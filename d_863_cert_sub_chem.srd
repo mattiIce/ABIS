@@ -1,0 +1,117 @@
+$PBExportHeader$d_863_cert_sub_chem.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=339 color="536870912" )
+table(column=(type=char(20) updatewhereclause=yes name=chemical_test_date dbname="chemical_test_date" )
+ column=(type=char(20) updatewhereclause=yes name=si dbname="si" )
+ column=(type=char(20) updatewhereclause=yes name=fe dbname="fe" )
+ column=(type=char(20) updatewhereclause=yes name=cu dbname="cu" )
+ column=(type=char(20) updatewhereclause=yes name=mn dbname="mn" )
+ column=(type=char(20) updatewhereclause=yes name=mg dbname="mg" )
+ column=(type=char(20) updatewhereclause=yes name=cr dbname="cr" )
+ column=(type=char(20) updatewhereclause=yes name=ni dbname="ni" )
+ column=(type=char(20) updatewhereclause=yes name=zn dbname="zn" )
+ column=(type=char(20) updatewhereclause=yes name=ti dbname="ti" )
+ column=(type=char(20) updatewhereclause=yes name=gh dbname="gh" )
+ column=(type=char(20) updatewhereclause=yes name=al dbname="al" )
+ column=(type=char(20) updatewhereclause=yes name=bb dbname="bb" )
+ column=(type=char(20) updatewhereclause=yes name=v dbname="v" )
+ column=(type=char(20) updatewhereclause=yes name=b dbname="b" )
+ column=(type=char(20) updatewhereclause=yes name=ca dbname="ca" )
+ column=(type=char(20) updatewhereclause=yes name=cd dbname="cd" )
+ column=(type=char(20) updatewhereclause=yes name=lb dbname="lb" )
+ column=(type=char(20) updatewhereclause=yes name=sx dbname="sx" )
+ column=(type=char(20) updatewhereclause=yes name=pb dbname="pb" )
+ column=(type=char(20) updatewhereclause=yes name=sb dbname="sb" )
+ column=(type=char(20) updatewhereclause=yes name=sn dbname="sn" )
+ column=(type=char(20) updatewhereclause=yes name=zr dbname="zr" )
+ column=(type=char(20) updatewhereclause=yes name=bi dbname="bi" )
+ column=(type=char(20) updatewhereclause=yes name=zb dbname="zb" )
+ column=(type=char(20) updatewhereclause=yes name=co dbname="co" )
+ column=(type=char(20) updatewhereclause=yes name=ik dbname="ik" )
+ column=(type=char(20) updatewhereclause=yes name=zp dbname="zp" )
+ column=(type=char(20) updatewhereclause=yes name=ss dbname="ss" )
+ column=(type=char(20) updatewhereclause=yes name=sh dbname="sh" )
+ column=(type=char(20) updatewhereclause=yes name=zas dbname="zas" )
+ column=(type=char(20) updatewhereclause=yes name=zv dbname="zv" )
+ column=(type=char(20) updatewhereclause=yes name=zlt dbname="zlt" )
+ column=(type=char(20) updatewhereclause=yes name=zlb dbname="zlb" )
+ column=(type=char(20) updatewhereclause=yes name=zln dbname="zln" )
+ column=(type=char(20) updatewhereclause=yes name=zlx dbname="zlx" )
+ retrieve="select
+  nvl(dbo.data_in_863.chemical_test_date, '') chemical_test_date,
+
+  nvl(dbo.data_in_863.si, '') si,
+  nvl(dbo.data_in_863.fe, '') fe,
+  nvl(dbo.data_in_863.cu, '') cu,
+  nvl(dbo.data_in_863.mn, '') mn,
+  nvl(dbo.data_in_863.mg, '') mg,
+  nvl(dbo.data_in_863.cr, '') cr,
+  nvl(dbo.data_in_863.ni, '') ni,
+  nvl(dbo.data_in_863.zn, '') zn,
+  nvl(dbo.data_in_863.ti, '') ti,
+  nvl(dbo.data_in_863.gh, '') gh,
+  nvl(dbo.data_in_863.al, '') al,
+  nvl(dbo.data_in_863.bb, '') bb,
+  nvl(dbo.data_in_863.v, '') v,
+
+  nvl(dbo.data_in_863.b, '') b,
+  nvl(dbo.data_in_863.ca, '') ca,
+  nvl(dbo.data_in_863.cd, '') cd,
+  nvl(dbo.data_in_863.lb, '') lb,
+  nvl(dbo.data_in_863.sx, '') sx,
+  nvl(dbo.data_in_863.pb, '') pb,
+  nvl(dbo.data_in_863.sb, '') sb,
+  nvl(dbo.data_in_863.sn, '') sn,
+  nvl(dbo.data_in_863.zr, '') zr,
+
+  nvl(dbo.data_in_863.bi, '') bi,
+  nvl(dbo.data_in_863.zb, '') zb,
+  nvl(dbo.data_in_863.co, '') co,
+  nvl(dbo.data_in_863.ik, '') ik,
+  nvl(dbo.data_in_863.zp, '') zp,
+  nvl(dbo.data_in_863.ss, '') ss,
+  nvl(dbo.data_in_863.sh, '') sh,
+  nvl(dbo.data_in_863.zas, '') zas,
+
+  nvl(dbo.data_in_863.zv, '') zv,
+  nvl(dbo.data_in_863.zlt, '') zlt,
+  nvl(dbo.data_in_863.zlb, '') zlb,
+  nvl(dbo.data_in_863.zln, '') zln,
+  nvl(dbo.data_in_863.zlx, '') zlx
+from dbo.data_in_863
+where edi_file_id = 
+(
+ select max(edi_file_id)
+ from dbo.data_in_863
+ where coil_num = :as_coil_org_num
+)" arguments=(("as_coil_org_num", string)) )
+text(band=detail alignment="0" text="SI" border="0" color="33554432" x="44" y="112" height="77" width="88" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="MG" border="0" color="33554432" x="44" y="182" height="77" width="88" html.valueishtml="0"  name=t_3 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="V" border="0" color="33554432" x="44" y="256" height="77" width="88" html.valueishtml="0"  name=t_4 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="1" expression="Trim(si)"border="0" color="0" x="176" y="112" height="77" width="212" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+compute(band=detail alignment="1" expression="Trim(mg)"border="0" color="0" x="176" y="182" height="77" width="212" format="[GENERAL]" html.valueishtml="0"  name=compute_2 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+compute(band=detail alignment="1" expression="Trim(v)"border="0" color="0" x="176" y="256" height="77" width="212" format="[GENERAL]" html.valueishtml="0"  name=compute_3 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="FE" border="0" color="33554432" x="527" y="112" height="77" width="88" html.valueishtml="0"  name=t_5 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="CR" border="0" color="33554432" x="527" y="182" height="77" width="88" html.valueishtml="0"  name=t_6 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="AL" border="0" color="33554432" x="527" y="256" height="77" width="88" html.valueishtml="0"  name=t_7 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="1" expression="Trim(al)"border="0" color="0" x="644" y="256" height="77" width="212" format="[GENERAL]" html.valueishtml="0"  name=compute_6 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+compute(band=detail alignment="1" expression="Trim(cr)"border="0" color="0" x="644" y="182" height="77" width="212" format="[GENERAL]" html.valueishtml="0"  name=compute_5 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+compute(band=detail alignment="1" expression="Trim(fe)"border="0" color="0" x="644" y="112" height="77" width="212" format="[GENERAL]" html.valueishtml="0"  name=compute_4 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="CU" border="0" color="33554432" x="1013" y="112" height="77" width="88" html.valueishtml="0"  name=t_8 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="ZN" border="0" color="33554432" x="1013" y="182" height="77" width="88" html.valueishtml="0"  name=t_9 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="1" expression="Trim(zn)"border="0" color="0" x="1115" y="182" height="77" width="212" format="[GENERAL]" html.valueishtml="0"  name=compute_8 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+compute(band=detail alignment="1" expression="Trim(cu)"border="0" color="0" x="1115" y="112" height="77" width="212" format="[GENERAL]" html.valueishtml="0"  name=compute_7 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="MN" border="0" color="33554432" x="1521" y="112" height="77" width="88" html.valueishtml="0"  name=t_10 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="TI" border="0" color="33554432" x="1521" y="182" height="77" width="88" html.valueishtml="0"  name=t_11 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="1" expression="Trim(ti)"border="0" color="0" x="1642" y="182" height="77" width="212" format="[GENERAL]" html.valueishtml="0"  name=compute_9 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+compute(band=detail alignment="1" expression="Trim(mn)"border="0" color="0" x="1642" y="112" height="77" width="212" format="[GENERAL]" html.valueishtml="0"  name=compute_10 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Chemical Composition" border="0" color="33554432" x="22" y="13" height="77" width="834" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

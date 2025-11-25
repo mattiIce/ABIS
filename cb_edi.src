@@ -1,0 +1,30 @@
+IF ii_ok_add < 1 THEN 
+	MessageBox("Error", "please open an shipment first!", StopSign! )
+	Return
+END IF
+
+Int li_status, li_rc
+li_status = wf_shipment_status()
+li_rc = 0
+IF li_status < 0 THEN Return
+IF (li_status = 0) AND (ii_cb_edi_status = 1) THEN 
+	li_rc = MessageBox("Warning", "This shipment is done, and it can NOT be sent again! Send EDI instead?", Question!, YesNO!)	
+	IF li_rc = 2 THEN Return
+END IF
+
+IF (li_rc = 1) OR (ii_cb_edi_status = 2) THEN
+	li_rc = f_edi_856(il_current_shippment)
+	CHOOSE CASE li_rc
+	CASE 1
+		MessageBox("Info", "EDI sent successfully!" )
+	CASE -1
+		MessageBox("Error","EDI failed, see EDI log file for details!", StopSign!)
+	CASE 100
+		MessageBox("Info","EDI failed due to one of the following:&
+									1) EDI had been sent already &
+									2) Customer does NOT require EDI transaction &
+									3) Shipment contains NO items " )
+	END CHOOSE
+ELSE
+	OpenwithParm(w_shipment_send, il_current_shippment)
+END IF

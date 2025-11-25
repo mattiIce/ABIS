@@ -1,0 +1,110 @@
+$PBExportHeader$d_863_cert_sub_mech.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=736 color="536870912" )
+table(column=(type=char(30) updatewhereclause=yes name=desc_t1 dbname="desc_t1" )
+ column=(type=char(10) updatewhereclause=yes name=data_t1 dbname="data_t1" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t2 dbname="desc_t2" )
+ column=(type=char(10) updatewhereclause=yes name=data_t2 dbname="data_t2" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t3 dbname="desc_t3" )
+ column=(type=char(10) updatewhereclause=yes name=data_t3 dbname="data_t3" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t4 dbname="desc_t4" )
+ column=(type=char(10) updatewhereclause=yes name=data_t4 dbname="data_t4" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t5 dbname="desc_t5" )
+ column=(type=char(10) updatewhereclause=yes name=data_t5 dbname="data_t5" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t6 dbname="desc_t6" )
+ column=(type=char(10) updatewhereclause=yes name=data_t6 dbname="data_t6" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t7 dbname="desc_t7" )
+ column=(type=char(10) updatewhereclause=yes name=data_t7 dbname="data_t7" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t8 dbname="desc_t8" )
+ column=(type=char(10) updatewhereclause=yes name=data_t8 dbname="data_t8" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t9 dbname="desc_t9" )
+ column=(type=char(10) updatewhereclause=yes name=data_t9 dbname="data_t9" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t10 dbname="desc_t10" )
+ column=(type=char(10) updatewhereclause=yes name=data_t10 dbname="data_t10" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t11 dbname="desc_t11" )
+ column=(type=char(10) updatewhereclause=yes name=data_t11 dbname="data_t11" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t12 dbname="desc_t12" )
+ column=(type=char(10) updatewhereclause=yes name=data_t12 dbname="data_t12" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t13 dbname="desc_t13" )
+ column=(type=char(10) updatewhereclause=yes name=data_t13 dbname="data_t13" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t14 dbname="desc_t14" )
+ column=(type=char(10) updatewhereclause=yes name=data_t14 dbname="data_t14" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t15 dbname="desc_t15" )
+ column=(type=char(10) updatewhereclause=yes name=data_t15 dbname="data_t15" )
+ column=(type=char(30) updatewhereclause=yes name=desc_t16 dbname="desc_t16" )
+ column=(type=char(10) updatewhereclause=yes name=data_t16 dbname="data_t16" )
+ retrieve="select   rpad(' ', 30, ' ') desc_t1,
+         rpad(' ', 10, ' ') data_t1,
+         rpad(' ', 30, ' ') desc_t2,
+         rpad(' ', 10, ' ') data_t2,
+         rpad(' ', 30, ' ') desc_t3,
+         rpad(' ', 10, ' ') data_t3,
+         rpad(' ', 30, ' ') desc_t4,
+         rpad(' ', 10, ' ') data_t4,
+         rpad(' ', 30, ' ') desc_t5,
+         rpad(' ', 10, ' ') data_t5,
+         rpad(' ', 30, ' ') desc_t6,
+         rpad(' ', 10, ' ') data_t6,
+         rpad(' ', 30, ' ') desc_t7,
+         rpad(' ', 10, ' ') data_t7,
+         rpad(' ', 30, ' ') desc_t8,
+         rpad(' ', 10, ' ') data_t8,
+         rpad(' ', 30, ' ') desc_t9,
+         rpad(' ', 10, ' ') data_t9,
+         rpad(' ', 30, ' ') desc_t10,
+         rpad(' ', 10, ' ') data_t10,
+         rpad(' ', 30, ' ') desc_t11,
+         rpad(' ', 10, ' ') data_t11,
+         rpad(' ', 30, ' ') desc_t12,
+         rpad(' ', 10, ' ') data_t12,
+         rpad(' ', 30, ' ') desc_t13,
+         rpad(' ', 10, ' ') data_t13,
+         rpad(' ', 30, ' ') desc_t14,
+         rpad(' ', 10, ' ') data_t14,
+         rpad(' ', 30, ' ') desc_t15,
+         rpad(' ', 10, ' ') data_t15,
+         rpad(' ', 30, ' ') desc_t16,
+         rpad(' ', 10, ' ') data_t16
+from     dual" )
+text(band=detail alignment="0" text="Mechanical Properties" border="0" color="33554432" x="176" y="10" height="77" width="848" html.valueishtml="0"  name=t_12 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="2" color="0" x="245" y="102" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t1_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="2" color="0" x="245" y="186" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t3_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=9 alignment="0" tabsequence=32766 border="2" color="0" x="245" y="269" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t5_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=13 alignment="0" tabsequence=32766 border="2" color="0" x="245" y="346" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t7_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=17 alignment="0" tabsequence=32766 border="2" color="0" x="245" y="426" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t9_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=21 alignment="0" tabsequence=32766 border="2" color="0" x="245" y="506" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t11_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=25 alignment="0" tabsequence=32766 border="2" color="0" x="245" y="586" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t13_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=29 alignment="0" tabsequence=32766 border="2" color="0" x="245" y="666" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t15_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="2" color="0" x="1236" y="102" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t2_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="2" color="0" x="1236" y="186" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t4_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=11 alignment="0" tabsequence=32766 border="2" color="0" x="1236" y="269" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t6_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=15 alignment="0" tabsequence=32766 border="2" color="0" x="1236" y="346" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t8_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=19 alignment="0" tabsequence=32766 border="2" color="0" x="1236" y="426" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t10_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=23 alignment="0" tabsequence=32766 border="2" color="0" x="1236" y="506" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t12_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=27 alignment="0" tabsequence=32766 border="2" color="0" x="1236" y="586" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t14_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=31 alignment="0" tabsequence=32766 border="2" color="0" x="1236" y="666" height="54" width="651" format="[general]" html.valueishtml="0"  name=desc_t16_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="2" color="0" x="1920" y="102" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t2_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=8 alignment="1" tabsequence=32766 border="2" color="0" x="1920" y="186" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t4_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=12 alignment="1" tabsequence=32766 border="2" color="0" x="1920" y="269" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t6_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=16 alignment="1" tabsequence=32766 border="2" color="0" x="1920" y="346" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t8_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=20 alignment="1" tabsequence=32766 border="2" color="0" x="1920" y="426" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t10_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=24 alignment="1" tabsequence=32766 border="2" color="0" x="1920" y="506" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t12_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=28 alignment="1" tabsequence=32766 border="2" color="0" x="1920" y="586" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t14 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=32 alignment="1" tabsequence=32766 border="2" color="0" x="1920" y="666" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t16_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=2 alignment="1" tabsequence=32766 border="2" color="0" x="929" y="102" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t1_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=6 alignment="1" tabsequence=32766 border="2" color="0" x="929" y="186" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t3_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=10 alignment="1" tabsequence=32766 border="2" color="0" x="929" y="269" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t5_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=14 alignment="1" tabsequence=32766 border="2" color="0" x="929" y="346" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t7_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=18 alignment="1" tabsequence=32766 border="2" color="0" x="929" y="426" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t9_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=22 alignment="1" tabsequence=32766 border="2" color="0" x="929" y="506" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t11_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=26 alignment="1" tabsequence=32766 border="2" color="0" x="929" y="586" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t13_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=30 alignment="1" tabsequence=32766 border="2" color="0" x="929" y="666" height="54" width="256" format="[general]" html.valueishtml="0"  name=data_t15_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

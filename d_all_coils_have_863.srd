@@ -1,0 +1,38 @@
+$PBExportHeader$d_all_coils_have_863.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=67 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=67 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=customer_id dbname="customer.customer_id" )
+ column=(type=char(18) updatewhereclause=yes name=customer_short_name dbname="customer.customer_short_name" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_abc_num dbname="customer_order.order_abc_num" )
+ column=(type=number updatewhereclause=yes name=cert_label_customer_code dbname="compute_0004" )
+ retrieve="select distinct 
+			customer.customer_id,
+			customer.customer_short_name,
+			customer_order.order_abc_num,
+			nvl(customer_order.cert_label_customer_code, 0)
+from   	sheet_packing_item
+       	join sheet_skid_detail on sheet_skid_detail.sheet_skid_num = sheet_packing_item.sheet_skid_num
+       	join production_sheet_item on production_sheet_item.prod_item_num = sheet_skid_detail.prod_item_num
+       	join ab_job on ab_job.ab_job_num = production_sheet_item.ab_job_num
+       	join customer_order on customer_order.order_abc_num = ab_job.order_abc_num
+       	join customer on customer.customer_id = customer_order.orig_customer_id
+where  	packing_list = :al_packing_list
+and 		nvl(customer_order.cert_label_customer_code, 0) <= 0" arguments=(("al_packing_list", number)) )
+text(band=header alignment="0" text="Customer Id" border="0" color="33554432" x="4" y="3" height="51" width="278" html.valueishtml="0"  name=customer_id_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Cert Label Customer Code" border="0" color="33554432" x="1704" y="3" height="51" width="625" html.valueishtml="0"  name=compute_0004_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Order ABC Number" border="0" color="33554432" x="1178" y="3" height="51" width="443" html.valueishtml="0"  name=order_abc_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Customer Short Name" border="0" color="33554432" x="538" y="3" height="51" width="508" html.valueishtml="0"  name=customer_short_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="0" y="0" height="51" width="263" format="[general]" html.valueishtml="0"  name=customer_id visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="1704" y="0" height="51" width="563" format="[general]" html.valueishtml="0"  name=cert_label_customer_code visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="1178" y="0" height="51" width="457" format="[general]" html.valueishtml="0"  name=order_abc_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="538" y="0" height="51" width="417" format="[general]" html.valueishtml="0"  name=customer_short_name visible="1" edit.limit=18 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

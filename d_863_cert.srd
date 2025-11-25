@@ -1,0 +1,150 @@
+$PBExportHeader$d_863_cert.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=3565 color="536870912"  height.autosize=yes)
+table(column=(type=char(32) updatewhereclause=yes name=coil_org_num dbname="coil.coil_org_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=coil_abc_num dbname="coil.coil_abc_num" )
+ column=(type=char(22) updatewhereclause=yes name=enduser_part_num dbname="order_item.enduser_part_num" )
+ column=(type=char(20) updatewhereclause=yes name=grade dbname="grade" )
+ column=(type=char(62) updatewhereclause=yes name=part_dims dbname="part_dims" )
+ column=(type=decimal(0) updatewhereclause=yes name=shipto_customer_id dbname="shipment.shipto_customer_id" )
+ column=(type=char(18) updatewhereclause=yes name=shipto_customer_name dbname="shipto_customer_name" )
+ column=(type=char(100) updatewhereclause=yes name=shipto_customer_street dbname="shipto_customer_street" )
+ column=(type=char(18) updatewhereclause=yes name=shipto_customer_city dbname="shipto_customer_city" )
+ column=(type=char(30) updatewhereclause=yes name=shipto_customer_state dbname="shipto_customer_state" )
+ column=(type=char(18) updatewhereclause=yes name=shipto_customer_zip dbname="customer.shipto_customer_zip" )
+ column=(type=char(10) updatewhereclause=yes name=cash_date dbname="cash_date" )
+ column=(type=char(10) updatewhereclause=yes name=lube_date dbname="lube_date" )
+ column=(type=char(20) updatewhereclause=yes name=lube_weight dbname="lube_weight" )
+ column=(type=char(80) updatewhereclause=yes name=lube_uom_desc dbname="lube_uom_desc" )
+ column=(type=char(20) updatewhereclause=yes name=lube_weight_uom dbname="lube_weight_uom" )
+ column=(type=char(50) updatewhereclause=yes name=spec dbname="spec" )
+ column=(type=char(50) updatewhereclause=yes name=designation dbname="designation" )
+ column=(type=char(16) updatewhereclause=yes name=sheet_skid_display_num dbname="sheet_skid.sheet_skid_display_num" )
+ retrieve="select distinct
+       coil.coil_org_num,
+       coil.coil_abc_num,
+	    order_item.enduser_part_num as enduser_part_num,
+       nvl(dbo.data_in_863.grade, '') grade,
+
+       case 
+          when upper(order_item.sheet_type) = 'RECTANGLE' then (select ltrim(rtrim(to_char(coil.coil_gauge * 25.4, '90.99'))) || ' X ' || ltrim(rtrim(to_char(rt_width * 25.4, '999999.99'))) || + ' X ' || ltrim(rtrim(to_char(rt_length * 25.4, '999999.99'))) from rectangle where order_abc_num = customer_order.order_abc_num and order_item_num = order_item.order_item_num)
+          when upper(order_item.sheet_type) = 'REINFORCEMENT' then (select ltrim(rtrim(to_char(coil.coil_gauge * 25.4, '90.99'))) || ' X ' || ltrim(rtrim(to_char(re_width * 25.4, '999999.99'))) || ' X ' || ltrim(rtrim(to_char(re_length * 25.4, '999999.99'))) from reinforcement where order_abc_num = customer_order.order_abc_num and order_item_num = order_item.order_item_num)
+          when upper(order_item.sheet_type) = 'LIFTGATE' then (select ltrim(rtrim(to_char(coil.coil_gauge * 25.4, '90.99'))) || ' X ' || ltrim(rtrim(to_char(li_width * 25.4, '999999.99'))) || ' X ' || ltrim(rtrim(to_char(li_length * 25.4, '999999.99'))) from liftgate_shape where order_abc_num = customer_order.order_abc_num and order_item_num = order_item.order_item_num)
+          when upper(order_item.sheet_type) = 'PARALLELOGRAM' then (select ltrim(rtrim(to_char(coil.coil_gauge * 25.4, '90.99'))) || ' X ' ||ltrim(rtrim( to_char(p_width * 25.4, '999999.99'))) || ltrim(rtrim(to_char(p_length * 25.4, '999999.99'))) from parallelogram where order_abc_num = customer_order.order_abc_num and order_item_num = order_item.order_item_num)
+          when upper(order_item.sheet_type) = 'FENDER' then (select ltrim(rtrim(to_char(coil.coil_gauge * 25.4, '90.99'))) || ' X ' || ltrim(rtrim(to_char(fe_side))) || ' X ' || ltrim(rtrim(to_char(fe_length * 25.4, '999999.99'))) from fender where order_abc_num = customer_order.order_abc_num and order_item_num = order_item.order_item_num)
+          when upper(order_item.sheet_type) = 'CHEVRON' then (select ltrim(rtrim(to_char(coil.coil_gauge * 25.4, '90.99'))) || ' X ' || ltrim(rtrim(to_char(ch_width * 25.4, '999999.99'))) || ' X ' || ltrim(rtrim(to_char(ch_length * 25.4, '999999.99'))) from chevron where order_abc_num = customer_order.order_abc_num and order_item_num = order_item.order_item_num)
+          when upper(order_item.sheet_type) = 'CIRCLE' then (select ltrim(rtrim(to_char(coil.coil_gauge * 25.4, '90.99'))) || ' X DIA: ' || ltrim(rtrim(to_char(c_diameter * 25.4, '999999.99'))) from circle where order_abc_num = customer_order.order_abc_num and order_item_num = order_item.order_item_num)
+          when upper(order_item.sheet_type) = 'TRAPEZOID' then (select ltrim(rtrim(to_char(coil.coil_gauge * 25.4, '90.99'))) || ' X ' || ltrim(rtrim(to_char(tr_width * 25.4, '999999.99'))) || ' X ' || ltrim(rtrim(to_char(tr_long_length * 25.4, '999999.99'))) || ltrim(rtrim(to_char(tr_short_length * 25.4, '999999.99'))) from trapezoid where order_abc_num = customer_order.order_abc_num and order_item_num = order_item.order_item_num)
+          when upper(order_item.sheet_type) = 'L.TRAPEZOID' then (select ltrim(rtrim(to_char(coil.coil_gauge * 25.4, '90.99'))) || ' X ' ||ltrim(rtrim( to_char(ltr_width * 25.4, '999999.99'))) || ' X ' || ltrim(rtrim(to_char(ltr_long_length * 25.4, '999999.99'))) || ' X ' || ltrim(rtrim(to_char(ltr_short_length * 25.4, '999999.99'))) from left_trapezoid where order_abc_num = customer_order.order_abc_num and order_item_num = order_item.order_item_num)
+          when upper(order_item.sheet_type) = 'R.TRAPEZOID' then (select ltrim(rtrim(to_char(coil.coil_gauge * 25.4, '90.99'))) || ' X ' || ltrim(rtrim(to_char(rtr_width * 25.4, '999999.99'))) || ' X ' || ltrim(rtrim(to_char(rtr_long_length * 25.4, '999999.99'))) || ' X ' || ltrim(rtrim(to_char(rtr_short_length * 25.4, '999999.99'))) from right_trapezoid where order_abc_num = customer_order.order_abc_num and order_item_num = order_item.order_item_num)
+          when upper(order_item.sheet_type) = 'OTHER' then (select ltrim(rtrim(to_char(coil.coil_gauge * 25.4, '90.99'))) || ' X ' || ltrim(rtrim(to_char(x_1 * 25.4, '999999.99'))) || ' X ' || ltrim(rtrim(to_char(x_2 * 25.4, '999999.99'))) from x1_shape where order_abc_num = customer_order.order_abc_num and order_item_num = order_item.order_item_num)
+       end part_dims,
+
+       shipment.des_sh_cust_id as shipto_customer_id,
+       upper(dest_customer.customer_short_name) as shipto_customer_name,
+       upper(dest_customer.customer_street) as shipto_customer_street,
+       upper(dest_customer.customer_city) as shipto_customer_city,
+       upper(dest_customer.customer_state) as shipto_customer_state,
+       dest_customer.customer_zip as shipto_customer_zip,
+
+ 		 to_char(to_date(nvl(dbo.data_in_863.cash_date, ''), 'yyyymmdd'), 'mm/dd/yyyy')  cash_date,
+
+		 to_char(to_date(nvl(dbo.data_in_863.lube_date, ''), 'yyyymmdd'), 'mm/dd/yyyy') lube_date,
+		 to_char(dbo.data_in_863.lube_weight) lube_weight,
+		 (select uom_code_desc from dbo.unit_of_measure where uom_code = nvl(dbo.data_in_863.lube_weight_uom, '')) lube_uom_desc,
+ 		 (nvl(dbo.data_in_863.lube_weight_uom, '')) lube_weight_uom,
+
+		 nvl(order_item.spec, '') spec,
+		 nvl(order_item.designation, '') designation,
+		 sheet_skid.sheet_skid_display_num sheet_skid_display_num
+from   production_sheet_item
+       join sheet_skid_detail on sheet_skid_detail.prod_item_num = production_sheet_item.prod_item_num
+       join coil on coil.coil_abc_num = production_sheet_item.coil_abc_num
+       join sheet_skid on sheet_skid.sheet_skid_num = sheet_skid_detail.sheet_skid_num
+       join customer_order on customer_order.order_abc_num = sheet_skid.ref_order_abc_num
+       join order_item on order_item.order_abc_num = customer_order.order_abc_num
+       join sheet_packing_item on sheet_packing_item.sheet_skid_num = sheet_skid.sheet_skid_num
+       join shipment on shipment.packing_list = sheet_packing_item.packing_list
+       join customer dest_customer on dest_customer.customer_id = shipment.des_sh_cust_id
+       join customer coil_from on coil_from.customer_id = shipment.customer_id
+        
+		 join dbo.data_in_863 on dbo.data_in_863.coil_num = coil.coil_org_num
+where  sheet_skid.sheet_skid_num = :al_sheet_skid_num
+and	 order_item.order_abc_num = :al_order_abc_num
+and	 order_item.order_item_num = :ai_order_item_num
+and dbo.data_in_863.edi_file_id = 
+(
+ select max(edi_file_id)
+ from dbo.data_in_863
+ where coil_num = :as_coil_num
+)" arguments=(("al_sheet_skid_num", number),("as_coil_num", string),("al_order_abc_num", number),("ai_order_item_num", number)) )
+line(band=detail x1="15" y1="3536" x2="11" y2="826"  name=l_4 visible="1" pen.style="0" pen.width="15" pen.color="0"  background.mode="2" background.color="16777215" )
+line(band=detail x1="11" y1="3539" x2="2417" y2="3542"  name=l_2 visible="1" pen.style="0" pen.width="15" pen.color="0"  background.mode="2" background.color="16777215" )
+line(band=detail x1="11" y1="822" x2="2417" y2="826"  name=l_1 visible="1" pen.style="0" pen.width="15" pen.color="0"  background.mode="2" background.color="16777215" )
+text(band=detail alignment="2" text="Novelis Corporation - Atlanta, GA 30326" border="0" color="0" x="574" y="925" height="54" width="1134" html.valueishtml="0"  name=t_11 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+line(band=detail x1="2417" y1="3536" x2="2414" y2="826"  name=l_3 visible="1" pen.style="0" pen.width="15" pen.color="0"  background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Lube Weight:" border="0" color="0" x="37" y="3437" height="54" width="340" html.valueishtml="0"  name=t_9 visible="1~tif ( IsNull(lube_weight) or String(lube_date) = ~"~" , 0, 1 )"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+compute(band=detail alignment="0" expression="Trim(shipto_customer_city) + ~", ~" + Trim(shipto_customer_state) + ~", ~" + shipto_customer_zip"border="0" color="33554432" x="889" y="1190" height="54" width="1488" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=8 alignment="0" tabsequence=32766 border="0" color="33554432" x="889" y="1123" height="61" width="1499" format="[general]" html.valueishtml="0"  name=shipto_customer_street visible="1" edit.limit=100 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="0" expression="lube_weight  + ~" ~" + lube_uom_desc"border="0" color="33554432" x="406" y="3437" height="54" width="1960" format="[GENERAL]" html.valueishtml="0"  name=compute_2 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+report(band=detail dataobject="d_863_cert_sub_chem" x="55" y="1750" height="358" width="2330" border="0"  height.autosize=yes criteria="" nest_arguments=((" coil_org_num ")) trail_footer = yes  name=dw_1 visible="1"  slideup=directlyabove )
+text(band=detail alignment="0" text="Mechanical Properties" border="0" color="33554432" x="80" y="2186" height="77" width="848" html.valueishtml="0"  name=t_5 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="143" y="2294" height="54" width="651" html.valueishtml="0"  name=desc_t1 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="1880" y="2294" height="58" width="256" html.valueishtml="0"  name=data_t2 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="1880" y="2374" height="58" width="256" html.valueishtml="0"  name=data_t4 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="1880" y="2454" height="58" width="256" html.valueishtml="0"  name=data_t6 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="1880" y="2534" height="58" width="256" html.valueishtml="0"  name=data_t8 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="1880" y="2614" height="58" width="256" html.valueishtml="0"  name=data_t10 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="1880" y="2694" height="58" width="256" html.valueishtml="0"  name=data_t12 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="1880" y="2774" height="58" width="256" html.valueishtml="0"  name=data_t14 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="1880" y="2854" height="58" width="256" html.valueishtml="0"  name=data_t16 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="143" y="2374" height="54" width="651" html.valueishtml="0"  name=desc_t3 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="143" y="2454" height="54" width="651" html.valueishtml="0"  name=desc_t5 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="143" y="2534" height="54" width="651" html.valueishtml="0"  name=desc_t7 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="143" y="2614" height="54" width="651" html.valueishtml="0"  name=desc_t9 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="143" y="2694" height="54" width="651" html.valueishtml="0"  name=desc_t11 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="143" y="2774" height="54" width="651" html.valueishtml="0"  name=desc_t13 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="143" y="2854" height="54" width="651" html.valueishtml="0"  name=desc_t15 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="823" y="2454" height="58" width="256" html.valueishtml="0"  name=data_t5 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="823" y="2534" height="58" width="256" html.valueishtml="0"  name=data_t7 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="823" y="2614" height="58" width="256" html.valueishtml="0"  name=data_t9 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="823" y="2694" height="58" width="256" html.valueishtml="0"  name=data_t11 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="823" y="2774" height="58" width="256" html.valueishtml="0"  name=data_t13 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="823" y="2854" height="58" width="256" html.valueishtml="0"  name=data_t15 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="1200" y="2454" height="54" width="651" html.valueishtml="0"  name=desc_t6 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="1200" y="2534" height="54" width="651" html.valueishtml="0"  name=desc_t8 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="1200" y="2614" height="54" width="651" html.valueishtml="0"  name=desc_t10 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="1200" y="2694" height="54" width="651" html.valueishtml="0"  name=desc_t12 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="1200" y="2774" height="54" width="651" html.valueishtml="0"  name=desc_t14 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="1200" y="2854" height="54" width="651" html.valueishtml="0"  name=desc_t16 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="823" y="2374" height="58" width="256" html.valueishtml="0"  name=data_t3 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="" border="0" color="33554432" x="823" y="2294" height="54" width="256" html.valueishtml="0"  name=data_t1 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="1200" y="2374" height="54" width="651" html.valueishtml="0"  name=desc_t4 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="" border="0" color="33554432" x="1200" y="2294" height="54" width="651" html.valueishtml="0"  name=desc_t2 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="2" text="Certificate of Conformance" border="0" color="0" x="783" y="858" height="58" width="717" html.valueishtml="0"  name=t_10 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+compute(band=detail alignment="2" expression="~"Skid #: ~" + sheet_skid_display_num"border="0" color="0" x="680" y="1293" height="61" width="922" format="[General]" html.valueishtml="0"  name=compute_3 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Ship to:" border="0" color="0" x="669" y="1062" height="58" width="201" html.valueishtml="0"  name=t_12 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="" border="0" color="0" x="889" y="1066" height="54" width="1492" html.valueishtml="0"  name=shipto_customer_name_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="453" y="1395" height="54" width="757" format="[general]" html.valueishtml="0"  name=coil_org_num visible="1" edit.limit=32 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="453" y="1469" height="54" width="757" format="[general]" html.valueishtml="0"  name=coil_abc_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="453" y="1542" height="54" width="757" format="[general]" html.valueishtml="0"  name=enduser_part_num visible="1" edit.limit=22 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="0" expression="trim(spec) + ~"  ~" + trim(designation)"border="0" color="33554432" x="453" y="1619" height="54" width="1905" format="[GENERAL]" html.valueishtml="0"  name=compute_4 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=12 alignment="0" tabsequence=32766 border="0" color="33554432" x="1631" y="1469" height="54" width="757" format="[general]" html.valueishtml="0"  name=cash_date visible="1" edit.limit=24 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=13 alignment="0" tabsequence=32766 border="0" color="33554432" x="1631" y="1542" height="54" width="757" format="[general]" html.valueishtml="0"  name=lube_date visible="1" edit.limit=20 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="33554432" x="1631" y="1395" height="54" width="757" format="[general]" html.valueishtml="0"  name=part_dims visible="1" edit.limit=169 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Size (mm):" border="0" color="0" x="1273" y="1395" height="54" width="267" html.valueishtml="0"  name=t_7 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Born Date:" border="0" color="0" x="1273" y="1469" height="54" width="278" html.valueishtml="0"  name=t_8 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Lubed Date:" border="0" color="0" x="1273" y="1542" height="54" width="315" html.valueishtml="0"  name=t_13 visible="1~tif ( IsNull(lube_date) or String(lube_date) = ~"~" , 0, 1 )"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Coil:" border="0" color="0" x="102" y="1395" height="54" width="106" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="ABC Serial:" border="0" color="0" x="102" y="1469" height="54" width="282" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Part:" border="0" color="0" x="102" y="1542" height="54" width="113" html.valueishtml="0"  name=t_3 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Spec:" border="0" color="0" x="102" y="1619" height="54" width="139" html.valueishtml="0"  name=t_4 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 
