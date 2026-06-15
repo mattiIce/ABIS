@@ -24,6 +24,9 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS customer_order;
             DROP TABLE IF EXISTS order_item;
             DROP TABLE IF EXISTS pst_test_result;
+            DROP TABLE IF EXISTS customer;
+            DROP TABLE IF EXISTS sheet_skid;
+            DROP TABLE IF EXISTS scrap_skid;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
@@ -57,6 +60,19 @@ public static class SqliteFixture
                 id INTEGER PRIMARY KEY AUTOINCREMENT, created_date TEXT, test_type INTEGER, position TEXT,
                 yts_val REAL, uts_val REAL, elong_val REAL, n_val REAL, r_val REAL,
                 thickness REAL, width REAL);
+
+            CREATE TABLE customer (
+                customer_id INTEGER PRIMARY KEY, customer_name TEXT, customer_short_name TEXT,
+                enduser_name TEXT, shipto_customer_zip TEXT);
+
+            CREATE TABLE sheet_skid (
+                sheet_skid_num INTEGER PRIMARY KEY, ab_job_num INTEGER, sheet_skid_display_num TEXT,
+                sheet_net_wt REAL, sheet_tare_wt REAL, skid_pieces INTEGER, skid_date TEXT);
+
+            CREATE TABLE scrap_skid (
+                scrap_skid_num INTEGER PRIMARY KEY, scrap_ab_job_num TEXT, scrap_alloy2 TEXT, scrap_temper TEXT,
+                scrap_type INTEGER, scrap_net_wt REAL, scrap_tare_wt REAL, scrap_location TEXT,
+                scrap_notes TEXT, skid_scrap_status INTEGER, scrap_date TEXT);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -137,6 +153,39 @@ public static class SqliteFixture
                 new { CreatedDate = (DateTime?)d, TestType = (int?)1, Position = "T", YtsVal = 45.0m, UtsVal = 50.0m, ElongVal = 12.5m, NVal = 0.25m, RVal = 0.5m, Thickness = 0.125m, Width = 48.5m },
                 new { CreatedDate = (DateTime?)d.AddHours(1), TestType = (int?)3, Position = "M", YtsVal = 46.0m, UtsVal = 51.0m, ElongVal = 12.0m, NVal = 0.25m, RVal = 0.5m, Thickness = 0.125m, Width = 48.5m },
                 new { CreatedDate = (DateTime?)d.AddHours(2), TestType = (int?)4, Position = "B", YtsVal = 44.0m, UtsVal = 49.0m, ElongVal = 13.0m, NVal = 0.25m, RVal = 0.5m, Thickness = 0.0625m, Width = 60.0m }
+            });
+
+        conn.Execute("""
+            INSERT INTO customer (customer_id, customer_name, customer_short_name, enduser_name, shipto_customer_zip)
+            VALUES (:CustomerId, :CustomerName, :CustomerShortName, :EnduserName, :ShiptoCustomerZip)
+            """,
+            new[]
+            {
+                new { CustomerId = 4001L, CustomerName = "ACME METALS", CustomerShortName = "ACME", EnduserName = "ACME END USE", ShiptoCustomerZip = "48201" },
+                new { CustomerId = 4002L, CustomerName = "BETA FAB", CustomerShortName = "BETA", EnduserName = "BETA END USE", ShiptoCustomerZip = "44101" }
+            });
+
+        conn.Execute("""
+            INSERT INTO sheet_skid (sheet_skid_num, ab_job_num, sheet_skid_display_num, sheet_net_wt, sheet_tare_wt, skid_pieces, skid_date)
+            VALUES (:SheetSkidNum, :AbJobNum, :SheetSkidDisplayNum, :SheetNetWt, :SheetTareWt, :SkidPieces, :SkidDate)
+            """,
+            new[]
+            {
+                new { SheetSkidNum = 3001L, AbJobNum = (long?)1001L, SheetSkidDisplayNum = "110-1001-01", SheetNetWt = 1980m, SheetTareWt = 50m, SkidPieces = (int?)100, SkidDate = (DateTime?)d.AddHours(4) },
+                new { SheetSkidNum = 3002L, AbJobNum = (long?)1001L, SheetSkidDisplayNum = "110-1001-02", SheetNetWt = 1975m, SheetTareWt = 50m, SkidPieces = (int?)100, SkidDate = (DateTime?)d.AddHours(5) },
+                new { SheetSkidNum = 3003L, AbJobNum = (long?)1003L, SheetSkidDisplayNum = "120-1003-01", SheetNetWt = 2400m, SheetTareWt = 60m, SkidPieces = (int?)80, SkidDate = (DateTime?)d.AddDays(3) }
+            });
+
+        conn.Execute("""
+            INSERT INTO scrap_skid (scrap_skid_num, scrap_ab_job_num, scrap_alloy2, scrap_temper, scrap_type,
+                scrap_net_wt, scrap_tare_wt, scrap_location, scrap_notes, skid_scrap_status, scrap_date)
+            VALUES (:ScrapSkidNum, :ScrapAbJobNum, :ScrapAlloy2, :ScrapTemper, :ScrapType,
+                :ScrapNetWt, :ScrapTareWt, :ScrapLocation, :ScrapNotes, :SkidScrapStatus, :ScrapDate)
+            """,
+            new[]
+            {
+                new { ScrapSkidNum = 8001L, ScrapAbJobNum = "1001", ScrapAlloy2 = "3003", ScrapTemper = "H14", ScrapType = (int?)1, ScrapNetWt = 120m, ScrapTareWt = 20m, ScrapLocation = "SCR-A", ScrapNotes = "", SkidScrapStatus = (int?)1, ScrapDate = (DateTime?)d.AddHours(6) },
+                new { ScrapSkidNum = 8002L, ScrapAbJobNum = "1003", ScrapAlloy2 = "5052", ScrapTemper = "H32", ScrapType = (int?)2, ScrapNetWt = 90m, ScrapTareWt = 20m, ScrapLocation = "SCR-B", ScrapNotes = "", SkidScrapStatus = (int?)1, ScrapDate = (DateTime?)d.AddDays(3) }
             });
     }
 }

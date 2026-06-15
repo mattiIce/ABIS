@@ -6,8 +6,10 @@ PowerBuilder client that talks straight to the database with no service tier
 missing integration point every later modernization step builds on
 ([`../docs/MODERNIZATION_ROADMAP.md`](../docs/MODERNIZATION_ROADMAP.md), Phase 2).
 
-> **Scope:** read-only (GET) endpoints for the core entities. Writes are
-> deliberately deferred until the seam is proven in production.
+> **Scope:** read (GET) endpoints across the core entities, plus a small,
+> proven **write** surface — customer master data (POST/PUT) and operational
+> partial updates (PATCH) to jobs and coils. Broader writes follow as the seam
+> is accepted.
 
 ## Stack
 
@@ -47,7 +49,7 @@ and needs no external database.
 
 ```sh
 cd api
-dotnet test                                # 16 tests: repository + HTTP smoke
+dotnet test                                # 30 tests: repository + HTTP smoke
 ```
 
 ## Endpoints
@@ -58,15 +60,32 @@ dotnet test                                # 16 tests: repository + HTTP smoke
 | `GET /api/jobs?page&pageSize&status` | List production jobs (paged) |
 | `GET /api/jobs/{abJobNum}` | One job |
 | `GET /api/jobs/{abJobNum}/coils` | Coils processed by a job (joined) |
+| `GET /api/jobs/{abJobNum}/skids` | Finished sheet skids for a job |
+| `GET /api/jobs/{abJobNum}/scrap` | Scrap skids for a job |
+| `PATCH /api/jobs/{abJobNum}` | Update job status / notes / men / finish time |
 | `GET /api/coils?page&pageSize&status` | List coils (paged) |
 | `GET /api/coils/{coilAbcNum}` | One coil |
+| `PATCH /api/coils/{coilAbcNum}` | Update coil status / location / notes |
 | `GET /api/orders?page&pageSize` | List customer orders (paged) |
 | `GET /api/orders/{orderAbcNum}` | One order |
 | `GET /api/order-items?page&pageSize&alloy` | List order items (paged) |
 | `GET /api/order-items/{orderItemNum}` | One order item |
+| `GET /api/customers?page&pageSize&name` | List customers (paged) |
+| `GET /api/customers/{customerId}` | One customer |
+| `POST /api/customers` | Create a customer (server-assigned id) → 201 |
+| `PUT /api/customers/{customerId}` | Replace a customer |
+| `GET /api/sheet-skids?page&pageSize` | List finished sheet skids (paged) |
+| `GET /api/scrap-skids?page&pageSize` | List scrap skids (paged) |
 | `GET /api/test-results?page&pageSize&testType` | List mechanical test results (paged) |
 
 Collections return a paged envelope: `{ items, page, pageSize, totalCount, totalPages }`.
+
+**Write semantics.** `POST /api/customers` requires `customerName` (else 400) and
+returns 201 with a `Location` header. `PATCH` applies a partial update — omitted
+(null) fields are left unchanged (so a field cannot be cleared to null via PATCH),
+and an unknown id returns 404. The customer id is server-assigned via `MAX+1`
+inside a transaction; a production Oracle deployment should back this with a
+sequence for concurrency.
 
 ## Configuration (production / Oracle)
 

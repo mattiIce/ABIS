@@ -30,6 +30,20 @@ public static class ApiEndpoints
                 Results.Ok(await repo.GetJobCoilsAsync(abJobNum, ct)))
            .WithName("GetJobCoils").WithTags("Jobs");
 
+        api.MapGet("/jobs/{abJobNum:long}/skids", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetJobSheetSkidsAsync(abJobNum, ct)))
+           .WithName("GetJobSkids").WithTags("Jobs");
+
+        api.MapGet("/jobs/{abJobNum:long}/scrap", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetJobScrapAsync(abJobNum, ct)))
+           .WithName("GetJobScrap").WithTags("Jobs");
+
+        api.MapPatch("/jobs/{abJobNum:long}", async (long abJobNum, JobPatch body, IAbisRepository repo, CancellationToken ct) =>
+                await repo.PatchJobAsync(abJobNum, body, ct) is { } job
+                    ? Results.Ok(job)
+                    : Results.NotFound())
+           .WithName("PatchJob").WithTags("Jobs");
+
         // ---- Coils ------------------------------------------------------
         api.MapGet("/coils", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, int? status = null) =>
@@ -41,6 +55,12 @@ public static class ApiEndpoints
                     ? Results.Ok(coil)
                     : Results.NotFound())
            .WithName("GetCoil").WithTags("Coils");
+
+        api.MapPatch("/coils/{coilAbcNum:long}", async (long coilAbcNum, CoilPatch body, IAbisRepository repo, CancellationToken ct) =>
+                await repo.PatchCoilAsync(coilAbcNum, body, ct) is { } coil
+                    ? Results.Ok(coil)
+                    : Results.NotFound())
+           .WithName("PatchCoil").WithTags("Coils");
 
         // ---- Orders -----------------------------------------------------
         api.MapGet("/orders", async (IAbisRepository repo, CancellationToken ct,
@@ -72,6 +92,57 @@ public static class ApiEndpoints
                 Results.Ok(await repo.GetTestResultsAsync(page, pageSize, testType, ct)))
            .WithName("ListTestResults").WithTags("TestResults");
 
+        // ---- Customers (read + write) ----------------------------------
+        api.MapGet("/customers", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, string? name = null) =>
+                Results.Ok(await repo.GetCustomersAsync(page, pageSize, name, ct)))
+           .WithName("ListCustomers").WithTags("Customers");
+
+        api.MapGet("/customers/{customerId:long}", async (long customerId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetCustomerAsync(customerId, ct) is { } customer
+                    ? Results.Ok(customer)
+                    : Results.NotFound())
+           .WithName("GetCustomer").WithTags("Customers");
+
+        api.MapPost("/customers", async (CustomerWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateCustomerAsync(body, ct);
+                return Results.Created($"/api/customers/{created.CustomerId}", created);
+            })
+           .WithName("CreateCustomer").WithTags("Customers");
+
+        api.MapPut("/customers/{customerId:long}", async (long customerId, CustomerWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateCustomerAsync(customerId, body, ct) is { } customer
+                    ? Results.Ok(customer)
+                    : Results.NotFound();
+            })
+           .WithName("UpdateCustomer").WithTags("Customers");
+
+        // ---- Skids ------------------------------------------------------
+        api.MapGet("/sheet-skids", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25) =>
+                Results.Ok(await repo.GetSheetSkidsAsync(page, pageSize, ct)))
+           .WithName("ListSheetSkids").WithTags("Skids");
+
+        api.MapGet("/scrap-skids", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25) =>
+                Results.Ok(await repo.GetScrapSkidsAsync(page, pageSize, ct)))
+           .WithName("ListScrapSkids").WithTags("Skids");
+
         return app;
+    }
+
+    /// <summary>Returns a ProblemDetails error dictionary, or null when valid.</summary>
+    private static Dictionary<string, string[]>? Validate(CustomerWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (string.IsNullOrWhiteSpace(body.CustomerName))
+            errors["customerName"] = ["customerName is required."];
+        return errors.Count == 0 ? null : errors;
     }
 }

@@ -77,10 +77,14 @@ the B-vs-C commitment until after a measured pilot.
 - [x] Add an **automated test harness** (xUnit: repository + in-process HTTP
       smoke tests) and **CI** (`.github/workflows/ci.yml` builds/tests the API
       and runs the discovery extractors).
+- [x] **Expand read coverage**: added customers, sheet skids, and scrap skids
+      (plus `/jobs/{id}/skids` and `/jobs/{id}/scrap` relationship endpoints).
+      *Ongoing* — more entities as Phase 1's full schema lands.
+- [x] **Introduce the write surface**: customer master data (POST/PUT, server-
+      assigned id, validation, 201/400/404) and operational PATCH on jobs and
+      coils, all tested against the fixture. *Ongoing* — broaden as accepted.
 - [ ] Validate the **Oracle** data-access path against a real database (CI only
       exercises the SQLite fixture today).
-- [ ] Expand coverage to the remaining read models as Phase 1's full schema lands.
-- [ ] Add **write** endpoints (command side) once the read seam is proven.
 - [ ] Add observability/auditing parity (the legacy `opc_action_log` shows the
       kind of audit trail to preserve).
 

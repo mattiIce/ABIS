@@ -60,6 +60,56 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task List_customers_returns_seeded()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/customers");
+        Assert.True(body.GetProperty("totalCount").GetInt32() >= 2);
+    }
+
+    [Fact]
+    public async Task Get_job_skids_returns_two()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/jobs/1001/skids");
+        Assert.Equal(2, body.GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Create_customer_returns_201_and_is_retrievable()
+    {
+        var resp = await _client.PostAsJsonAsync("/api/customers", new { customerName = "DELTA EXTRUSIONS", customerShortName = "DELTA" });
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        Assert.NotNull(resp.Headers.Location);
+
+        var created = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        var id = created.GetProperty("customerId").GetInt64();
+        var fetched = await _client.GetFromJsonAsync<JsonElement>($"/api/customers/{id}");
+        Assert.Equal("DELTA EXTRUSIONS", fetched.GetProperty("customerName").GetString());
+    }
+
+    [Fact]
+    public async Task Create_customer_without_name_returns_400()
+    {
+        var resp = await _client.PostAsJsonAsync("/api/customers", new { customerShortName = "X" });
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Patch_job_updates_status()
+    {
+        var resp = await _client.PatchAsJsonAsync("/api/jobs/1002", new { jobStatus = 7 });
+        resp.EnsureSuccessStatusCode();
+        var body = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(7, body.GetProperty("jobStatus").GetInt32());
+    }
+
+    [Fact]
+    public async Task Patch_unknown_job_returns_404()
+    {
+        var resp = await _client.PatchAsJsonAsync("/api/jobs/999999", new { jobStatus = 1 });
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    [Fact]
     public async Task Swagger_document_is_served()
     {
         var resp = await _client.GetAsync("/swagger/v1/swagger.json");

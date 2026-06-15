@@ -56,6 +56,22 @@ public sealed class AbisRepository : IAbisRepository
         thickness AS Thickness, width AS Width
         """;
 
+    private const string CustomerCols = """
+        customer_id AS CustomerId, customer_name AS CustomerName, customer_short_name AS CustomerShortName,
+        enduser_name AS EnduserName, shipto_customer_zip AS ShiptoCustomerZip
+        """;
+
+    private const string SheetSkidCols = """
+        sheet_skid_num AS SheetSkidNum, ab_job_num AS AbJobNum, sheet_skid_display_num AS SheetSkidDisplayNum,
+        sheet_net_wt AS SheetNetWt, sheet_tare_wt AS SheetTareWt, skid_pieces AS SkidPieces, skid_date AS SkidDate
+        """;
+
+    private const string ScrapSkidCols = """
+        scrap_skid_num AS ScrapSkidNum, scrap_ab_job_num AS ScrapAbJobNum, scrap_alloy2 AS ScrapAlloy2,
+        scrap_temper AS ScrapTemper, scrap_type AS ScrapType, scrap_net_wt AS ScrapNetWt, scrap_tare_wt AS ScrapTareWt,
+        scrap_location AS ScrapLocation, scrap_notes AS ScrapNotes, skid_scrap_status AS SkidScrapStatus, scrap_date AS ScrapDate
+        """;
+
     private async Task<DbConnection> OpenAsync(CancellationToken ct)
     {
         var conn = _factory.Create();
@@ -157,6 +173,114 @@ public sealed class AbisRepository : IAbisRepository
         PageAsync<TestResult>(TestCols, "pst_test_result", "created_date DESC",
             testType is null ? null : "test_type = :testType",
             new { testType }, page, pageSize, ct);
+
+    public async Task<IReadOnlyList<SheetSkid>> GetJobSheetSkidsAsync(long abJobNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<SheetSkid>(new CommandDefinition(
+            $"SELECT {SheetSkidCols} FROM sheet_skid WHERE ab_job_num = :id ORDER BY sheet_skid_num",
+            new { id = abJobNum }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public Task<PagedResult<SheetSkid>> GetSheetSkidsAsync(int page, int pageSize, CancellationToken ct) =>
+        PageAsync<SheetSkid>(SheetSkidCols, "sheet_skid", "sheet_skid_num", null, new { }, page, pageSize, ct);
+
+    public async Task<IReadOnlyList<ScrapSkid>> GetJobScrapAsync(long abJobNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // scrap_ab_job_num is char(18) in the legacy schema, so match the string form.
+        var rows = await conn.QueryAsync<ScrapSkid>(new CommandDefinition(
+            $"SELECT {ScrapSkidCols} FROM scrap_skid WHERE scrap_ab_job_num = :id ORDER BY scrap_skid_num",
+            new { id = abJobNum.ToString() }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public Task<PagedResult<ScrapSkid>> GetScrapSkidsAsync(int page, int pageSize, CancellationToken ct) =>
+        PageAsync<ScrapSkid>(ScrapSkidCols, "scrap_skid", "scrap_skid_num", null, new { }, page, pageSize, ct);
+
+    public Task<PagedResult<Customer>> GetCustomersAsync(int page, int pageSize, string? name, CancellationToken ct) =>
+        PageAsync<Customer>(CustomerCols, "customer", "customer_id",
+            name is null ? null : "customer_name LIKE :name",
+            new { name = name is null ? null : $"%{name}%" }, page, pageSize, ct);
+
+    public async Task<Customer?> GetCustomerAsync(long customerId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<Customer>(new CommandDefinition(
+            $"SELECT {CustomerCols} FROM customer WHERE customer_id = :id", new { id = customerId }, cancellationToken: ct));
+    }
+
+    public async Task<Customer> CreateCustomerAsync(CustomerWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        // Portable id assignment. A production Oracle deployment should back this
+        // with a sequence for concurrency; MAX+1 within the transaction is
+        // sufficient for the dev/CI fixture and keeps a single code path.
+        var id = await conn.ExecuteScalarAsync<long>(new CommandDefinition(
+            "SELECT COALESCE(MAX(customer_id),0)+1 FROM customer", transaction: tx, cancellationToken: ct));
+
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO customer (customer_id, customer_name, customer_short_name, enduser_name, shipto_customer_zip)
+            VALUES (:id, :name, :shortName, :enduser, :zip)
+            """,
+            new { id, name = body.CustomerName, shortName = body.CustomerShortName, enduser = body.EnduserName, zip = body.ShiptoCustomerZip },
+            transaction: tx, cancellationToken: ct));
+
+        await tx.CommitAsync(ct);
+        return (await GetCustomerAsync(id, ct))!;
+    }
+
+    public async Task<Customer?> UpdateCustomerAsync(long customerId, CustomerWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE customer SET customer_name = :name, customer_short_name = :shortName,
+                   enduser_name = :enduser, shipto_customer_zip = :zip
+            WHERE customer_id = :id
+            """,
+            new { name = body.CustomerName, shortName = body.CustomerShortName, enduser = body.EnduserName, zip = body.ShiptoCustomerZip, id = customerId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetCustomerAsync(customerId, ct);
+    }
+
+    public async Task<AbJob?> PatchJobAsync(long abJobNum, JobPatch patch, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // COALESCE(:new, col) keeps the existing value when the field is omitted.
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE ab_job SET
+                job_status = COALESCE(:status, job_status),
+                job_notes = COALESCE(:notes, job_notes),
+                number_of_men_used = COALESCE(:men, number_of_men_used),
+                time_date_finished = COALESCE(:finished, time_date_finished)
+            WHERE ab_job_num = :id
+            """,
+            new { status = patch.JobStatus, notes = patch.JobNotes, men = patch.NumberOfMenUsed, finished = patch.TimeDateFinished, id = abJobNum },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetJobAsync(abJobNum, ct);
+    }
+
+    public async Task<Coil?> PatchCoilAsync(long coilAbcNum, CoilPatch patch, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE coil SET
+                coil_status = COALESCE(:status, coil_status),
+                coil_location = COALESCE(:location, coil_location),
+                coil_notes = COALESCE(:notes, coil_notes)
+            WHERE coil_abc_num = :id
+            """,
+            new { status = patch.CoilStatus, location = patch.CoilLocation, notes = patch.CoilNotes, id = coilAbcNum },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetCoilAsync(coilAbcNum, ct);
+    }
 
     /// <summary>Merge two anonymous parameter objects into one Dapper parameter bag.</summary>
     private static DynamicParameters Merge(object a, object b)
