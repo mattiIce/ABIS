@@ -49,7 +49,7 @@ and needs no external database.
 
 ```sh
 cd api
-dotnet test                                # 38 tests: repository + HTTP smoke
+dotnet test                                # 41 tests: repository + HTTP smoke
 ```
 
 ## Endpoints
@@ -96,6 +96,28 @@ returns 201 with a `Location` header. `PATCH` applies a partial update — omitt
 and an unknown id returns 404. The customer id is server-assigned via `MAX+1`
 inside a transaction; a production Oracle deployment should back this with a
 sequence for concurrency.
+
+## Authentication
+
+All `/api/*` endpoints require an **API key** in the `X-Api-Key` header; `/health`
+and Swagger stay anonymous. Endpoints only require an authenticated principal, so
+the `ApiKey` scheme can later be replaced by OAuth/OIDC without touching them.
+
+```sh
+curl -H "X-Api-Key: dev-local-key" http://localhost:5xxx/api/jobs
+```
+
+Configure via the `ApiKeys` section (keys belong in a secret store / environment,
+never in source):
+
+```sh
+export ApiKeys__Enabled="true"
+export ApiKeys__Keys__0="<a-strong-key>"
+export ApiKeys__Keys__1="<another-key>"     # multiple keys supported
+```
+
+The dev profile ships a throwaway key (`dev-local-key`). Set `ApiKeys__Enabled=false`
+only on a trusted internal network. In Swagger UI, use **Authorize** to supply the key.
 
 ## Configuration (production / Oracle)
 

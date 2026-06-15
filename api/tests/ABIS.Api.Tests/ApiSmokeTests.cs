@@ -11,8 +11,14 @@ namespace Abis.Api.Tests;
 public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
 {
     private readonly HttpClient _client;
+    private readonly ApiFactory _factory;
 
-    public ApiSmokeTests(ApiFactory factory) => _client = factory.CreateClient();
+    public ApiSmokeTests(ApiFactory factory)
+    {
+        _factory = factory;
+        _client = factory.CreateClient();
+        _client.DefaultRequestHeaders.Add("X-Api-Key", "test-key");
+    }
 
     [Fact]
     public async Task Health_is_ok()
@@ -21,6 +27,31 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
         resp.EnsureSuccessStatusCode();
         var body = await resp.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal("ok", body.GetProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task Api_request_without_key_is_401()
+    {
+        var bare = _factory.CreateClient();   // no X-Api-Key header
+        var resp = await bare.GetAsync("/api/jobs");
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Api_request_with_bad_key_is_401()
+    {
+        var bare = _factory.CreateClient();
+        bare.DefaultRequestHeaders.Add("X-Api-Key", "wrong");
+        var resp = await bare.GetAsync("/api/jobs");
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Health_is_anonymous()
+    {
+        var bare = _factory.CreateClient();   // no key
+        var resp = await bare.GetAsync("/health");
+        resp.EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -159,6 +190,8 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
             Environment.SetEnvironmentVariable("Database__Provider", "Sqlite");
             Environment.SetEnvironmentVariable("Database__ConnectionString", $"Data Source={_dbPath}");
             Environment.SetEnvironmentVariable("Database__Seed", "true");
+            Environment.SetEnvironmentVariable("ApiKeys__Enabled", "true");
+            Environment.SetEnvironmentVariable("ApiKeys__Keys__0", "test-key");
         }
 
         protected override void Dispose(bool disposing)

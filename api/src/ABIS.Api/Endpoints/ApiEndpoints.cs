@@ -12,7 +12,9 @@ public static class ApiEndpoints
         app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
            .WithTags("Meta").WithName("Health");
 
-        var api = app.MapGroup("/api");
+        // All /api endpoints require an authenticated caller (see ApiKey auth).
+        // /health and Swagger remain anonymous.
+        var api = app.MapGroup("/api").RequireAuthorization();
 
         // ---- Jobs -------------------------------------------------------
         api.MapGet("/jobs", async (IAbisRepository repo, CancellationToken ct,

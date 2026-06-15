@@ -86,6 +86,8 @@ the B-vs-C commitment until after a measured pilot.
       *Ongoing* — broaden as accepted.
 - [x] **Observability / audit parity**: `AuditMiddleware` records every mutating
       request into the legacy `opc_action_log`, exposed via `GET /api/audit-log`.
+- [x] **Authentication**: API-key auth (`X-Api-Key`) gates the `/api` surface
+      (`/health` + Swagger stay open); swappable for OAuth/OIDC later.
 - [ ] Validate the **Oracle** data-access path against a real database (CI only
       exercises the SQLite fixture today).
 
