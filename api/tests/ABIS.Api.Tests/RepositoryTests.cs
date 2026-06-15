@@ -195,6 +195,57 @@ public sealed class RepositoryTests : IDisposable
         Assert.Equal("3003", patched.CoilAlloy2);     // untouched field preserved
     }
 
+    [Fact]
+    public async Task CreateOrder_assigns_next_id_and_persists()
+    {
+        var created = await _repo.CreateOrderAsync(
+            new CustomerOrderWrite { OrigCustomerId = 4001, OrigCustomerPo = "PO-NEW", EnduserPo = "EU-NEW" }, CancellationToken.None);
+        Assert.Equal(9003, created.OrderAbcNum);   // MAX(9002) + 1
+        Assert.Equal("PO-NEW", (await _repo.GetOrderAsync(9003, CancellationToken.None))!.OrigCustomerPo);
+    }
+
+    [Fact]
+    public async Task UpdateOrder_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateOrderAsync(9001,
+            new CustomerOrderWrite { OrigCustomerId = 4001, EnduserPo = "EU-CHANGED" }, CancellationToken.None);
+        Assert.Equal("EU-CHANGED", updated!.EnduserPo);
+        Assert.Null(await _repo.UpdateOrderAsync(999999, new CustomerOrderWrite(), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CreateOrderItem_assigns_id_and_sets_created_timestamp()
+    {
+        var created = await _repo.CreateOrderItemAsync(
+            new OrderItemWrite { EnduserPartNum = "PN-NEW", Alloy2 = "6061", UnitPrice = 2.0m }, CancellationToken.None);
+        Assert.Equal(7004, created.OrderItemNum);   // MAX(7003) + 1
+        Assert.Equal("PN-NEW", created.EnduserPartNum);
+        Assert.NotNull(created.ItemCreatedDttm);     // server-assigned
+    }
+
+    [Fact]
+    public async Task UpdateOrderItem_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateOrderItemAsync(7001,
+            new OrderItemWrite { EnduserPartNum = "PN-3003-A", UnitPrice = 9.99m }, CancellationToken.None);
+        Assert.Equal(9.99m, updated!.UnitPrice);
+        Assert.Null(await _repo.UpdateOrderItemAsync(999999,
+            new OrderItemWrite { EnduserPartNum = "X" }, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task WriteAudit_then_read_returns_newest_first()
+    {
+        await _repo.WriteAuditAsync("TEST /api/thing", success: true, "HTTP 200", CancellationToken.None);
+        var log = await _repo.GetAuditLogAsync(1, 25, source: null, CancellationToken.None);
+        Assert.Equal(3, log.TotalCount);             // 2 seeded + 1 written
+        Assert.Equal("TEST /api/thing", log.Items[0].Source);   // ordered by id DESC
+        Assert.Equal(1, log.Items[0].Success);
+
+        var filtered = await _repo.GetAuditLogAsync(1, 25, source: "TEST", CancellationToken.None);
+        Assert.Single(filtered.Items);
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }

@@ -49,7 +49,7 @@ and needs no external database.
 
 ```sh
 cd api
-dotnet test                                # 30 tests: repository + HTTP smoke
+dotnet test                                # 38 tests: repository + HTTP smoke
 ```
 
 ## Endpoints
@@ -68,8 +68,12 @@ dotnet test                                # 30 tests: repository + HTTP smoke
 | `PATCH /api/coils/{coilAbcNum}` | Update coil status / location / notes |
 | `GET /api/orders?page&pageSize` | List customer orders (paged) |
 | `GET /api/orders/{orderAbcNum}` | One order |
+| `POST /api/orders` | Create an order header (server-assigned id) → 201 |
+| `PUT /api/orders/{orderAbcNum}` | Replace an order header |
 | `GET /api/order-items?page&pageSize&alloy` | List order items (paged) |
 | `GET /api/order-items/{orderItemNum}` | One order item |
+| `POST /api/order-items` | Create an order item (requires `enduserPartNum`) → 201 |
+| `PUT /api/order-items/{orderItemNum}` | Replace an order item |
 | `GET /api/customers?page&pageSize&name` | List customers (paged) |
 | `GET /api/customers/{customerId}` | One customer |
 | `POST /api/customers` | Create a customer (server-assigned id) → 201 |
@@ -77,8 +81,14 @@ dotnet test                                # 30 tests: repository + HTTP smoke
 | `GET /api/sheet-skids?page&pageSize` | List finished sheet skids (paged) |
 | `GET /api/scrap-skids?page&pageSize` | List scrap skids (paged) |
 | `GET /api/test-results?page&pageSize&testType` | List mechanical test results (paged) |
+| `GET /api/audit-log?page&pageSize&source` | List the action/audit log, newest first |
 
 Collections return a paged envelope: `{ items, page, pageSize, totalCount, totalPages }`.
+
+**Audit trail.** Every mutating request (POST/PUT/PATCH/DELETE under `/api`) is
+recorded in the legacy `opc_action_log` table by `AuditMiddleware` (source =
+`"{method} {path}"`, success = HTTP status < 400). Auditing is best-effort and
+never fails the request. Read it back via `GET /api/audit-log`.
 
 **Write semantics.** `POST /api/customers` requires `customerName` (else 400) and
 returns 201 with a `Location` header. `PATCH` applies a partial update — omitted

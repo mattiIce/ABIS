@@ -20,11 +20,16 @@ public interface IAbisRepository
     Task<Coil?> GetCoilAsync(long coilAbcNum, CancellationToken ct);
     Task<Coil?> PatchCoilAsync(long coilAbcNum, CoilPatch patch, CancellationToken ct);
 
-    // ---- Orders ---------------------------------------------------------
+    // ---- Orders (read + write) -----------------------------------------
     Task<PagedResult<CustomerOrder>> GetOrdersAsync(int page, int pageSize, CancellationToken ct);
     Task<CustomerOrder?> GetOrderAsync(long orderAbcNum, CancellationToken ct);
+    Task<CustomerOrder> CreateOrderAsync(CustomerOrderWrite body, CancellationToken ct);
+    Task<CustomerOrder?> UpdateOrderAsync(long orderAbcNum, CustomerOrderWrite body, CancellationToken ct);
+
     Task<PagedResult<OrderItem>> GetOrderItemsAsync(int page, int pageSize, string? alloy, CancellationToken ct);
     Task<OrderItem?> GetOrderItemAsync(long orderItemNum, CancellationToken ct);
+    Task<OrderItem> CreateOrderItemAsync(OrderItemWrite body, CancellationToken ct);
+    Task<OrderItem?> UpdateOrderItemAsync(long orderItemNum, OrderItemWrite body, CancellationToken ct);
 
     // ---- Customers (read + write) --------------------------------------
     Task<PagedResult<Customer>> GetCustomersAsync(int page, int pageSize, string? name, CancellationToken ct);
@@ -38,4 +43,8 @@ public interface IAbisRepository
 
     // ---- QA -------------------------------------------------------------
     Task<PagedResult<TestResult>> GetTestResultsAsync(int page, int pageSize, int? testType, CancellationToken ct);
+
+    // ---- Audit / action log --------------------------------------------
+    Task WriteAuditAsync(string source, bool success, string? notes, CancellationToken ct);
+    Task<PagedResult<AuditEntry>> GetAuditLogAsync(int page, int pageSize, string? source, CancellationToken ct);
 }

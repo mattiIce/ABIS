@@ -74,6 +74,19 @@ public static class ApiEndpoints
                     : Results.NotFound())
            .WithName("GetOrder").WithTags("Orders");
 
+        api.MapPost("/orders", async (CustomerOrderWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                var created = await repo.CreateOrderAsync(body, ct);
+                return Results.Created($"/api/orders/{created.OrderAbcNum}", created);
+            })
+           .WithName("CreateOrder").WithTags("Orders");
+
+        api.MapPut("/orders/{orderAbcNum:long}", async (long orderAbcNum, CustomerOrderWrite body, IAbisRepository repo, CancellationToken ct) =>
+                await repo.UpdateOrderAsync(orderAbcNum, body, ct) is { } order
+                    ? Results.Ok(order)
+                    : Results.NotFound())
+           .WithName("UpdateOrder").WithTags("Orders");
+
         // ---- Order items ------------------------------------------------
         api.MapGet("/order-items", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? alloy = null) =>
@@ -85,6 +98,25 @@ public static class ApiEndpoints
                     ? Results.Ok(item)
                     : Results.NotFound())
            .WithName("GetOrderItem").WithTags("OrderItems");
+
+        api.MapPost("/order-items", async (OrderItemWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateOrderItemAsync(body, ct);
+                return Results.Created($"/api/order-items/{created.OrderItemNum}", created);
+            })
+           .WithName("CreateOrderItem").WithTags("OrderItems");
+
+        api.MapPut("/order-items/{orderItemNum:long}", async (long orderItemNum, OrderItemWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateOrderItemAsync(orderItemNum, body, ct) is { } item
+                    ? Results.Ok(item)
+                    : Results.NotFound();
+            })
+           .WithName("UpdateOrderItem").WithTags("OrderItems");
 
         // ---- Test results ----------------------------------------------
         api.MapGet("/test-results", async (IAbisRepository repo, CancellationToken ct,
@@ -134,6 +166,12 @@ public static class ApiEndpoints
                 Results.Ok(await repo.GetScrapSkidsAsync(page, pageSize, ct)))
            .WithName("ListScrapSkids").WithTags("Skids");
 
+        // ---- Audit / action log ----------------------------------------
+        api.MapGet("/audit-log", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, string? source = null) =>
+                Results.Ok(await repo.GetAuditLogAsync(page, pageSize, source, ct)))
+           .WithName("ListAuditLog").WithTags("Audit");
+
         return app;
     }
 
@@ -143,6 +181,14 @@ public static class ApiEndpoints
         var errors = new Dictionary<string, string[]>();
         if (string.IsNullOrWhiteSpace(body.CustomerName))
             errors["customerName"] = ["customerName is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(OrderItemWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (string.IsNullOrWhiteSpace(body.EnduserPartNum))
+            errors["enduserPartNum"] = ["enduserPartNum is required."];
         return errors.Count == 0 ? null : errors;
     }
 }

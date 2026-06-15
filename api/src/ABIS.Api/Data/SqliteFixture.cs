@@ -27,6 +27,7 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS customer;
             DROP TABLE IF EXISTS sheet_skid;
             DROP TABLE IF EXISTS scrap_skid;
+            DROP TABLE IF EXISTS opc_action_log;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
@@ -73,6 +74,9 @@ public static class SqliteFixture
                 scrap_skid_num INTEGER PRIMARY KEY, scrap_ab_job_num TEXT, scrap_alloy2 TEXT, scrap_temper TEXT,
                 scrap_type INTEGER, scrap_net_wt REAL, scrap_tare_wt REAL, scrap_location TEXT,
                 scrap_notes TEXT, skid_scrap_status INTEGER, scrap_date TEXT);
+
+            CREATE TABLE opc_action_log (
+                opc_log_id INTEGER PRIMARY KEY, time_stamp TEXT, source TEXT, success INTEGER, notes TEXT);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -186,6 +190,16 @@ public static class SqliteFixture
             {
                 new { ScrapSkidNum = 8001L, ScrapAbJobNum = "1001", ScrapAlloy2 = "3003", ScrapTemper = "H14", ScrapType = (int?)1, ScrapNetWt = 120m, ScrapTareWt = 20m, ScrapLocation = "SCR-A", ScrapNotes = "", SkidScrapStatus = (int?)1, ScrapDate = (DateTime?)d.AddHours(6) },
                 new { ScrapSkidNum = 8002L, ScrapAbJobNum = "1003", ScrapAlloy2 = "5052", ScrapTemper = "H32", ScrapType = (int?)2, ScrapNetWt = 90m, ScrapTareWt = 20m, ScrapLocation = "SCR-B", ScrapNotes = "", SkidScrapStatus = (int?)1, ScrapDate = (DateTime?)d.AddDays(3) }
+            });
+
+        conn.Execute("""
+            INSERT INTO opc_action_log (opc_log_id, time_stamp, source, success, notes)
+            VALUES (:OpcLogId, :TimeStamp, :Source, :Success, :Notes)
+            """,
+            new[]
+            {
+                new { OpcLogId = 1L, TimeStamp = (DateTime?)d, Source = "SEED", Success = (int?)1, Notes = "fixture seed" },
+                new { OpcLogId = 2L, TimeStamp = (DateTime?)d.AddMinutes(5), Source = "SEED", Success = (int?)1, Notes = "fixture seed 2" }
             });
     }
 }

@@ -1,5 +1,6 @@
 using Abis.Api.Data;
 using Abis.Api.Endpoints;
+using Abis.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,9 @@ if (dbOptions.Seed && dbOptions.Dialect == SqlDialect.Sqlite)
     SqliteFixture.EnsureCreatedAndSeeded(dbOptions.ConnectionString);
     app.Logger.LogInformation("Seeded SQLite fixture at {ConnectionString}", dbOptions.ConnectionString);
 }
+
+// Outermost: observe the final status (incl. exception-handler output) and audit it.
+app.UseMiddleware<AuditMiddleware>();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();

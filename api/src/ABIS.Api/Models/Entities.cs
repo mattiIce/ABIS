@@ -150,3 +150,14 @@ public sealed class ScrapSkid
     public int? SkidScrapStatus { get; set; }
     public DateTime? ScrapDate { get; set; }
 }
+
+/// <summary>An action-log / audit entry (table <c>opc_action_log</c>). The API
+/// reuses this legacy table to record every mutating request.</summary>
+public sealed class AuditEntry
+{
+    public long OpcLogId { get; set; }
+    public DateTime? TimeStamp { get; set; }
+    public string? Source { get; set; }
+    public int? Success { get; set; }
+    public string? Notes { get; set; }
+}

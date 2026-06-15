@@ -110,6 +110,33 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Create_order_returns_201()
+    {
+        var resp = await _client.PostAsJsonAsync("/api/orders", new { origCustomerId = 4001, origCustomerPo = "PO-HTTP" });
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        Assert.NotNull(resp.Headers.Location);
+    }
+
+    [Fact]
+    public async Task Create_order_item_without_part_returns_400()
+    {
+        var resp = await _client.PostAsJsonAsync("/api/order-items", new { alloy2 = "3003" });
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Mutating_requests_are_audited()
+    {
+        // A write...
+        await _client.PostAsJsonAsync("/api/customers", new { customerName = "AUDITED CO" });
+        // ...produces an audit-log entry for that route.
+        var log = await _client.GetFromJsonAsync<JsonElement>("/api/audit-log?source=customers");
+        Assert.True(log.GetProperty("totalCount").GetInt32() >= 1);
+        var first = log.GetProperty("items")[0];
+        Assert.Contains("/api/customers", first.GetProperty("source").GetString());
+    }
+
+    [Fact]
     public async Task Swagger_document_is_served()
     {
         var resp = await _client.GetAsync("/swagger/v1/swagger.json");

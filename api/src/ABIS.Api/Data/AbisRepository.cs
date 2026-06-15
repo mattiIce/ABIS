@@ -72,6 +72,10 @@ public sealed class AbisRepository : IAbisRepository
         scrap_location AS ScrapLocation, scrap_notes AS ScrapNotes, skid_scrap_status AS SkidScrapStatus, scrap_date AS ScrapDate
         """;
 
+    private const string AuditCols = """
+        opc_log_id AS OpcLogId, time_stamp AS TimeStamp, source AS Source, success AS Success, notes AS Notes
+        """;
+
     private async Task<DbConnection> OpenAsync(CancellationToken ct)
     {
         var conn = _factory.Create();
@@ -216,11 +220,7 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
 
-        // Portable id assignment. A production Oracle deployment should back this
-        // with a sequence for concurrency; MAX+1 within the transaction is
-        // sufficient for the dev/CI fixture and keeps a single code path.
-        var id = await conn.ExecuteScalarAsync<long>(new CommandDefinition(
-            "SELECT COALESCE(MAX(customer_id),0)+1 FROM customer", transaction: tx, cancellationToken: ct));
+        var id = await NextIdAsync(conn, tx, "customer", "customer_id", ct);
 
         await conn.ExecuteAsync(new CommandDefinition(
             """
@@ -281,6 +281,109 @@ public sealed class AbisRepository : IAbisRepository
             cancellationToken: ct));
         return n == 0 ? null : await GetCoilAsync(coilAbcNum, ct);
     }
+
+    public async Task<CustomerOrder> CreateOrderAsync(CustomerOrderWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "customer_order", "order_abc_num", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO customer_order (order_abc_num, orig_customer_id, orig_customer_po, enduser_po, scrap_handing_type)
+            VALUES (:id, :cust, :po, :epo, :scrap)
+            """,
+            new { id, cust = body.OrigCustomerId, po = body.OrigCustomerPo, epo = body.EnduserPo, scrap = body.ScrapHandingType },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetOrderAsync(id, ct))!;
+    }
+
+    public async Task<CustomerOrder?> UpdateOrderAsync(long orderAbcNum, CustomerOrderWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE customer_order SET orig_customer_id = :cust, orig_customer_po = :po,
+                   enduser_po = :epo, scrap_handing_type = :scrap
+            WHERE order_abc_num = :id
+            """,
+            new { cust = body.OrigCustomerId, po = body.OrigCustomerPo, epo = body.EnduserPo, scrap = body.ScrapHandingType, id = orderAbcNum },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetOrderAsync(orderAbcNum, ct);
+    }
+
+    public async Task<OrderItem> CreateOrderItemAsync(OrderItemWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "order_item", "order_item_num", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO order_item (order_item_num, enduser_part_num, alloy2, temper, gauge, gauge_p, gauge_m,
+                surface, flatness, sheet_type, material_end_use, order_item_desc, pieces_skid,
+                theoretical_unit_wt, unit_price, item_created_dttm)
+            VALUES (:id, :part, :alloy, :temper, :gauge, :gp, :gm, :surface, :flatness, :sheet, :enduse,
+                :desc, :pieces, :tuw, :price, :created)
+            """,
+            new
+            {
+                id, part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
+                gp = body.GaugeP, gm = body.GaugeM, surface = body.Surface, flatness = body.Flatness,
+                sheet = body.SheetType, enduse = body.MaterialEndUse, desc = body.OrderItemDesc,
+                pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice,
+                created = (DateTime?)DateTime.UtcNow
+            },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetOrderItemAsync(id, ct))!;
+    }
+
+    public async Task<OrderItem?> UpdateOrderItemAsync(long orderItemNum, OrderItemWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE order_item SET enduser_part_num = :part, alloy2 = :alloy, temper = :temper, gauge = :gauge,
+                gauge_p = :gp, gauge_m = :gm, surface = :surface, flatness = :flatness, sheet_type = :sheet,
+                material_end_use = :enduse, order_item_desc = :desc, pieces_skid = :pieces,
+                theoretical_unit_wt = :tuw, unit_price = :price
+            WHERE order_item_num = :id
+            """,
+            new
+            {
+                part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
+                gp = body.GaugeP, gm = body.GaugeM, surface = body.Surface, flatness = body.Flatness,
+                sheet = body.SheetType, enduse = body.MaterialEndUse, desc = body.OrderItemDesc,
+                pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice, id = orderItemNum
+            },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetOrderItemAsync(orderItemNum, ct);
+    }
+
+    public async Task WriteAuditAsync(string source, bool success, string? notes, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // INSERT...SELECT (portable to Oracle, which disallows subqueries in VALUES)
+        // assigns the next id atomically. Production should use a sequence.
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO opc_action_log (opc_log_id, time_stamp, source, success, notes)
+            SELECT COALESCE(MAX(opc_log_id), 0) + 1, :ts, :source, :success, :notes FROM opc_action_log
+            """,
+            new { ts = (DateTime?)DateTime.UtcNow, source, success = success ? 1 : 0, notes },
+            cancellationToken: ct));
+    }
+
+    public Task<PagedResult<AuditEntry>> GetAuditLogAsync(int page, int pageSize, string? source, CancellationToken ct) =>
+        PageAsync<AuditEntry>(AuditCols, "opc_action_log", "opc_log_id DESC",
+            source is null ? null : "source LIKE :source",
+            new { source = source is null ? null : $"%{source}%" }, page, pageSize, ct);
+
+    /// <summary>Next id via MAX+1, run inside the caller's transaction. Table/column
+    /// are internal constants (not user input). Production Oracle should use a sequence.</summary>
+    private static Task<long> NextIdAsync(DbConnection conn, DbTransaction tx, string table, string idColumn, CancellationToken ct) =>
+        conn.ExecuteScalarAsync<long>(new CommandDefinition(
+            $"SELECT COALESCE(MAX({idColumn}), 0) + 1 FROM {table}", transaction: tx, cancellationToken: ct));
 
     /// <summary>Merge two anonymous parameter objects into one Dapper parameter bag.</summary>
     private static DynamicParameters Merge(object a, object b)
