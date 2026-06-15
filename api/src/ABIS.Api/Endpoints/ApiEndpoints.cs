@@ -15,7 +15,8 @@ public static class ApiEndpoints
             version = typeof(ApiEndpoints).Assembly.GetName().Version?.ToString() ?? "1.0.0",
             environment = env.EnvironmentName,
             docs = "/swagger",
-            health = "/health"
+            health = "/health",
+            ui = "/ui/index.html"
         })).WithTags("Meta").WithName("Root");
 
         app.MapGet("/health", () => Results.Ok(new { status = "ok" }))

@@ -63,6 +63,15 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Order_entry_demo_page_is_served()
+    {
+        var bare = _factory.CreateClient();   // static files are anonymous
+        var resp = await bare.GetAsync("/ui/index.html");
+        resp.EnsureSuccessStatusCode();
+        Assert.Contains("ABIS Order Entry", await resp.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task List_jobs_returns_paged_envelope()
     {
         var body = await _client.GetFromJsonAsync<JsonElement>("/api/jobs");

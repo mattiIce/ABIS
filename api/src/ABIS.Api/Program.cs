@@ -79,6 +79,10 @@ app.UseStatusCodePages();
 
 app.UseCors("Default");
 
+// Serve the static order-entry demo (wwwroot/ui/) — anonymous; its data calls
+// still carry the API key.
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

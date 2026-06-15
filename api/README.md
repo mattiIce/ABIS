@@ -38,18 +38,28 @@ Requires the .NET 8 SDK.
 ```sh
 cd api
 dotnet run --project src/ABIS.Api          # Development profile: seeds SQLite
-# browse http://localhost:5xxx/swagger
+# browse http://localhost:5xxx/swagger          (API explorer)
+# browse http://localhost:5xxx/ui/index.html    (order-entry demo UI)
 ```
 
 The Development profile (`appsettings.Development.json`) uses
 `Provider=Sqlite`, `Seed=true`, so the API comes up populated with sample data
 and needs no external database.
 
+### Order-entry demo UI
+
+`wwwroot/ui/index.html` is a dependency-free (vanilla JS, no build step) page
+that exercises the order-entry flow end-to-end — search/filter orders, view an
+order's header + customer + lines, and save a new order with line items. It
+serves as a **Path C greenfield reference** (see
+[`../docs/PHASE3_PILOT_PLAN.md`](../docs/PHASE3_PILOT_PLAN.md)) and a manual
+test harness. Paste the dev API key (`dev-local-key`) into the header field.
+
 ## Test
 
 ```sh
 cd api
-dotnet test                                # 58 tests: repository + HTTP smoke
+dotnet test                                # 59 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).

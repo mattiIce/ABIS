@@ -93,6 +93,8 @@ Even without the PB IDE / DB, work that advances Phase 3 and is doable here:
   model (`GET /api/orders/{id}/full` = header + customer + items), a
   transactional save (`POST /api/orders/with-items`), and dropdown reference
   data (`GET /api/lookups/alloys`). The greenfield UI pilot can start against
-  these the moment DB access exists.
+  these the moment DB access exists. A dependency-free **demo UI**
+  (`api/src/ABIS.Api/wwwroot/ui/index.html`) already exercises the full flow
+  end-to-end as a Path C reference (no framework lock-in).
 - [ ] Flesh out the data model ([`DATA_MODEL.md`](DATA_MODEL.md)) for the
   candidate modules from additional DataWindow exports.
