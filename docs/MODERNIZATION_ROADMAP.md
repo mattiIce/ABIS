@@ -21,8 +21,10 @@ ERP/MES). It is grounded in the analysis in
 
 - ✅ The app was **migrated onto a current, supported Appeon PowerBuilder**
   (Aug 2025) — see `lion_mig.log`. The end-of-life risk is already addressed.
-- ✅ **Discovery started** (this effort): reproducible extractors, a partial
-  data model, an object inventory, and this roadmap.
+- ✅ **Discovery done** (this effort): reproducible extractors, a partial data
+  model, an object inventory, and this roadmap.
+- ✅ **Phase 2 seam started**: a read-first ASP.NET Core API over the core
+  entities, with tests and CI — see [`../api/`](../api/README.md).
 - ⚠️ **Not buildable as committed**: 7 PFE/PFD libraries referenced by the
   target are missing from the repo (see `ARCHITECTURE.md` §build-readiness).
 - ❌ **No API / service tier.** The client talks straight to the DB; there is no
@@ -66,13 +68,19 @@ the B-vs-C commitment until after a measured pilot.
 - [ ] Catalog all external integrations precisely (every `WSC32`/Win32 call,
       every OPC tag, every EDI transaction set).
 
-### Phase 2 — Build the seam (the missing API tier)
-- [ ] Stand up a **REST/GraphQL API** over the existing database (read-first),
-      starting with the core entities (`ab_job`, `coil`, `customer_order`/
-      `order_item`, test results). This is the integration point everything else
-      hangs off of.
-- [ ] Add an **automated test harness** and **CI** (lint/build/test) — the
-      `session-start-hook` skill can wire CI for web sessions.
+### Phase 2 — Build the seam (the missing API tier)  *(in progress)*
+- [x] Stand up a **REST API** over the existing database (read-first), starting
+      with the core entities (`ab_job`, `coil`, `customer_order`/`order_item`,
+      test results). This is the integration point everything else hangs off of.
+      → see [`../api/`](../api/README.md): ASP.NET Core 8 + Dapper, Oracle in
+      production, a seeded SQLite fixture for dev/CI.
+- [x] Add an **automated test harness** (xUnit: repository + in-process HTTP
+      smoke tests) and **CI** (`.github/workflows/ci.yml` builds/tests the API
+      and runs the discovery extractors).
+- [ ] Validate the **Oracle** data-access path against a real database (CI only
+      exercises the SQLite fixture today).
+- [ ] Expand coverage to the remaining read models as Phase 1's full schema lands.
+- [ ] Add **write** endpoints (command side) once the read seam is proven.
 - [ ] Add observability/auditing parity (the legacy `opc_action_log` shows the
       kind of audit trail to preserve).
 

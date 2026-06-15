@@ -1,0 +1,16 @@
+# .NET build output
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+*.user
+
+# Local dev SQLite fixtures (the API seeds these at runtime)
+*.db
+*.db-shm
+*.db-wal
+
+# IDE / OS cruft
+.vs/
+.idea/
+.vscode/
+.DS_Store

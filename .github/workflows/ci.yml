@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, "claude/**" ]
+  pull_request:
+
+jobs:
+  api:
+    name: API build & test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore
+        run: dotnet restore ABIS.Api.sln
+      - name: Build
+        run: dotnet build ABIS.Api.sln -c Release --no-restore
+      - name: Test
+        run: dotnet test ABIS.Api.sln -c Release --no-build --verbosity normal
+
+  analysis:
+    name: Discovery extractors
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run schema extractor
+        run: python3 tools/extract_schema.py .
+      - name: Run inventory extractor
+        run: python3 tools/extract_inventory.py .

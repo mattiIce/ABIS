@@ -8,10 +8,12 @@ certification, skid/scrap handling, warehouse, shipping/EDI, and accounting,
 plus direct integration with plant-floor hardware (scales/gauges over serial and
 PLCs over OPC).
 
-> **This repository is undergoing a modernization effort.** The first phase —
-> **discovery & roadmap** — is captured under [`docs/`](docs/). No application
-> behavior has been changed; the work so far is analysis, reproducible tooling,
-> and planning.
+> **This repository is undergoing a modernization effort.**
+> - **Phase 1 — discovery & roadmap** is captured under [`docs/`](docs/)
+>   (analysis, reproducible tooling, planning; no legacy behavior changed).
+> - **Phase 2 — the API seam** is under [`api/`](api/README.md): a read-first
+>   ASP.NET Core 8 REST API over the core entities (Oracle in production; a
+>   seeded SQLite fixture for local dev / CI).
 
 ## Documentation
 
