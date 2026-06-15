@@ -49,7 +49,7 @@ and needs no external database.
 
 ```sh
 cd api
-dotnet test                                # 49 tests: repository + HTTP smoke
+dotnet test                                # 58 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -86,9 +86,12 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/coils/{coilAbcNum}` | One coil |
 | `POST /api/coils` | Create a coil on receipt (requires `coilAlloy2`) → 201 |
 | `PATCH /api/coils/{coilAbcNum}` | Update coil status / location / notes |
-| `GET /api/orders?page&pageSize` | List customer orders (paged) |
-| `GET /api/orders/{orderAbcNum}` | One order |
+| `GET /api/orders?page&pageSize&customerId&po` | List customer orders (paged, filterable) |
+| `GET /api/orders/{orderAbcNum}` | One order header |
+| `GET /api/orders/{orderAbcNum}/items` | Line items for an order |
+| `GET /api/orders/{orderAbcNum}/full` | Order header + customer + items (order-entry read model) |
 | `POST /api/orders` | Create an order header (server-assigned id) → 201 |
+| `POST /api/orders/with-items` | Create an order + its line items in one transaction → 201 |
 | `PUT /api/orders/{orderAbcNum}` | Replace an order header |
 | `GET /api/order-items?page&pageSize&alloy` | List order items (paged) |
 | `GET /api/order-items/{orderItemNum}` | One order item |
@@ -105,6 +108,7 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/scrap-skids/{scrapSkidNum}` | One scrap skid |
 | `POST /api/scrap-skids` | Create a scrap skid (requires `scrapAbJobNum`) → 201 |
 | `GET /api/test-results?page&pageSize&testType` | List mechanical test results (paged) |
+| `GET /api/lookups/alloys` | Distinct alloys (dropdown reference data) |
 | `GET /api/audit-log?page&pageSize&source` | List the action/audit log, newest first |
 
 Collections return a paged envelope: `{ items, page, pageSize, totalCount, totalPages }`.
@@ -163,4 +167,6 @@ factory). The Oracle path is wired and compiles, but is **not exercised by CI**
 relying on it. The model property names and table shapes mirror the *partial*,
 recovered data model; reconcile against the real schema (Phase 1) as it is
 completed. `order_item.order_item_num` is treated as the PK by inference from
-`ab_job.order_item_num`.
+`ab_job.order_item_num`, and `order_item.order_abc_num` is an **inferred FK** to
+`customer_order` (order entry requires an order↔item link) — both pending
+confirmation against the real schema.

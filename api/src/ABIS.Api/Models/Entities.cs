@@ -79,6 +79,10 @@ public sealed class CustomerOrder
 public sealed class OrderItem
 {
     public long OrderItemNum { get; set; }
+    /// <summary>Owning order. INFERRED FK (order entry requires an order↔item link;
+    /// ab_job carries both order_abc_num and order_item_num). Confirm against the
+    /// real schema in Phase 1.</summary>
+    public long? OrderAbcNum { get; set; }
     public string? EnduserPartNum { get; set; }
     public string? Alloy2 { get; set; }
     public string? Temper { get; set; }
@@ -149,6 +153,15 @@ public sealed class ScrapSkid
     public string? ScrapNotes { get; set; }
     public int? SkidScrapStatus { get; set; }
     public DateTime? ScrapDate { get; set; }
+}
+
+/// <summary>Composite read model for an order-entry screen: the order header,
+/// its (resolved) customer, and its line items.</summary>
+public sealed class OrderDetail
+{
+    public required CustomerOrder Order { get; init; }
+    public Customer? Customer { get; init; }
+    public required IReadOnlyList<OrderItem> Items { get; init; }
 }
 
 /// <summary>An action-log / audit entry (table <c>opc_action_log</c>). The API

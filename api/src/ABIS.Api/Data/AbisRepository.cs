@@ -43,9 +43,9 @@ public sealed class AbisRepository : IAbisRepository
         """;
 
     private const string OrderItemCols = """
-        order_item_num AS OrderItemNum, enduser_part_num AS EnduserPartNum, alloy2 AS Alloy2,
-        temper AS Temper, gauge AS Gauge, gauge_p AS GaugeP, gauge_m AS GaugeM, surface AS Surface,
-        flatness AS Flatness, sheet_type AS SheetType, material_end_use AS MaterialEndUse,
+        order_item_num AS OrderItemNum, order_abc_num AS OrderAbcNum, enduser_part_num AS EnduserPartNum,
+        alloy2 AS Alloy2, temper AS Temper, gauge AS Gauge, gauge_p AS GaugeP, gauge_m AS GaugeM,
+        surface AS Surface, flatness AS Flatness, sheet_type AS SheetType, material_end_use AS MaterialEndUse,
         order_item_desc AS OrderItemDesc, pieces_skid AS PiecesSkid,
         theoretical_unit_wt AS TheoreticalUnitWt, unit_price AS UnitPrice, item_created_dttm AS ItemCreatedDttm
         """;
@@ -150,9 +150,17 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {CoilCols} FROM coil WHERE coil_abc_num = :id", new { id = coilAbcNum }, cancellationToken: ct));
     }
 
-    public Task<PagedResult<CustomerOrder>> GetOrdersAsync(int page, int pageSize, CancellationToken ct) =>
-        PageAsync<CustomerOrder>(OrderCols, "customer_order", "order_abc_num", null,
-            new { }, page, pageSize, ct);
+    public Task<PagedResult<CustomerOrder>> GetOrdersAsync(int page, int pageSize, long? customerId, string? po, CancellationToken ct)
+    {
+        // Build only the conditions/params actually used, so the count query
+        // carries no unreferenced parameters (keeps Oracle positional binding happy).
+        var p = new DynamicParameters();
+        var conditions = new List<string>();
+        if (customerId is not null) { conditions.Add("orig_customer_id = :customerId"); p.Add("customerId", customerId); }
+        if (po is not null) { conditions.Add("orig_customer_po LIKE :po"); p.Add("po", $"%{po}%"); }
+        var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
+        return PageAsync<CustomerOrder>(OrderCols, "customer_order", "order_abc_num", where, p, page, pageSize, ct);
+    }
 
     public async Task<CustomerOrder?> GetOrderAsync(long orderAbcNum, CancellationToken ct)
     {
@@ -319,15 +327,15 @@ public sealed class AbisRepository : IAbisRepository
         var id = await NextIdAsync(conn, tx, "order_item", "order_item_num", ct);
         await conn.ExecuteAsync(new CommandDefinition(
             """
-            INSERT INTO order_item (order_item_num, enduser_part_num, alloy2, temper, gauge, gauge_p, gauge_m,
+            INSERT INTO order_item (order_item_num, order_abc_num, enduser_part_num, alloy2, temper, gauge, gauge_p, gauge_m,
                 surface, flatness, sheet_type, material_end_use, order_item_desc, pieces_skid,
                 theoretical_unit_wt, unit_price, item_created_dttm)
-            VALUES (:id, :part, :alloy, :temper, :gauge, :gp, :gm, :surface, :flatness, :sheet, :enduse,
+            VALUES (:id, :ord, :part, :alloy, :temper, :gauge, :gp, :gm, :surface, :flatness, :sheet, :enduse,
                 :desc, :pieces, :tuw, :price, :created)
             """,
             new
             {
-                id, part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
+                id, ord = body.OrderAbcNum, part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
                 gp = body.GaugeP, gm = body.GaugeM, surface = body.Surface, flatness = body.Flatness,
                 sheet = body.SheetType, enduse = body.MaterialEndUse, desc = body.OrderItemDesc,
                 pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice,
@@ -343,15 +351,15 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
-            UPDATE order_item SET enduser_part_num = :part, alloy2 = :alloy, temper = :temper, gauge = :gauge,
-                gauge_p = :gp, gauge_m = :gm, surface = :surface, flatness = :flatness, sheet_type = :sheet,
-                material_end_use = :enduse, order_item_desc = :desc, pieces_skid = :pieces,
+            UPDATE order_item SET order_abc_num = :ord, enduser_part_num = :part, alloy2 = :alloy, temper = :temper,
+                gauge = :gauge, gauge_p = :gp, gauge_m = :gm, surface = :surface, flatness = :flatness,
+                sheet_type = :sheet, material_end_use = :enduse, order_item_desc = :desc, pieces_skid = :pieces,
                 theoretical_unit_wt = :tuw, unit_price = :price
             WHERE order_item_num = :id
             """,
             new
             {
-                part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
+                ord = body.OrderAbcNum, part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
                 gp = body.GaugeP, gm = body.GaugeM, surface = body.Surface, flatness = body.Flatness,
                 sheet = body.SheetType, enduse = body.MaterialEndUse, desc = body.OrderItemDesc,
                 pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice, id = orderItemNum
@@ -482,6 +490,73 @@ public sealed class AbisRepository : IAbisRepository
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
         return (await GetScrapSkidAsync(id, ct))!;
+    }
+
+    public async Task<IReadOnlyList<OrderItem>> GetOrderItemsByOrderAsync(long orderAbcNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<OrderItem>(new CommandDefinition(
+            $"SELECT {OrderItemCols} FROM order_item WHERE order_abc_num = :id ORDER BY order_item_num",
+            new { id = orderAbcNum }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<OrderDetail?> GetOrderDetailAsync(long orderAbcNum, CancellationToken ct)
+    {
+        var order = await GetOrderAsync(orderAbcNum, ct);
+        if (order is null) return null;
+        var customer = order.OrigCustomerId is null ? null : await GetCustomerAsync(order.OrigCustomerId.Value, ct);
+        var items = await GetOrderItemsByOrderAsync(orderAbcNum, ct);
+        return new OrderDetail { Order = order, Customer = customer, Items = items };
+    }
+
+    public async Task<OrderDetail> CreateOrderWithItemsAsync(OrderCreateWithItems body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        var orderId = await NextIdAsync(conn, tx, "customer_order", "order_abc_num", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO customer_order (order_abc_num, orig_customer_id, orig_customer_po, enduser_po, scrap_handing_type)
+            VALUES (:id, :cust, :po, :epo, :scrap)
+            """,
+            new { id = orderId, cust = body.Order.OrigCustomerId, po = body.Order.OrigCustomerPo, epo = body.Order.EnduserPo, scrap = body.Order.ScrapHandingType },
+            transaction: tx, cancellationToken: ct));
+
+        foreach (var item in body.Items)
+        {
+            var itemId = await NextIdAsync(conn, tx, "order_item", "order_item_num", ct);
+            await conn.ExecuteAsync(new CommandDefinition(
+                """
+                INSERT INTO order_item (order_item_num, order_abc_num, enduser_part_num, alloy2, temper, gauge,
+                    gauge_p, gauge_m, surface, flatness, sheet_type, material_end_use, order_item_desc,
+                    pieces_skid, theoretical_unit_wt, unit_price, item_created_dttm)
+                VALUES (:id, :ord, :part, :alloy, :temper, :gauge, :gp, :gm, :surface, :flatness, :sheet,
+                    :enduse, :desc, :pieces, :tuw, :price, :created)
+                """,
+                new
+                {
+                    id = itemId, ord = orderId, part = item.EnduserPartNum, alloy = item.Alloy2, temper = item.Temper,
+                    gauge = item.Gauge, gp = item.GaugeP, gm = item.GaugeM, surface = item.Surface, flatness = item.Flatness,
+                    sheet = item.SheetType, enduse = item.MaterialEndUse, desc = item.OrderItemDesc,
+                    pieces = item.PiecesSkid, tuw = item.TheoreticalUnitWt, price = item.UnitPrice,
+                    created = (DateTime?)DateTime.UtcNow
+                },
+                transaction: tx, cancellationToken: ct));
+        }
+
+        await tx.CommitAsync(ct);
+        return (await GetOrderDetailAsync(orderId, ct))!;
+    }
+
+    public async Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<string>(new CommandDefinition(
+            "SELECT DISTINCT alloy2 FROM order_item WHERE alloy2 IS NOT NULL ORDER BY alloy2",
+            cancellationToken: ct));
+        return rows.AsList();
     }
 
     /// <summary>Next id via MAX+1, run inside the caller's transaction. Table/column

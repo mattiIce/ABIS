@@ -45,6 +45,9 @@ public sealed class CustomerOrderWrite
 /// server-side on create.</summary>
 public sealed class OrderItemWrite
 {
+    /// <summary>Owning order (inferred FK). Optional for a standalone item; set by
+    /// the server when creating an order with embedded items.</summary>
+    public long? OrderAbcNum { get; set; }
     public string? EnduserPartNum { get; set; }
     public string? Alloy2 { get; set; }
     public string? Temper { get; set; }
@@ -59,6 +62,15 @@ public sealed class OrderItemWrite
     public int? PiecesSkid { get; set; }
     public decimal? TheoreticalUnitWt { get; set; }
     public decimal? UnitPrice { get; set; }
+}
+
+/// <summary>Create an order header together with its line items in one
+/// transaction (the order-entry "save" operation). The server assigns the order
+/// id and stamps it onto each item.</summary>
+public sealed class OrderCreateWithItems
+{
+    public required CustomerOrderWrite Order { get; set; }
+    public List<OrderItemWrite> Items { get; set; } = [];
 }
 
 /// <summary>Create a production job (table <c>ab_job</c>). <c>create_date</c> is

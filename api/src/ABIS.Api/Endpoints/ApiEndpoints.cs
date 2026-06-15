@@ -91,8 +91,8 @@ public static class ApiEndpoints
 
         // ---- Orders -----------------------------------------------------
         api.MapGet("/orders", async (IAbisRepository repo, CancellationToken ct,
-                int page = 1, int pageSize = 25) =>
-                Results.Ok(await repo.GetOrdersAsync(page, pageSize, ct)))
+                int page = 1, int pageSize = 25, long? customerId = null, string? po = null) =>
+                Results.Ok(await repo.GetOrdersAsync(page, pageSize, customerId, po, ct)))
            .WithName("ListOrders").WithTags("Orders");
 
         api.MapGet("/orders/{orderAbcNum:long}", async (long orderAbcNum, IAbisRepository repo, CancellationToken ct) =>
@@ -101,12 +101,33 @@ public static class ApiEndpoints
                     : Results.NotFound())
            .WithName("GetOrder").WithTags("Orders");
 
+        api.MapGet("/orders/{orderAbcNum:long}/items", async (long orderAbcNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetOrderItemsByOrderAsync(orderAbcNum, ct)))
+           .WithName("GetOrderItemsForOrder").WithTags("Orders");
+
+        // Order-entry screen read model: header + customer + line items.
+        api.MapGet("/orders/{orderAbcNum:long}/full", async (long orderAbcNum, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetOrderDetailAsync(orderAbcNum, ct) is { } detail
+                    ? Results.Ok(detail)
+                    : Results.NotFound())
+           .WithName("GetOrderDetail").WithTags("Orders");
+
         api.MapPost("/orders", async (CustomerOrderWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
                 var created = await repo.CreateOrderAsync(body, ct);
                 return Results.Created($"/api/orders/{created.OrderAbcNum}", created);
             })
            .WithName("CreateOrder").WithTags("Orders");
+
+        // Order-entry "save": create the header and its line items in one transaction.
+        api.MapPost("/orders/with-items", async (OrderCreateWithItems body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateOrderWithItemsAsync(body, ct);
+                return Results.Created($"/api/orders/{created.Order.OrderAbcNum}", created);
+            })
+           .WithName("CreateOrderWithItems").WithTags("Orders");
 
         api.MapPut("/orders/{orderAbcNum:long}", async (long orderAbcNum, CustomerOrderWrite body, IAbisRepository repo, CancellationToken ct) =>
                 await repo.UpdateOrderAsync(orderAbcNum, body, ct) is { } order
@@ -223,6 +244,11 @@ public static class ApiEndpoints
             })
            .WithName("CreateScrapSkid").WithTags("Skids");
 
+        // ---- Lookups (reference data for data-entry screens) -----------
+        api.MapGet("/lookups/alloys", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetAlloysAsync(ct)))
+           .WithName("ListAlloys").WithTags("Lookups");
+
         // ---- Audit / action log ----------------------------------------
         api.MapGet("/audit-log", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? source = null) =>
@@ -246,6 +272,15 @@ public static class ApiEndpoints
         var errors = new Dictionary<string, string[]>();
         if (string.IsNullOrWhiteSpace(body.EnduserPartNum))
             errors["enduserPartNum"] = ["enduserPartNum is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(OrderCreateWithItems body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        for (var i = 0; i < body.Items.Count; i++)
+            if (string.IsNullOrWhiteSpace(body.Items[i].EnduserPartNum))
+                errors[$"items[{i}].enduserPartNum"] = ["enduserPartNum is required."];
         return errors.Count == 0 ? null : errors;
     }
 

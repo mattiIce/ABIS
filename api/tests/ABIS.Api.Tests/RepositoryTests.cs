@@ -286,6 +286,67 @@ public sealed class RepositoryTests : IDisposable
         Assert.Equal("1001", created.ScrapAbJobNum);
     }
 
+    // ---- Order-entry pilot support -------------------------------------
+
+    [Fact]
+    public async Task GetOrderItemsByOrder_returns_lines_for_order()
+    {
+        var items = await _repo.GetOrderItemsByOrderAsync(9001, CancellationToken.None);
+        Assert.Equal(2, items.Count);
+        Assert.All(items, i => Assert.Equal(9001, i.OrderAbcNum));
+    }
+
+    [Fact]
+    public async Task GetOrderDetail_resolves_header_customer_and_items()
+    {
+        var detail = await _repo.GetOrderDetailAsync(9001, CancellationToken.None);
+        Assert.NotNull(detail);
+        Assert.Equal(9001, detail!.Order.OrderAbcNum);
+        Assert.Equal(4001, detail.Customer!.CustomerId);
+        Assert.Equal(2, detail.Items.Count);
+
+        Assert.Null(await _repo.GetOrderDetailAsync(999999, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetOrders_filters_by_customer_and_po()
+    {
+        var byCust = await _repo.GetOrdersAsync(1, 25, customerId: 4001, po: null, CancellationToken.None);
+        Assert.Equal(1, byCust.TotalCount);
+        Assert.Equal(9001, byCust.Items[0].OrderAbcNum);
+
+        var byPo = await _repo.GetOrdersAsync(1, 25, customerId: null, po: "PO-AB-1002", CancellationToken.None);
+        Assert.Equal(9002, byPo.Items.Single().OrderAbcNum);
+    }
+
+    [Fact]
+    public async Task CreateOrderWithItems_creates_header_and_linked_items()
+    {
+        var detail = await _repo.CreateOrderWithItemsAsync(new OrderCreateWithItems
+        {
+            Order = new CustomerOrderWrite { OrigCustomerId = 4001, OrigCustomerPo = "PO-COMBO" },
+            Items =
+            [
+                new OrderItemWrite { EnduserPartNum = "PN-A", Alloy2 = "3003" },
+                new OrderItemWrite { EnduserPartNum = "PN-B", Alloy2 = "5052" }
+            ]
+        }, CancellationToken.None);
+
+        Assert.Equal(9003, detail.Order.OrderAbcNum);          // MAX(9002) + 1
+        Assert.Equal(2, detail.Items.Count);
+        Assert.All(detail.Items, i => Assert.Equal(9003, i.OrderAbcNum));   // stamped by server
+        Assert.Equal(4001, detail.Customer!.CustomerId);
+    }
+
+    [Fact]
+    public async Task GetAlloys_returns_distinct_seeded_alloys()
+    {
+        var alloys = await _repo.GetAlloysAsync(CancellationToken.None);
+        Assert.Contains("3003", alloys);
+        Assert.Contains("5052", alloys);
+        Assert.Equal(alloys.Distinct().Count(), alloys.Count);
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }

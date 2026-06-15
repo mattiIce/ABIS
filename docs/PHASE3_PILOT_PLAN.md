@@ -87,8 +87,12 @@ A worked scoring table is filled in per module as pilots complete.
 ## How this environment can help before prerequisites land
 
 Even without the PB IDE / DB, work that advances Phase 3 and is doable here:
-- Extend the Phase-2 API with the endpoints the **Path C** `order_entry` pilot
-  will need (against the SQLite fixture), so the greenfield pilot can start the
-  moment DB access exists.
-- Flesh out the data model ([`DATA_MODEL.md`](DATA_MODEL.md)) for the candidate
-  modules from additional DataWindow exports.
+- [x] Extend the Phase-2 API with the endpoints the **Path C** `order_entry`
+  pilot needs (against the SQLite fixture): order search filters
+  (`customerId`/`po`), the order→line-items relationship, an order-entry read
+  model (`GET /api/orders/{id}/full` = header + customer + items), a
+  transactional save (`POST /api/orders/with-items`), and dropdown reference
+  data (`GET /api/lookups/alloys`). The greenfield UI pilot can start against
+  these the moment DB access exists.
+- [ ] Flesh out the data model ([`DATA_MODEL.md`](DATA_MODEL.md)) for the
+  candidate modules from additional DataWindow exports.

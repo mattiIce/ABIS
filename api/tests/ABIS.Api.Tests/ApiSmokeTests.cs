@@ -202,6 +202,51 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Order_full_returns_header_customer_and_items()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/orders/9001/full");
+        Assert.Equal(9001, body.GetProperty("order").GetProperty("orderAbcNum").GetInt64());
+        Assert.Equal(4001, body.GetProperty("customer").GetProperty("customerId").GetInt64());
+        Assert.Equal(2, body.GetProperty("items").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Create_order_with_items_returns_201_with_lines()
+    {
+        var resp = await _client.PostAsJsonAsync("/api/orders/with-items", new
+        {
+            order = new { origCustomerId = 4001, origCustomerPo = "PO-HTTP-COMBO" },
+            items = new[]
+            {
+                new { enduserPartNum = "PN-X", alloy2 = "3003" },
+                new { enduserPartNum = "PN-Y", alloy2 = "5052" }
+            }
+        });
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var detail = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(2, detail.GetProperty("items").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Create_order_with_invalid_item_returns_400()
+    {
+        var resp = await _client.PostAsJsonAsync("/api/orders/with-items", new
+        {
+            order = new { origCustomerId = 4001 },
+            items = new[] { new { alloy2 = "3003" } }   // missing enduserPartNum
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Lookups_alloys_contains_seeded_values()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/lookups/alloys");
+        var alloys = body.EnumerateArray().Select(e => e.GetString()).ToList();
+        Assert.Contains("3003", alloys);
+    }
+
+    [Fact]
     public async Task Swagger_document_is_served()
     {
         var resp = await _client.GetAsync("/swagger/v1/swagger.json");

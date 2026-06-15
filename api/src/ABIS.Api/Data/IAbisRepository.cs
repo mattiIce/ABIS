@@ -23,12 +23,15 @@ public interface IAbisRepository
     Task<Coil?> PatchCoilAsync(long coilAbcNum, CoilPatch patch, CancellationToken ct);
 
     // ---- Orders (read + write) -----------------------------------------
-    Task<PagedResult<CustomerOrder>> GetOrdersAsync(int page, int pageSize, CancellationToken ct);
+    Task<PagedResult<CustomerOrder>> GetOrdersAsync(int page, int pageSize, long? customerId, string? po, CancellationToken ct);
     Task<CustomerOrder?> GetOrderAsync(long orderAbcNum, CancellationToken ct);
+    Task<OrderDetail?> GetOrderDetailAsync(long orderAbcNum, CancellationToken ct);
     Task<CustomerOrder> CreateOrderAsync(CustomerOrderWrite body, CancellationToken ct);
+    Task<OrderDetail> CreateOrderWithItemsAsync(OrderCreateWithItems body, CancellationToken ct);
     Task<CustomerOrder?> UpdateOrderAsync(long orderAbcNum, CustomerOrderWrite body, CancellationToken ct);
 
     Task<PagedResult<OrderItem>> GetOrderItemsAsync(int page, int pageSize, string? alloy, CancellationToken ct);
+    Task<IReadOnlyList<OrderItem>> GetOrderItemsByOrderAsync(long orderAbcNum, CancellationToken ct);
     Task<OrderItem?> GetOrderItemAsync(long orderItemNum, CancellationToken ct);
     Task<OrderItem> CreateOrderItemAsync(OrderItemWrite body, CancellationToken ct);
     Task<OrderItem?> UpdateOrderItemAsync(long orderItemNum, OrderItemWrite body, CancellationToken ct);
@@ -49,6 +52,9 @@ public interface IAbisRepository
 
     // ---- QA -------------------------------------------------------------
     Task<PagedResult<TestResult>> GetTestResultsAsync(int page, int pageSize, int? testType, CancellationToken ct);
+
+    // ---- Lookups (reference data for data-entry screens) ---------------
+    Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct);
 
     // ---- Audit / action log --------------------------------------------
     Task WriteAuditAsync(string source, bool success, string? notes, CancellationToken ct);
