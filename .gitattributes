@@ -1,0 +1,21 @@
+# PowerBuilder compiled libraries are binary: don't attempt text diff/merge,
+# and keep them out of language statistics.
+*.pbl   binary linguist-generated
+*.pbd   binary
+
+# PowerBuilder exported sources are text. Keep them LF-normalized in the repo
+# so diffs are stable across platforms.
+*.srd   text
+*.srq   text
+*.src   text
+*.sra   text
+*.srw   text
+*.sru   text
+*.srf   text
+*.srs   text
+*.srm   text
+*.pbw   text
+*.pbt   text
+
+# Generated analysis artifacts.
+docs/**/*.json  text
