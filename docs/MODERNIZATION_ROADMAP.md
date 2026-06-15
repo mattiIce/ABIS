@@ -97,6 +97,10 @@ the B-vs-C commitment until after a measured pilot.
       exercises the SQLite fixture today).
 
 ### Phase 3 — Pilot both modernization paths on real modules
+
+> Detailed plan: [`PHASE3_PILOT_PLAN.md`](PHASE3_PILOT_PLAN.md) — candidate
+> modules, scoring rubric, prerequisites, and decision/exit criteria.
+
 - [ ] **Path B pilot:** run a self-contained, low-risk module (candidate:
       `quotation` or a reporting screen) through Appeon PowerServer; measure
       reuse %, UX, and operability.

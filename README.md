@@ -23,6 +23,7 @@ PLCs over OPC).
 | [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | Partial database model (20 tables / 140 columns) recovered from the DataWindow sources, with explicit and inferred relationships. |
 | [`docs/OBJECT_INVENTORY.md`](docs/OBJECT_INVENTORY.md) | Approximate object inventory (~1,345 DataWindows, ~588 windows, …) recovered from the compiled libraries, per-library and grouped by domain. |
 | [`docs/MODERNIZATION_ROADMAP.md`](docs/MODERNIZATION_ROADMAP.md) | Strategic options, a recommended hybrid/strangler-fig approach, and a phased plan with concrete next steps. |
+| [`docs/PHASE3_PILOT_PLAN.md`](docs/PHASE3_PILOT_PLAN.md) | The Phase 3 bake-off: piloting Appeon PowerServer vs. greenfield-on-the-API, with a scoring rubric and candidate modules. |
 
 ## Reproducing the analysis
 
