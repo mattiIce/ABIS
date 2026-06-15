@@ -13,11 +13,13 @@ public interface IAbisRepository
     Task<IReadOnlyList<ProcessCoil>> GetJobCoilsAsync(long abJobNum, CancellationToken ct);
     Task<IReadOnlyList<SheetSkid>> GetJobSheetSkidsAsync(long abJobNum, CancellationToken ct);
     Task<IReadOnlyList<ScrapSkid>> GetJobScrapAsync(long abJobNum, CancellationToken ct);
+    Task<AbJob> CreateJobAsync(JobWrite body, CancellationToken ct);
     Task<AbJob?> PatchJobAsync(long abJobNum, JobPatch patch, CancellationToken ct);
 
     // ---- Coils ----------------------------------------------------------
     Task<PagedResult<Coil>> GetCoilsAsync(int page, int pageSize, int? status, CancellationToken ct);
     Task<Coil?> GetCoilAsync(long coilAbcNum, CancellationToken ct);
+    Task<Coil> CreateCoilAsync(CoilWrite body, CancellationToken ct);
     Task<Coil?> PatchCoilAsync(long coilAbcNum, CoilPatch patch, CancellationToken ct);
 
     // ---- Orders (read + write) -----------------------------------------
@@ -39,7 +41,11 @@ public interface IAbisRepository
 
     // ---- Skids ----------------------------------------------------------
     Task<PagedResult<SheetSkid>> GetSheetSkidsAsync(int page, int pageSize, CancellationToken ct);
+    Task<SheetSkid?> GetSheetSkidAsync(long sheetSkidNum, CancellationToken ct);
+    Task<SheetSkid> CreateSheetSkidAsync(SheetSkidWrite body, CancellationToken ct);
     Task<PagedResult<ScrapSkid>> GetScrapSkidsAsync(int page, int pageSize, CancellationToken ct);
+    Task<ScrapSkid?> GetScrapSkidAsync(long scrapSkidNum, CancellationToken ct);
+    Task<ScrapSkid> CreateScrapSkidAsync(ScrapSkidWrite body, CancellationToken ct);
 
     // ---- QA -------------------------------------------------------------
     Task<PagedResult<TestResult>> GetTestResultsAsync(int page, int pageSize, int? testType, CancellationToken ct);

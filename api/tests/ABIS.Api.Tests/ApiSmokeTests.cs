@@ -168,6 +168,32 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Create_coil_returns_201_and_is_retrievable()
+    {
+        var resp = await _client.PostAsJsonAsync("/api/coils", new { coilAlloy2 = "6061", coilGauge = 0.25, netWt = 15000 });
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        Assert.NotNull(resp.Headers.Location);
+        var created = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        var id = created.GetProperty("coilAbcNum").GetInt64();
+        var fetched = await _client.GetFromJsonAsync<JsonElement>($"/api/coils/{id}");
+        Assert.Equal("6061", fetched.GetProperty("coilAlloy2").GetString());
+    }
+
+    [Fact]
+    public async Task Create_coil_without_alloy_returns_400()
+    {
+        var resp = await _client.PostAsJsonAsync("/api/coils", new { coilGauge = 0.1 });
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_sheet_skid_returns_201()
+    {
+        var resp = await _client.PostAsJsonAsync("/api/sheet-skids", new { abJobNum = 1001, sheetNetWt = 2000, skidPieces = 100 });
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+    }
+
+    [Fact]
     public async Task Swagger_document_is_served()
     {
         var resp = await _client.GetAsync("/swagger/v1/swagger.json");

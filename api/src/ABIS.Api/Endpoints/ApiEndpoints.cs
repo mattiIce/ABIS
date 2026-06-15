@@ -40,6 +40,13 @@ public static class ApiEndpoints
                 Results.Ok(await repo.GetJobScrapAsync(abJobNum, ct)))
            .WithName("GetJobScrap").WithTags("Jobs");
 
+        api.MapPost("/jobs", async (JobWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                var created = await repo.CreateJobAsync(body, ct);
+                return Results.Created($"/api/jobs/{created.AbJobNum}", created);
+            })
+           .WithName("CreateJob").WithTags("Jobs");
+
         api.MapPatch("/jobs/{abJobNum:long}", async (long abJobNum, JobPatch body, IAbisRepository repo, CancellationToken ct) =>
                 await repo.PatchJobAsync(abJobNum, body, ct) is { } job
                     ? Results.Ok(job)
@@ -57,6 +64,15 @@ public static class ApiEndpoints
                     ? Results.Ok(coil)
                     : Results.NotFound())
            .WithName("GetCoil").WithTags("Coils");
+
+        api.MapPost("/coils", async (CoilWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateCoilAsync(body, ct);
+                return Results.Created($"/api/coils/{created.CoilAbcNum}", created);
+            })
+           .WithName("CreateCoil").WithTags("Coils");
 
         api.MapPatch("/coils/{coilAbcNum:long}", async (long coilAbcNum, CoilPatch body, IAbisRepository repo, CancellationToken ct) =>
                 await repo.PatchCoilAsync(coilAbcNum, body, ct) is { } coil
@@ -163,10 +179,40 @@ public static class ApiEndpoints
                 Results.Ok(await repo.GetSheetSkidsAsync(page, pageSize, ct)))
            .WithName("ListSheetSkids").WithTags("Skids");
 
+        api.MapGet("/sheet-skids/{sheetSkidNum:long}", async (long sheetSkidNum, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetSheetSkidAsync(sheetSkidNum, ct) is { } skid
+                    ? Results.Ok(skid)
+                    : Results.NotFound())
+           .WithName("GetSheetSkid").WithTags("Skids");
+
+        api.MapPost("/sheet-skids", async (SheetSkidWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateSheetSkidAsync(body, ct);
+                return Results.Created($"/api/sheet-skids/{created.SheetSkidNum}", created);
+            })
+           .WithName("CreateSheetSkid").WithTags("Skids");
+
         api.MapGet("/scrap-skids", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25) =>
                 Results.Ok(await repo.GetScrapSkidsAsync(page, pageSize, ct)))
            .WithName("ListScrapSkids").WithTags("Skids");
+
+        api.MapGet("/scrap-skids/{scrapSkidNum:long}", async (long scrapSkidNum, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetScrapSkidAsync(scrapSkidNum, ct) is { } skid
+                    ? Results.Ok(skid)
+                    : Results.NotFound())
+           .WithName("GetScrapSkid").WithTags("Skids");
+
+        api.MapPost("/scrap-skids", async (ScrapSkidWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateScrapSkidAsync(body, ct);
+                return Results.Created($"/api/scrap-skids/{created.ScrapSkidNum}", created);
+            })
+           .WithName("CreateScrapSkid").WithTags("Skids");
 
         // ---- Audit / action log ----------------------------------------
         api.MapGet("/audit-log", async (IAbisRepository repo, CancellationToken ct,
@@ -191,6 +237,30 @@ public static class ApiEndpoints
         var errors = new Dictionary<string, string[]>();
         if (string.IsNullOrWhiteSpace(body.EnduserPartNum))
             errors["enduserPartNum"] = ["enduserPartNum is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(CoilWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (string.IsNullOrWhiteSpace(body.CoilAlloy2))
+            errors["coilAlloy2"] = ["coilAlloy2 is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(SheetSkidWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (body.AbJobNum <= 0)
+            errors["abJobNum"] = ["abJobNum is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(ScrapSkidWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (string.IsNullOrWhiteSpace(body.ScrapAbJobNum))
+            errors["scrapAbJobNum"] = ["scrapAbJobNum is required."];
         return errors.Count == 0 ? null : errors;
     }
 }

@@ -379,6 +379,111 @@ public sealed class AbisRepository : IAbisRepository
             source is null ? null : "source LIKE :source",
             new { source = source is null ? null : $"%{source}%" }, page, pageSize, ct);
 
+    public async Task<AbJob> CreateJobAsync(JobWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "ab_job", "ab_job_num", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO ab_job (ab_job_num, order_abc_num, order_item_num, line_num, job_status, material_yield,
+                number_of_men_used, sketch_id, create_date, due_date, job_notes, sketch_job_note)
+            VALUES (:id, :ord, :item, :line, :status, :matYield, :men, :sketch, :created, :due, :notes, :sketchNote)
+            """,
+            new
+            {
+                id, ord = body.OrderAbcNum, item = body.OrderItemNum, line = body.LineNum, status = body.JobStatus,
+                matYield = body.MaterialYield, men = body.NumberOfMenUsed, sketch = body.SketchId,
+                created = (DateTime?)DateTime.UtcNow, due = body.DueDate, notes = body.JobNotes, sketchNote = body.SketchJobNote
+            },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetJobAsync(id, ct))!;
+    }
+
+    public async Task<Coil> CreateCoilAsync(CoilWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "coil", "coil_abc_num", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO coil (coil_abc_num, coil_alloy2, coil_temper, coil_gauge, coil_width, coil_line_num,
+                coil_location, coil_mid_num, coil_org_num, coil_status, coil_notes, coil_entry_date,
+                customer_id, coil_from_cust_id, date_received, icra, lot_num, net_wt, net_wt_balance, pieces_per_case)
+            VALUES (:id, :alloy, :temper, :gauge, :width, :line, :loc, :mid, :org, :status, :notes, :entry,
+                :cust, :fromCust, :received, :icra, :lot, :net, :bal, :pieces)
+            """,
+            new
+            {
+                id, alloy = body.CoilAlloy2, temper = body.CoilTemper, gauge = body.CoilGauge, width = body.CoilWidth,
+                line = body.CoilLineNum, loc = body.CoilLocation, mid = body.CoilMidNum, org = body.CoilOrgNum,
+                status = body.CoilStatus, notes = body.CoilNotes, entry = (DateTime?)DateTime.UtcNow,
+                cust = body.CustomerId, fromCust = body.CoilFromCustId, received = (DateTime?)DateTime.UtcNow,
+                icra = body.Icra, lot = body.LotNum, net = body.NetWt, bal = body.NetWtBalance, pieces = body.PiecesPerCase
+            },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetCoilAsync(id, ct))!;
+    }
+
+    public async Task<SheetSkid?> GetSheetSkidAsync(long sheetSkidNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<SheetSkid>(new CommandDefinition(
+            $"SELECT {SheetSkidCols} FROM sheet_skid WHERE sheet_skid_num = :id", new { id = sheetSkidNum }, cancellationToken: ct));
+    }
+
+    public async Task<SheetSkid> CreateSheetSkidAsync(SheetSkidWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "sheet_skid", "sheet_skid_num", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO sheet_skid (sheet_skid_num, ab_job_num, sheet_skid_display_num, sheet_net_wt,
+                sheet_tare_wt, skid_pieces, skid_date)
+            VALUES (:id, :job, :display, :net, :tare, :pieces, :date)
+            """,
+            new
+            {
+                id, job = body.AbJobNum, display = body.SheetSkidDisplayNum, net = body.SheetNetWt,
+                tare = body.SheetTareWt, pieces = body.SkidPieces, date = (DateTime?)DateTime.UtcNow
+            },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetSheetSkidAsync(id, ct))!;
+    }
+
+    public async Task<ScrapSkid?> GetScrapSkidAsync(long scrapSkidNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<ScrapSkid>(new CommandDefinition(
+            $"SELECT {ScrapSkidCols} FROM scrap_skid WHERE scrap_skid_num = :id", new { id = scrapSkidNum }, cancellationToken: ct));
+    }
+
+    public async Task<ScrapSkid> CreateScrapSkidAsync(ScrapSkidWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "scrap_skid", "scrap_skid_num", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO scrap_skid (scrap_skid_num, scrap_ab_job_num, scrap_alloy2, scrap_temper, scrap_type,
+                scrap_net_wt, scrap_tare_wt, scrap_location, scrap_notes, skid_scrap_status, scrap_date)
+            VALUES (:id, :job, :alloy, :temper, :type, :net, :tare, :loc, :notes, :status, :date)
+            """,
+            new
+            {
+                id, job = body.ScrapAbJobNum, alloy = body.ScrapAlloy2, temper = body.ScrapTemper, type = body.ScrapType,
+                net = body.ScrapNetWt, tare = body.ScrapTareWt, loc = body.ScrapLocation, notes = body.ScrapNotes,
+                status = body.SkidScrapStatus, date = (DateTime?)DateTime.UtcNow
+            },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetScrapSkidAsync(id, ct))!;
+    }
+
     /// <summary>Next id via MAX+1, run inside the caller's transaction. Table/column
     /// are internal constants (not user input). Production Oracle should use a sequence.</summary>
     private static Task<long> NextIdAsync(DbConnection conn, DbTransaction tx, string table, string idColumn, CancellationToken ct) =>

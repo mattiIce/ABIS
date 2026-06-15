@@ -246,6 +246,46 @@ public sealed class RepositoryTests : IDisposable
         Assert.Single(filtered.Items);
     }
 
+    [Fact]
+    public async Task CreateJob_assigns_next_id_and_sets_create_date()
+    {
+        var created = await _repo.CreateJobAsync(
+            new JobWrite { OrderAbcNum = 9001, LineNum = 110, JobStatus = 0, JobNotes = "new job" }, CancellationToken.None);
+        Assert.Equal(1004, created.AbJobNum);   // MAX(1003) + 1
+        Assert.NotNull(created.CreateDate);
+        Assert.Equal("new job", created.JobNotes);
+    }
+
+    [Fact]
+    public async Task CreateCoil_assigns_next_id_and_persists()
+    {
+        var created = await _repo.CreateCoilAsync(
+            new CoilWrite { CoilAlloy2 = "6061", CoilGauge = 0.25m, NetWt = 15000m, CoilStatus = 1 }, CancellationToken.None);
+        Assert.Equal(5005, created.CoilAbcNum);   // MAX(5004) + 1
+        Assert.Equal("6061", created.CoilAlloy2);
+        Assert.NotNull(created.CoilEntryDate);
+    }
+
+    [Fact]
+    public async Task CreateSheetSkid_and_GetById_round_trip()
+    {
+        var created = await _repo.CreateSheetSkidAsync(
+            new SheetSkidWrite { AbJobNum = 1001, SheetNetWt = 1990m, SkidPieces = 100 }, CancellationToken.None);
+        Assert.Equal(3004, created.SheetSkidNum);   // MAX(3003) + 1
+
+        var fetched = await _repo.GetSheetSkidAsync(3004, CancellationToken.None);
+        Assert.Equal(1001, fetched!.AbJobNum);
+    }
+
+    [Fact]
+    public async Task CreateScrapSkid_assigns_next_id()
+    {
+        var created = await _repo.CreateScrapSkidAsync(
+            new ScrapSkidWrite { ScrapAbJobNum = "1001", ScrapAlloy2 = "3003", ScrapNetWt = 75m }, CancellationToken.None);
+        Assert.Equal(8003, created.ScrapSkidNum);   // MAX(8002) + 1
+        Assert.Equal("1001", created.ScrapAbJobNum);
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }

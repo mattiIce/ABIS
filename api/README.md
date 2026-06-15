@@ -49,7 +49,7 @@ and needs no external database.
 
 ```sh
 cd api
-dotnet test                                # 41 tests: repository + HTTP smoke
+dotnet test                                # 48 tests: repository + HTTP smoke
 ```
 
 ## Endpoints
@@ -62,9 +62,11 @@ dotnet test                                # 41 tests: repository + HTTP smoke
 | `GET /api/jobs/{abJobNum}/coils` | Coils processed by a job (joined) |
 | `GET /api/jobs/{abJobNum}/skids` | Finished sheet skids for a job |
 | `GET /api/jobs/{abJobNum}/scrap` | Scrap skids for a job |
+| `POST /api/jobs` | Create a production job → 201 |
 | `PATCH /api/jobs/{abJobNum}` | Update job status / notes / men / finish time |
 | `GET /api/coils?page&pageSize&status` | List coils (paged) |
 | `GET /api/coils/{coilAbcNum}` | One coil |
+| `POST /api/coils` | Create a coil on receipt (requires `coilAlloy2`) → 201 |
 | `PATCH /api/coils/{coilAbcNum}` | Update coil status / location / notes |
 | `GET /api/orders?page&pageSize` | List customer orders (paged) |
 | `GET /api/orders/{orderAbcNum}` | One order |
@@ -79,7 +81,11 @@ dotnet test                                # 41 tests: repository + HTTP smoke
 | `POST /api/customers` | Create a customer (server-assigned id) → 201 |
 | `PUT /api/customers/{customerId}` | Replace a customer |
 | `GET /api/sheet-skids?page&pageSize` | List finished sheet skids (paged) |
+| `GET /api/sheet-skids/{sheetSkidNum}` | One sheet skid |
+| `POST /api/sheet-skids` | Create a sheet skid (requires `abJobNum`) → 201 |
 | `GET /api/scrap-skids?page&pageSize` | List scrap skids (paged) |
+| `GET /api/scrap-skids/{scrapSkidNum}` | One scrap skid |
+| `POST /api/scrap-skids` | Create a scrap skid (requires `scrapAbJobNum`) → 201 |
 | `GET /api/test-results?page&pageSize&testType` | List mechanical test results (paged) |
 | `GET /api/audit-log?page&pageSize&source` | List the action/audit log, newest first |
 

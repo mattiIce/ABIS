@@ -80,10 +80,13 @@ the B-vs-C commitment until after a measured pilot.
 - [x] **Expand read coverage**: added customers, sheet skids, and scrap skids
       (plus `/jobs/{id}/skids` and `/jobs/{id}/scrap` relationship endpoints).
       *Ongoing* — more entities as Phase 1's full schema lands.
-- [x] **Introduce the write surface**: customer master data, order headers, and
-      order items (POST/PUT, server-assigned ids, validation, 201/400/404) plus
-      operational PATCH on jobs and coils — all tested against the fixture.
-      *Ongoing* — broaden as accepted.
+- [x] **Write surface across core entities**: customers, order headers, order
+      items, jobs, coils, sheet skids, and scrap skids (POST/PUT, server-assigned
+      ids, validation, 201/400/404) plus operational PATCH on jobs and coils —
+      all tested against the fixture.
+- [ ] Shipping / EDI surface (`inbound_shipment`, `shipment`) — deferred until
+      Phase 1's full schema lands (these tables are too thinly represented in the
+      recovered model to build faithfully).
 - [x] **Observability / audit parity**: `AuditMiddleware` records every mutating
       request into the legacy `opc_action_log`, exposed via `GET /api/audit-log`.
 - [x] **Authentication**: API-key auth (`X-Api-Key`) gates the `/api` surface
