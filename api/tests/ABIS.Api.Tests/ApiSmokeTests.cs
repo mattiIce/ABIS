@@ -55,6 +55,14 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Root_returns_service_info_anonymously()
+    {
+        var bare = _factory.CreateClient();   // no key
+        var body = await bare.GetFromJsonAsync<JsonElement>("/");
+        Assert.Equal("ABIS API", body.GetProperty("name").GetString());
+    }
+
+    [Fact]
     public async Task List_jobs_returns_paged_envelope()
     {
         var body = await _client.GetFromJsonAsync<JsonElement>("/api/jobs");

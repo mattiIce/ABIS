@@ -49,13 +49,31 @@ and needs no external database.
 
 ```sh
 cd api
-dotnet test                                # 48 tests: repository + HTTP smoke
+dotnet test                                # 49 tests: repository + HTTP smoke
 ```
+
+`api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
+
+## Container
+
+```sh
+# build context is the api/ directory
+docker build -f api/Dockerfile -t abis-api:latest api
+docker run -p 8080:8080 \
+  -e Database__Provider=Oracle \
+  -e Database__ConnectionString="User Id=abis;Password=...;Data Source=//host:1521/ORCLPDB1" \
+  -e ApiKeys__Keys__0="<a-strong-key>" \
+  abis-api:latest
+# -> http://localhost:8080/   (Kestrel listens on 8080 in the container)
+```
+
+CI builds this image on every PR (see `.github/workflows/ci.yml`).
 
 ## Endpoints
 
 | Method & path | Description |
 |---|---|
+| `GET /` | Service info (name, version, environment, links) |
 | `GET /health` | Liveness probe |
 | `GET /api/jobs?page&pageSize&status` | List production jobs (paged) |
 | `GET /api/jobs/{abJobNum}` | One job |

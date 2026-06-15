@@ -36,3 +36,11 @@ jobs:
         run: python3 tools/extract_schema.py .
       - name: Run inventory extractor
         run: python3 tools/extract_inventory.py .
+
+  docker:
+    name: API image build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -f api/Dockerfile -t abis-api:ci api

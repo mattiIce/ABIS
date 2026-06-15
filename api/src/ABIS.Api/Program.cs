@@ -50,6 +50,18 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddProblemDetails();
 
+// CORS for a future SPA: configure allowed origins via Cors:Origins. With none
+// configured, Development allows any origin for convenience; other environments
+// stay same-origin only.
+var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
+builder.Services.AddCors(options => options.AddPolicy("Default", policy =>
+{
+    if (corsOrigins.Length > 0)
+        policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod();
+    else if (builder.Environment.IsDevelopment())
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+}));
+
 var app = builder.Build();
 
 // Dev/CI only: build and seed the local SQLite fixture so the API has data.
@@ -64,6 +76,8 @@ app.UseMiddleware<AuditMiddleware>();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+app.UseCors("Default");
 
 app.UseAuthentication();
 app.UseAuthorization();

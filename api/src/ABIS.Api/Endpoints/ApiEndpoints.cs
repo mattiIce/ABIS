@@ -9,6 +9,15 @@ public static class ApiEndpoints
 {
     public static IEndpointRouteBuilder MapAbisApi(this IEndpointRouteBuilder app)
     {
+        app.MapGet("/", (IHostEnvironment env) => Results.Ok(new
+        {
+            name = "ABIS API",
+            version = typeof(ApiEndpoints).Assembly.GetName().Version?.ToString() ?? "1.0.0",
+            environment = env.EnvironmentName,
+            docs = "/swagger",
+            health = "/health"
+        })).WithTags("Meta").WithName("Root");
+
         app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
            .WithTags("Meta").WithName("Health");
 
