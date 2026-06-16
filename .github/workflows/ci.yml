@@ -100,9 +100,21 @@ jobs:
         run: python3 tools/extract_inventory.py .
 
   docker:
-    name: API image build
+    name: API image build & smoke
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
         run: docker build -f api/Dockerfile -t abis-api:ci api
+      - name: Smoke-test the image boots and serves
+        run: |
+          docker run -d --name abis -p 8080:8080 \
+            -e Database__Provider=Sqlite \
+            -e Database__ConnectionString="Data Source=/tmp/abis.db" \
+            -e Database__Seed=true \
+            abis-api:ci
+          for i in $(seq 1 30); do curl -sf http://localhost:8080/health >/dev/null && break || sleep 2; done
+          echo "liveness:";  curl -fsS http://localhost:8080/health;       echo
+          echo "readiness:"; curl -fsS http://localhost:8080/health/ready; echo
+          docker logs abis | tail -20
+          docker rm -f abis

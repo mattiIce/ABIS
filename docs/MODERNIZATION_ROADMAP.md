@@ -110,7 +110,8 @@ the B-vs-C commitment until after a measured pilot.
       request into the legacy `opc_action_log`, exposed via `GET /api/audit-log`.
 - [x] **Authentication**: API-key auth (`X-Api-Key`) gates the `/api` surface
       (`/health`, `/health/ready` + Swagger stay open); swappable for OAuth/OIDC later.
-- [x] **Deployment readiness**: multi-stage `Dockerfile` (built in CI), CORS for
+- [x] **Deployment readiness**: multi-stage `Dockerfile` (built **and smoke-tested**
+      in CI — the image must boot and serve `/health` + `/health/ready`), CORS for
       a future SPA, a `/` service-info endpoint, and a `requests.http` collection.
 - [ ] Validate the **Oracle** data-access path against a real database (CI only
       exercises the SQLite fixture today).
