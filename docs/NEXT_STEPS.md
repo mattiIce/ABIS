@@ -32,7 +32,7 @@ curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0 --inst
 export PATH="$HOME/.dotnet:$PATH"
 
 cd api
-dotnet test                                   # 96 tests (repository + HTTP)
+dotnet test                                   # 99 tests (repository + HTTP)
 dotnet run --project src/ABIS.Api             # Dev profile: seeds SQLite, no DB needed
 # API key for /api/*: dev-local-key  (header X-Api-Key)
 # Demo UIs: http://localhost:5xxx/ui/index.html , /ui/coils.html , /ui/qa.html
@@ -61,9 +61,9 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
 - ✅ **List sorting** across the paged grids — done: allowlisted `sort`/`dir` per
   resource with a PK tie-breaker (`Data/Sort.cs`); invalid input → 400.
 - ✅ **QA / test-results slice** — done (standalone): `position` + `from`/`to`
-  date-range filters, sorting, and a demo page (`/ui/qa.html`). The coil/job
-  linkage is still **not** in the extract — left unfabricated. `temp_test_result`
-  remains unmodeled (no columns recovered).
+  date-range filters, sorting, and a demo page (`/ui/qa.html`); `temp_test_result`
+  added later (see below). The coil/job linkage is still **not** in the extract —
+  left unfabricated.
 - ✅ **Readiness probe** — done: `GET /health/ready` runs `SELECT 1` (503 when the
   DB is unreachable); liveness stays at `GET /health`.
 - ✅ **Production hardening** — done: fixed-window **rate limiting** on `/api`

@@ -89,7 +89,7 @@ running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ```sh
 cd api
-dotnet test                                # 96 tests: repository + HTTP smoke
+dotnet test                                # 99 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -257,6 +257,11 @@ export RateLimiting__WindowSeconds="10"
 
 Every response also carries baseline security headers: `X-Content-Type-Options:
 nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: no-referrer`.
+
+**Correlation IDs.** Each request gets an `X-Request-Id` (a caller-supplied one is
+honored when it looks safe, otherwise generated), echoed on the response, surfaced
+in `ProblemDetails` (`requestId`), and recorded in the audit-log notes — so a call
+can be traced across client, API, and the legacy `opc_action_log`.
 
 ## Configuration (production / Oracle)
 

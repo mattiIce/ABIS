@@ -34,9 +34,11 @@ public sealed class AuditMiddleware
         {
             var source = $"{context.Request.Method} {context.Request.Path}";
             var status = context.Response.StatusCode;
+            var requestId = RequestIdMiddleware.Current(context);
+            var notes = requestId is null ? $"HTTP {status}" : $"HTTP {status} req {requestId}";
             // Use a fresh token: the request may already be completing, but the
             // audit write should still land.
-            await repository.WriteAuditAsync(source, status < 400, $"HTTP {status}", CancellationToken.None);
+            await repository.WriteAuditAsync(source, status < 400, notes, CancellationToken.None);
         }
         catch (Exception ex)
         {

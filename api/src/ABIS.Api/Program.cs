@@ -82,7 +82,12 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddProblemDetails();
+builder.Services.AddProblemDetails(options =>
+    options.CustomizeProblemDetails = ctx =>
+    {
+        if (Abis.Api.Middleware.RequestIdMiddleware.Current(ctx.HttpContext) is { } requestId)
+            ctx.ProblemDetails.Extensions["requestId"] = requestId;
+    });
 
 // CORS for a future SPA: configure allowed origins via Cors:Origins. With none
 // configured, Development allows any origin for convenience; other environments
@@ -105,7 +110,10 @@ if (dbOptions.Seed && dbOptions.Dialect == SqlDialect.Sqlite)
     app.Logger.LogInformation("Seeded SQLite fixture at {ConnectionString}", dbOptions.ConnectionString);
 }
 
-// Outermost: observe the final status (incl. exception-handler output) and audit it.
+// First: assign/propagate a correlation id available to everything downstream.
+app.UseMiddleware<RequestIdMiddleware>();
+
+// Outermost audit: observe the final status (incl. exception-handler output) and audit it.
 app.UseMiddleware<AuditMiddleware>();
 
 // Baseline security headers on every response (set before the body is written).

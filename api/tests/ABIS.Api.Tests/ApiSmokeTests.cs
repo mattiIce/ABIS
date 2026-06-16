@@ -38,6 +38,37 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Response_carries_a_generated_request_id()
+    {
+        var resp = await _client.GetAsync("/health");
+        Assert.True(resp.Headers.Contains("X-Request-Id"));
+        Assert.False(string.IsNullOrWhiteSpace(resp.Headers.GetValues("X-Request-Id").Single()));
+    }
+
+    [Fact]
+    public async Task A_supplied_request_id_is_echoed()
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Get, "/health");
+        req.Headers.Add("X-Request-Id", "trace-echo-1");
+        var resp = await _client.SendAsync(req);
+        Assert.Equal("trace-echo-1", resp.Headers.GetValues("X-Request-Id").Single());
+    }
+
+    [Fact]
+    public async Task Request_id_is_recorded_in_the_audit_trail()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Api-Key", "test-key");
+        client.DefaultRequestHeaders.Add("X-Request-Id", "trace-audit-xyz");
+        await client.PostAsJsonAsync("/api/customers", new { customerName = "TRACE CO" });
+
+        var log = await client.GetFromJsonAsync<JsonElement>("/api/audit-log?source=customers&pageSize=100");
+        var found = log.GetProperty("items").EnumerateArray()
+            .Any(i => (i.GetProperty("notes").GetString() ?? "").Contains("trace-audit-xyz"));
+        Assert.True(found);
+    }
+
+    [Fact]
     public async Task Api_request_without_key_is_401()
     {
         var bare = _factory.CreateClient();   // no X-Api-Key header
