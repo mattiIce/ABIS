@@ -90,6 +90,26 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Typed_client_demo_page_is_served()
+    {
+        var bare = _factory.CreateClient();
+        var resp = await bare.GetAsync("/ui/typed.html");
+        resp.EnsureSuccessStatusCode();
+        Assert.Contains("Typed Client", await resp.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Generated_client_es_module_is_served()
+    {
+        // The committed, compiled NSwag client (tsc output) ships as a browser
+        // ES module so the typed demo runs with no runtime build step.
+        var bare = _factory.CreateClient();
+        var resp = await bare.GetAsync("/ui/app/generated/abis-client.js");
+        resp.EnsureSuccessStatusCode();
+        Assert.Contains("class AbisClient", await resp.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task List_jobs_returns_paged_envelope()
     {
         var body = await _client.GetFromJsonAsync<JsonElement>("/api/jobs");

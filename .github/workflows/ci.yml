@@ -39,6 +39,16 @@ jobs:
         with:
           name: ts-client
           path: api/abis-client.ts
+      # Compile the typed demo (clientapp) against the freshly generated client,
+      # proving the contract still produces a client that builds with the UI code.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build typed client demo
+        run: |
+          npm --prefix clientapp ci
+          npm --prefix clientapp run gen
+          npm --prefix clientapp run build
 
   analysis:
     name: Discovery extractors

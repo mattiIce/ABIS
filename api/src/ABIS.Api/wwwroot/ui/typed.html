@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ABIS Coils via Typed Client (Path C demo)</title>
+<style>
+  :root { --bd:#d0d7de; --bg:#f6f8fa; --ac:#0969da; }
+  * { box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 0; color: #1f2328; }
+  header { background:#24292f; color:#fff; padding:10px 16px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; font-weight:600; }
+  header nav { display:flex; gap:12px; }
+  header nav a { color:#9ecbff; text-decoration:none; }
+  header .key { margin-left:auto; display:flex; gap:6px; align-items:center; }
+  main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns:2fr 1fr; }
+  section { border:1px solid var(--bd); border-radius:8px; padding:14px; }
+  section.wide { grid-column:1 / -1; }
+  h2 { font-size:14px; margin:0 0 10px; text-transform:uppercase; letter-spacing:.04em; color:#57606a; }
+  label { font-size:12px; color:#57606a; }
+  input, select, button { font:inherit; padding:6px 8px; border:1px solid var(--bd); border-radius:6px; }
+  button { background:var(--ac); color:#fff; border-color:var(--ac); cursor:pointer; }
+  table { width:100%; border-collapse:collapse; margin-top:8px; }
+  th, td { text-align:left; padding:5px 6px; border-bottom:1px solid var(--bd); font-size:13px; }
+  th { color:#57606a; font-weight:600; }
+  td.num, th.num { text-align:right; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:end; }
+  .muted { color:#8b949e; }
+  .pill { background:var(--bg); border:1px solid var(--bd); border-radius:12px; padding:1px 8px; font-size:12px; }
+  .err { color:#cf222e; }
+  tbody tr.click { cursor:pointer; }
+  tbody tr.click:hover { background:var(--bg); }
+</style>
+</head>
+<body>
+<header>
+  <h1>ABIS Coils — Typed Client <span class="pill">generated TS client</span></h1>
+  <nav>
+    <a href="/ui/index.html">Order entry</a>
+    <a href="/ui/coils.html">Coil inventory</a>
+    <a href="/ui/qa.html">QA results</a>
+    <a href="/ui/typed.html">Typed client</a>
+  </nav>
+  <div class="key">
+    <label for="apiKey" style="color:#fff">X-Api-Key</label>
+    <input id="apiKey" placeholder="dev-local-key" style="width:180px" />
+  </div>
+</header>
+
+<main>
+  <section class="wide">
+    <h2>Coils (via the NSwag-generated <code>AbisClient</code>)</h2>
+    <div class="row">
+      <div><label>Sort</label><br>
+        <select id="sort">
+          <option value="coilAbcNum">Coil #</option>
+          <option value="alloy">Alloy</option>
+          <option value="location">Location</option>
+          <option value="netWt">Net wt</option>
+          <option value="netWtBalance">Balance</option>
+        </select>
+      </div>
+      <div><label>Direction</label><br>
+        <select id="dir"><option value="asc">Asc</option><option value="desc">Desc</option></select>
+      </div>
+      <button id="btnSearch">Search</button>
+      <span id="msg" class="muted"></span>
+    </div>
+    <table id="tbl">
+      <thead><tr><th>Coil</th><th>Alloy</th><th>Temper</th><th class="num">Gauge</th>
+        <th>Location</th><th class="num">Net wt</th><th class="num">Balance</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Coil detail</h2>
+    <div id="detail" class="muted">Select a coil to load it via <code>getCoil()</code>.</div>
+  </section>
+</main>
+
+<!-- The compiled, generated client + demo. No runtime build step: tsc output is
+     committed under /ui/app/. Rebuild with: cd api/clientapp && npm run all -->
+<script type="module" src="/ui/app/main.js"></script>
+</body>
+</html>

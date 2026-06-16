@@ -32,7 +32,7 @@ curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0 --inst
 export PATH="$HOME/.dotnet:$PATH"
 
 cd api
-dotnet test                                   # 82 tests (repository + HTTP)
+dotnet test                                   # 84 tests (repository + HTTP)
 dotnet run --project src/ABIS.Api             # Dev profile: seeds SQLite, no DB needed
 # API key for /api/*: dev-local-key  (header X-Api-Key)
 # Demo UIs: http://localhost:5xxx/ui/index.html , /ui/coils.html , /ui/qa.html
@@ -69,9 +69,12 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
 - ✅ **Typed contract + client codegen** — done: every endpoint declares response
   types via `.Produces<T>()` / `.ProducesValidationProblem()` (+ a group-wide
   `401`), so the OpenAPI doc carries real schemas. CI generates a typed
-  TypeScript client with NSwag and uploads it as the `ts-client` artifact
-  (`dotnet tool run nswag openapi2tsclient …`). Next: have a demo UI consume the
-  generated client, and/or add other languages via `openapi-generator`.
+  TypeScript client with NSwag and uploads it as the `ts-client` artifact.
+- ✅ **Demo UI on the generated client** — done: `clientapp/` is a TypeScript demo
+  that imports the generated client, compiled by `tsc` to ES modules under
+  `/ui/app/`; `/ui/typed.html` is the coil screen driven by it. CI compiles it so
+  a contract change that breaks the typed UI fails the build. Next: other client
+  languages via `openapi-generator`; migrate a real module onto the typed client.
 - **Write hardening:** optimistic concurrency (rowversion/ETag), a soft-delete
   policy decision, and replacing the `MAX+1` id assignment with **Oracle
   sequences** once the DB is known (search `NextIdAsync`). True concurrency needs

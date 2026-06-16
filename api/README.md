@@ -28,7 +28,9 @@ api/
     Endpoints/              minimal-API route definitions
     Models/                 read models (shapes follow docs/DATA_MODEL.md)
     Data/                   connection factory, repository (Dapper), SQLite fixture
+    wwwroot/ui/             demo UIs (vanilla JS); /app is the compiled typed client
   tests/ABIS.Api.Tests/     xUnit: repository + in-process HTTP smoke tests
+  clientapp/                TypeScript demo that consumes the generated client (tsc)
 ```
 
 ## Run locally
@@ -48,24 +50,41 @@ and needs no external database.
 
 ### Demo UIs
 
-Dependency-free (vanilla JS, no build step) pages under `wwwroot/ui/`, serving as
-**Path C greenfield references** (see
+Pages under `wwwroot/ui/`, serving as **Path C greenfield references** (see
 [`../docs/PHASE3_PILOT_PLAN.md`](../docs/PHASE3_PILOT_PLAN.md)) and manual test
 harnesses. Paste the dev API key (`dev-local-key`) into the header field; the
-two pages cross-link.
+pages cross-link.
 
 - **`/ui/index.html`** — order entry: search/filter orders, view header +
-  customer + lines, save a new order with line items.
+  customer + lines, save a new order with line items. *(vanilla JS)*
 - **`/ui/coils.html`** — coil inventory: filter coils, view a coil + its
-  processing history, receive a coil, and an alloy/location weight rollup.
+  processing history, receive a coil, and an alloy/location weight rollup. *(vanilla JS)*
 - **`/ui/qa.html`** — QA test results: filter mechanical test results by type,
-  position, and date range, with click-to-sort (server-side) column headers.
+  position, and date range, with click-to-sort (server-side) column headers. *(vanilla JS)*
+- **`/ui/typed.html`** — coil inventory driven by the **generated TypeScript
+  client** (`clientapp/`, compiled by `tsc` to ES modules under `/ui/app/`),
+  demonstrating the codegen loop end-to-end.
+
+#### Typed client demo (`clientapp/`)
+
+`clientapp/` is a small TypeScript app that imports the NSwag-generated client and
+is compiled to browser ES modules (committed under `wwwroot/ui/app/`, so the demo
+runs with no runtime build). After changing the API, regenerate and rebuild:
+
+```sh
+cd api
+dotnet build src/ABIS.Api/ABIS.Api.csproj -c Release
+dotnet tool restore && dotnet tool run swagger tofile --output openapi.json src/ABIS.Api/bin/Release/net8.0/ABIS.Api.dll v1
+cd clientapp && npm ci && npm run all     # gen (NSwag) + build (tsc) -> ../src/ABIS.Api/wwwroot/ui/app/
+```
+
+CI compiles this on every run, so a contract change that breaks the typed UI fails the build.
 
 ## Test
 
 ```sh
 cd api
-dotnet test                                # 82 tests: repository + HTTP smoke
+dotnet test                                # 84 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).

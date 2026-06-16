@@ -1,0 +1,14 @@
+{
+  "name": "abis-clientapp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Typed TypeScript demo that consumes the NSwag-generated ABIS API client, compiled to browser ES modules served at /ui/app/. Proves the generated contract is usable end-to-end.",
+  "scripts": {
+    "gen": "dotnet tool run nswag openapi2tsclient /input:../openapi.json /output:src/generated/abis-client.ts /template:Fetch /className:AbisClient",
+    "build": "tsc -p tsconfig.json",
+    "all": "npm run gen && npm run build"
+  },
+  "devDependencies": {
+    "typescript": "5.5.4"
+  }
+}
