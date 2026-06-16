@@ -5,6 +5,10 @@ ERP/MES). It is grounded in the analysis in
 [`ARCHITECTURE.md`](ARCHITECTURE.md), [`DATA_MODEL.md`](DATA_MODEL.md), and
 [`OBJECT_INVENTORY.md`](OBJECT_INVENTORY.md).
 
+> **Continuing the work?** See [`NEXT_STEPS.md`](NEXT_STEPS.md) for a pickup guide
+> (current state, prioritized next steps, environment setup, and the recipe for
+> adding a module slice).
+
 ## Goals & guiding principles
 
 - **Keep the plant running.** ABIS is operational software for a working

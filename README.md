@@ -19,6 +19,7 @@ PLCs over OPC).
 
 | Document | What's in it |
 |---|---|
+| [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md) | **Start here to continue** — handoff guide: current state, prioritized next steps, environment notes, the module-slice recipe, and solved gotchas. |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | As-is architecture: stack, 2-tier topology, the two app targets (`lion` + the `da` data-acquisition app), module map, integration surface, the Aug-2025 PB migration, and build-readiness issues. |
 | [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | Partial database model (20 tables / 140 columns) recovered from the DataWindow sources, with explicit and inferred relationships. |
 | [`docs/OBJECT_INVENTORY.md`](docs/OBJECT_INVENTORY.md) | Approximate object inventory (~1,345 DataWindows, ~588 windows, …) recovered from the compiled libraries, per-library and grouped by domain. |
