@@ -120,11 +120,10 @@ jobs:
   oracle-smoke:
     name: Oracle connectivity smoke (gated)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: api
     # Steps run only when the ORACLE_CONNECTION_STRING secret is set (point it at a
     # NON-production Oracle the runner can reach). Otherwise this job is a no-op.
+    # (No job-level working-directory: the Gate step runs before checkout, so the
+    # api/ dir doesn't exist yet — the build/run steps set their own.)
     env:
       ORACLE_CS: ${{ secrets.ORACLE_CONNECTION_STRING }}
     steps:
@@ -138,9 +137,11 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Build
         if: ${{ env.ORACLE_CS != '' }}
+        working-directory: api
         run: dotnet build src/ABIS.Api/ABIS.Api.csproj -c Release
       - name: Readiness smoke against Oracle
         if: ${{ env.ORACLE_CS != '' }}
+        working-directory: api
         env:
           Database__Provider: Oracle
           Database__Seed: "false"
