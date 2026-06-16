@@ -49,6 +49,25 @@ jobs:
           npm --prefix clientapp ci
           npm --prefix clientapp run gen
           npm --prefix clientapp run build
+      - name: e2e — generated client against a live API
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          Database__Provider: Sqlite
+          Database__ConnectionString: "Data Source=/tmp/abis_e2e.db"
+          Database__Seed: "true"
+          ApiKeys__Enabled: "true"
+          ApiKeys__Keys__0: "ci-e2e-key"
+          ASPNETCORE_URLS: "http://127.0.0.1:5225"
+        run: |
+          dotnet run --project src/ABIS.Api -c Release --no-build &
+          API_PID=$!
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:5225/health >/dev/null && break || sleep 1; done
+          set +e
+          ABIS_BASE=http://127.0.0.1:5225 ABIS_KEY=ci-e2e-key node clientapp/e2e/run.mjs
+          STATUS=$?
+          set -e
+          kill $API_PID || true
+          exit $STATUS
 
   analysis:
     name: Discovery extractors

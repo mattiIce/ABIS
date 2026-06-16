@@ -79,6 +79,10 @@ cd clientapp && npm ci && npm run all     # gen (NSwag) + build (tsc) -> ../src/
 ```
 
 CI compiles this on every run, so a contract change that breaks the typed UI fails the build.
+CI also runs an **end-to-end check** (`clientapp/e2e/run.mjs`) that drives the generated
+client against a live, seeded API instance — so a change that breaks the real
+request/response path (not just compilation) fails too. Run it locally against a
+running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ## Test
 

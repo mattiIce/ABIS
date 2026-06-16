@@ -6,7 +6,8 @@
   "scripts": {
     "gen": "dotnet tool run nswag openapi2tsclient /input:../openapi.json /output:src/generated/abis-client.ts /template:Fetch /className:AbisClient",
     "build": "tsc -p tsconfig.json",
-    "all": "npm run gen && npm run build"
+    "all": "npm run gen && npm run build",
+    "e2e": "node e2e/run.mjs"
   },
   "devDependencies": {
     "typescript": "5.5.4"
