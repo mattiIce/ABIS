@@ -46,7 +46,10 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
 
 ### Blocked on environment (highest leverage — need the user)
 1. **Get DB access (connection string) or a DDL dump.** Unblocks:
-   - Validate the **Oracle** data path (CI only exercises SQLite today).
+   - Validate the **Oracle** data path (CI only exercises SQLite today) — a
+     turnkey runbook + a secret-gated CI smoke job are ready in
+     [`ORACLE_VALIDATION.md`](ORACLE_VALIDATION.md); set the
+     `ORACLE_CONNECTION_STRING` secret to light up the `oracle-smoke` CI job.
    - Replace the **partial/inferred schema** with the real one; confirm the
      inferred `order_item.order_abc_num` FK and the `order_item_num` PK.
    - Point the Phase-3 pilots at real data.
@@ -98,6 +101,10 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
   extracted tables are either too thin to model faithfully
   (`inbound_shipment`/`shipment`/`die`/`return_scrap_item`, 1–2 cols) or
   out-of-API-scope (`abis_ini`, `security_application`).
+- ✅ **Contract & onboarding polish** — done: per-operation OpenAPI
+  `.WithSummary(...)` (flows into generated-client doc comments); a committed
+  `api/openapi.snapshot.json` with a CI drift-check; a root `CONTRIBUTING.md`; and
+  the Oracle-validation runbook + gated CI job above.
 - **Expand the recovered data model** by exporting *more* DataWindows to text and
   re-running `tools/extract_schema.py` — **needs the PB IDE** (can't export new
   `.srd` here). Bigger modules (`quotation`, `daily_prod`, shipping/EDI) unlock
