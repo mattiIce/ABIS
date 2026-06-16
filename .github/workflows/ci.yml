@@ -38,6 +38,11 @@ jobs:
         run: dotnet tool restore
       - name: Generate OpenAPI contract
         run: dotnet tool run swagger tofile --output openapi.json src/ABIS.Api/bin/Release/net8.0/ABIS.Api.dll v1
+      - name: Verify OpenAPI matches the committed snapshot
+        # Fails if the contract drifted without updating the snapshot. To accept an
+        # intended change: cd api && dotnet tool run swagger tofile --output
+        # openapi.snapshot.json src/ABIS.Api/bin/Release/net8.0/ABIS.Api.dll v1
+        run: diff -u openapi.snapshot.json openapi.json
       - name: Upload OpenAPI contract
         uses: actions/upload-artifact@v4
         with:
@@ -111,6 +116,44 @@ jobs:
         run: python3 tools/extract_schema.py .
       - name: Run inventory extractor
         run: python3 tools/extract_inventory.py .
+
+  oracle-smoke:
+    name: Oracle connectivity smoke (gated)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    # Steps run only when the ORACLE_CONNECTION_STRING secret is set (point it at a
+    # NON-production Oracle the runner can reach). Otherwise this job is a no-op.
+    env:
+      ORACLE_CS: ${{ secrets.ORACLE_CONNECTION_STRING }}
+    steps:
+      - name: Gate
+        run: '[ -n "$ORACLE_CS" ] && echo "Oracle smoke enabled." || echo "ORACLE_CONNECTION_STRING not set — skipping."'
+      - uses: actions/checkout@v4
+        if: ${{ env.ORACLE_CS != '' }}
+      - uses: actions/setup-dotnet@v4
+        if: ${{ env.ORACLE_CS != '' }}
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build
+        if: ${{ env.ORACLE_CS != '' }}
+        run: dotnet build src/ABIS.Api/ABIS.Api.csproj -c Release
+      - name: Readiness smoke against Oracle
+        if: ${{ env.ORACLE_CS != '' }}
+        env:
+          Database__Provider: Oracle
+          Database__Seed: "false"
+          Database__ConnectionString: ${{ env.ORACLE_CS }}
+          ApiKeys__Enabled: "false"
+          ASPNETCORE_ENVIRONMENT: Production
+          ASPNETCORE_URLS: "http://127.0.0.1:5230"
+        run: |
+          dotnet run --project src/ABIS.Api -c Release --no-build &
+          API_PID=$!
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:5230/health >/dev/null && break || sleep 2; done
+          echo "readiness:"; curl -fsS http://127.0.0.1:5230/health/ready; echo
+          kill $API_PID || true
 
   docker:
     name: API image build & smoke
