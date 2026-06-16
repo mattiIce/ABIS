@@ -5,6 +5,11 @@ on:
     branches: [ main, "claude/**" ]
   pull_request:
 
+# Cancel superseded runs for the same ref (dedupes the push + pull_request pair).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   api:
     name: API build & test
@@ -17,6 +22,12 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('api/**/*.csproj', 'api/Directory.Build.props', 'api/.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
       - name: Restore
         run: dotnet restore ABIS.Api.sln
       - name: Build
@@ -61,6 +72,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: api/clientapp/package-lock.json
       - name: Build typed client demo
         run: |
           npm --prefix clientapp ci
