@@ -1,0 +1,205 @@
+using Dapper;
+using Microsoft.Data.Sqlite;
+
+namespace Abis.Api.Data;
+
+/// <summary>
+/// Builds and seeds the local SQLite development/CI database. This is NOT used
+/// in production (where Provider=Oracle and Seed=false). The schema mirrors the
+/// recovered snake_case column names from docs/DATA_MODEL.md so the same
+/// repository SQL runs unchanged against both engines. Seed values are chosen to
+/// be exactly representable so tests are deterministic.
+/// </summary>
+public static class SqliteFixture
+{
+    public static void EnsureCreatedAndSeeded(string connectionString)
+    {
+        using var conn = new SqliteConnection(connectionString);
+        conn.Open();
+
+        conn.Execute("""
+            DROP TABLE IF EXISTS ab_job;
+            DROP TABLE IF EXISTS coil;
+            DROP TABLE IF EXISTS process_coil;
+            DROP TABLE IF EXISTS customer_order;
+            DROP TABLE IF EXISTS order_item;
+            DROP TABLE IF EXISTS pst_test_result;
+            DROP TABLE IF EXISTS customer;
+            DROP TABLE IF EXISTS sheet_skid;
+            DROP TABLE IF EXISTS scrap_skid;
+            DROP TABLE IF EXISTS opc_action_log;
+
+            CREATE TABLE ab_job (
+                ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
+                line_num INTEGER, job_status INTEGER, material_yield REAL, number_of_men_used INTEGER,
+                sketch_id INTEGER, create_date TEXT, due_date TEXT, time_date_started TEXT,
+                time_date_finished TEXT, job_notes TEXT, sketch_job_note TEXT);
+
+            CREATE TABLE coil (
+                coil_abc_num INTEGER PRIMARY KEY, coil_alloy2 TEXT, coil_temper TEXT, coil_gauge REAL,
+                coil_width REAL, coil_line_num INTEGER, coil_location TEXT, coil_mid_num TEXT,
+                coil_org_num TEXT, coil_status INTEGER, coil_notes TEXT, coil_entry_date TEXT,
+                customer_id INTEGER, coil_from_cust_id INTEGER, date_received TEXT, icra TEXT,
+                lot_num TEXT, net_wt REAL, net_wt_balance REAL, pieces_per_case INTEGER);
+
+            CREATE TABLE process_coil (
+                ab_job_num INTEGER, coil_abc_num INTEGER, process_coil_status INTEGER,
+                process_date TEXT, process_end_wt REAL, process_quantity REAL,
+                PRIMARY KEY (ab_job_num, coil_abc_num));
+
+            CREATE TABLE customer_order (
+                order_abc_num INTEGER PRIMARY KEY, orig_customer_id INTEGER, orig_customer_po TEXT,
+                enduser_po TEXT, scrap_handing_type TEXT);
+
+            CREATE TABLE order_item (
+                order_item_num INTEGER PRIMARY KEY, order_abc_num INTEGER, enduser_part_num TEXT, alloy2 TEXT,
+                temper TEXT, gauge REAL, gauge_p REAL, gauge_m REAL, surface TEXT, flatness TEXT,
+                sheet_type TEXT, material_end_use TEXT, order_item_desc TEXT, pieces_skid INTEGER,
+                theoretical_unit_wt REAL, unit_price REAL, item_created_dttm TEXT);
+
+            CREATE TABLE pst_test_result (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, created_date TEXT, test_type INTEGER, position TEXT,
+                yts_val REAL, uts_val REAL, elong_val REAL, n_val REAL, r_val REAL,
+                thickness REAL, width REAL);
+
+            CREATE TABLE customer (
+                customer_id INTEGER PRIMARY KEY, customer_name TEXT, customer_short_name TEXT,
+                enduser_name TEXT, shipto_customer_zip TEXT);
+
+            CREATE TABLE sheet_skid (
+                sheet_skid_num INTEGER PRIMARY KEY, ab_job_num INTEGER, sheet_skid_display_num TEXT,
+                sheet_net_wt REAL, sheet_tare_wt REAL, skid_pieces INTEGER, skid_date TEXT);
+
+            CREATE TABLE scrap_skid (
+                scrap_skid_num INTEGER PRIMARY KEY, scrap_ab_job_num TEXT, scrap_alloy2 TEXT, scrap_temper TEXT,
+                scrap_type INTEGER, scrap_net_wt REAL, scrap_tare_wt REAL, scrap_location TEXT,
+                scrap_notes TEXT, skid_scrap_status INTEGER, scrap_date TEXT);
+
+            CREATE TABLE opc_action_log (
+                opc_log_id INTEGER PRIMARY KEY, time_stamp TEXT, source TEXT, success INTEGER, notes TEXT);
+            """);
+
+        var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
+
+        conn.Execute("""
+            INSERT INTO customer_order (order_abc_num, orig_customer_id, orig_customer_po, enduser_po, scrap_handing_type)
+            VALUES (:OrderAbcNum, :OrigCustomerId, :OrigCustomerPo, :EnduserPo, :ScrapHandingType)
+            """,
+            new[]
+            {
+                new { OrderAbcNum = 9001L, OrigCustomerId = 4001L, OrigCustomerPo = "PO-AB-1001", EnduserPo = "EU-7781", ScrapHandingType = "RETURN" },
+                new { OrderAbcNum = 9002L, OrigCustomerId = 4002L, OrigCustomerPo = "PO-AB-1002", EnduserPo = "EU-7782", ScrapHandingType = "KEEP" }
+            });
+
+        conn.Execute("""
+            INSERT INTO order_item (order_item_num, order_abc_num, enduser_part_num, alloy2, temper, gauge, gauge_p, gauge_m,
+                surface, flatness, sheet_type, material_end_use, order_item_desc, pieces_skid,
+                theoretical_unit_wt, unit_price, item_created_dttm)
+            VALUES (:OrderItemNum, :OrderAbcNum, :EnduserPartNum, :Alloy2, :Temper, :Gauge, :GaugeP, :GaugeM,
+                :Surface, :Flatness, :SheetType, :MaterialEndUse, :OrderItemDesc, :PiecesSkid,
+                :TheoreticalUnitWt, :UnitPrice, :ItemCreatedDttm)
+            """,
+            new[]
+            {
+                new { OrderItemNum = 7001L, OrderAbcNum = (long?)9001L, EnduserPartNum = "PN-3003-A", Alloy2 = "3003", Temper = "H14", Gauge = 0.125m, GaugeP = 0.005m, GaugeM = 0.005m, Surface = "MILL", Flatness = "STD", SheetType = "SHEET", MaterialEndUse = "HVAC", OrderItemDesc = "3003 sheet", PiecesSkid = 50, TheoreticalUnitWt = 12.5m, UnitPrice = 1.25m, ItemCreatedDttm = (DateTime?)d },
+                new { OrderItemNum = 7002L, OrderAbcNum = (long?)9001L, EnduserPartNum = "PN-5052-B", Alloy2 = "5052", Temper = "H32", Gauge = 0.0625m, GaugeP = 0.004m, GaugeM = 0.004m, Surface = "MILL", Flatness = "TIGHT", SheetType = "SHEET", MaterialEndUse = "MARINE", OrderItemDesc = "5052 sheet", PiecesSkid = 40, TheoreticalUnitWt = 8.0m, UnitPrice = 1.5m, ItemCreatedDttm = (DateTime?)d },
+                new { OrderItemNum = 7003L, OrderAbcNum = (long?)9002L, EnduserPartNum = "PN-3003-C", Alloy2 = "3003", Temper = "H14", Gauge = 0.25m, GaugeP = 0.01m, GaugeM = 0.01m, Surface = "BRUSHED", Flatness = "STD", SheetType = "PLATE", MaterialEndUse = "GENERAL", OrderItemDesc = "3003 plate", PiecesSkid = 25, TheoreticalUnitWt = 25.0m, UnitPrice = 1.75m, ItemCreatedDttm = (DateTime?)d }
+            });
+
+        conn.Execute("""
+            INSERT INTO ab_job (ab_job_num, order_abc_num, order_item_num, line_num, job_status, material_yield,
+                number_of_men_used, sketch_id, create_date, due_date, time_date_started, time_date_finished,
+                job_notes, sketch_job_note)
+            VALUES (:AbJobNum, :OrderAbcNum, :OrderItemNum, :LineNum, :JobStatus, :MaterialYield,
+                :NumberOfMenUsed, :SketchId, :CreateDate, :DueDate, :TimeDateStarted, :TimeDateFinished,
+                :JobNotes, :SketchJobNote)
+            """,
+            new[]
+            {
+                new { AbJobNum = 1001L, OrderAbcNum = (long?)9001L, OrderItemNum = (long?)7001L, LineNum = (long?)110L, JobStatus = (int?)1, MaterialYield = (decimal?)92.5m, NumberOfMenUsed = (int?)3, SketchId = (long?)1L, CreateDate = (DateTime?)d, DueDate = (DateTime?)d.AddDays(7), TimeDateStarted = (DateTime?)d.AddHours(1), TimeDateFinished = (DateTime?)null, JobNotes = "Running", SketchJobNote = "" },
+                new { AbJobNum = 1002L, OrderAbcNum = (long?)9001L, OrderItemNum = (long?)7002L, LineNum = (long?)110L, JobStatus = (int?)1, MaterialYield = (decimal?)88.0m, NumberOfMenUsed = (int?)2, SketchId = (long?)2L, CreateDate = (DateTime?)d.AddDays(1), DueDate = (DateTime?)d.AddDays(8), TimeDateStarted = (DateTime?)d.AddDays(1), TimeDateFinished = (DateTime?)null, JobNotes = "Queued", SketchJobNote = "" },
+                new { AbJobNum = 1003L, OrderAbcNum = (long?)9002L, OrderItemNum = (long?)7003L, LineNum = (long?)120L, JobStatus = (int?)2, MaterialYield = (decimal?)95.0m, NumberOfMenUsed = (int?)4, SketchId = (long?)3L, CreateDate = (DateTime?)d.AddDays(2), DueDate = (DateTime?)d.AddDays(5), TimeDateStarted = (DateTime?)d.AddDays(2), TimeDateFinished = (DateTime?)d.AddDays(3), JobNotes = "Complete", SketchJobNote = "" }
+            });
+
+        conn.Execute("""
+            INSERT INTO coil (coil_abc_num, coil_alloy2, coil_temper, coil_gauge, coil_width, coil_line_num,
+                coil_location, coil_mid_num, coil_org_num, coil_status, coil_notes, coil_entry_date,
+                customer_id, coil_from_cust_id, date_received, icra, lot_num, net_wt, net_wt_balance, pieces_per_case)
+            VALUES (:CoilAbcNum, :CoilAlloy2, :CoilTemper, :CoilGauge, :CoilWidth, :CoilLineNum,
+                :CoilLocation, :CoilMidNum, :CoilOrgNum, :CoilStatus, :CoilNotes, :CoilEntryDate,
+                :CustomerId, :CoilFromCustId, :DateReceived, :Icra, :LotNum, :NetWt, :NetWtBalance, :PiecesPerCase)
+            """,
+            new[]
+            {
+                new { CoilAbcNum = 5001L, CoilAlloy2 = "3003", CoilTemper = "H14", CoilGauge = 0.125m, CoilWidth = 48.5m, CoilLineNum = (long?)110L, CoilLocation = "A-01", CoilMidNum = "MID-5001", CoilOrgNum = "ORG-5001", CoilStatus = (int?)1, CoilNotes = "", CoilEntryDate = (DateTime?)d, CustomerId = (long?)4001L, CoilFromCustId = (long?)4001L, DateReceived = (DateTime?)d, Icra = "ICRA1", LotNum = "LOT-1", NetWt = 12000m, NetWtBalance = 8000m, PiecesPerCase = (int?)0 },
+                new { CoilAbcNum = 5002L, CoilAlloy2 = "3003", CoilTemper = "H14", CoilGauge = 0.125m, CoilWidth = 48.5m, CoilLineNum = (long?)110L, CoilLocation = "A-02", CoilMidNum = "MID-5002", CoilOrgNum = "ORG-5002", CoilStatus = (int?)1, CoilNotes = "", CoilEntryDate = (DateTime?)d, CustomerId = (long?)4001L, CoilFromCustId = (long?)4001L, DateReceived = (DateTime?)d, Icra = "ICRA2", LotNum = "LOT-2", NetWt = 11000m, NetWtBalance = 11000m, PiecesPerCase = (int?)0 },
+                new { CoilAbcNum = 5003L, CoilAlloy2 = "5052", CoilTemper = "H32", CoilGauge = 0.0625m, CoilWidth = 60.0m, CoilLineNum = (long?)110L, CoilLocation = "B-01", CoilMidNum = "MID-5003", CoilOrgNum = "ORG-5003", CoilStatus = (int?)1, CoilNotes = "", CoilEntryDate = (DateTime?)d, CustomerId = (long?)4002L, CoilFromCustId = (long?)4002L, DateReceived = (DateTime?)d, Icra = "ICRA3", LotNum = "LOT-3", NetWt = 9000m, NetWtBalance = 9000m, PiecesPerCase = (int?)0 },
+                new { CoilAbcNum = 5004L, CoilAlloy2 = "5052", CoilTemper = "H32", CoilGauge = 0.0625m, CoilWidth = 60.0m, CoilLineNum = (long?)120L, CoilLocation = "B-02", CoilMidNum = "MID-5004", CoilOrgNum = "ORG-5004", CoilStatus = (int?)3, CoilNotes = "On hold", CoilEntryDate = (DateTime?)d, CustomerId = (long?)4002L, CoilFromCustId = (long?)4002L, DateReceived = (DateTime?)d, Icra = "ICRA4", LotNum = "LOT-4", NetWt = 9500m, NetWtBalance = 9500m, PiecesPerCase = (int?)0 }
+            });
+
+        conn.Execute("""
+            INSERT INTO process_coil (ab_job_num, coil_abc_num, process_coil_status, process_date, process_end_wt, process_quantity)
+            VALUES (:AbJobNum, :CoilAbcNum, :ProcessCoilStatus, :ProcessDate, :ProcessEndWt, :ProcessQuantity)
+            """,
+            new[]
+            {
+                new { AbJobNum = 1001L, CoilAbcNum = 5001L, ProcessCoilStatus = (int?)1, ProcessDate = (DateTime?)d.AddHours(2), ProcessEndWt = 4000m, ProcessQuantity = 200m },
+                new { AbJobNum = 1001L, CoilAbcNum = 5002L, ProcessCoilStatus = (int?)1, ProcessDate = (DateTime?)d.AddHours(3), ProcessEndWt = 0m, ProcessQuantity = 0m },
+                new { AbJobNum = 1002L, CoilAbcNum = 5003L, ProcessCoilStatus = (int?)0, ProcessDate = (DateTime?)null, ProcessEndWt = 0m, ProcessQuantity = 0m }
+            });
+
+        conn.Execute("""
+            INSERT INTO pst_test_result (created_date, test_type, position, yts_val, uts_val, elong_val, n_val, r_val, thickness, width)
+            VALUES (:CreatedDate, :TestType, :Position, :YtsVal, :UtsVal, :ElongVal, :NVal, :RVal, :Thickness, :Width)
+            """,
+            new[]
+            {
+                new { CreatedDate = (DateTime?)d, TestType = (int?)1, Position = "T", YtsVal = 45.0m, UtsVal = 50.0m, ElongVal = 12.5m, NVal = 0.25m, RVal = 0.5m, Thickness = 0.125m, Width = 48.5m },
+                new { CreatedDate = (DateTime?)d.AddHours(1), TestType = (int?)3, Position = "M", YtsVal = 46.0m, UtsVal = 51.0m, ElongVal = 12.0m, NVal = 0.25m, RVal = 0.5m, Thickness = 0.125m, Width = 48.5m },
+                new { CreatedDate = (DateTime?)d.AddHours(2), TestType = (int?)4, Position = "B", YtsVal = 44.0m, UtsVal = 49.0m, ElongVal = 13.0m, NVal = 0.25m, RVal = 0.5m, Thickness = 0.0625m, Width = 60.0m }
+            });
+
+        conn.Execute("""
+            INSERT INTO customer (customer_id, customer_name, customer_short_name, enduser_name, shipto_customer_zip)
+            VALUES (:CustomerId, :CustomerName, :CustomerShortName, :EnduserName, :ShiptoCustomerZip)
+            """,
+            new[]
+            {
+                new { CustomerId = 4001L, CustomerName = "ACME METALS", CustomerShortName = "ACME", EnduserName = "ACME END USE", ShiptoCustomerZip = "48201" },
+                new { CustomerId = 4002L, CustomerName = "BETA FAB", CustomerShortName = "BETA", EnduserName = "BETA END USE", ShiptoCustomerZip = "44101" }
+            });
+
+        conn.Execute("""
+            INSERT INTO sheet_skid (sheet_skid_num, ab_job_num, sheet_skid_display_num, sheet_net_wt, sheet_tare_wt, skid_pieces, skid_date)
+            VALUES (:SheetSkidNum, :AbJobNum, :SheetSkidDisplayNum, :SheetNetWt, :SheetTareWt, :SkidPieces, :SkidDate)
+            """,
+            new[]
+            {
+                new { SheetSkidNum = 3001L, AbJobNum = (long?)1001L, SheetSkidDisplayNum = "110-1001-01", SheetNetWt = 1980m, SheetTareWt = 50m, SkidPieces = (int?)100, SkidDate = (DateTime?)d.AddHours(4) },
+                new { SheetSkidNum = 3002L, AbJobNum = (long?)1001L, SheetSkidDisplayNum = "110-1001-02", SheetNetWt = 1975m, SheetTareWt = 50m, SkidPieces = (int?)100, SkidDate = (DateTime?)d.AddHours(5) },
+                new { SheetSkidNum = 3003L, AbJobNum = (long?)1003L, SheetSkidDisplayNum = "120-1003-01", SheetNetWt = 2400m, SheetTareWt = 60m, SkidPieces = (int?)80, SkidDate = (DateTime?)d.AddDays(3) }
+            });
+
+        conn.Execute("""
+            INSERT INTO scrap_skid (scrap_skid_num, scrap_ab_job_num, scrap_alloy2, scrap_temper, scrap_type,
+                scrap_net_wt, scrap_tare_wt, scrap_location, scrap_notes, skid_scrap_status, scrap_date)
+            VALUES (:ScrapSkidNum, :ScrapAbJobNum, :ScrapAlloy2, :ScrapTemper, :ScrapType,
+                :ScrapNetWt, :ScrapTareWt, :ScrapLocation, :ScrapNotes, :SkidScrapStatus, :ScrapDate)
+            """,
+            new[]
+            {
+                new { ScrapSkidNum = 8001L, ScrapAbJobNum = "1001", ScrapAlloy2 = "3003", ScrapTemper = "H14", ScrapType = (int?)1, ScrapNetWt = 120m, ScrapTareWt = 20m, ScrapLocation = "SCR-A", ScrapNotes = "", SkidScrapStatus = (int?)1, ScrapDate = (DateTime?)d.AddHours(6) },
+                new { ScrapSkidNum = 8002L, ScrapAbJobNum = "1003", ScrapAlloy2 = "5052", ScrapTemper = "H32", ScrapType = (int?)2, ScrapNetWt = 90m, ScrapTareWt = 20m, ScrapLocation = "SCR-B", ScrapNotes = "", SkidScrapStatus = (int?)1, ScrapDate = (DateTime?)d.AddDays(3) }
+            });
+
+        conn.Execute("""
+            INSERT INTO opc_action_log (opc_log_id, time_stamp, source, success, notes)
+            VALUES (:OpcLogId, :TimeStamp, :Source, :Success, :Notes)
+            """,
+            new[]
+            {
+                new { OpcLogId = 1L, TimeStamp = (DateTime?)d, Source = "SEED", Success = (int?)1, Notes = "fixture seed" },
+                new { OpcLogId = 2L, TimeStamp = (DateTime?)d.AddMinutes(5), Source = "SEED", Success = (int?)1, Notes = "fixture seed 2" }
+            });
+    }
+}

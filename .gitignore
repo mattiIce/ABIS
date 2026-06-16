@@ -1,0 +1,19 @@
+# .NET build output
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+*.user
+
+# Local dev SQLite fixtures (the API seeds these at runtime)
+*.db
+*.db-shm
+*.db-wal
+
+# Generated OpenAPI contract (produced in CI as an artifact)
+openapi.json
+
+# IDE / OS cruft
+.vs/
+.idea/
+.vscode/
+.DS_Store

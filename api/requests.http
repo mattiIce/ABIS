@@ -1,0 +1,51 @@
+### ABIS API sample requests (VS Code REST Client / JetBrains HTTP client)
+### Run the API first:  dotnet run --project src/ABIS.Api
+
+@host = http://localhost:5199
+@apiKey = dev-local-key
+
+### Service info (anonymous)
+GET {{host}}/
+
+### Health (anonymous)
+GET {{host}}/health
+
+### List jobs (auth required)
+GET {{host}}/api/jobs?pageSize=5
+X-Api-Key: {{apiKey}}
+
+### One job
+GET {{host}}/api/jobs/1001
+X-Api-Key: {{apiKey}}
+
+### Coils processed by a job
+GET {{host}}/api/jobs/1001/coils
+X-Api-Key: {{apiKey}}
+
+### Create a coil on receipt
+POST {{host}}/api/coils
+X-Api-Key: {{apiKey}}
+Content-Type: application/json
+
+{ "coilAlloy2": "6061", "coilTemper": "T6", "coilGauge": 0.25, "coilWidth": 48.5, "netWt": 15000, "coilStatus": 1 }
+
+### Update a coil (move / status)
+PATCH {{host}}/api/coils/5001
+X-Api-Key: {{apiKey}}
+Content-Type: application/json
+
+{ "coilLocation": "DOCK-7", "coilStatus": 2 }
+
+### Create a customer
+POST {{host}}/api/customers
+X-Api-Key: {{apiKey}}
+Content-Type: application/json
+
+{ "customerName": "DELTA EXTRUSIONS", "customerShortName": "DELTA" }
+
+### Audit log (newest first)
+GET {{host}}/api/audit-log?pageSize=10
+X-Api-Key: {{apiKey}}
+
+### Missing key -> 401
+GET {{host}}/api/jobs

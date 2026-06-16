@@ -1,0 +1,1926 @@
+{
+  "_meta": {
+    "generated_by": "tools/extract_schema.py",
+    "source_files_parsed": 42,
+    "note": "Partial model recovered from exported DataWindow/query sources only. Not a live database introspection."
+  },
+  "table_count": 20,
+  "relationship_count": 2,
+  "tables": {
+    "ab_job": {
+      "column_count": 14,
+      "columns": {
+        "ab_job_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 3,
+          "sources": [
+            "d_ab_job_list.srd",
+            "d_ab_job_list_per_cust.srd",
+            "d_all_shift_job_coil_cust.srd"
+          ]
+        },
+        "create_date": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_list.srd",
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "due_date": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_list.srd",
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "job_notes": {
+          "types": [
+            "char(255)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_list.srd",
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "job_status": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_list.srd",
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "line_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_list.srd",
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "material_yield": {
+          "types": [
+            "decimal(2)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_list.srd",
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "number_of_men_used": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_list.srd",
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "order_abc_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_list.srd",
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "order_item_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_list.srd",
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "sketch_id": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "sketch_job_note": {
+          "types": [
+            "char(1024)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "time_date_finished": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_list.srd",
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "time_date_started": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_list.srd",
+            "d_ab_job_list_per_cust.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "abis_ini": {
+      "column_count": 5,
+      "columns": {
+        "description": {
+          "types": [
+            "char(500)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abis_ini.srd"
+          ]
+        },
+        "key": {
+          "types": [
+            "char(100)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abis_ini.srd"
+          ]
+        },
+        "process": {
+          "types": [
+            "char(100)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abis_ini.srd"
+          ]
+        },
+        "section": {
+          "types": [
+            "char(50)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abis_ini.srd"
+          ]
+        },
+        "value": {
+          "types": [
+            "char(250)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abis_ini.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "coil": {
+      "column_count": 20,
+      "columns": {
+        "coil_abc_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 11,
+          "sources": [
+            "d_863_cert.srd",
+            "d_863_check_output.srd",
+            "d_ab_job_coil_detail_display.srd",
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coil_rej.srd",
+            "d_ab_job_process_coil_sum.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        },
+        "coil_alloy2": {
+          "types": [
+            "char(8)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd"
+          ]
+        },
+        "coil_entry_date": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd"
+          ]
+        },
+        "coil_from_cust_id": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd"
+          ]
+        },
+        "coil_gauge": {
+          "types": [
+            "decimal(4)"
+          ],
+          "source_count": 7,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd",
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        },
+        "coil_line_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd"
+          ]
+        },
+        "coil_location": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd"
+          ]
+        },
+        "coil_mid_num": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 9,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd",
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coil_rej.srd",
+            "d_ab_job_process_coil_sum.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        },
+        "coil_notes": {
+          "types": [
+            "char(255)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd"
+          ]
+        },
+        "coil_org_num": {
+          "types": [
+            "char(32)"
+          ],
+          "source_count": 10,
+          "sources": [
+            "d_863_cert.srd",
+            "d_ab_job_coil_detail_display.srd",
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coil_rej.srd",
+            "d_ab_job_process_coil_sum.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        },
+        "coil_status": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 9,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd",
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coil_rej.srd",
+            "d_ab_job_process_coil_sum.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        },
+        "coil_temper": {
+          "types": [
+            "char(8)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd"
+          ]
+        },
+        "coil_width": {
+          "types": [
+            "decimal(3)"
+          ],
+          "source_count": 5,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd",
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coils.srd"
+          ]
+        },
+        "customer_id": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd"
+          ]
+        },
+        "date_received": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd"
+          ]
+        },
+        "icra": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd"
+          ]
+        },
+        "lot_num": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 7,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd",
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        },
+        "net_wt": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 9,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd",
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coil_rej.srd",
+            "d_ab_job_process_coil_sum.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        },
+        "net_wt_balance": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 9,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd",
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coil_rej.srd",
+            "d_ab_job_process_coil_sum.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        },
+        "pieces_per_case": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_coil_detail_display.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "customer": {
+      "column_count": 5,
+      "columns": {
+        "customer_id": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_all_coils_have_863.srd"
+          ]
+        },
+        "customer_name": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "customer_short_name": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_all_coils_have_863.srd",
+            "d_all_shift_job_coil_cust.srd"
+          ]
+        },
+        "enduser_name": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "shipto_customer_zip": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_863_cert.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "customer_duns_xref": {
+      "column_count": 2,
+      "columns": {
+        "customer_duns_number_string": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "dddw_customer_duns.srd"
+          ]
+        },
+        "customer_name": {
+          "types": [
+            "char(50)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "dddw_customer_duns.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "customer_order": {
+      "column_count": 5,
+      "columns": {
+        "enduser_po": {
+          "types": [
+            "char(36)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "order_abc_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_all_coils_have_863.srd"
+          ]
+        },
+        "orig_customer_id": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_list_per_cust.srd"
+          ]
+        },
+        "orig_customer_po": {
+          "types": [
+            "char(36)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "scrap_handing_type": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "die": {
+      "column_count": 1,
+      "columns": {
+        "die_name": {
+          "types": [
+            "char(32)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "dddw_die_list_active.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "inbound_shipment": {
+      "column_count": 2,
+      "columns": {
+        "bol": {
+          "types": [
+            "char(40)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_archived_bol.srd"
+          ]
+        },
+        "edi_file_id": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_archived_bol.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "opc_action_log": {
+      "column_count": 5,
+      "columns": {
+        "notes": {
+          "types": [
+            "char(255)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_action_table_update.srd"
+          ]
+        },
+        "opc_log_id": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_action_table_update.srd"
+          ]
+        },
+        "source": {
+          "types": [
+            "char(64)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_action_table_update.srd"
+          ]
+        },
+        "success": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_action_table_update.srd"
+          ]
+        },
+        "time_stamp": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_action_table_update.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "order_item": {
+      "column_count": 15,
+      "columns": {
+        "alloy2": {
+          "types": [
+            "char(8)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "enduser_part_num": {
+          "types": [
+            "char(22)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_863_cert.srd",
+            "d_active_parts_list.srd"
+          ]
+        },
+        "flatness": {
+          "types": [
+            "char(255)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "gauge": {
+          "types": [
+            "decimal(5)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "gauge_m": {
+          "types": [
+            "decimal(6)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "gauge_p": {
+          "types": [
+            "decimal(6)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "item_created_dttm": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "material_end_use": {
+          "types": [
+            "char(255)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "order_item_desc": {
+          "types": [
+            "char(255)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "pieces_skid": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "sheet_type": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "surface": {
+          "types": [
+            "char(255)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "temper": {
+          "types": [
+            "char(8)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "theoretical_unit_wt": {
+          "types": [
+            "decimal(5)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        },
+        "unit_price": {
+          "types": [
+            "decimal(5)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_active_parts_list.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "process_coil": {
+      "column_count": 6,
+      "columns": {
+        "ab_job_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 8,
+          "sources": [
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coil_rej.srd",
+            "d_ab_job_process_coil_sum.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        },
+        "coil_abc_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 8,
+          "sources": [
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coil_rej.srd",
+            "d_ab_job_process_coil_sum.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        },
+        "process_coil_status": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 4,
+          "sources": [
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coils.srd"
+          ]
+        },
+        "process_date": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 8,
+          "sources": [
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coil_rej.srd",
+            "d_ab_job_process_coil_sum.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        },
+        "process_end_wt": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 6,
+          "sources": [
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        },
+        "process_quantity": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 8,
+          "sources": [
+            "d_ab_job_process_coil.srd",
+            "d_ab_job_process_coil_2.srd",
+            "d_ab_job_process_coil_auto.srd",
+            "d_ab_job_process_coil_rej.srd",
+            "d_ab_job_process_coil_sum.srd",
+            "d_ab_job_process_coils.srd",
+            "d_ab_job_reband_coil_list.srd",
+            "d_ab_job_rej_coil_list.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "process_partial_skid": {
+      "column_count": 7,
+      "columns": {
+        "ab_job_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_process_partial.srd",
+            "d_ab_job_process_partial_offline.srd"
+          ]
+        },
+        "partial_sheet_net_wt": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_process_partial.srd",
+            "d_ab_job_process_partial_offline.srd"
+          ]
+        },
+        "partial_skid_ab_job_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_process_partial.srd",
+            "d_ab_job_process_partial_offline.srd"
+          ]
+        },
+        "partial_skid_date": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_process_partial.srd",
+            "d_ab_job_process_partial_offline.srd"
+          ]
+        },
+        "partial_skid_location": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_process_partial.srd",
+            "d_ab_job_process_partial_offline.srd"
+          ]
+        },
+        "partial_skid_pieces": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_process_partial.srd",
+            "d_ab_job_process_partial_offline.srd"
+          ]
+        },
+        "sheet_skid_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_process_partial.srd",
+            "d_ab_job_process_partial_offline.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "pst_test_result": {
+      "column_count": 16,
+      "columns": {
+        "celong_status": {
+          "types": [
+            "number"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "cn_status": {
+          "types": [
+            "number"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "cr_status": {
+          "types": [
+            "number"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "created_date": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "cthickness_status": {
+          "types": [
+            "number"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "cuts_status": {
+          "types": [
+            "number"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "cyts_status": {
+          "types": [
+            "number"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "elong_val": {
+          "types": [
+            "decimal(5)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "n_val": {
+          "types": [
+            "decimal(8)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "position": {
+          "types": [
+            "char(2)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "r_val": {
+          "types": [
+            "decimal(8)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "test_type": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "thickness": {
+          "types": [
+            "decimal(7)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "uts_val": {
+          "types": [
+            "decimal(5)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "width": {
+          "types": [
+            "decimal(7)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        },
+        "yts_val": {
+          "types": [
+            "decimal(5)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_alcan_coil_info.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "reject_coil_packing_item": {
+      "column_count": 4,
+      "columns": {
+        "coil_abc_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_assigned_to_shipment_rejcoil.srd"
+          ]
+        },
+        "packing_list": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_assigned_to_shipment_rejcoil.srd"
+          ]
+        },
+        "rej_coil_packaging_ticket": {
+          "types": [
+            "number"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_assigned_to_shipment_rejcoil.srd"
+          ]
+        },
+        "rej_coil_packing_item": {
+          "types": [
+            "number"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_assigned_to_shipment_rejcoil.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "return_scrap_item": {
+      "column_count": 1,
+      "columns": {
+        "return_item_net_wt": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_scrap_list.srd",
+            "d_acct_scrap_type_summary.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "scrap_skid": {
+      "column_count": 11,
+      "columns": {
+        "scrap_ab_job_num": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_scrap_list.srd"
+          ]
+        },
+        "scrap_alloy2": {
+          "types": [
+            "char(8)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_scrap_list.srd"
+          ]
+        },
+        "scrap_date": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_scrap_list.srd"
+          ]
+        },
+        "scrap_location": {
+          "types": [
+            "char(18)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_scrap_list.srd"
+          ]
+        },
+        "scrap_net_wt": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_scrap_list.srd"
+          ]
+        },
+        "scrap_notes": {
+          "types": [
+            "char(255)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_scrap_list.srd"
+          ]
+        },
+        "scrap_skid_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_scrap_list.srd"
+          ]
+        },
+        "scrap_tare_wt": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_scrap_list.srd"
+          ]
+        },
+        "scrap_temper": {
+          "types": [
+            "char(8)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_scrap_list.srd"
+          ]
+        },
+        "scrap_type": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 2,
+          "sources": [
+            "d_ab_job_scrap_list.srd",
+            "d_acct_scrap_type_list.srd"
+          ]
+        },
+        "skid_scrap_status": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_scrap_list.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "security_application": {
+      "column_count": 3,
+      "columns": {
+        "application_id": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_app_list.srd"
+          ]
+        },
+        "application_name": {
+          "types": [
+            "char(64)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_app_list.srd"
+          ]
+        },
+        "application_notes": {
+          "types": [
+            "char(255)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_app_list.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "sheet_skid": {
+      "column_count": 7,
+      "columns": {
+        "ab_job_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_current_partial_offline.srd"
+          ]
+        },
+        "sheet_net_wt": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_current_partial_offline.srd"
+          ]
+        },
+        "sheet_skid_display_num": {
+          "types": [
+            "char(16)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_863_cert.srd"
+          ]
+        },
+        "sheet_skid_num": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_current_partial_offline.srd"
+          ]
+        },
+        "sheet_tare_wt": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 3,
+          "sources": [
+            "d_ab_job_current_partial_offline.srd",
+            "d_ab_job_process_partial.srd",
+            "d_ab_job_process_partial_offline.srd"
+          ]
+        },
+        "skid_date": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_current_partial_offline.srd"
+          ]
+        },
+        "skid_pieces": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_ab_job_current_partial_offline.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "shipment": {
+      "column_count": 1,
+      "columns": {
+        "shipto_customer_id": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_863_cert.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    },
+    "temp_test_result": {
+      "column_count": 10,
+      "columns": {
+        "created_date": {
+          "types": [
+            "datetime"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abc_test_result.srd"
+          ]
+        },
+        "elongation": {
+          "types": [
+            "decimal(5)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abc_test_result.srd"
+          ]
+        },
+        "n": {
+          "types": [
+            "decimal(8)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abc_test_result.srd"
+          ]
+        },
+        "position": {
+          "types": [
+            "char(2)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abc_test_result.srd"
+          ]
+        },
+        "r": {
+          "types": [
+            "decimal(8)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abc_test_result.srd"
+          ]
+        },
+        "test_type": {
+          "types": [
+            "decimal(0)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abc_test_result.srd"
+          ]
+        },
+        "thickness": {
+          "types": [
+            "decimal(7)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abc_test_result.srd"
+          ]
+        },
+        "uts": {
+          "types": [
+            "decimal(5)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abc_test_result.srd"
+          ]
+        },
+        "width": {
+          "types": [
+            "decimal(7)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abc_test_result.srd"
+          ]
+        },
+        "yts": {
+          "types": [
+            "decimal(5)"
+          ],
+          "source_count": 1,
+          "sources": [
+            "d_abc_test_result.srd"
+          ]
+        }
+      },
+      "queried_by": []
+    }
+  },
+  "relationships": [
+    {
+      "from_table": "production_sheet_item",
+      "from_column": "prod_item_num",
+      "to_table": "sheet_skid_detail",
+      "to_column": "prod_item_num"
+    },
+    {
+      "from_table": "sheet_skid_detail",
+      "from_column": "sheet_skid_num",
+      "to_table": "sheet_skid_dimension_check",
+      "to_column": "sheet_skid_num"
+    }
+  ],
+  "inferred_relationships_by_shared_column": {
+    "ab_job_num": [
+      "ab_job",
+      "process_coil",
+      "process_partial_skid",
+      "sheet_skid"
+    ],
+    "coil_abc_num": [
+      "coil",
+      "process_coil",
+      "reject_coil_packing_item"
+    ],
+    "created_date": [
+      "pst_test_result",
+      "temp_test_result"
+    ],
+    "customer_id": [
+      "coil",
+      "customer"
+    ],
+    "customer_name": [
+      "customer",
+      "customer_duns_xref"
+    ],
+    "order_abc_num": [
+      "ab_job",
+      "customer_order"
+    ],
+    "position": [
+      "pst_test_result",
+      "temp_test_result"
+    ],
+    "sheet_skid_num": [
+      "process_partial_skid",
+      "sheet_skid"
+    ],
+    "test_type": [
+      "pst_test_result",
+      "temp_test_result"
+    ],
+    "thickness": [
+      "pst_test_result",
+      "temp_test_result"
+    ],
+    "width": [
+      "pst_test_result",
+      "temp_test_result"
+    ]
+  },
+  "computed_or_unqualified_columns": [
+    "ab_job_num",
+    "abc_num",
+    "al",
+    "alloy",
+    "alloy2",
+    "aro_b",
+    "aro_b_date",
+    "aro_b_uom",
+    "aro_f",
+    "aro_f_date",
+    "aro_f_uom",
+    "b",
+    "bb",
+    "beginning_wt",
+    "bi",
+    "bkn_b",
+    "bkn_b_date",
+    "bkn_b_uom",
+    "bkn_f",
+    "bkn_f_date",
+    "bkn_f_uom",
+    "c_color",
+    "ca",
+    "cash_date",
+    "cd",
+    "chemical_test_date",
+    "co",
+    "coil_num",
+    "compute_0004",
+    "compute_0016",
+    "compute_0017",
+    "cr",
+    "cu",
+    "cust_order_line_note",
+    "data_t1",
+    "data_t10",
+    "data_t11",
+    "data_t12",
+    "data_t13",
+    "data_t14",
+    "data_t15",
+    "data_t16",
+    "data_t2",
+    "data_t3",
+    "data_t4",
+    "data_t5",
+    "data_t6",
+    "data_t7",
+    "data_t8",
+    "data_t9",
+    "desc_t1",
+    "desc_t10",
+    "desc_t11",
+    "desc_t12",
+    "desc_t13",
+    "desc_t14",
+    "desc_t15",
+    "desc_t16",
+    "desc_t2",
+    "desc_t3",
+    "desc_t4",
+    "desc_t5",
+    "desc_t6",
+    "desc_t7",
+    "desc_t8",
+    "desc_t9",
+    "designation",
+    "die_name",
+    "dpa_b",
+    "dpa_b_date",
+    "dpa_b_uom",
+    "dpa_f",
+    "dpa_f_date",
+    "dpa_f_uom",
+    "fe",
+    "gh",
+    "grade",
+    "heat_treated",
+    "ik",
+    "init_wt",
+    "isu_b",
+    "isu_b_date",
+    "isu_b_uom",
+    "isu_f",
+    "isu_f_date",
+    "isu_f_uom",
+    "itd_b",
+    "itd_b_date",
+    "itd_b_uom",
+    "itd_f",
+    "itd_f_date",
+    "itd_f_uom",
+    "ith_b",
+    "ith_b_date",
+    "ith_b_uom",
+    "ith_f",
+    "ith_f_date",
+    "ith_f_uom",
+    "itl_b",
+    "itl_b_date",
+    "itl_b_uom",
+    "itl_f",
+    "itl_f_date",
+    "itl_f_uom",
+    "itt_b",
+    "itt_b_date",
+    "itt_b_uom",
+    "itt_f",
+    "itt_f_date",
+    "itt_f_uom",
+    "job_coil_status",
+    "lb",
+    "lb_cut",
+    "long_length",
+    "long_minus",
+    "long_plus",
+    "lot_num",
+    "lube_date",
+    "lube_uom_desc",
+    "lube_weight",
+    "lube_weight_uom",
+    "material_num",
+    "mdo_b",
+    "mdo_b_date",
+    "mdo_b_uom",
+    "mdo_f",
+    "mdo_f_date",
+    "mdo_f_uom",
+    "mg",
+    "mn",
+    "n4t_b",
+    "n4t_b_date",
+    "n4t_b_uom",
+    "n4t_f",
+    "n4t_f_date",
+    "n4t_f_uom",
+    "n5t_b",
+    "n5t_b_date",
+    "n5t_b_uom",
+    "n5t_f",
+    "n5t_f_date",
+    "n5t_f_uom",
+    "ni",
+    "orig_num",
+    "part_dims",
+    "pb",
+    "processed_date",
+    "sb",
+    "sector",
+    "sh",
+    "shipto_customer_city",
+    "shipto_customer_name",
+    "shipto_customer_state",
+    "shipto_customer_street",
+    "short_length",
+    "short_minus",
+    "short_plus",
+    "si",
+    "sn",
+    "spec",
+    "ss",
+    "status",
+    "sx",
+    "tel_b",
+    "tel_b_date",
+    "tel_b_uom",
+    "tel_f",
+    "tel_f_date",
+    "tel_f_uom",
+    "tes_b",
+    "tes_b_date",
+    "tes_b_uom",
+    "tes_f",
+    "tes_f_date",
+    "tes_f_uom",
+    "tet_b",
+    "tet_b_date",
+    "tet_b_uom",
+    "tet_f",
+    "tet_f_date",
+    "tet_f_uom",
+    "thd_b",
+    "thd_b_date",
+    "thd_b_uom",
+    "thd_f",
+    "thd_f_date",
+    "thd_f_uom",
+    "thl_b",
+    "thl_b_date",
+    "thl_b_uom",
+    "thl_f",
+    "thl_f_date",
+    "thl_f_uom",
+    "tht_b",
+    "tht_b_date",
+    "tht_b_uom",
+    "tht_f",
+    "tht_f_date",
+    "tht_f_uom",
+    "ti",
+    "tmd_b",
+    "tmd_b_date",
+    "tmd_b_uom",
+    "tmd_f",
+    "tmd_f_date",
+    "tmd_f_uom",
+    "tnd_b",
+    "tnd_b_date",
+    "tnd_b_uom",
+    "tnd_f",
+    "tnd_f_date",
+    "tnd_f_uom",
+    "tnl_b",
+    "tnl_b_date",
+    "tnl_b_uom",
+    "tnl_f",
+    "tnl_f_date",
+    "tnl_f_uom",
+    "tnt_b",
+    "tnt_b_date",
+    "tnt_b_uom",
+    "tnt_f",
+    "tnt_f_date",
+    "tnt_f_uom",
+    "tps_b",
+    "tps_b_date",
+    "tps_b_uom",
+    "tps_f",
+    "tps_f_date",
+    "tps_f_uom",
+    "trd_b",
+    "trd_b_date",
+    "trd_b_uom",
+    "trd_f",
+    "trd_f_date",
+    "trd_f_uom",
+    "trimming_required",
+    "trl_b",
+    "trl_b_date",
+    "trl_b_uom",
+    "trl_f",
+    "trl_f_date",
+    "trl_f_uom",
+    "trt_b",
+    "trt_b_date",
+    "trt_b_uom",
+    "trt_f",
+    "trt_f_date",
+    "trt_f_uom",
+    "tte_b",
+    "tte_b_date",
+    "tte_b_uom",
+    "tte_f",
+    "tte_f_date",
+    "tte_f_uom",
+    "ttl_b",
+    "ttl_b_date",
+    "ttl_b_uom",
+    "ttl_f",
+    "ttl_f_date",
+    "ttl_f_uom",
+    "tto_b",
+    "tto_b_date",
+    "tto_b_uom",
+    "tto_f",
+    "tto_f_date",
+    "tto_f_uom",
+    "tts_b",
+    "tts_b_date",
+    "tts_b_uom",
+    "tts_f",
+    "tts_f_date",
+    "tts_f_uom",
+    "ttt_b",
+    "ttt_b_date",
+    "ttt_b_uom",
+    "ttt_f",
+    "ttt_f_date",
+    "ttt_f_uom",
+    "ttu_b",
+    "ttu_b_date",
+    "ttu_b_uom",
+    "ttu_f",
+    "ttu_f_date",
+    "ttu_f_uom",
+    "tty_b",
+    "tty_b_date",
+    "tty_b_uom",
+    "tty_f",
+    "tty_f_date",
+    "tty_f_uom",
+    "ttz_b",
+    "ttz_b_date",
+    "ttz_b_uom",
+    "ttz_f",
+    "ttz_f_date",
+    "ttz_f_uom",
+    "ult_b",
+    "ult_b_date",
+    "ult_b_uom",
+    "ult_f",
+    "ult_f_date",
+    "ult_f_uom",
+    "upt_b",
+    "upt_b_date",
+    "upt_b_uom",
+    "upt_f",
+    "upt_f_date",
+    "upt_f_uom",
+    "v",
+    "width",
+    "width_minus",
+    "width_plus",
+    "x27_b",
+    "x27_b_date",
+    "x27_b_uom",
+    "x27_f",
+    "x27_f_date",
+    "x27_f_uom",
+    "ypn_b",
+    "ypn_b_date",
+    "ypn_b_uom",
+    "ypn_f",
+    "ypn_f_date",
+    "ypn_f_uom",
+    "ysr_b",
+    "ysr_b_date",
+    "ysr_b_uom",
+    "ysr_f",
+    "ysr_f_date",
+    "ysr_f_uom",
+    "zas",
+    "zb",
+    "zlb",
+    "zln",
+    "zlt",
+    "zlx",
+    "zn",
+    "zp",
+    "zr",
+    "zv"
+  ]
+}
