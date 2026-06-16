@@ -84,6 +84,11 @@ the B-vs-C commitment until after a measured pilot.
 - [x] **Expand read coverage**: added customers, sheet skids, and scrap skids
       (plus `/jobs/{id}/skids` and `/jobs/{id}/scrap` relationship endpoints).
       *Ongoing* — more entities as Phase 1's full schema lands.
+- [x] **Query ergonomics**: allowlisted, injection-safe **sorting** (`sort`/`dir`
+      with a PK tie-breaker) on every paged list (`Data/Sort.cs`), and richer QA
+      filtering (`position` + `from`/`to` date range on test results).
+- [x] **Readiness probe**: `GET /health/ready` runs `SELECT 1` (503 when the DB is
+      unreachable) alongside the dependency-free `GET /health` liveness check.
 - [x] **Write surface across core entities**: customers, order headers, order
       items, jobs, coils, sheet skids, and scrap skids (POST/PUT, server-assigned
       ids, validation, 201/400/404) plus operational PATCH on jobs and coils —
@@ -94,7 +99,7 @@ the B-vs-C commitment until after a measured pilot.
 - [x] **Observability / audit parity**: `AuditMiddleware` records every mutating
       request into the legacy `opc_action_log`, exposed via `GET /api/audit-log`.
 - [x] **Authentication**: API-key auth (`X-Api-Key`) gates the `/api` surface
-      (`/health` + Swagger stay open); swappable for OAuth/OIDC later.
+      (`/health`, `/health/ready` + Swagger stay open); swappable for OAuth/OIDC later.
 - [x] **Deployment readiness**: multi-stage `Dockerfile` (built in CI), CORS for
       a future SPA, a `/` service-info endpoint, and a `requests.http` collection.
 - [ ] Validate the **Oracle** data-access path against a real database (CI only

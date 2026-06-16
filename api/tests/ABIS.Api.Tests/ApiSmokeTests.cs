@@ -81,6 +81,15 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Qa_demo_page_is_served()
+    {
+        var bare = _factory.CreateClient();
+        var resp = await bare.GetAsync("/ui/qa.html");
+        resp.EnsureSuccessStatusCode();
+        Assert.Contains("ABIS QA Test Results", await resp.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task List_jobs_returns_paged_envelope()
     {
         var body = await _client.GetFromJsonAsync<JsonElement>("/api/jobs");
@@ -292,6 +301,53 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     {
         var body = await _client.GetFromJsonAsync<JsonElement>("/api/coils/5001/processing");
         Assert.Equal(1, body.GetArrayLength());
+    }
+
+    [Fact]
+    public async Task List_jobs_sorted_by_status_desc_applies()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/jobs?sort=jobStatus&dir=desc");
+        var statuses = body.GetProperty("items").EnumerateArray()
+            .Select(j => j.GetProperty("jobStatus").GetInt32()).ToList();
+        Assert.Equal(statuses.OrderByDescending(s => s).ToList(), statuses);
+    }
+
+    [Fact]
+    public async Task List_with_unknown_sort_field_is_400()
+    {
+        var resp = await _client.GetAsync("/api/jobs?sort=bogusColumn");
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task List_with_bad_direction_is_400()
+    {
+        var resp = await _client.GetAsync("/api/coils?sort=netWt&dir=upward");
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Readiness_probe_reports_ready_against_fixture()
+    {
+        var resp = await _client.GetAsync("/health/ready");
+        resp.EnsureSuccessStatusCode();
+        var body = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("ready", body.GetProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task Readiness_probe_is_anonymous()
+    {
+        var bare = _factory.CreateClient();   // no key
+        var resp = await bare.GetAsync("/health/ready");
+        resp.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Test_results_filter_by_position()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/test-results?position=M");
+        Assert.Equal(1, body.GetProperty("totalCount").GetInt32());
     }
 
     [Fact]

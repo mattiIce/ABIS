@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ABIS QA Test Results (Path C demo)</title>
+<style>
+  :root { --bd:#d0d7de; --bg:#f6f8fa; --ac:#0969da; }
+  * { box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 0; color: #1f2328; }
+  header { background:#24292f; color:#fff; padding:10px 16px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; font-weight:600; }
+  header nav { display:flex; gap:12px; }
+  header nav a { color:#9ecbff; text-decoration:none; }
+  header .key { margin-left:auto; display:flex; gap:6px; align-items:center; }
+  main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; }
+  section { border:1px solid var(--bd); border-radius:8px; padding:14px; }
+  h2 { font-size:14px; margin:0 0 10px; text-transform:uppercase; letter-spacing:.04em; color:#57606a; }
+  label { display:block; font-size:12px; color:#57606a; margin:6px 0 2px; }
+  input, select, button { font:inherit; padding:6px 8px; border:1px solid var(--bd); border-radius:6px; }
+  button { background:var(--ac); color:#fff; border-color:var(--ac); cursor:pointer; }
+  table { width:100%; border-collapse:collapse; margin-top:8px; }
+  th, td { text-align:left; padding:5px 6px; border-bottom:1px solid var(--bd); font-size:13px; }
+  th { color:#57606a; font-weight:600; }
+  th.sortable { cursor:pointer; user-select:none; }
+  th.sortable:hover { color:var(--ac); }
+  td.num, th.num { text-align:right; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:end; }
+  .muted { color:#8b949e; }
+  .pill { background:var(--bg); border:1px solid var(--bd); border-radius:12px; padding:1px 8px; font-size:12px; }
+  .err { color:#cf222e; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ABIS QA Test Results <span class="pill">Path C demo</span></h1>
+  <nav>
+    <a href="/ui/index.html">Order entry</a>
+    <a href="/ui/coils.html">Coil inventory</a>
+    <a href="/ui/qa.html">QA results</a>
+  </nav>
+  <div class="key">
+    <label for="apiKey" style="color:#fff;margin:0">X-Api-Key</label>
+    <input id="apiKey" placeholder="dev-local-key" style="width:180px" />
+  </div>
+</header>
+
+<main>
+  <section>
+    <h2>Find mechanical test results</h2>
+    <div class="row">
+      <div><label>Test type</label><input id="fType" type="number" style="width:90px" placeholder="any" /></div>
+      <div><label>Position</label><input id="fPos" style="width:90px" placeholder="any" /></div>
+      <div><label>From date</label><input id="fFrom" type="date" /></div>
+      <div><label>To date</label><input id="fTo" type="date" /></div>
+      <button id="btnSearch">Search</button>
+      <span id="msg" class="muted"></span>
+    </div>
+    <p class="muted" style="margin:8px 0 0">Click a column header to sort (server-side, allowlisted).</p>
+    <table id="tbl">
+      <thead><tr>
+        <th class="sortable" data-sort="createdDate">Date</th>
+        <th class="sortable num" data-sort="testType">Type</th>
+        <th class="sortable" data-sort="position">Pos</th>
+        <th class="sortable num" data-sort="ytsVal">YTS</th>
+        <th class="sortable num" data-sort="utsVal">UTS</th>
+        <th class="sortable num" data-sort="elongVal">Elong</th>
+        <th class="num">n</th><th class="num">r</th>
+        <th class="num">Thick</th><th class="num">Width</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const keyInput = $("#apiKey");
+keyInput.value = localStorage.getItem("abis_api_key") || "dev-local-key";
+keyInput.addEventListener("change", () => localStorage.setItem("abis_api_key", keyInput.value));
+
+let sortField = "createdDate", sortDir = "desc";
+
+async function api(path) {
+  const res = await fetch(path, { headers: { "X-Api-Key": keyInput.value } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+const n = v => (v ?? "") === "" ? "" : Number(v).toLocaleString();
+
+async function search() {
+  const p = new URLSearchParams();
+  if ($("#fType").value) p.set("testType", $("#fType").value);
+  if ($("#fPos").value) p.set("position", $("#fPos").value);
+  if ($("#fFrom").value) p.set("from", $("#fFrom").value);
+  if ($("#fTo").value) p.set("to", $("#fTo").value);
+  p.set("sort", sortField); p.set("dir", sortDir);
+  $("#msg").textContent = "Loading…";
+  try {
+    const page = await api(`/api/test-results?${p}`);
+    $("#tbl tbody").innerHTML = page.items.map(t => `
+      <tr>
+        <td>${(t.createdDate || "").slice(0,10)}</td>
+        <td class="num">${t.testType ?? ""}</td><td>${t.position ?? ""}</td>
+        <td class="num">${n(t.ytsVal)}</td><td class="num">${n(t.utsVal)}</td><td class="num">${n(t.elongVal)}</td>
+        <td class="num">${t.nVal ?? ""}</td><td class="num">${t.rVal ?? ""}</td>
+        <td class="num">${t.thickness ?? ""}</td><td class="num">${t.width ?? ""}</td>
+      </tr>`).join("");
+    $("#msg").textContent = `${page.totalCount} result(s) · sorted by ${sortField} ${sortDir}`;
+  } catch (e) { $("#msg").innerHTML = `<span class="err">${e.message} — check the API key</span>`; }
+}
+
+document.querySelectorAll("th.sortable").forEach(th => th.onclick = () => {
+  const f = th.dataset.sort;
+  sortDir = (sortField === f && sortDir === "asc") ? "desc" : "asc";
+  sortField = f;
+  search();
+});
+$("#btnSearch").onclick = search;
+
+search();
+</script>
+</body>
+</html>

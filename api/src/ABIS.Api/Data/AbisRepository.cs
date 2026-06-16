@@ -83,6 +83,13 @@ public sealed class AbisRepository : IAbisRepository
         return conn;
     }
 
+    public async Task<bool> PingAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // SELECT 1 is portable to both engines and confirms the connection is live.
+        return await conn.ExecuteScalarAsync<long>(new CommandDefinition("SELECT 1", cancellationToken: ct)) == 1;
+    }
+
     private async Task<PagedResult<T>> PageAsync<T>(
         string columns, string from, string orderBy, string? where,
         object pageArgs, int page, int pageSize, CancellationToken ct)
@@ -109,8 +116,8 @@ public sealed class AbisRepository : IAbisRepository
         };
     }
 
-    public Task<PagedResult<AbJob>> GetJobsAsync(int page, int pageSize, int? status, CancellationToken ct) =>
-        PageAsync<AbJob>(JobCols, "ab_job", "ab_job_num",
+    public Task<PagedResult<AbJob>> GetJobsAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct) =>
+        PageAsync<AbJob>(JobCols, "ab_job", orderBy ?? "ab_job_num",
             status is null ? null : "job_status = :status",
             new { status }, page, pageSize, ct);
 
@@ -138,7 +145,7 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
-    public Task<PagedResult<Coil>> GetCoilsAsync(int page, int pageSize, int? status, string? alloy, string? location, long? customerId, CancellationToken ct)
+    public Task<PagedResult<Coil>> GetCoilsAsync(int page, int pageSize, int? status, string? alloy, string? location, long? customerId, string? orderBy, CancellationToken ct)
     {
         var p = new DynamicParameters();
         var conditions = new List<string>();
@@ -147,7 +154,7 @@ public sealed class AbisRepository : IAbisRepository
         if (location is not null) { conditions.Add("coil_location LIKE :location"); p.Add("location", $"%{location}%"); }
         if (customerId is not null) { conditions.Add("customer_id = :customerId"); p.Add("customerId", customerId); }
         var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
-        return PageAsync<Coil>(CoilCols, "coil", "coil_abc_num", where, p, page, pageSize, ct);
+        return PageAsync<Coil>(CoilCols, "coil", orderBy ?? "coil_abc_num", where, p, page, pageSize, ct);
     }
 
     public async Task<IReadOnlyList<CoilProcessing>> GetCoilProcessingAsync(long coilAbcNum, CancellationToken ct)
@@ -193,7 +200,7 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {CoilCols} FROM coil WHERE coil_abc_num = :id", new { id = coilAbcNum }, cancellationToken: ct));
     }
 
-    public Task<PagedResult<CustomerOrder>> GetOrdersAsync(int page, int pageSize, long? customerId, string? po, CancellationToken ct)
+    public Task<PagedResult<CustomerOrder>> GetOrdersAsync(int page, int pageSize, long? customerId, string? po, string? orderBy, CancellationToken ct)
     {
         // Build only the conditions/params actually used, so the count query
         // carries no unreferenced parameters (keeps Oracle positional binding happy).
@@ -202,7 +209,7 @@ public sealed class AbisRepository : IAbisRepository
         if (customerId is not null) { conditions.Add("orig_customer_id = :customerId"); p.Add("customerId", customerId); }
         if (po is not null) { conditions.Add("orig_customer_po LIKE :po"); p.Add("po", $"%{po}%"); }
         var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
-        return PageAsync<CustomerOrder>(OrderCols, "customer_order", "order_abc_num", where, p, page, pageSize, ct);
+        return PageAsync<CustomerOrder>(OrderCols, "customer_order", orderBy ?? "order_abc_num", where, p, page, pageSize, ct);
     }
 
     public async Task<CustomerOrder?> GetOrderAsync(long orderAbcNum, CancellationToken ct)
@@ -212,8 +219,8 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {OrderCols} FROM customer_order WHERE order_abc_num = :id", new { id = orderAbcNum }, cancellationToken: ct));
     }
 
-    public Task<PagedResult<OrderItem>> GetOrderItemsAsync(int page, int pageSize, string? alloy, CancellationToken ct) =>
-        PageAsync<OrderItem>(OrderItemCols, "order_item", "order_item_num",
+    public Task<PagedResult<OrderItem>> GetOrderItemsAsync(int page, int pageSize, string? alloy, string? orderBy, CancellationToken ct) =>
+        PageAsync<OrderItem>(OrderItemCols, "order_item", orderBy ?? "order_item_num",
             alloy is null ? null : "alloy2 = :alloy",
             new { alloy }, page, pageSize, ct);
 
@@ -224,10 +231,17 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {OrderItemCols} FROM order_item WHERE order_item_num = :id", new { id = orderItemNum }, cancellationToken: ct));
     }
 
-    public Task<PagedResult<TestResult>> GetTestResultsAsync(int page, int pageSize, int? testType, CancellationToken ct) =>
-        PageAsync<TestResult>(TestCols, "pst_test_result", "created_date DESC",
-            testType is null ? null : "test_type = :testType",
-            new { testType }, page, pageSize, ct);
+    public Task<PagedResult<TestResult>> GetTestResultsAsync(int page, int pageSize, int? testType, string? position, DateTime? from, DateTime? to, string? orderBy, CancellationToken ct)
+    {
+        var p = new DynamicParameters();
+        var conditions = new List<string>();
+        if (testType is not null) { conditions.Add("test_type = :testType"); p.Add("testType", testType); }
+        if (position is not null) { conditions.Add("position = :position"); p.Add("position", position); }
+        if (from is not null) { conditions.Add("created_date >= :fromDate"); p.Add("fromDate", from); }
+        if (to is not null) { conditions.Add("created_date <= :toDate"); p.Add("toDate", to); }
+        var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
+        return PageAsync<TestResult>(TestCols, "pst_test_result", orderBy ?? "created_date DESC", where, p, page, pageSize, ct);
+    }
 
     public async Task<IReadOnlyList<SheetSkid>> GetJobSheetSkidsAsync(long abJobNum, CancellationToken ct)
     {
@@ -238,8 +252,8 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
-    public Task<PagedResult<SheetSkid>> GetSheetSkidsAsync(int page, int pageSize, CancellationToken ct) =>
-        PageAsync<SheetSkid>(SheetSkidCols, "sheet_skid", "sheet_skid_num", null, new { }, page, pageSize, ct);
+    public Task<PagedResult<SheetSkid>> GetSheetSkidsAsync(int page, int pageSize, string? orderBy, CancellationToken ct) =>
+        PageAsync<SheetSkid>(SheetSkidCols, "sheet_skid", orderBy ?? "sheet_skid_num", null, new { }, page, pageSize, ct);
 
     public async Task<IReadOnlyList<ScrapSkid>> GetJobScrapAsync(long abJobNum, CancellationToken ct)
     {
@@ -251,11 +265,11 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
-    public Task<PagedResult<ScrapSkid>> GetScrapSkidsAsync(int page, int pageSize, CancellationToken ct) =>
-        PageAsync<ScrapSkid>(ScrapSkidCols, "scrap_skid", "scrap_skid_num", null, new { }, page, pageSize, ct);
+    public Task<PagedResult<ScrapSkid>> GetScrapSkidsAsync(int page, int pageSize, string? orderBy, CancellationToken ct) =>
+        PageAsync<ScrapSkid>(ScrapSkidCols, "scrap_skid", orderBy ?? "scrap_skid_num", null, new { }, page, pageSize, ct);
 
-    public Task<PagedResult<Customer>> GetCustomersAsync(int page, int pageSize, string? name, CancellationToken ct) =>
-        PageAsync<Customer>(CustomerCols, "customer", "customer_id",
+    public Task<PagedResult<Customer>> GetCustomersAsync(int page, int pageSize, string? name, string? orderBy, CancellationToken ct) =>
+        PageAsync<Customer>(CustomerCols, "customer", orderBy ?? "customer_id",
             name is null ? null : "customer_name LIKE :name",
             new { name = name is null ? null : $"%{name}%" }, page, pageSize, ct);
 
@@ -425,8 +439,8 @@ public sealed class AbisRepository : IAbisRepository
             cancellationToken: ct));
     }
 
-    public Task<PagedResult<AuditEntry>> GetAuditLogAsync(int page, int pageSize, string? source, CancellationToken ct) =>
-        PageAsync<AuditEntry>(AuditCols, "opc_action_log", "opc_log_id DESC",
+    public Task<PagedResult<AuditEntry>> GetAuditLogAsync(int page, int pageSize, string? source, string? orderBy, CancellationToken ct) =>
+        PageAsync<AuditEntry>(AuditCols, "opc_action_log", orderBy ?? "opc_log_id DESC",
             source is null ? null : "source LIKE :source",
             new { source = source is null ? null : $"%{source}%" }, page, pageSize, ct);
 

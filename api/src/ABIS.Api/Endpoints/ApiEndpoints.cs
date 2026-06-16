@@ -16,11 +16,31 @@ public static class ApiEndpoints
             environment = env.EnvironmentName,
             docs = "/swagger",
             health = "/health",
+            ready = "/health/ready",
             ui = "/ui/index.html"
         })).WithTags("Meta").WithName("Root");
 
+        // Liveness: the process is up. No dependencies touched (cheap; safe to poll).
         app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
            .WithTags("Meta").WithName("Health");
+
+        // Readiness: the database is reachable. Returns 503 when it is not, so an
+        // orchestrator can hold traffic until the data path is actually serving.
+        app.MapGet("/health/ready", async (IAbisRepository repo, CancellationToken ct) =>
+            {
+                try
+                {
+                    return await repo.PingAsync(ct)
+                        ? Results.Ok(new { status = "ready" })
+                        : Results.Json(new { status = "unavailable" }, statusCode: StatusCodes.Status503ServiceUnavailable);
+                }
+                catch (Exception ex)
+                {
+                    return Results.Json(new { status = "unavailable", error = ex.Message },
+                        statusCode: StatusCodes.Status503ServiceUnavailable);
+                }
+            })
+           .WithTags("Meta").WithName("Ready");
 
         // All /api endpoints require an authenticated caller (see ApiKey auth).
         // /health and Swagger remain anonymous.
@@ -28,8 +48,12 @@ public static class ApiEndpoints
 
         // ---- Jobs -------------------------------------------------------
         api.MapGet("/jobs", async (IAbisRepository repo, CancellationToken ct,
-                int page = 1, int pageSize = 25, int? status = null) =>
-                Results.Ok(await repo.GetJobsAsync(page, pageSize, status, ct)))
+                int page = 1, int pageSize = 25, int? status = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("jobs", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetJobsAsync(page, pageSize, status, orderBy, ct));
+            })
            .WithName("ListJobs").WithTags("Jobs");
 
         api.MapGet("/jobs/{abJobNum:long}", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
@@ -66,8 +90,13 @@ public static class ApiEndpoints
         // ---- Coils (inventory) -----------------------------------------
         api.MapGet("/coils", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, int? status = null,
-                string? alloy = null, string? location = null, long? customerId = null) =>
-                Results.Ok(await repo.GetCoilsAsync(page, pageSize, status, alloy, location, customerId, ct)))
+                string? alloy = null, string? location = null, long? customerId = null,
+                string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("coils", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetCoilsAsync(page, pageSize, status, alloy, location, customerId, orderBy, ct));
+            })
            .WithName("ListCoils").WithTags("Coils");
 
         // Inventory rollup: weight on hand grouped by alloy or location.
@@ -108,8 +137,13 @@ public static class ApiEndpoints
 
         // ---- Orders -----------------------------------------------------
         api.MapGet("/orders", async (IAbisRepository repo, CancellationToken ct,
-                int page = 1, int pageSize = 25, long? customerId = null, string? po = null) =>
-                Results.Ok(await repo.GetOrdersAsync(page, pageSize, customerId, po, ct)))
+                int page = 1, int pageSize = 25, long? customerId = null, string? po = null,
+                string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("orders", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetOrdersAsync(page, pageSize, customerId, po, orderBy, ct));
+            })
            .WithName("ListOrders").WithTags("Orders");
 
         api.MapGet("/orders/{orderAbcNum:long}", async (long orderAbcNum, IAbisRepository repo, CancellationToken ct) =>
@@ -154,8 +188,12 @@ public static class ApiEndpoints
 
         // ---- Order items ------------------------------------------------
         api.MapGet("/order-items", async (IAbisRepository repo, CancellationToken ct,
-                int page = 1, int pageSize = 25, string? alloy = null) =>
-                Results.Ok(await repo.GetOrderItemsAsync(page, pageSize, alloy, ct)))
+                int page = 1, int pageSize = 25, string? alloy = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("orderItems", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetOrderItemsAsync(page, pageSize, alloy, orderBy, ct));
+            })
            .WithName("ListOrderItems").WithTags("OrderItems");
 
         api.MapGet("/order-items/{orderItemNum:long}", async (long orderItemNum, IAbisRepository repo, CancellationToken ct) =>
@@ -183,16 +221,25 @@ public static class ApiEndpoints
             })
            .WithName("UpdateOrderItem").WithTags("OrderItems");
 
-        // ---- Test results ----------------------------------------------
+        // ---- Test results (QA) -----------------------------------------
         api.MapGet("/test-results", async (IAbisRepository repo, CancellationToken ct,
-                int page = 1, int pageSize = 25, int? testType = null) =>
-                Results.Ok(await repo.GetTestResultsAsync(page, pageSize, testType, ct)))
+                int page = 1, int pageSize = 25, int? testType = null, string? position = null,
+                DateTime? from = null, DateTime? to = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("testResults", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetTestResultsAsync(page, pageSize, testType, position, from, to, orderBy, ct));
+            })
            .WithName("ListTestResults").WithTags("TestResults");
 
         // ---- Customers (read + write) ----------------------------------
         api.MapGet("/customers", async (IAbisRepository repo, CancellationToken ct,
-                int page = 1, int pageSize = 25, string? name = null) =>
-                Results.Ok(await repo.GetCustomersAsync(page, pageSize, name, ct)))
+                int page = 1, int pageSize = 25, string? name = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("customers", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetCustomersAsync(page, pageSize, name, orderBy, ct));
+            })
            .WithName("ListCustomers").WithTags("Customers");
 
         api.MapGet("/customers/{customerId:long}", async (long customerId, IAbisRepository repo, CancellationToken ct) =>
@@ -222,8 +269,12 @@ public static class ApiEndpoints
 
         // ---- Skids ------------------------------------------------------
         api.MapGet("/sheet-skids", async (IAbisRepository repo, CancellationToken ct,
-                int page = 1, int pageSize = 25) =>
-                Results.Ok(await repo.GetSheetSkidsAsync(page, pageSize, ct)))
+                int page = 1, int pageSize = 25, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("sheetSkids", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetSheetSkidsAsync(page, pageSize, orderBy, ct));
+            })
            .WithName("ListSheetSkids").WithTags("Skids");
 
         api.MapGet("/sheet-skids/{sheetSkidNum:long}", async (long sheetSkidNum, IAbisRepository repo, CancellationToken ct) =>
@@ -242,8 +293,12 @@ public static class ApiEndpoints
            .WithName("CreateSheetSkid").WithTags("Skids");
 
         api.MapGet("/scrap-skids", async (IAbisRepository repo, CancellationToken ct,
-                int page = 1, int pageSize = 25) =>
-                Results.Ok(await repo.GetScrapSkidsAsync(page, pageSize, ct)))
+                int page = 1, int pageSize = 25, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("scrapSkids", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetScrapSkidsAsync(page, pageSize, orderBy, ct));
+            })
            .WithName("ListScrapSkids").WithTags("Skids");
 
         api.MapGet("/scrap-skids/{scrapSkidNum:long}", async (long scrapSkidNum, IAbisRepository repo, CancellationToken ct) =>
@@ -268,8 +323,12 @@ public static class ApiEndpoints
 
         // ---- Audit / action log ----------------------------------------
         api.MapGet("/audit-log", async (IAbisRepository repo, CancellationToken ct,
-                int page = 1, int pageSize = 25, string? source = null) =>
-                Results.Ok(await repo.GetAuditLogAsync(page, pageSize, source, ct)))
+                int page = 1, int pageSize = 25, string? source = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("auditLog", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetAuditLogAsync(page, pageSize, source, orderBy, ct));
+            })
            .WithName("ListAuditLog").WithTags("Audit");
 
         return app;

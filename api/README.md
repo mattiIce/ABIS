@@ -58,12 +58,14 @@ two pages cross-link.
   customer + lines, save a new order with line items.
 - **`/ui/coils.html`** — coil inventory: filter coils, view a coil + its
   processing history, receive a coil, and an alloy/location weight rollup.
+- **`/ui/qa.html`** — QA test results: filter mechanical test results by type,
+  position, and date range, with click-to-sort (server-side) column headers.
 
 ## Test
 
 ```sh
 cd api
-dotnet test                                # 67 tests: repository + HTTP smoke
+dotnet test                                # 81 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -101,46 +103,62 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | Method & path | Description |
 |---|---|
 | `GET /` | Service info (name, version, environment, links) |
-| `GET /health` | Liveness probe |
-| `GET /api/jobs?page&pageSize&status` | List production jobs (paged) |
+| `GET /health` | Liveness probe (process up; no dependencies touched) |
+| `GET /health/ready` | Readiness probe (database reachable); 503 when not |
+| `GET /api/jobs?page&pageSize&status&sort&dir` | List production jobs (paged, sortable) |
 | `GET /api/jobs/{abJobNum}` | One job |
 | `GET /api/jobs/{abJobNum}/coils` | Coils processed by a job (joined) |
 | `GET /api/jobs/{abJobNum}/skids` | Finished sheet skids for a job |
 | `GET /api/jobs/{abJobNum}/scrap` | Scrap skids for a job |
 | `POST /api/jobs` | Create a production job → 201 |
 | `PATCH /api/jobs/{abJobNum}` | Update job status / notes / men / finish time |
-| `GET /api/coils?page&pageSize&status&alloy&location&customerId` | List coils (paged, filterable) |
+| `GET /api/coils?page&pageSize&status&alloy&location&customerId&sort&dir` | List coils (paged, filterable, sortable) |
 | `GET /api/coils/summary?groupBy=alloy\|location` | Inventory weight rollup (count + net wt + balance) |
 | `GET /api/coils/{coilAbcNum}` | One coil |
 | `GET /api/coils/{coilAbcNum}/processing` | A coil's processing history (consuming jobs) |
 | `POST /api/coils` | Create a coil on receipt (requires `coilAlloy2`) → 201 |
 | `PATCH /api/coils/{coilAbcNum}` | Update coil status / location / notes |
-| `GET /api/orders?page&pageSize&customerId&po` | List customer orders (paged, filterable) |
+| `GET /api/orders?page&pageSize&customerId&po&sort&dir` | List customer orders (paged, filterable, sortable) |
 | `GET /api/orders/{orderAbcNum}` | One order header |
 | `GET /api/orders/{orderAbcNum}/items` | Line items for an order |
 | `GET /api/orders/{orderAbcNum}/full` | Order header + customer + items (order-entry read model) |
 | `POST /api/orders` | Create an order header (server-assigned id) → 201 |
 | `POST /api/orders/with-items` | Create an order + its line items in one transaction → 201 |
 | `PUT /api/orders/{orderAbcNum}` | Replace an order header |
-| `GET /api/order-items?page&pageSize&alloy` | List order items (paged) |
+| `GET /api/order-items?page&pageSize&alloy&sort&dir` | List order items (paged, sortable) |
 | `GET /api/order-items/{orderItemNum}` | One order item |
 | `POST /api/order-items` | Create an order item (requires `enduserPartNum`) → 201 |
 | `PUT /api/order-items/{orderItemNum}` | Replace an order item |
-| `GET /api/customers?page&pageSize&name` | List customers (paged) |
+| `GET /api/customers?page&pageSize&name&sort&dir` | List customers (paged, sortable) |
 | `GET /api/customers/{customerId}` | One customer |
 | `POST /api/customers` | Create a customer (server-assigned id) → 201 |
 | `PUT /api/customers/{customerId}` | Replace a customer |
-| `GET /api/sheet-skids?page&pageSize` | List finished sheet skids (paged) |
+| `GET /api/sheet-skids?page&pageSize&sort&dir` | List finished sheet skids (paged, sortable) |
 | `GET /api/sheet-skids/{sheetSkidNum}` | One sheet skid |
 | `POST /api/sheet-skids` | Create a sheet skid (requires `abJobNum`) → 201 |
-| `GET /api/scrap-skids?page&pageSize` | List scrap skids (paged) |
+| `GET /api/scrap-skids?page&pageSize&sort&dir` | List scrap skids (paged, sortable) |
 | `GET /api/scrap-skids/{scrapSkidNum}` | One scrap skid |
 | `POST /api/scrap-skids` | Create a scrap skid (requires `scrapAbJobNum`) → 201 |
-| `GET /api/test-results?page&pageSize&testType` | List mechanical test results (paged) |
+| `GET /api/test-results?page&pageSize&testType&position&from&to&sort&dir` | List mechanical test results (paged, filterable, sortable) |
 | `GET /api/lookups/alloys` | Distinct alloys (dropdown reference data) |
-| `GET /api/audit-log?page&pageSize&source` | List the action/audit log, newest first |
+| `GET /api/audit-log?page&pageSize&source&sort&dir` | List the action/audit log, newest first (sortable) |
 
 Collections return a paged envelope: `{ items, page, pageSize, totalCount, totalPages }`.
+
+**Sorting.** List endpoints accept `sort` (a field name) and `dir` (`asc`/`desc`,
+default `asc`). Sortable fields are **allowlisted per resource** and mapped to
+physical columns server-side (so only known columns and a validated direction
+reach the SQL — injection-safe); a stable tie-breaker (usually the primary key)
+is appended for deterministic paging. An unknown `sort` field or a bad `dir`
+returns `400` with a ProblemDetails listing the allowed fields. Without `sort`,
+each list keeps its natural default order (e.g. test results and the audit log
+default to newest-first).
+
+**Readiness vs liveness.** `GET /health` is a cheap liveness check (the process
+is up). `GET /health/ready` opens a database connection and runs `SELECT 1`,
+returning `200 {status:"ready"}` or `503 {status:"unavailable"}` — point an
+orchestrator's readiness gate here so traffic is held until the data path serves.
+Both are anonymous.
 
 **Audit trail.** Every mutating request (POST/PUT/PATCH/DELETE under `/api`) is
 recorded in the legacy `opc_action_log` table by `AuditMiddleware` (source =
