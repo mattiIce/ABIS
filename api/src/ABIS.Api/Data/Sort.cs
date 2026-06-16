@@ -72,6 +72,16 @@ public static class Sort
             ("ytsVal", "yts_val"), ("utsVal", "uts_val"), ("elongVal", "elong_val")),
             DefaultOrderBy: "created_date DESC", TieBreaker: null),
 
+        ["tempTestResults"] = new(Cols(
+            ("createdDate", "created_date"), ("testType", "test_type"), ("position", "position"),
+            ("yts", "yts"), ("uts", "uts"), ("elongation", "elongation")),
+            DefaultOrderBy: "created_date DESC", TieBreaker: null),
+
+        ["partialSkids"] = new(Cols(
+            ("sheetSkidNum", "sheet_skid_num"), ("abJobNum", "ab_job_num"),
+            ("netWt", "partial_sheet_net_wt"), ("pieces", "partial_skid_pieces"), ("skidDate", "partial_skid_date")),
+            DefaultOrderBy: "sheet_skid_num", TieBreaker: "sheet_skid_num"),
+
         ["auditLog"] = new(Cols(
             ("opcLogId", "opc_log_id"), ("timeStamp", "time_stamp"), ("source", "source"), ("success", "success")),
             DefaultOrderBy: "opc_log_id DESC", TieBreaker: "opc_log_id"),

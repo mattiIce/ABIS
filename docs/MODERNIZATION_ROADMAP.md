@@ -81,8 +81,9 @@ the B-vs-C commitment until after a measured pilot.
 - [x] Add an **automated test harness** (xUnit: repository + in-process HTTP
       smoke tests) and **CI** (`.github/workflows/ci.yml` builds/tests the API
       and runs the discovery extractors).
-- [x] **Expand read coverage**: added customers, sheet skids, and scrap skids
-      (plus `/jobs/{id}/skids` and `/jobs/{id}/scrap` relationship endpoints).
+- [x] **Expand read coverage**: added customers, sheet skids, scrap skids, partial
+      skids, and in-progress test results (`temp_test_result`), plus
+      `/jobs/{id}/skids`, `/scrap`, and `/partial-skids` relationship endpoints.
       *Ongoing* — more entities as Phase 1's full schema lands.
 - [x] **Query ergonomics**: allowlisted, injection-safe **sorting** (`sort`/`dir`
       with a PK tie-breaker) on every paged list (`Data/Sort.cs`), and richer QA

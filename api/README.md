@@ -84,7 +84,7 @@ CI compiles this on every run, so a contract change that breaks the typed UI fai
 
 ```sh
 cd api
-dotnet test                                # 90 tests: repository + HTTP smoke
+dotnet test                                # 94 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -141,6 +141,7 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/jobs/{abJobNum}/coils` | Coils processed by a job (joined) |
 | `GET /api/jobs/{abJobNum}/skids` | Finished sheet skids for a job |
 | `GET /api/jobs/{abJobNum}/scrap` | Scrap skids for a job |
+| `GET /api/jobs/{abJobNum}/partial-skids` | In-process partial skids for a job |
 | `POST /api/jobs` | Create a production job → 201 |
 | `PATCH /api/jobs/{abJobNum}` | Update job status / notes / men / finish time |
 | `GET /api/coils?page&pageSize&status&alloy&location&customerId&sort&dir` | List coils (paged, filterable, sortable) |
@@ -170,7 +171,9 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/scrap-skids?page&pageSize&sort&dir` | List scrap skids (paged, sortable) |
 | `GET /api/scrap-skids/{scrapSkidNum}` | One scrap skid |
 | `POST /api/scrap-skids` | Create a scrap skid (requires `scrapAbJobNum`) → 201 |
-| `GET /api/test-results?page&pageSize&testType&position&from&to&sort&dir` | List mechanical test results (paged, filterable, sortable) |
+| `GET /api/partial-skids?page&pageSize&sort&dir` | List in-process partial skids (paged, sortable) |
+| `GET /api/test-results?page&pageSize&testType&position&from&to&sort&dir` | List posted mechanical test results (paged, filterable, sortable) |
+| `GET /api/temp-test-results?page&pageSize&testType&position&from&to&sort&dir` | List in-progress (working-set) test results (paged, filterable, sortable) |
 | `GET /api/lookups/alloys` | Distinct alloys (dropdown reference data) |
 | `GET /api/audit-log?page&pageSize&source&sort&dir` | List the action/audit log, newest first (sortable) |
 

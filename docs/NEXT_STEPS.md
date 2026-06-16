@@ -32,7 +32,7 @@ curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0 --inst
 export PATH="$HOME/.dotnet:$PATH"
 
 cd api
-dotnet test                                   # 90 tests (repository + HTTP)
+dotnet test                                   # 94 tests (repository + HTTP)
 dotnet run --project src/ABIS.Api             # Dev profile: seeds SQLite, no DB needed
 # API key for /api/*: dev-local-key  (header X-Api-Key)
 # Demo UIs: http://localhost:5xxx/ui/index.html , /ui/coils.html , /ui/qa.html
@@ -83,10 +83,16 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
   soft-delete policy. True concurrency needs a rowversion column the recovered
   schema doesn't have — confirm against the real schema before adding one. The
   audit-log insert still uses `MAX+1` (append-only, best-effort).
-- **More module slices** following the recipe below (e.g. `quotation`,
-  `daily_prod`) as Phase-1's full schema lands.
-- **Expand the recovered data model** by exporting more DataWindows to text and
-  re-running `tools/extract_schema.py`.
+- ✅ **More slices from the recovered schema** — added `temp_test_result`
+  (in-progress QA, `GET /api/temp-test-results`) and `process_partial_skid`
+  (`GET /api/partial-skids` + `GET /api/jobs/{id}/partial-skids`). Remaining
+  extracted tables are either too thin to model faithfully
+  (`inbound_shipment`/`shipment`/`die`/`return_scrap_item`, 1–2 cols) or
+  out-of-API-scope (`abis_ini`, `security_application`).
+- **Expand the recovered data model** by exporting *more* DataWindows to text and
+  re-running `tools/extract_schema.py` — **needs the PB IDE** (can't export new
+  `.srd` here). Bigger modules (`quotation`, `daily_prod`, shipping/EDI) unlock
+  once their tables/columns are recovered; don't fabricate columns before then.
 
 ## Recipe: add a new module slice
 

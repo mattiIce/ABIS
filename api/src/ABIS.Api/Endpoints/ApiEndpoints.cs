@@ -87,6 +87,11 @@ public static class ApiEndpoints
            .WithName("GetJobScrap").WithTags("Jobs")
            .Produces<IEnumerable<ScrapSkid>>();
 
+        api.MapGet("/jobs/{abJobNum:long}/partial-skids", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetJobPartialSkidsAsync(abJobNum, ct)))
+           .WithName("GetJobPartialSkids").WithTags("Jobs")
+           .Produces<IEnumerable<PartialSkid>>();
+
         api.MapPost("/jobs", async (JobWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
                 var created = await repo.CreateJobAsync(body, ct);
@@ -265,6 +270,18 @@ public static class ApiEndpoints
            .WithName("ListTestResults").WithTags("TestResults")
            .Produces<PagedResult<TestResult>>().ProducesValidationProblem();
 
+        // In-progress / working-set test results (companion to the posted table).
+        api.MapGet("/temp-test-results", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, int? testType = null, string? position = null,
+                DateTime? from = null, DateTime? to = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("tempTestResults", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetTempTestResultsAsync(page, pageSize, testType, position, from, to, orderBy, ct));
+            })
+           .WithName("ListTempTestResults").WithTags("TestResults")
+           .Produces<PagedResult<TempTestResult>>().ProducesValidationProblem();
+
         // ---- Customers (read + write) ----------------------------------
         api.MapGet("/customers", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? name = null, string? sort = null, string? dir = null) =>
@@ -358,6 +375,16 @@ public static class ApiEndpoints
             })
            .WithName("CreateScrapSkid").WithTags("Skids")
            .Produces<ScrapSkid>(StatusCodes.Status201Created).ProducesValidationProblem();
+
+        api.MapGet("/partial-skids", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("partialSkids", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetPartialSkidsAsync(page, pageSize, orderBy, ct));
+            })
+           .WithName("ListPartialSkids").WithTags("Skids")
+           .Produces<PagedResult<PartialSkid>>().ProducesValidationProblem();
 
         // ---- Lookups (reference data for data-entry screens) -----------
         api.MapGet("/lookups/alloys", async (IAbisRepository repo, CancellationToken ct) =>

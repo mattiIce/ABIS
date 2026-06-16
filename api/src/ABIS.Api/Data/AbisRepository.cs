@@ -56,6 +56,17 @@ public sealed class AbisRepository : IAbisRepository
         thickness AS Thickness, width AS Width
         """;
 
+    private const string TempTestCols = """
+        created_date AS CreatedDate, test_type AS TestType, position AS Position, yts AS Yts,
+        uts AS Uts, elongation AS Elongation, n AS N, r AS R, thickness AS Thickness, width AS Width
+        """;
+
+    private const string PartialSkidCols = """
+        ab_job_num AS AbJobNum, partial_skid_ab_job_num AS PartialSkidAbJobNum, sheet_skid_num AS SheetSkidNum,
+        partial_sheet_net_wt AS PartialSheetNetWt, partial_skid_pieces AS PartialSkidPieces,
+        partial_skid_location AS PartialSkidLocation, partial_skid_date AS PartialSkidDate
+        """;
+
     private const string CustomerCols = """
         customer_id AS CustomerId, customer_name AS CustomerName, customer_short_name AS CustomerShortName,
         enduser_name AS EnduserName, shipto_customer_zip AS ShiptoCustomerZip
@@ -243,6 +254,18 @@ public sealed class AbisRepository : IAbisRepository
         return PageAsync<TestResult>(TestCols, "pst_test_result", orderBy ?? "created_date DESC", where, p, page, pageSize, ct);
     }
 
+    public Task<PagedResult<TempTestResult>> GetTempTestResultsAsync(int page, int pageSize, int? testType, string? position, DateTime? from, DateTime? to, string? orderBy, CancellationToken ct)
+    {
+        var p = new DynamicParameters();
+        var conditions = new List<string>();
+        if (testType is not null) { conditions.Add("test_type = :testType"); p.Add("testType", testType); }
+        if (position is not null) { conditions.Add("position = :position"); p.Add("position", position); }
+        if (from is not null) { conditions.Add("created_date >= :fromDate"); p.Add("fromDate", from); }
+        if (to is not null) { conditions.Add("created_date <= :toDate"); p.Add("toDate", to); }
+        var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
+        return PageAsync<TempTestResult>(TempTestCols, "temp_test_result", orderBy ?? "created_date DESC", where, p, page, pageSize, ct);
+    }
+
     public async Task<IReadOnlyList<SheetSkid>> GetJobSheetSkidsAsync(long abJobNum, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
@@ -267,6 +290,18 @@ public sealed class AbisRepository : IAbisRepository
 
     public Task<PagedResult<ScrapSkid>> GetScrapSkidsAsync(int page, int pageSize, string? orderBy, CancellationToken ct) =>
         PageAsync<ScrapSkid>(ScrapSkidCols, "scrap_skid", orderBy ?? "scrap_skid_num", null, new { }, page, pageSize, ct);
+
+    public Task<PagedResult<PartialSkid>> GetPartialSkidsAsync(int page, int pageSize, string? orderBy, CancellationToken ct) =>
+        PageAsync<PartialSkid>(PartialSkidCols, "process_partial_skid", orderBy ?? "sheet_skid_num", null, new { }, page, pageSize, ct);
+
+    public async Task<IReadOnlyList<PartialSkid>> GetJobPartialSkidsAsync(long abJobNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<PartialSkid>(new CommandDefinition(
+            $"SELECT {PartialSkidCols} FROM process_partial_skid WHERE ab_job_num = :id ORDER BY sheet_skid_num",
+            new { id = abJobNum }, cancellationToken: ct));
+        return rows.AsList();
+    }
 
     public Task<PagedResult<Customer>> GetCustomersAsync(int page, int pageSize, string? name, string? orderBy, CancellationToken ct) =>
         PageAsync<Customer>(CustomerCols, "customer", orderBy ?? "customer_id",

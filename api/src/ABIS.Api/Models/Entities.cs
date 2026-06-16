@@ -115,6 +115,38 @@ public sealed class TestResult
     public decimal? Width { get; set; }
 }
 
+/// <summary>An in-progress / working-set mechanical test result (table
+/// <c>temp_test_result</c>) — the companion to the posted <c>pst_test_result</c>.
+/// Note the legacy column names differ from the posted table: <c>yts</c>/<c>uts</c>/
+/// <c>elongation</c>/<c>n</c>/<c>r</c> here vs the <c>*_val</c> columns there.</summary>
+public sealed class TempTestResult
+{
+    public DateTime? CreatedDate { get; set; }
+    public int? TestType { get; set; }
+    public string? Position { get; set; }
+    public decimal? Yts { get; set; }
+    public decimal? Uts { get; set; }
+    public decimal? Elongation { get; set; }
+    public decimal? N { get; set; }
+    public decimal? R { get; set; }
+    public decimal? Thickness { get; set; }
+    public decimal? Width { get; set; }
+}
+
+/// <summary>A partial (in-process) output skid on a job (table
+/// <c>process_partial_skid</c>) — material accumulated before a full sheet skid is
+/// closed out. <c>partial_skid_ab_job_num</c> is the legacy char form of the job.</summary>
+public sealed class PartialSkid
+{
+    public long? AbJobNum { get; set; }
+    public string? PartialSkidAbJobNum { get; set; }
+    public long? SheetSkidNum { get; set; }
+    public decimal? PartialSheetNetWt { get; set; }
+    public int? PartialSkidPieces { get; set; }
+    public string? PartialSkidLocation { get; set; }
+    public DateTime? PartialSkidDate { get; set; }
+}
+
 /// <summary>A coil's processing history entry: a <c>process_coil</c> row joined
 /// with a few attributes of the consuming job.</summary>
 public sealed class CoilProcessing

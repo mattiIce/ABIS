@@ -371,6 +371,23 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Temp_test_results_are_listed()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/temp-test-results");
+        Assert.Equal(2, body.GetProperty("totalCount").GetInt32());
+    }
+
+    [Fact]
+    public async Task Partial_skids_list_and_by_job()
+    {
+        var all = await _client.GetFromJsonAsync<JsonElement>("/api/partial-skids");
+        Assert.Equal(3, all.GetProperty("totalCount").GetInt32());
+
+        var byJob = await _client.GetFromJsonAsync<JsonElement>("/api/jobs/1001/partial-skids");
+        Assert.Equal(2, byJob.GetArrayLength());
+    }
+
+    [Fact]
     public async Task Swagger_document_is_served()
     {
         var resp = await _client.GetAsync("/swagger/v1/swagger.json");

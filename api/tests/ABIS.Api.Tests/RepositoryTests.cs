@@ -446,6 +446,32 @@ public sealed class RepositoryTests : IDisposable
         Assert.Equal(2, ranged.TotalCount);   // the +1h and +2h rows
     }
 
+    // ---- temp_test_result (in-progress QA) -----------------------------
+
+    [Fact]
+    public async Task GetTempTestResults_lists_and_filters_by_position()
+    {
+        var all = await _repo.GetTempTestResultsAsync(1, 25, null, null, null, null, null, CancellationToken.None);
+        Assert.Equal(2, all.TotalCount);
+
+        var m = await _repo.GetTempTestResultsAsync(1, 25, null, position: "M", from: null, to: null, orderBy: null, CancellationToken.None);
+        Assert.Single(m.Items);
+        Assert.Equal(41.0m, m.Items[0].Yts);   // temp table uses 'yts', not 'yts_val'
+    }
+
+    // ---- process_partial_skid ------------------------------------------
+
+    [Fact]
+    public async Task GetPartialSkids_lists_all_and_filters_by_job()
+    {
+        var all = await _repo.GetPartialSkidsAsync(1, 25, null, CancellationToken.None);
+        Assert.Equal(3, all.TotalCount);
+
+        var job1001 = await _repo.GetJobPartialSkidsAsync(1001, CancellationToken.None);
+        Assert.Equal(2, job1001.Count);
+        Assert.All(job1001, s => Assert.Equal(1001, s.AbJobNum));
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }
