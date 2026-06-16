@@ -9,8 +9,9 @@
 *.db-shm
 *.db-wal
 
-# Generated OpenAPI contract (produced in CI as an artifact)
+# Generated API contract + clients (produced in CI as artifacts)
 openapi.json
+abis-client.ts
 
 # IDE / OS cruft
 .vs/

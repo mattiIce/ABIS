@@ -359,6 +359,24 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
         Assert.True(doc.GetProperty("paths").TryGetProperty("/api/jobs", out _));
     }
 
+    [Fact]
+    public async Task Swagger_declares_typed_response_schemas()
+    {
+        var doc = await _client.GetFromJsonAsync<JsonElement>("/swagger/v1/swagger.json");
+
+        // The list endpoint's 200 must reference a concrete schema (not be untyped),
+        // so generated clients get real models rather than `any`.
+        var ok200 = doc.GetProperty("paths").GetProperty("/api/jobs").GetProperty("get")
+            .GetProperty("responses").GetProperty("200")
+            .GetProperty("content").GetProperty("application/json").GetProperty("schema");
+        Assert.Contains("PagedResult", ok200.GetProperty("$ref").GetString());
+
+        // The single-get declares a 404, and the entity schema is a named component.
+        Assert.True(doc.GetProperty("paths").GetProperty("/api/jobs/{abJobNum}").GetProperty("get")
+            .GetProperty("responses").TryGetProperty("404", out _));
+        Assert.True(doc.GetProperty("components").GetProperty("schemas").TryGetProperty("AbJob", out _));
+    }
+
     /// <summary>Boots the app with env-var overrides pointing at a unique temp SQLite db.</summary>
     public sealed class ApiFactory : WebApplicationFactory<Program>
     {

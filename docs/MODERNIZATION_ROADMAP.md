@@ -89,6 +89,9 @@ the B-vs-C commitment until after a measured pilot.
       filtering (`position` + `from`/`to` date range on test results).
 - [x] **Readiness probe**: `GET /health/ready` runs `SELECT 1` (503 when the DB is
       unreachable) alongside the dependency-free `GET /health` liveness check.
+- [x] **Typed contract + client codegen**: every endpoint declares its response
+      types (`.Produces<T>()`), so the OpenAPI doc carries real schemas; CI emits a
+      typed TypeScript client (NSwag) as the `ts-client` artifact.
 - [x] **Write surface across core entities**: customers, order headers, order
       items, jobs, coils, sheet skids, and scrap skids (POST/PUT, server-assigned
       ids, validation, 201/400/404) plus operational PATCH on jobs and coils —

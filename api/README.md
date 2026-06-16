@@ -65,23 +65,35 @@ two pages cross-link.
 
 ```sh
 cd api
-dotnet test                                # 81 tests: repository + HTTP smoke
+dotnet test                                # 82 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
 
-### OpenAPI contract
+### OpenAPI contract & client codegen
 
 The Swagger/OpenAPI document is served at `/swagger/v1/swagger.json` at runtime.
-To emit it as a file (e.g. for client codegen) — CI also does this and uploads it
-as the `openapi` artifact:
+Every operation declares its **response types** (`.Produces<T>()`) — list
+endpoints return a typed `…PagedResult`, single-gets a typed entity + `404`,
+writes a `201`/`200` + `400` validation problem, and all `/api/*` a `401` — so
+the contract is fully typed and codegen produces real models, not `any`.
+
+Emit the contract as a file and generate a typed **TypeScript client** (CI does
+both and uploads them as the `openapi` and `ts-client` artifacts):
 
 ```sh
 cd api
 dotnet build src/ABIS.Api/ABIS.Api.csproj -c Release
 dotnet tool restore
+# OpenAPI document:
 dotnet tool run swagger tofile --output openapi.json src/ABIS.Api/bin/Release/net8.0/ABIS.Api.dll v1
+# Typed fetch-based TypeScript client (models + methods):
+dotnet tool run nswag openapi2tsclient /input:openapi.json /output:abis-client.ts /template:Fetch /className:AbisClient
 ```
+
+Both generated files are git-ignored (build artifacts). Swap the NSwag template
+(`/template:Angular`, `Axios`, …) or use `openapi-generator` against the same
+`openapi.json` for other languages.
 
 ## Container
 

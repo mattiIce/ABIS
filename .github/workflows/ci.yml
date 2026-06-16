@@ -32,6 +32,13 @@ jobs:
         with:
           name: openapi
           path: api/openapi.json
+      - name: Generate TypeScript client (proves the contract is codegen-ready)
+        run: dotnet tool run nswag openapi2tsclient /input:openapi.json /output:abis-client.ts /template:Fetch /className:AbisClient
+      - name: Upload TypeScript client
+        uses: actions/upload-artifact@v4
+        with:
+          name: ts-client
+          path: api/abis-client.ts
 
   analysis:
     name: Discovery extractors

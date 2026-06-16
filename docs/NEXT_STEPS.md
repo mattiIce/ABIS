@@ -11,7 +11,8 @@ and [`PHASE3_PILOT_PLAN.md`](PHASE3_PILOT_PLAN.md).
 - **Phase 2 – API seam (`api/`):** ASP.NET Core 8 + Dapper. Read/write across the
   core entities; **allowlisted sorting on every list**; API-key auth; audit
   middleware → `opc_action_log`; liveness + **DB-readiness** health probes; CORS;
-  ProblemDetails; Swagger; Dockerfile; OpenAPI artifact. **81 tests, CI green.**
+  ProblemDetails; Swagger; Dockerfile; **fully-typed OpenAPI contract + generated
+  TypeScript client**. **82 tests, CI green.**
 - **Phase 3 – Pilots:** plan + **three end-to-end vertical slices** with demo UIs
   (`order_entry` → `/ui/index.html`, `inv_coil` → `/ui/coils.html`,
   QA test results → `/ui/qa.html`).
@@ -31,7 +32,7 @@ curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0 --inst
 export PATH="$HOME/.dotnet:$PATH"
 
 cd api
-dotnet test                                   # 81 tests (repository + HTTP)
+dotnet test                                   # 82 tests (repository + HTTP)
 dotnet run --project src/ABIS.Api             # Dev profile: seeds SQLite, no DB needed
 # API key for /api/*: dev-local-key  (header X-Api-Key)
 # Demo UIs: http://localhost:5xxx/ui/index.html , /ui/coils.html , /ui/qa.html
@@ -65,10 +66,12 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
   remains unmodeled (no columns recovered).
 - ✅ **Readiness probe** — done: `GET /health/ready` runs `SELECT 1` (503 when the
   DB is unreachable); liveness stays at `GET /health`.
-- **Typed client codegen** from the OpenAPI artifact (e.g. NSwag/openapi-generator).
-  To make the contract fully typed first, annotate endpoints with
-  `.Produces<T>()` / `.ProducesValidationProblem()` (today most return an untyped
-  200). This is the recommended next increment.
+- ✅ **Typed contract + client codegen** — done: every endpoint declares response
+  types via `.Produces<T>()` / `.ProducesValidationProblem()` (+ a group-wide
+  `401`), so the OpenAPI doc carries real schemas. CI generates a typed
+  TypeScript client with NSwag and uploads it as the `ts-client` artifact
+  (`dotnet tool run nswag openapi2tsclient …`). Next: have a demo UI consume the
+  generated client, and/or add other languages via `openapi-generator`.
 - **Write hardening:** optimistic concurrency (rowversion/ETag), a soft-delete
   policy decision, and replacing the `MAX+1` id assignment with **Oracle
   sequences** once the DB is known (search `NextIdAsync`). True concurrency needs
