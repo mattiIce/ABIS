@@ -32,7 +32,7 @@ curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0 --inst
 export PATH="$HOME/.dotnet:$PATH"
 
 cd api
-dotnet test                                   # 99 tests (repository + HTTP)
+dotnet test                                   # 101 tests (repository + HTTP)
 dotnet run --project src/ABIS.Api             # Dev profile: seeds SQLite, no DB needed
 # API key for /api/*: dev-local-key  (header X-Api-Key)
 # Demo UIs: http://localhost:5xxx/ui/index.html , /ui/coils.html , /ui/qa.html
@@ -85,10 +85,13 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
   dialect-specific next-id SQL — `MAX+1` on SQLite (dev), a sequence `NEXTVAL` on
   Oracle (concurrency-safe), names via the `{table}_seq` convention with per-table
   overrides (`Database:Sequences`). Real sequence names still need DB confirmation.
-- **Write hardening (remaining):** optimistic concurrency (rowversion/ETag) and a
-  soft-delete policy. True concurrency needs a rowversion column the recovered
-  schema doesn't have — confirm against the real schema before adding one. The
-  audit-log insert still uses `MAX+1` (append-only, best-effort).
+- ✅ **Read caching** — done: weak `ETag` on `/api` GETs + `If-None-Match` → `304`
+  (`ETagMiddleware`). Also a correlation id (`X-Request-Id`) echoed on responses,
+  in ProblemDetails, and in the audit notes.
+- **Write hardening (remaining):** `If-Match` optimistic concurrency (the read
+  ETags are the foundation) and a soft-delete policy. True concurrency needs a
+  rowversion column the recovered schema doesn't have — confirm against the real
+  schema before adding one. The audit-log insert still uses `MAX+1` (append-only).
 - ✅ **More slices from the recovered schema** — added `temp_test_result`
   (in-progress QA, `GET /api/temp-test-results`) and `process_partial_skid`
   (`GET /api/partial-skids` + `GET /api/jobs/{id}/partial-skids`). Remaining

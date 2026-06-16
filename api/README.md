@@ -89,7 +89,7 @@ running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ```sh
 cd api
-dotnet test                                # 99 tests: repository + HTTP smoke
+dotnet test                                # 101 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -262,6 +262,11 @@ nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: no-referrer`.
 honored when it looks safe, otherwise generated), echoed on the response, surfaced
 in `ProblemDetails` (`requestId`), and recorded in the audit-log notes — so a call
 can be traced across client, API, and the legacy `opc_action_log`.
+
+**Conditional GETs.** `/api` GET responses carry a weak `ETag`; a caller that sends
+a matching `If-None-Match` gets `304 Not Modified` with no body — cheap bandwidth
+savings for the polling shop-floor screens (and a foundation for `If-Match`
+optimistic concurrency once the real schema provides a row version).
 
 ## Configuration (production / Oracle)
 

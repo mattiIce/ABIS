@@ -148,6 +148,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Conditional-GET caching for /api reads (wraps endpoint execution).
+app.UseMiddleware<ETagMiddleware>();
+
 app.MapAbisApi();
 
 app.Run();

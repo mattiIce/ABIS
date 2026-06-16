@@ -427,6 +427,29 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Get_returns_an_etag_and_honors_if_none_match()
+    {
+        var first = await _client.GetAsync("/api/jobs/1001");
+        first.EnsureSuccessStatusCode();
+        var etag = first.Headers.ETag;
+        Assert.NotNull(etag);
+
+        using var conditional = new HttpRequestMessage(HttpMethod.Get, "/api/jobs/1001");
+        conditional.Headers.IfNoneMatch.Add(etag!);
+        var second = await _client.SendAsync(conditional);
+        Assert.Equal(HttpStatusCode.NotModified, second.StatusCode);
+        Assert.Empty(await second.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Different_resources_have_different_etags()
+    {
+        var a = (await _client.GetAsync("/api/jobs/1001")).Headers.ETag!.Tag;
+        var b = (await _client.GetAsync("/api/jobs/1002")).Headers.ETag!.Tag;
+        Assert.NotEqual(a, b);
+    }
+
+    [Fact]
     public async Task Swagger_document_is_served()
     {
         var resp = await _client.GetAsync("/swagger/v1/swagger.json");
