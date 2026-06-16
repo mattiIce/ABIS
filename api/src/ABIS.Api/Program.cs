@@ -1,8 +1,10 @@
+using System.Threading.RateLimiting;
 using Abis.Api.Data;
 using Abis.Api.Endpoints;
 using Abis.Api.Middleware;
 using Abis.Api.Security;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +25,38 @@ builder.Services
     .AddAuthentication(ApiKeyAuthenticationHandler.SchemeName)
     .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationHandler.SchemeName, null);
 builder.Services.AddAuthorization();
+
+// Rate limiting: a fixed window partitioned per API key (fallback to remote IP),
+// applied to the /api group. Shields the legacy DB from runaway callers; tunable
+// via the RateLimiting section.
+var rateLimitOptions = builder.Configuration.GetSection(RateLimitOptions.SectionName).Get<RateLimitOptions>()
+                       ?? new RateLimitOptions();
+builder.Services.AddSingleton(rateLimitOptions);
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(RateLimitOptions.PolicyName, http =>
+    {
+        var partitionKey = http.Request.Headers[apiKeyOptions.HeaderName].ToString();
+        if (string.IsNullOrEmpty(partitionKey))
+            partitionKey = http.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = rateLimitOptions.PermitLimit,
+            Window = TimeSpan.FromSeconds(rateLimitOptions.WindowSeconds),
+            QueueLimit = 0
+        });
+    });
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.Headers.RetryAfter = rateLimitOptions.WindowSeconds.ToString();
+        await Results.Problem(
+            statusCode: StatusCodes.Status429TooManyRequests,
+            title: "Too many requests",
+            detail: $"Rate limit exceeded. Retry after {rateLimitOptions.WindowSeconds}s.")
+            .ExecuteAsync(context.HttpContext);
+    };
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -74,6 +108,16 @@ if (dbOptions.Seed && dbOptions.Dialect == SqlDialect.Sqlite)
 // Outermost: observe the final status (incl. exception-handler output) and audit it.
 app.UseMiddleware<AuditMiddleware>();
 
+// Baseline security headers on every response (set before the body is written).
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["X-Frame-Options"] = "DENY";
+    headers["Referrer-Policy"] = "no-referrer";
+    await next();
+});
+
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
@@ -85,6 +129,10 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// After routing + auth so the selected endpoint's RequireRateLimiting policy applies.
+if (rateLimitOptions.Enabled)
+    app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {

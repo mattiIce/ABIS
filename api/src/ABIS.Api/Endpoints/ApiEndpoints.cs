@@ -1,5 +1,6 @@
 using Abis.Api.Data;
 using Abis.Api.Models;
+using Abis.Api.Security;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Abis.Api.Endpoints;
@@ -51,7 +52,7 @@ public static class ApiEndpoints
         // All /api endpoints require an authenticated caller (see ApiKey auth).
         // /health and Swagger remain anonymous. The 401 is declared once for the
         // whole group so it appears on every operation in the contract.
-        var api = app.MapGroup("/api").RequireAuthorization();
+        var api = app.MapGroup("/api").RequireAuthorization().RequireRateLimiting(RateLimitOptions.PolicyName);
         api.WithMetadata(new ProducesResponseTypeAttribute(StatusCodes.Status401Unauthorized));
 
         // ---- Jobs -------------------------------------------------------

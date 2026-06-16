@@ -32,7 +32,7 @@ curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0 --inst
 export PATH="$HOME/.dotnet:$PATH"
 
 cd api
-dotnet test                                   # 94 tests (repository + HTTP)
+dotnet test                                   # 96 tests (repository + HTTP)
 dotnet run --project src/ABIS.Api             # Dev profile: seeds SQLite, no DB needed
 # API key for /api/*: dev-local-key  (header X-Api-Key)
 # Demo UIs: http://localhost:5xxx/ui/index.html , /ui/coils.html , /ui/qa.html
@@ -66,6 +66,9 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
   remains unmodeled (no columns recovered).
 - ✅ **Readiness probe** — done: `GET /health/ready` runs `SELECT 1` (503 when the
   DB is unreachable); liveness stays at `GET /health`.
+- ✅ **Production hardening** — done: fixed-window **rate limiting** on `/api`
+  (per-API-key partition, `429` + `Retry-After`, tunable via `RateLimiting`) and
+  baseline **security headers** (`nosniff`, `DENY`, `no-referrer`) on every response.
 - ✅ **Typed contract + client codegen** — done: every endpoint declares response
   types via `.Produces<T>()` / `.ProducesValidationProblem()` (+ a group-wide
   `401`), so the OpenAPI doc carries real schemas. CI generates a typed

@@ -90,6 +90,8 @@ the B-vs-C commitment until after a measured pilot.
       filtering (`position` + `from`/`to` date range on test results).
 - [x] **Readiness probe**: `GET /health/ready` runs `SELECT 1` (503 when the DB is
       unreachable) alongside the dependency-free `GET /health` liveness check.
+- [x] **Production hardening**: per-API-key fixed-window rate limiting on `/api`
+      (`429` + `Retry-After`) and baseline security headers on every response.
 - [x] **Typed contract + client codegen**: every endpoint declares its response
       types (`.Produces<T>()`), so the OpenAPI doc carries real schemas; CI emits a
       typed TypeScript client (NSwag) as the `ts-client` artifact. A `clientapp/`

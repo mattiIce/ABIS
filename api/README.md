@@ -84,7 +84,7 @@ CI compiles this on every run, so a contract change that breaks the typed UI fai
 
 ```sh
 cd api
-dotnet test                                # 94 tests: repository + HTTP smoke
+dotnet test                                # 96 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -230,6 +230,22 @@ export ApiKeys__Keys__1="<another-key>"     # multiple keys supported
 
 The dev profile ships a throwaway key (`dev-local-key`). Set `ApiKeys__Enabled=false`
 only on a trusted internal network. In Swagger UI, use **Authorize** to supply the key.
+
+## Rate limiting & security headers
+
+The `/api` group is protected by a **fixed-window rate limiter**, partitioned per
+API key (falling back to the remote IP) so one noisy client can't starve others or
+hammer the legacy database. Exceeding the window returns `429` (ProblemDetails +
+`Retry-After`). Tune via the `RateLimiting` section:
+
+```sh
+export RateLimiting__Enabled="true"      # set false to remove the limiter
+export RateLimiting__PermitLimit="1000"  # requests per window per partition
+export RateLimiting__WindowSeconds="10"
+```
+
+Every response also carries baseline security headers: `X-Content-Type-Options:
+nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: no-referrer`.
 
 ## Configuration (production / Oracle)
 

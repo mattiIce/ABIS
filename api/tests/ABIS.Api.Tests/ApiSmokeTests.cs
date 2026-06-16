@@ -30,6 +30,14 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Responses_carry_baseline_security_headers()
+    {
+        var resp = await _client.GetAsync("/health");
+        Assert.Equal("nosniff", resp.Headers.GetValues("X-Content-Type-Options").Single());
+        Assert.Equal("DENY", resp.Headers.GetValues("X-Frame-Options").Single());
+    }
+
+    [Fact]
     public async Task Api_request_without_key_is_401()
     {
         var bare = _factory.CreateClient();   // no X-Api-Key header
