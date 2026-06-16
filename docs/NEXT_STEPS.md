@@ -75,9 +75,12 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
   TypeScript client with NSwag and uploads it as the `ts-client` artifact.
 - ✅ **Demo UI on the generated client** — done: `clientapp/` is a TypeScript demo
   that imports the generated client, compiled by `tsc` to ES modules under
-  `/ui/app/`; `/ui/typed.html` is the coil screen driven by it. CI compiles it so
-  a contract change that breaks the typed UI fails the build. Next: other client
-  languages via `openapi-generator`; migrate a real module onto the typed client.
+  `/ui/app/`; `/ui/typed.html` drives the coil screen and a typed create-order
+  write. CI compiles it **and** runs an e2e (`clientapp/e2e/run.mjs`) against a
+  live API, so a contract break fails the build.
+- ✅ **Multi-language codegen** — done: CI also emits a **Python** client
+  (`openapi-generator`, `python-client` artifact) from the same contract. Next:
+  migrate a real legacy module onto a generated client.
 - ✅ **ID generation hardened** — done: ids come from the connection factory's
   dialect-specific next-id SQL — `MAX+1` on SQLite (dev), a sequence `NEXTVAL` on
   Oracle (concurrency-safe), names via the `{table}_seq` convention with per-table

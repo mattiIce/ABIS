@@ -39,6 +39,23 @@ jobs:
         with:
           name: ts-client
           path: api/abis-client.ts
+      # Second-language client: prove the contract is language-agnostic.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Generate Python client (openapi-generator)
+        run: |
+          curl -sSL -o /tmp/openapi-generator-cli.jar \
+            https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.7.0/openapi-generator-cli-7.7.0.jar
+          java -jar /tmp/openapi-generator-cli.jar generate \
+            -i openapi.json -g python -o python-client \
+            --additional-properties=packageName=abis_client,projectName=abis-client
+      - name: Upload Python client
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-client
+          path: api/python-client
       # Compile the typed demo (clientapp) against the freshly generated client,
       # proving the contract still produces a client that builds with the UI code.
       - uses: actions/setup-node@v4

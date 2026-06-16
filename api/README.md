@@ -116,8 +116,14 @@ dotnet tool run nswag openapi2tsclient /input:openapi.json /output:abis-client.t
 ```
 
 Both generated files are git-ignored (build artifacts). Swap the NSwag template
-(`/template:Angular`, `Axios`, …) or use `openapi-generator` against the same
-`openapi.json` for other languages.
+(`/template:Angular`, `Axios`, …) for other TS flavors. CI also generates a
+**Python client** with `openapi-generator` from the same `openapi.json` (uploaded
+as the `python-client` artifact), demonstrating the contract is language-agnostic:
+
+```sh
+java -jar openapi-generator-cli.jar generate -i openapi.json -g python \
+  -o python-client --additional-properties=packageName=abis_client
+```
 
 ## Container
 

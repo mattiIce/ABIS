@@ -12,6 +12,7 @@
 # Generated API contract + clients (produced in CI as artifacts)
 openapi.json
 abis-client.ts
+python-client/
 
 # IDE / OS cruft
 .vs/
