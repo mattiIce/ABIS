@@ -89,7 +89,7 @@ running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ```sh
 cd api
-dotnet test                                # 101 tests: repository + HTTP smoke
+dotnet test                                # 103 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -200,10 +200,10 @@ each list keeps its natural default order (e.g. test results and the audit log
 default to newest-first).
 
 **Readiness vs liveness.** `GET /health` is a cheap liveness check (the process
-is up). `GET /health/ready` opens a database connection and runs `SELECT 1`,
-returning `200 {status:"ready"}` or `503 {status:"unavailable"}` — point an
-orchestrator's readiness gate here so traffic is held until the data path serves.
-Both are anonymous.
+is up). `GET /health/ready` opens a database connection and runs a trivial probe
+(`SELECT 1`, or `SELECT 1 FROM dual` on Oracle), returning `200 {status:"ready"}`
+or `503 {status:"unavailable"}` — point an orchestrator's readiness gate here so
+traffic is held until the data path serves. Both are anonymous.
 
 **Audit trail.** Every mutating request (POST/PUT/PATCH/DELETE under `/api`) is
 recorded in the legacy `opc_action_log` table by `AuditMiddleware` (source =

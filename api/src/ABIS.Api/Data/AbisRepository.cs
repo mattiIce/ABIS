@@ -97,8 +97,9 @@ public sealed class AbisRepository : IAbisRepository
     public async Task<bool> PingAsync(CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
-        // SELECT 1 is portable to both engines and confirms the connection is live.
-        return await conn.ExecuteScalarAsync<long>(new CommandDefinition("SELECT 1", cancellationToken: ct)) == 1;
+        // Dialect-specific probe from the factory (Oracle requires a FROM clause:
+        // a bare "SELECT 1" raises ORA-00923, so the Oracle branch uses FROM dual).
+        return await conn.ExecuteScalarAsync<long>(new CommandDefinition(_factory.PingQuery, cancellationToken: ct)) == 1;
     }
 
     private async Task<PagedResult<T>> PageAsync<T>(
@@ -115,7 +116,11 @@ public sealed class AbisRepository : IAbisRepository
             new CommandDefinition($"SELECT COUNT(*) FROM {from}{whereSql}", pageArgs, cancellationToken: ct));
 
         var sql = _factory.Paginate($"SELECT {columns} FROM {from}{whereSql} ORDER BY {orderBy}");
-        var args = Merge(pageArgs, new { limit = pageSize, offset = (page - 1) * pageSize });
+        // Add offset before limit so source order matches the Oracle clause
+        // ("OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY") — Oracle binds these
+        // positionally (ODP.NET BindByName defaults to false). SQLite binds by name,
+        // so its "LIMIT :limit OFFSET :offset" is unaffected by the order.
+        var args = Merge(pageArgs, new { offset = (page - 1) * pageSize, limit = pageSize });
         var rows = await conn.QueryAsync<T>(new CommandDefinition(sql, args, cancellationToken: ct));
 
         return new PagedResult<T>

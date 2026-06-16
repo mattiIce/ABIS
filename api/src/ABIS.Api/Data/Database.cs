@@ -59,6 +59,10 @@ public interface IDbConnectionFactory
     /// <c>NEXTVAL</c> on Oracle (concurrency-safe for production). <paramref name="table"/>
     /// and <paramref name="idColumn"/> are internal constants, never user input.</summary>
     string NextIdQuery(string table, string idColumn);
+
+    /// <summary>Dialect-specific trivial connectivity probe. Oracle requires a FROM
+    /// clause (a bare <c>SELECT 1</c> raises ORA-00923), so it uses <c>FROM dual</c>.</summary>
+    string PingQuery { get; }
 }
 
 public sealed class DbConnectionFactory : IDbConnectionFactory
@@ -81,6 +85,13 @@ public sealed class DbConnectionFactory : IDbConnectionFactory
         SqlDialect.Sqlite => $"{orderedSql} LIMIT :limit OFFSET :offset",
         // Oracle 12c+ row-limiting clause.
         SqlDialect.Oracle => $"{orderedSql} OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY",
+        _ => throw new InvalidOperationException($"Unsupported dialect {Dialect}.")
+    };
+
+    public string PingQuery => Dialect switch
+    {
+        SqlDialect.Sqlite => "SELECT 1",
+        SqlDialect.Oracle => "SELECT 1 FROM dual",
         _ => throw new InvalidOperationException($"Unsupported dialect {Dialect}.")
     };
 

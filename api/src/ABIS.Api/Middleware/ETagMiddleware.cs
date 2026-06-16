@@ -41,11 +41,15 @@ public sealed class ETagMiddleware
                 var etag = ComputeWeakETag(buffer);
                 context.Response.Headers.ETag = etag;
 
+                // 304 when the caller's validator matches: an exact tag or "*"
+                // (RFC 7232 — match any current representation).
                 var ifNoneMatch = context.Request.Headers.IfNoneMatch.ToString();
-                if (!string.IsNullOrEmpty(ifNoneMatch) && ifNoneMatch.Split(',').Any(t => t.Trim() == etag))
+                if (!string.IsNullOrEmpty(ifNoneMatch) &&
+                    ifNoneMatch.Split(',').Any(t => { var v = t.Trim(); return v == etag || v == "*"; }))
                 {
                     context.Response.StatusCode = StatusCodes.Status304NotModified;
                     context.Response.Headers.ContentLength = null;
+                    context.Response.Headers.ContentType = default;   // no representation body on a 304
                     context.Response.Body = originalBody;
                     return;
                 }

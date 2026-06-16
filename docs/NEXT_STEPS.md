@@ -32,7 +32,7 @@ curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0 --inst
 export PATH="$HOME/.dotnet:$PATH"
 
 cd api
-dotnet test                                   # 101 tests (repository + HTTP)
+dotnet test                                   # 103 tests (repository + HTTP)
 dotnet run --project src/ABIS.Api             # Dev profile: seeds SQLite, no DB needed
 # API key for /api/*: dev-local-key  (header X-Api-Key)
 # Demo UIs: http://localhost:5xxx/ui/index.html , /ui/coils.html , /ui/qa.html

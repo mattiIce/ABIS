@@ -116,14 +116,21 @@ app.UseMiddleware<RequestIdMiddleware>();
 // Outermost audit: observe the final status (incl. exception-handler output) and audit it.
 app.UseMiddleware<AuditMiddleware>();
 
-// Baseline security headers on every response (set before the body is written).
-app.Use(async (context, next) =>
+// Baseline security headers on every response. Set via OnStarting so they are
+// applied right before the response is sent — which also covers responses that
+// UseExceptionHandler re-executes (it clears directly-set headers; OnStarting
+// callbacks survive), keeping the headers on 500s too.
+app.Use((context, next) =>
 {
-    var headers = context.Response.Headers;
-    headers["X-Content-Type-Options"] = "nosniff";
-    headers["X-Frame-Options"] = "DENY";
-    headers["Referrer-Policy"] = "no-referrer";
-    await next();
+    context.Response.OnStarting(() =>
+    {
+        var headers = context.Response.Headers;
+        headers["X-Content-Type-Options"] = "nosniff";
+        headers["X-Frame-Options"] = "DENY";
+        headers["Referrer-Policy"] = "no-referrer";
+        return Task.CompletedTask;
+    });
+    return next(context);
 });
 
 app.UseExceptionHandler();

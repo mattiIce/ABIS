@@ -56,4 +56,12 @@ public sealed class DatabaseTests
         Assert.EndsWith("LIMIT :limit OFFSET :offset", Factory("Sqlite").Paginate("SELECT 1 ORDER BY a"));
         Assert.EndsWith("OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY", Factory("Oracle").Paginate("SELECT 1 ORDER BY a"));
     }
+
+    [Fact]
+    public void Ping_query_is_dialect_specific()
+    {
+        // Oracle needs a FROM clause; a bare "SELECT 1" raises ORA-00923.
+        Assert.Equal("SELECT 1", Factory("Sqlite").PingQuery);
+        Assert.Equal("SELECT 1 FROM dual", Factory("Oracle").PingQuery);
+    }
 }

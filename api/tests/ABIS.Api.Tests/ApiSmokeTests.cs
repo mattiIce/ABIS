@@ -450,6 +450,16 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Get_with_if_none_match_wildcard_returns_304()
+    {
+        // RFC 7232: "If-None-Match: *" matches any current representation.
+        using var req = new HttpRequestMessage(HttpMethod.Get, "/api/jobs/1001");
+        req.Headers.TryAddWithoutValidation("If-None-Match", "*");
+        var resp = await _client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.NotModified, resp.StatusCode);
+    }
+
+    [Fact]
     public async Task Swagger_document_is_served()
     {
         var resp = await _client.GetAsync("/swagger/v1/swagger.json");
