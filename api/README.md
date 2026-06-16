@@ -63,7 +63,8 @@ pages cross-link.
   position, and date range, with click-to-sort (server-side) column headers. *(vanilla JS)*
 - **`/ui/typed.html`** — coil inventory driven by the **generated TypeScript
   client** (`clientapp/`, compiled by `tsc` to ES modules under `/ui/app/`),
-  demonstrating the codegen loop end-to-end.
+  including a typed **write** (create order via `createOrderWithItems()` built
+  from generated DTOs) — the codegen loop end-to-end, reads and writes.
 
 #### Typed client demo (`clientapp/`)
 

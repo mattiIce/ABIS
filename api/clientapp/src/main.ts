@@ -5,7 +5,7 @@
 //
 // Compiled by `tsc` (see ../tsconfig.json) to browser ES modules in
 // wwwroot/ui/app/, so it is served with no runtime build step.
-import { AbisClient, Coil } from './generated/abis-client.js';
+import { AbisClient, Coil, OrderCreateWithItems, CustomerOrderWrite, OrderItemWrite } from './generated/abis-client.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T =>
   document.querySelector(sel) as T;
@@ -68,5 +68,32 @@ async function detail(id: number): Promise<void> {
   }
 }
 
+// Typed write path: create an order + line item through the generated client.
+// The request body is built from generated DTO classes (compile-checked), and the
+// response is a typed OrderDetail.
+async function createOrder(): Promise<void> {
+  const msg = $('#createMsg');
+  msg.textContent = 'Saving…';
+  try {
+    const body = new OrderCreateWithItems({
+      order: new CustomerOrderWrite({
+        origCustomerId: 4001,
+        origCustomerPo: $<HTMLInputElement>('#oPo').value || 'PO-TYPED',
+      }),
+      items: [
+        new OrderItemWrite({
+          enduserPartNum: $<HTMLInputElement>('#oPart').value || 'PN-TYPED',
+          alloy2: $<HTMLInputElement>('#oAlloy').value || '3003',
+        }),
+      ],
+    });
+    const detail = await client().createOrderWithItems(body);
+    msg.innerHTML = `<span class="pill">Created order ${detail.order.orderAbcNum} with ${detail.items?.length ?? 0} item(s)</span>`;
+  } catch (e) {
+    msg.innerHTML = `<span class="err">${(e as Error).message ?? e}</span>`;
+  }
+}
+
 $('#btnSearch').addEventListener('click', search);
+$('#btnCreate').addEventListener('click', createOrder);
 void search();

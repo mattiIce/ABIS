@@ -6,7 +6,13 @@
 //   ABIS_BASE=http://127.0.0.1:5225 ABIS_KEY=<key> node clientapp/e2e/run.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { AbisClient, ApiException } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
+import {
+  AbisClient,
+  ApiException,
+  OrderCreateWithItems,
+  CustomerOrderWrite,
+  OrderItemWrite,
+} from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
 const key = process.env.ABIS_KEY ?? 'dev-local-key';
@@ -43,4 +49,15 @@ test('listJobs filters + sorts via the typed client', async () => {
   const page = await client.listJobs(1, 25, undefined, 'jobStatus', 'desc');
   const statuses = page.items.map((j) => j.jobStatus);
   assert.deepEqual(statuses, [...statuses].sort((a, b) => b - a));
+});
+
+test('createOrderWithItems writes via typed DTOs and returns a typed OrderDetail', async () => {
+  const body = new OrderCreateWithItems({
+    order: new CustomerOrderWrite({ origCustomerId: 4001, origCustomerPo: 'PO-E2E' }),
+    items: [new OrderItemWrite({ enduserPartNum: 'PN-E2E', alloy2: '3003' })],
+  });
+  const detail = await client.createOrderWithItems(body);
+  assert.ok(detail.order.orderAbcNum > 0);
+  assert.equal(detail.items.length, 1);
+  assert.equal(detail.items[0].enduserPartNum, 'PN-E2E');
 });
