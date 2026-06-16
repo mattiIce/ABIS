@@ -30,6 +30,45 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Responses_carry_baseline_security_headers()
+    {
+        var resp = await _client.GetAsync("/health");
+        Assert.Equal("nosniff", resp.Headers.GetValues("X-Content-Type-Options").Single());
+        Assert.Equal("DENY", resp.Headers.GetValues("X-Frame-Options").Single());
+    }
+
+    [Fact]
+    public async Task Response_carries_a_generated_request_id()
+    {
+        var resp = await _client.GetAsync("/health");
+        Assert.True(resp.Headers.Contains("X-Request-Id"));
+        Assert.False(string.IsNullOrWhiteSpace(resp.Headers.GetValues("X-Request-Id").Single()));
+    }
+
+    [Fact]
+    public async Task A_supplied_request_id_is_echoed()
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Get, "/health");
+        req.Headers.Add("X-Request-Id", "trace-echo-1");
+        var resp = await _client.SendAsync(req);
+        Assert.Equal("trace-echo-1", resp.Headers.GetValues("X-Request-Id").Single());
+    }
+
+    [Fact]
+    public async Task Request_id_is_recorded_in_the_audit_trail()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Api-Key", "test-key");
+        client.DefaultRequestHeaders.Add("X-Request-Id", "trace-audit-xyz");
+        await client.PostAsJsonAsync("/api/customers", new { customerName = "TRACE CO" });
+
+        var log = await client.GetFromJsonAsync<JsonElement>("/api/audit-log?source=customers&pageSize=100");
+        var found = log.GetProperty("items").EnumerateArray()
+            .Any(i => (i.GetProperty("notes").GetString() ?? "").Contains("trace-audit-xyz"));
+        Assert.True(found);
+    }
+
+    [Fact]
     public async Task Api_request_without_key_is_401()
     {
         var bare = _factory.CreateClient();   // no X-Api-Key header
@@ -78,6 +117,35 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
         var resp = await bare.GetAsync("/ui/coils.html");
         resp.EnsureSuccessStatusCode();
         Assert.Contains("ABIS Coil Inventory", await resp.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Qa_demo_page_is_served()
+    {
+        var bare = _factory.CreateClient();
+        var resp = await bare.GetAsync("/ui/qa.html");
+        resp.EnsureSuccessStatusCode();
+        Assert.Contains("ABIS QA Test Results", await resp.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Typed_client_demo_page_is_served()
+    {
+        var bare = _factory.CreateClient();
+        var resp = await bare.GetAsync("/ui/typed.html");
+        resp.EnsureSuccessStatusCode();
+        Assert.Contains("Typed Client", await resp.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Generated_client_es_module_is_served()
+    {
+        // The committed, compiled NSwag client (tsc output) ships as a browser
+        // ES module so the typed demo runs with no runtime build step.
+        var bare = _factory.CreateClient();
+        var resp = await bare.GetAsync("/ui/app/generated/abis-client.js");
+        resp.EnsureSuccessStatusCode();
+        Assert.Contains("class AbisClient", await resp.Content.ReadAsStringAsync());
     }
 
     [Fact]
@@ -295,12 +363,127 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task List_jobs_sorted_by_status_desc_applies()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/jobs?sort=jobStatus&dir=desc");
+        var statuses = body.GetProperty("items").EnumerateArray()
+            .Select(j => j.GetProperty("jobStatus").GetInt32()).ToList();
+        Assert.Equal(statuses.OrderByDescending(s => s).ToList(), statuses);
+    }
+
+    [Fact]
+    public async Task List_with_unknown_sort_field_is_400()
+    {
+        var resp = await _client.GetAsync("/api/jobs?sort=bogusColumn");
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task List_with_bad_direction_is_400()
+    {
+        var resp = await _client.GetAsync("/api/coils?sort=netWt&dir=upward");
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Readiness_probe_reports_ready_against_fixture()
+    {
+        var resp = await _client.GetAsync("/health/ready");
+        resp.EnsureSuccessStatusCode();
+        var body = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("ready", body.GetProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task Readiness_probe_is_anonymous()
+    {
+        var bare = _factory.CreateClient();   // no key
+        var resp = await bare.GetAsync("/health/ready");
+        resp.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Test_results_filter_by_position()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/test-results?position=M");
+        Assert.Equal(1, body.GetProperty("totalCount").GetInt32());
+    }
+
+    [Fact]
+    public async Task Temp_test_results_are_listed()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/temp-test-results");
+        Assert.Equal(2, body.GetProperty("totalCount").GetInt32());
+    }
+
+    [Fact]
+    public async Task Partial_skids_list_and_by_job()
+    {
+        var all = await _client.GetFromJsonAsync<JsonElement>("/api/partial-skids");
+        Assert.Equal(3, all.GetProperty("totalCount").GetInt32());
+
+        var byJob = await _client.GetFromJsonAsync<JsonElement>("/api/jobs/1001/partial-skids");
+        Assert.Equal(2, byJob.GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Get_returns_an_etag_and_honors_if_none_match()
+    {
+        var first = await _client.GetAsync("/api/jobs/1001");
+        first.EnsureSuccessStatusCode();
+        var etag = first.Headers.ETag;
+        Assert.NotNull(etag);
+
+        using var conditional = new HttpRequestMessage(HttpMethod.Get, "/api/jobs/1001");
+        conditional.Headers.IfNoneMatch.Add(etag!);
+        var second = await _client.SendAsync(conditional);
+        Assert.Equal(HttpStatusCode.NotModified, second.StatusCode);
+        Assert.Empty(await second.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Different_resources_have_different_etags()
+    {
+        var a = (await _client.GetAsync("/api/jobs/1001")).Headers.ETag!.Tag;
+        var b = (await _client.GetAsync("/api/jobs/1002")).Headers.ETag!.Tag;
+        Assert.NotEqual(a, b);
+    }
+
+    [Fact]
+    public async Task Get_with_if_none_match_wildcard_returns_304()
+    {
+        // RFC 7232: "If-None-Match: *" matches any current representation.
+        using var req = new HttpRequestMessage(HttpMethod.Get, "/api/jobs/1001");
+        req.Headers.TryAddWithoutValidation("If-None-Match", "*");
+        var resp = await _client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.NotModified, resp.StatusCode);
+    }
+
+    [Fact]
     public async Task Swagger_document_is_served()
     {
         var resp = await _client.GetAsync("/swagger/v1/swagger.json");
         resp.EnsureSuccessStatusCode();
         var doc = await resp.Content.ReadFromJsonAsync<JsonElement>();
         Assert.True(doc.GetProperty("paths").TryGetProperty("/api/jobs", out _));
+    }
+
+    [Fact]
+    public async Task Swagger_declares_typed_response_schemas()
+    {
+        var doc = await _client.GetFromJsonAsync<JsonElement>("/swagger/v1/swagger.json");
+
+        // The list endpoint's 200 must reference a concrete schema (not be untyped),
+        // so generated clients get real models rather than `any`.
+        var ok200 = doc.GetProperty("paths").GetProperty("/api/jobs").GetProperty("get")
+            .GetProperty("responses").GetProperty("200")
+            .GetProperty("content").GetProperty("application/json").GetProperty("schema");
+        Assert.Contains("PagedResult", ok200.GetProperty("$ref").GetString());
+
+        // The single-get declares a 404, and the entity schema is a named component.
+        Assert.True(doc.GetProperty("paths").GetProperty("/api/jobs/{abJobNum}").GetProperty("get")
+            .GetProperty("responses").TryGetProperty("404", out _));
+        Assert.True(doc.GetProperty("components").GetProperty("schemas").TryGetProperty("AbJob", out _));
     }
 
     /// <summary>Boots the app with env-var overrides pointing at a unique temp SQLite db.</summary>

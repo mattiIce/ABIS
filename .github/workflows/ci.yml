@@ -5,6 +5,11 @@ on:
     branches: [ main, "claude/**" ]
   pull_request:
 
+# Cancel superseded runs for the same ref (dedupes the push + pull_request pair).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   api:
     name: API build & test
@@ -17,6 +22,12 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('api/**/*.csproj', 'api/Directory.Build.props', 'api/.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
       - name: Restore
         run: dotnet restore ABIS.Api.sln
       - name: Build
@@ -32,6 +43,61 @@ jobs:
         with:
           name: openapi
           path: api/openapi.json
+      - name: Generate TypeScript client (proves the contract is codegen-ready)
+        run: dotnet tool run nswag openapi2tsclient /input:openapi.json /output:abis-client.ts /template:Fetch /className:AbisClient
+      - name: Upload TypeScript client
+        uses: actions/upload-artifact@v4
+        with:
+          name: ts-client
+          path: api/abis-client.ts
+      # Second-language client: prove the contract is language-agnostic.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Generate Python client (openapi-generator)
+        run: |
+          curl -sSL -o /tmp/openapi-generator-cli.jar \
+            https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.7.0/openapi-generator-cli-7.7.0.jar
+          java -jar /tmp/openapi-generator-cli.jar generate \
+            -i openapi.json -g python -o python-client \
+            --additional-properties=packageName=abis_client,projectName=abis-client
+      - name: Upload Python client
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-client
+          path: api/python-client
+      # Compile the typed demo (clientapp) against the freshly generated client,
+      # proving the contract still produces a client that builds with the UI code.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: api/clientapp/package-lock.json
+      - name: Build typed client demo
+        run: |
+          npm --prefix clientapp ci
+          npm --prefix clientapp run gen
+          npm --prefix clientapp run build
+      - name: e2e — generated client against a live API
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          Database__Provider: Sqlite
+          Database__ConnectionString: "Data Source=/tmp/abis_e2e.db"
+          Database__Seed: "true"
+          ApiKeys__Enabled: "true"
+          ApiKeys__Keys__0: "ci-e2e-key"
+          ASPNETCORE_URLS: "http://127.0.0.1:5225"
+        run: |
+          dotnet run --project src/ABIS.Api -c Release --no-build &
+          API_PID=$!
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:5225/health >/dev/null && break || sleep 1; done
+          set +e
+          ABIS_BASE=http://127.0.0.1:5225 ABIS_KEY=ci-e2e-key node clientapp/e2e/run.mjs
+          STATUS=$?
+          set -e
+          kill $API_PID || true
+          exit $STATUS
 
   analysis:
     name: Discovery extractors
@@ -47,9 +113,21 @@ jobs:
         run: python3 tools/extract_inventory.py .
 
   docker:
-    name: API image build
+    name: API image build & smoke
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
         run: docker build -f api/Dockerfile -t abis-api:ci api
+      - name: Smoke-test the image boots and serves
+        run: |
+          docker run -d --name abis -p 8080:8080 \
+            -e Database__Provider=Sqlite \
+            -e Database__ConnectionString="Data Source=/tmp/abis.db" \
+            -e Database__Seed=true \
+            abis-api:ci
+          for i in $(seq 1 30); do curl -sf http://localhost:8080/health >/dev/null && break || sleep 2; done
+          echo "liveness:";  curl -fsS http://localhost:8080/health;       echo
+          echo "readiness:"; curl -fsS http://localhost:8080/health/ready; echo
+          docker logs abis | tail -20
+          docker rm -f abis

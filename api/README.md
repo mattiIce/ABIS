@@ -28,7 +28,9 @@ api/
     Endpoints/              minimal-API route definitions
     Models/                 read models (shapes follow docs/DATA_MODEL.md)
     Data/                   connection factory, repository (Dapper), SQLite fixture
+    wwwroot/ui/             demo UIs (vanilla JS); /app is the compiled typed client
   tests/ABIS.Api.Tests/     xUnit: repository + in-process HTTP smoke tests
+  clientapp/                TypeScript demo that consumes the generated client (tsc)
 ```
 
 ## Run locally
@@ -48,37 +50,79 @@ and needs no external database.
 
 ### Demo UIs
 
-Dependency-free (vanilla JS, no build step) pages under `wwwroot/ui/`, serving as
-**Path C greenfield references** (see
+Pages under `wwwroot/ui/`, serving as **Path C greenfield references** (see
 [`../docs/PHASE3_PILOT_PLAN.md`](../docs/PHASE3_PILOT_PLAN.md)) and manual test
 harnesses. Paste the dev API key (`dev-local-key`) into the header field; the
-two pages cross-link.
+pages cross-link.
 
 - **`/ui/index.html`** — order entry: search/filter orders, view header +
-  customer + lines, save a new order with line items.
+  customer + lines, save a new order with line items. *(vanilla JS)*
 - **`/ui/coils.html`** — coil inventory: filter coils, view a coil + its
-  processing history, receive a coil, and an alloy/location weight rollup.
+  processing history, receive a coil, and an alloy/location weight rollup. *(vanilla JS)*
+- **`/ui/qa.html`** — QA test results: filter mechanical test results by type,
+  position, and date range, with click-to-sort (server-side) column headers. *(vanilla JS)*
+- **`/ui/typed.html`** — coil inventory driven by the **generated TypeScript
+  client** (`clientapp/`, compiled by `tsc` to ES modules under `/ui/app/`),
+  including a typed **write** (create order via `createOrderWithItems()` built
+  from generated DTOs) — the codegen loop end-to-end, reads and writes.
+
+#### Typed client demo (`clientapp/`)
+
+`clientapp/` is a small TypeScript app that imports the NSwag-generated client and
+is compiled to browser ES modules (committed under `wwwroot/ui/app/`, so the demo
+runs with no runtime build). After changing the API, regenerate and rebuild:
+
+```sh
+cd api
+dotnet build src/ABIS.Api/ABIS.Api.csproj -c Release
+dotnet tool restore && dotnet tool run swagger tofile --output openapi.json src/ABIS.Api/bin/Release/net8.0/ABIS.Api.dll v1
+cd clientapp && npm ci && npm run all     # gen (NSwag) + build (tsc) -> ../src/ABIS.Api/wwwroot/ui/app/
+```
+
+CI compiles this on every run, so a contract change that breaks the typed UI fails the build.
+CI also runs an **end-to-end check** (`clientapp/e2e/run.mjs`) that drives the generated
+client against a live, seeded API instance — so a change that breaks the real
+request/response path (not just compilation) fails too. Run it locally against a
+running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ## Test
 
 ```sh
 cd api
-dotnet test                                # 67 tests: repository + HTTP smoke
+dotnet test                                # 103 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
 
-### OpenAPI contract
+### OpenAPI contract & client codegen
 
 The Swagger/OpenAPI document is served at `/swagger/v1/swagger.json` at runtime.
-To emit it as a file (e.g. for client codegen) — CI also does this and uploads it
-as the `openapi` artifact:
+Every operation declares its **response types** (`.Produces<T>()`) — list
+endpoints return a typed `…PagedResult`, single-gets a typed entity + `404`,
+writes a `201`/`200` + `400` validation problem, and all `/api/*` a `401` — so
+the contract is fully typed and codegen produces real models, not `any`.
+
+Emit the contract as a file and generate a typed **TypeScript client** (CI does
+both and uploads them as the `openapi` and `ts-client` artifacts):
 
 ```sh
 cd api
 dotnet build src/ABIS.Api/ABIS.Api.csproj -c Release
 dotnet tool restore
+# OpenAPI document:
 dotnet tool run swagger tofile --output openapi.json src/ABIS.Api/bin/Release/net8.0/ABIS.Api.dll v1
+# Typed fetch-based TypeScript client (models + methods):
+dotnet tool run nswag openapi2tsclient /input:openapi.json /output:abis-client.ts /template:Fetch /className:AbisClient
+```
+
+Both generated files are git-ignored (build artifacts). Swap the NSwag template
+(`/template:Angular`, `Axios`, …) for other TS flavors. CI also generates a
+**Python client** with `openapi-generator` from the same `openapi.json` (uploaded
+as the `python-client` artifact), demonstrating the contract is language-agnostic:
+
+```sh
+java -jar openapi-generator-cli.jar generate -i openapi.json -g python \
+  -o python-client --additional-properties=packageName=abis_client
 ```
 
 ## Container
@@ -101,46 +145,65 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | Method & path | Description |
 |---|---|
 | `GET /` | Service info (name, version, environment, links) |
-| `GET /health` | Liveness probe |
-| `GET /api/jobs?page&pageSize&status` | List production jobs (paged) |
+| `GET /health` | Liveness probe (process up; no dependencies touched) |
+| `GET /health/ready` | Readiness probe (database reachable); 503 when not |
+| `GET /api/jobs?page&pageSize&status&sort&dir` | List production jobs (paged, sortable) |
 | `GET /api/jobs/{abJobNum}` | One job |
 | `GET /api/jobs/{abJobNum}/coils` | Coils processed by a job (joined) |
 | `GET /api/jobs/{abJobNum}/skids` | Finished sheet skids for a job |
 | `GET /api/jobs/{abJobNum}/scrap` | Scrap skids for a job |
+| `GET /api/jobs/{abJobNum}/partial-skids` | In-process partial skids for a job |
 | `POST /api/jobs` | Create a production job → 201 |
 | `PATCH /api/jobs/{abJobNum}` | Update job status / notes / men / finish time |
-| `GET /api/coils?page&pageSize&status&alloy&location&customerId` | List coils (paged, filterable) |
+| `GET /api/coils?page&pageSize&status&alloy&location&customerId&sort&dir` | List coils (paged, filterable, sortable) |
 | `GET /api/coils/summary?groupBy=alloy\|location` | Inventory weight rollup (count + net wt + balance) |
 | `GET /api/coils/{coilAbcNum}` | One coil |
 | `GET /api/coils/{coilAbcNum}/processing` | A coil's processing history (consuming jobs) |
 | `POST /api/coils` | Create a coil on receipt (requires `coilAlloy2`) → 201 |
 | `PATCH /api/coils/{coilAbcNum}` | Update coil status / location / notes |
-| `GET /api/orders?page&pageSize&customerId&po` | List customer orders (paged, filterable) |
+| `GET /api/orders?page&pageSize&customerId&po&sort&dir` | List customer orders (paged, filterable, sortable) |
 | `GET /api/orders/{orderAbcNum}` | One order header |
 | `GET /api/orders/{orderAbcNum}/items` | Line items for an order |
 | `GET /api/orders/{orderAbcNum}/full` | Order header + customer + items (order-entry read model) |
 | `POST /api/orders` | Create an order header (server-assigned id) → 201 |
 | `POST /api/orders/with-items` | Create an order + its line items in one transaction → 201 |
 | `PUT /api/orders/{orderAbcNum}` | Replace an order header |
-| `GET /api/order-items?page&pageSize&alloy` | List order items (paged) |
+| `GET /api/order-items?page&pageSize&alloy&sort&dir` | List order items (paged, sortable) |
 | `GET /api/order-items/{orderItemNum}` | One order item |
 | `POST /api/order-items` | Create an order item (requires `enduserPartNum`) → 201 |
 | `PUT /api/order-items/{orderItemNum}` | Replace an order item |
-| `GET /api/customers?page&pageSize&name` | List customers (paged) |
+| `GET /api/customers?page&pageSize&name&sort&dir` | List customers (paged, sortable) |
 | `GET /api/customers/{customerId}` | One customer |
 | `POST /api/customers` | Create a customer (server-assigned id) → 201 |
 | `PUT /api/customers/{customerId}` | Replace a customer |
-| `GET /api/sheet-skids?page&pageSize` | List finished sheet skids (paged) |
+| `GET /api/sheet-skids?page&pageSize&sort&dir` | List finished sheet skids (paged, sortable) |
 | `GET /api/sheet-skids/{sheetSkidNum}` | One sheet skid |
 | `POST /api/sheet-skids` | Create a sheet skid (requires `abJobNum`) → 201 |
-| `GET /api/scrap-skids?page&pageSize` | List scrap skids (paged) |
+| `GET /api/scrap-skids?page&pageSize&sort&dir` | List scrap skids (paged, sortable) |
 | `GET /api/scrap-skids/{scrapSkidNum}` | One scrap skid |
 | `POST /api/scrap-skids` | Create a scrap skid (requires `scrapAbJobNum`) → 201 |
-| `GET /api/test-results?page&pageSize&testType` | List mechanical test results (paged) |
+| `GET /api/partial-skids?page&pageSize&sort&dir` | List in-process partial skids (paged, sortable) |
+| `GET /api/test-results?page&pageSize&testType&position&from&to&sort&dir` | List posted mechanical test results (paged, filterable, sortable) |
+| `GET /api/temp-test-results?page&pageSize&testType&position&from&to&sort&dir` | List in-progress (working-set) test results (paged, filterable, sortable) |
 | `GET /api/lookups/alloys` | Distinct alloys (dropdown reference data) |
-| `GET /api/audit-log?page&pageSize&source` | List the action/audit log, newest first |
+| `GET /api/audit-log?page&pageSize&source&sort&dir` | List the action/audit log, newest first (sortable) |
 
 Collections return a paged envelope: `{ items, page, pageSize, totalCount, totalPages }`.
+
+**Sorting.** List endpoints accept `sort` (a field name) and `dir` (`asc`/`desc`,
+default `asc`). Sortable fields are **allowlisted per resource** and mapped to
+physical columns server-side (so only known columns and a validated direction
+reach the SQL — injection-safe); a stable tie-breaker (usually the primary key)
+is appended for deterministic paging. An unknown `sort` field or a bad `dir`
+returns `400` with a ProblemDetails listing the allowed fields. Without `sort`,
+each list keeps its natural default order (e.g. test results and the audit log
+default to newest-first).
+
+**Readiness vs liveness.** `GET /health` is a cheap liveness check (the process
+is up). `GET /health/ready` opens a database connection and runs a trivial probe
+(`SELECT 1`, or `SELECT 1 FROM dual` on Oracle), returning `200 {status:"ready"}`
+or `503 {status:"unavailable"}` — point an orchestrator's readiness gate here so
+traffic is held until the data path serves. Both are anonymous.
 
 **Audit trail.** Every mutating request (POST/PUT/PATCH/DELETE under `/api`) is
 recorded in the legacy `opc_action_log` table by `AuditMiddleware` (source =
@@ -150,9 +213,12 @@ never fails the request. Read it back via `GET /api/audit-log`.
 **Write semantics.** `POST /api/customers` requires `customerName` (else 400) and
 returns 201 with a `Location` header. `PATCH` applies a partial update — omitted
 (null) fields are left unchanged (so a field cannot be cleared to null via PATCH),
-and an unknown id returns 404. The customer id is server-assigned via `MAX+1`
-inside a transaction; a production Oracle deployment should back this with a
-sequence for concurrency.
+and an unknown id returns 404. Ids are server-assigned inside a transaction by the
+connection factory's dialect-specific next-id SQL: `MAX+1` on the SQLite dev
+fixture (single-writer, keeps seed ids tidy) and a **sequence `NEXTVAL` on Oracle**
+(concurrency-safe). Sequence names default to the `{table}_seq` convention and are
+overridable per table — see *Configuration* below. *(The audit-log insert still
+uses `MAX+1`; it is append-only and best-effort.)*
 
 ## Authentication
 
@@ -176,6 +242,32 @@ export ApiKeys__Keys__1="<another-key>"     # multiple keys supported
 The dev profile ships a throwaway key (`dev-local-key`). Set `ApiKeys__Enabled=false`
 only on a trusted internal network. In Swagger UI, use **Authorize** to supply the key.
 
+## Rate limiting & security headers
+
+The `/api` group is protected by a **fixed-window rate limiter**, partitioned per
+API key (falling back to the remote IP) so one noisy client can't starve others or
+hammer the legacy database. Exceeding the window returns `429` (ProblemDetails +
+`Retry-After`). Tune via the `RateLimiting` section:
+
+```sh
+export RateLimiting__Enabled="true"      # set false to remove the limiter
+export RateLimiting__PermitLimit="1000"  # requests per window per partition
+export RateLimiting__WindowSeconds="10"
+```
+
+Every response also carries baseline security headers: `X-Content-Type-Options:
+nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: no-referrer`.
+
+**Correlation IDs.** Each request gets an `X-Request-Id` (a caller-supplied one is
+honored when it looks safe, otherwise generated), echoed on the response, surfaced
+in `ProblemDetails` (`requestId`), and recorded in the audit-log notes — so a call
+can be traced across client, API, and the legacy `opc_action_log`.
+
+**Conditional GETs.** `/api` GET responses carry a weak `ETag`; a caller that sends
+a matching `If-None-Match` gets `304 Not Modified` with no body — cheap bandwidth
+savings for the polling shop-floor screens (and a foundation for `If-Match`
+optimistic concurrency once the real schema provides a row version).
+
 ## Configuration (production / Oracle)
 
 Set the `Database` section — preferably via environment variables so secrets
@@ -189,9 +281,23 @@ export ASPNETCORE_ENVIRONMENT="Production"
 dotnet run --project src/ABIS.Api
 ```
 
+**Sequences (Oracle).** Inserts draw ids from a sequence per table. By default the
+name follows `{table}_seq` (`Database__SequenceNameFormat`, default `{0}_seq`);
+override individual tables for names that differ:
+
+```sh
+export Database__SequenceNameFormat="{0}_seq"          # ab_job -> ab_job_seq
+export Database__Sequences__ab_job="ABIS.AB_JOB_S"     # per-table override (schema-qualified ok)
+export Database__Sequences__coil="COIL_SEQ"
+```
+
+Resolved names are validated as plain/scheme-qualified identifiers before use.
+**Confirm the real sequence names against the database** (Phase 1) — these are
+conventions, not recovered facts.
+
 The repository SQL is engine-portable (`:name` parameters; columns aliased to
-model property names; dialect-specific paging supplied by the connection
-factory). The Oracle path is wired and compiles, but is **not exercised by CI**
+model property names; dialect-specific paging and next-id supplied by the
+connection factory). The Oracle path is wired and compiles, but is **not exercised by CI**
 (no Oracle instance available) — validate it against a real database before
 relying on it. The model property names and table shapes mirror the *partial*,
 recovered data model; reconcile against the real schema (Phase 1) as it is

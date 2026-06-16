@@ -7,11 +7,26 @@
 ### Service info (anonymous)
 GET {{host}}/
 
-### Health (anonymous)
+### Health — liveness (anonymous)
 GET {{host}}/health
+
+### Health — readiness: DB reachable (anonymous; 503 if not)
+GET {{host}}/health/ready
 
 ### List jobs (auth required)
 GET {{host}}/api/jobs?pageSize=5
+X-Api-Key: {{apiKey}}
+
+### List jobs sorted by status (desc) — allowlisted sort/dir
+GET {{host}}/api/jobs?sort=jobStatus&dir=desc
+X-Api-Key: {{apiKey}}
+
+### Unknown sort field -> 400 (lists allowed fields)
+GET {{host}}/api/jobs?sort=bogus
+X-Api-Key: {{apiKey}}
+
+### QA test results: filter by position + date range, newest first
+GET {{host}}/api/test-results?position=T&from=2026-01-01&to=2026-12-31
 X-Api-Key: {{apiKey}}
 
 ### One job

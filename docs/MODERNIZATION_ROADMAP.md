@@ -81,9 +81,24 @@ the B-vs-C commitment until after a measured pilot.
 - [x] Add an **automated test harness** (xUnit: repository + in-process HTTP
       smoke tests) and **CI** (`.github/workflows/ci.yml` builds/tests the API
       and runs the discovery extractors).
-- [x] **Expand read coverage**: added customers, sheet skids, and scrap skids
-      (plus `/jobs/{id}/skids` and `/jobs/{id}/scrap` relationship endpoints).
+- [x] **Expand read coverage**: added customers, sheet skids, scrap skids, partial
+      skids, and in-progress test results (`temp_test_result`), plus
+      `/jobs/{id}/skids`, `/scrap`, and `/partial-skids` relationship endpoints.
       *Ongoing* — more entities as Phase 1's full schema lands.
+- [x] **Query ergonomics**: allowlisted, injection-safe **sorting** (`sort`/`dir`
+      with a PK tie-breaker) on every paged list (`Data/Sort.cs`), and richer QA
+      filtering (`position` + `from`/`to` date range on test results).
+- [x] **Readiness probe**: `GET /health/ready` runs `SELECT 1` (503 when the DB is
+      unreachable) alongside the dependency-free `GET /health` liveness check.
+- [x] **Production hardening**: per-API-key fixed-window rate limiting on `/api`
+      (`429` + `Retry-After`) and baseline security headers on every response.
+- [x] **Typed contract + client codegen**: every endpoint declares its response
+      types (`.Produces<T>()`), so the OpenAPI doc carries real schemas; CI emits a
+      typed TypeScript client (NSwag) as the `ts-client` artifact. A `clientapp/`
+      demo (`/ui/typed.html`) consumes that client, compiled in CI.
+- [x] **Concurrency-safe ids**: the connection factory supplies dialect-specific
+      next-id SQL — `MAX+1` on SQLite (dev), sequence `NEXTVAL` on Oracle (prod),
+      with a configurable `{table}_seq` convention.
 - [x] **Write surface across core entities**: customers, order headers, order
       items, jobs, coils, sheet skids, and scrap skids (POST/PUT, server-assigned
       ids, validation, 201/400/404) plus operational PATCH on jobs and coils —
@@ -94,8 +109,9 @@ the B-vs-C commitment until after a measured pilot.
 - [x] **Observability / audit parity**: `AuditMiddleware` records every mutating
       request into the legacy `opc_action_log`, exposed via `GET /api/audit-log`.
 - [x] **Authentication**: API-key auth (`X-Api-Key`) gates the `/api` surface
-      (`/health` + Swagger stay open); swappable for OAuth/OIDC later.
-- [x] **Deployment readiness**: multi-stage `Dockerfile` (built in CI), CORS for
+      (`/health`, `/health/ready` + Swagger stay open); swappable for OAuth/OIDC later.
+- [x] **Deployment readiness**: multi-stage `Dockerfile` (built **and smoke-tested**
+      in CI — the image must boot and serve `/health` + `/health/ready`), CORS for
       a future SPA, a `/` service-info endpoint, and a `requests.http` collection.
 - [ ] Validate the **Oracle** data-access path against a real database (CI only
       exercises the SQLite fixture today).

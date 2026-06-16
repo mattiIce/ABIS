@@ -26,7 +26,7 @@ public sealed class RepositoryTests : IDisposable
     [Fact]
     public async Task GetJobs_returns_all_seeded_jobs()
     {
-        var page = await _repo.GetJobsAsync(1, 25, status: null, CancellationToken.None);
+        var page = await _repo.GetJobsAsync(1, 25, status: null, orderBy: null, CancellationToken.None);
         Assert.Equal(3, page.TotalCount);
         Assert.Equal(3, page.Items.Count);
     }
@@ -34,7 +34,7 @@ public sealed class RepositoryTests : IDisposable
     [Fact]
     public async Task GetJobs_filters_by_status()
     {
-        var page = await _repo.GetJobsAsync(1, 25, status: 1, CancellationToken.None);
+        var page = await _repo.GetJobsAsync(1, 25, status: 1, orderBy: null, CancellationToken.None);
         Assert.Equal(2, page.TotalCount);
         Assert.All(page.Items, j => Assert.Equal(1, j.JobStatus));
     }
@@ -42,12 +42,12 @@ public sealed class RepositoryTests : IDisposable
     [Fact]
     public async Task GetJobs_paginates()
     {
-        var p1 = await _repo.GetJobsAsync(1, 2, status: null, CancellationToken.None);
+        var p1 = await _repo.GetJobsAsync(1, 2, status: null, orderBy: null, CancellationToken.None);
         Assert.Equal(3, p1.TotalCount);
         Assert.Equal(2, p1.Items.Count);
         Assert.Equal(2, p1.TotalPages);
 
-        var p2 = await _repo.GetJobsAsync(2, 2, status: null, CancellationToken.None);
+        var p2 = await _repo.GetJobsAsync(2, 2, status: null, orderBy: null, CancellationToken.None);
         Assert.Single(p2.Items);
     }
 
@@ -94,7 +94,7 @@ public sealed class RepositoryTests : IDisposable
     [Fact]
     public async Task GetOrderItems_filters_by_alloy()
     {
-        var items = await _repo.GetOrderItemsAsync(1, 25, alloy: "3003", CancellationToken.None);
+        var items = await _repo.GetOrderItemsAsync(1, 25, alloy: "3003", orderBy: null, CancellationToken.None);
         Assert.Equal(2, items.TotalCount);
         Assert.All(items.Items, i => Assert.Equal("3003", i.Alloy2));
     }
@@ -102,10 +102,10 @@ public sealed class RepositoryTests : IDisposable
     [Fact]
     public async Task GetTestResults_filters_by_type_and_orders_desc()
     {
-        var all = await _repo.GetTestResultsAsync(1, 25, testType: null, CancellationToken.None);
+        var all = await _repo.GetTestResultsAsync(1, 25, testType: null, position: null, from: null, to: null, orderBy: null, CancellationToken.None);
         Assert.Equal(3, all.TotalCount);
 
-        var t1 = await _repo.GetTestResultsAsync(1, 25, testType: 1, CancellationToken.None);
+        var t1 = await _repo.GetTestResultsAsync(1, 25, testType: 1, position: null, from: null, to: null, orderBy: null, CancellationToken.None);
         Assert.Single(t1.Items);
         Assert.Equal(45.0m, t1.Items[0].YtsVal);
     }
@@ -115,10 +115,10 @@ public sealed class RepositoryTests : IDisposable
     [Fact]
     public async Task GetCustomers_lists_and_filters_by_name()
     {
-        var all = await _repo.GetCustomersAsync(1, 25, name: null, CancellationToken.None);
+        var all = await _repo.GetCustomersAsync(1, 25, name: null, orderBy: null, CancellationToken.None);
         Assert.Equal(2, all.TotalCount);
 
-        var acme = await _repo.GetCustomersAsync(1, 25, name: "ACME", CancellationToken.None);
+        var acme = await _repo.GetCustomersAsync(1, 25, name: "ACME", orderBy: null, CancellationToken.None);
         Assert.Single(acme.Items);
         Assert.Equal(4001, acme.Items[0].CustomerId);
     }
@@ -237,12 +237,12 @@ public sealed class RepositoryTests : IDisposable
     public async Task WriteAudit_then_read_returns_newest_first()
     {
         await _repo.WriteAuditAsync("TEST /api/thing", success: true, "HTTP 200", CancellationToken.None);
-        var log = await _repo.GetAuditLogAsync(1, 25, source: null, CancellationToken.None);
+        var log = await _repo.GetAuditLogAsync(1, 25, source: null, orderBy: null, CancellationToken.None);
         Assert.Equal(3, log.TotalCount);             // 2 seeded + 1 written
         Assert.Equal("TEST /api/thing", log.Items[0].Source);   // ordered by id DESC
         Assert.Equal(1, log.Items[0].Success);
 
-        var filtered = await _repo.GetAuditLogAsync(1, 25, source: "TEST", CancellationToken.None);
+        var filtered = await _repo.GetAuditLogAsync(1, 25, source: "TEST", orderBy: null, CancellationToken.None);
         Assert.Single(filtered.Items);
     }
 
@@ -311,11 +311,11 @@ public sealed class RepositoryTests : IDisposable
     [Fact]
     public async Task GetOrders_filters_by_customer_and_po()
     {
-        var byCust = await _repo.GetOrdersAsync(1, 25, customerId: 4001, po: null, CancellationToken.None);
+        var byCust = await _repo.GetOrdersAsync(1, 25, customerId: 4001, po: null, orderBy: null, CancellationToken.None);
         Assert.Equal(1, byCust.TotalCount);
         Assert.Equal(9001, byCust.Items[0].OrderAbcNum);
 
-        var byPo = await _repo.GetOrdersAsync(1, 25, customerId: null, po: "PO-AB-1002", CancellationToken.None);
+        var byPo = await _repo.GetOrdersAsync(1, 25, customerId: null, po: "PO-AB-1002", orderBy: null, CancellationToken.None);
         Assert.Equal(9002, byPo.Items.Single().OrderAbcNum);
     }
 
@@ -352,11 +352,11 @@ public sealed class RepositoryTests : IDisposable
     [Fact]
     public async Task GetCoils_filters_by_alloy_and_location()
     {
-        var byAlloy = await _repo.GetCoilsAsync(1, 25, null, alloy: "3003", null, null, CancellationToken.None);
+        var byAlloy = await _repo.GetCoilsAsync(1, 25, null, alloy: "3003", null, null, orderBy: null, CancellationToken.None);
         Assert.Equal(2, byAlloy.TotalCount);
         Assert.All(byAlloy.Items, c => Assert.Equal("3003", c.CoilAlloy2));
 
-        var byLoc = await _repo.GetCoilsAsync(1, 25, null, null, location: "A-", null, CancellationToken.None);
+        var byLoc = await _repo.GetCoilsAsync(1, 25, null, null, location: "A-", null, orderBy: null, CancellationToken.None);
         Assert.Equal(2, byLoc.TotalCount);   // A-01, A-02
     }
 
@@ -377,6 +377,99 @@ public sealed class RepositoryTests : IDisposable
         Assert.Equal(2, g3003.Count);
         Assert.Equal(23000m, g3003.TotalNetWt);   // 12000 + 11000
         Assert.Equal(2, summary.Single(x => x.Key == "5052").Count);
+    }
+
+    // ---- Sorting --------------------------------------------------------
+
+    [Fact]
+    public async Task GetCoils_orders_by_supplied_clause()
+    {
+        // net_wt ascending: 9000 (5003), 9500 (5004), 11000 (5002), 12000 (5001).
+        var asc = await _repo.GetCoilsAsync(1, 25, null, null, null, null, orderBy: "net_wt ASC, coil_abc_num", CancellationToken.None);
+        Assert.Equal(5003, asc.Items[0].CoilAbcNum);
+        Assert.Equal(5001, asc.Items[^1].CoilAbcNum);
+
+        var desc = await _repo.GetCoilsAsync(1, 25, null, null, null, null, orderBy: "net_wt DESC, coil_abc_num", CancellationToken.None);
+        Assert.Equal(5001, desc.Items[0].CoilAbcNum);
+    }
+
+    [Fact]
+    public void Sort_resolves_allowlisted_field_with_tiebreaker()
+    {
+        Assert.True(Sort.TryResolve("coils", "netWt", "asc", out var orderBy, out var problems));
+        Assert.Null(problems);
+        Assert.Equal("net_wt ASC, coil_abc_num", orderBy);
+    }
+
+    [Fact]
+    public void Sort_defaults_when_no_field_supplied()
+    {
+        Assert.True(Sort.TryResolve("jobs", null, null, out var orderBy, out _));
+        Assert.Equal("ab_job_num", orderBy);
+    }
+
+    [Fact]
+    public void Sort_rejects_unknown_field_and_bad_direction()
+    {
+        Assert.False(Sort.TryResolve("jobs", "dropTable", null, out _, out var p1));
+        Assert.True(p1!.ContainsKey("sort"));
+
+        Assert.False(Sort.TryResolve("jobs", "jobStatus", "sideways", out _, out var p2));
+        Assert.True(p2!.ContainsKey("dir"));
+    }
+
+    // ---- Readiness ------------------------------------------------------
+
+    [Fact]
+    public async Task Ping_returns_true_against_a_live_fixture()
+    {
+        Assert.True(await _repo.PingAsync(CancellationToken.None));
+    }
+
+    // ---- QA test-result filters ----------------------------------------
+
+    [Fact]
+    public async Task GetTestResults_filters_by_position()
+    {
+        var m = await _repo.GetTestResultsAsync(1, 25, testType: null, position: "M", from: null, to: null, orderBy: null, CancellationToken.None);
+        Assert.Single(m.Items);
+        Assert.Equal(46.0m, m.Items[0].YtsVal);
+    }
+
+    [Fact]
+    public async Task GetTestResults_filters_by_date_range()
+    {
+        // Seeded created_date values: base (08:00), +1h, +2h.
+        var baseDate = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
+        var ranged = await _repo.GetTestResultsAsync(1, 25, testType: null, position: null,
+            from: baseDate.AddMinutes(30), to: baseDate.AddHours(5), orderBy: null, CancellationToken.None);
+        Assert.Equal(2, ranged.TotalCount);   // the +1h and +2h rows
+    }
+
+    // ---- temp_test_result (in-progress QA) -----------------------------
+
+    [Fact]
+    public async Task GetTempTestResults_lists_and_filters_by_position()
+    {
+        var all = await _repo.GetTempTestResultsAsync(1, 25, null, null, null, null, null, CancellationToken.None);
+        Assert.Equal(2, all.TotalCount);
+
+        var m = await _repo.GetTempTestResultsAsync(1, 25, null, position: "M", from: null, to: null, orderBy: null, CancellationToken.None);
+        Assert.Single(m.Items);
+        Assert.Equal(41.0m, m.Items[0].Yts);   // temp table uses 'yts', not 'yts_val'
+    }
+
+    // ---- process_partial_skid ------------------------------------------
+
+    [Fact]
+    public async Task GetPartialSkids_lists_all_and_filters_by_job()
+    {
+        var all = await _repo.GetPartialSkidsAsync(1, 25, null, CancellationToken.None);
+        Assert.Equal(3, all.TotalCount);
+
+        var job1001 = await _repo.GetJobPartialSkidsAsync(1001, CancellationToken.None);
+        Assert.Equal(2, job1001.Count);
+        Assert.All(job1001, s => Assert.Equal(1001, s.AbJobNum));
     }
 
     public void Dispose()

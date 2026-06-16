@@ -27,6 +27,8 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS customer;
             DROP TABLE IF EXISTS sheet_skid;
             DROP TABLE IF EXISTS scrap_skid;
+            DROP TABLE IF EXISTS process_partial_skid;
+            DROP TABLE IF EXISTS temp_test_result;
             DROP TABLE IF EXISTS opc_action_log;
 
             CREATE TABLE ab_job (
@@ -74,6 +76,14 @@ public static class SqliteFixture
                 scrap_skid_num INTEGER PRIMARY KEY, scrap_ab_job_num TEXT, scrap_alloy2 TEXT, scrap_temper TEXT,
                 scrap_type INTEGER, scrap_net_wt REAL, scrap_tare_wt REAL, scrap_location TEXT,
                 scrap_notes TEXT, skid_scrap_status INTEGER, scrap_date TEXT);
+
+            CREATE TABLE temp_test_result (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, created_date TEXT, test_type INTEGER, position TEXT,
+                yts REAL, uts REAL, elongation REAL, n REAL, r REAL, thickness REAL, width REAL);
+
+            CREATE TABLE process_partial_skid (
+                sheet_skid_num INTEGER, ab_job_num INTEGER, partial_skid_ab_job_num TEXT,
+                partial_sheet_net_wt REAL, partial_skid_pieces INTEGER, partial_skid_location TEXT, partial_skid_date TEXT);
 
             CREATE TABLE opc_action_log (
                 opc_log_id INTEGER PRIMARY KEY, time_stamp TEXT, source TEXT, success INTEGER, notes TEXT);
@@ -190,6 +200,28 @@ public static class SqliteFixture
             {
                 new { ScrapSkidNum = 8001L, ScrapAbJobNum = "1001", ScrapAlloy2 = "3003", ScrapTemper = "H14", ScrapType = (int?)1, ScrapNetWt = 120m, ScrapTareWt = 20m, ScrapLocation = "SCR-A", ScrapNotes = "", SkidScrapStatus = (int?)1, ScrapDate = (DateTime?)d.AddHours(6) },
                 new { ScrapSkidNum = 8002L, ScrapAbJobNum = "1003", ScrapAlloy2 = "5052", ScrapTemper = "H32", ScrapType = (int?)2, ScrapNetWt = 90m, ScrapTareWt = 20m, ScrapLocation = "SCR-B", ScrapNotes = "", SkidScrapStatus = (int?)1, ScrapDate = (DateTime?)d.AddDays(3) }
+            });
+
+        conn.Execute("""
+            INSERT INTO temp_test_result (created_date, test_type, position, yts, uts, elongation, n, r, thickness, width)
+            VALUES (:CreatedDate, :TestType, :Position, :Yts, :Uts, :Elongation, :N, :R, :Thickness, :Width)
+            """,
+            new[]
+            {
+                new { CreatedDate = (DateTime?)d, TestType = (int?)1, Position = "T", Yts = 40.0m, Uts = 48.0m, Elongation = 11.0m, N = 0.24m, R = 0.48m, Thickness = 0.125m, Width = 48.5m },
+                new { CreatedDate = (DateTime?)d.AddHours(1), TestType = (int?)1, Position = "M", Yts = 41.0m, Uts = 49.0m, Elongation = 11.5m, N = 0.24m, R = 0.48m, Thickness = 0.125m, Width = 48.5m }
+            });
+
+        conn.Execute("""
+            INSERT INTO process_partial_skid (sheet_skid_num, ab_job_num, partial_skid_ab_job_num,
+                partial_sheet_net_wt, partial_skid_pieces, partial_skid_location, partial_skid_date)
+            VALUES (:SheetSkidNum, :AbJobNum, :PartialSkidAbJobNum, :PartialSheetNetWt, :PartialSkidPieces, :PartialSkidLocation, :PartialSkidDate)
+            """,
+            new[]
+            {
+                new { SheetSkidNum = 3001L, AbJobNum = (long?)1001L, PartialSkidAbJobNum = "1001", PartialSheetNetWt = 990m, PartialSkidPieces = (int?)50, PartialSkidLocation = "WIP-1", PartialSkidDate = (DateTime?)d.AddHours(2) },
+                new { SheetSkidNum = 3002L, AbJobNum = (long?)1001L, PartialSkidAbJobNum = "1001", PartialSheetNetWt = 980m, PartialSkidPieces = (int?)49, PartialSkidLocation = "WIP-1", PartialSkidDate = (DateTime?)d.AddHours(3) },
+                new { SheetSkidNum = 3003L, AbJobNum = (long?)1003L, PartialSkidAbJobNum = "1003", PartialSheetNetWt = 1200m, PartialSkidPieces = (int?)40, PartialSkidLocation = "WIP-2", PartialSkidDate = (DateTime?)d.AddDays(3) }
             });
 
         conn.Execute("""
