@@ -138,10 +138,53 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
-    public Task<PagedResult<Coil>> GetCoilsAsync(int page, int pageSize, int? status, CancellationToken ct) =>
-        PageAsync<Coil>(CoilCols, "coil", "coil_abc_num",
-            status is null ? null : "coil_status = :status",
-            new { status }, page, pageSize, ct);
+    public Task<PagedResult<Coil>> GetCoilsAsync(int page, int pageSize, int? status, string? alloy, string? location, long? customerId, CancellationToken ct)
+    {
+        var p = new DynamicParameters();
+        var conditions = new List<string>();
+        if (status is not null) { conditions.Add("coil_status = :status"); p.Add("status", status); }
+        if (alloy is not null) { conditions.Add("coil_alloy2 = :alloy"); p.Add("alloy", alloy); }
+        if (location is not null) { conditions.Add("coil_location LIKE :location"); p.Add("location", $"%{location}%"); }
+        if (customerId is not null) { conditions.Add("customer_id = :customerId"); p.Add("customerId", customerId); }
+        var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
+        return PageAsync<Coil>(CoilCols, "coil", "coil_abc_num", where, p, page, pageSize, ct);
+    }
+
+    public async Task<IReadOnlyList<CoilProcessing>> GetCoilProcessingAsync(long coilAbcNum, CancellationToken ct)
+    {
+        const string sql = """
+            SELECT pc.ab_job_num AS AbJobNum, pc.coil_abc_num AS CoilAbcNum, pc.process_coil_status AS ProcessCoilStatus,
+                   pc.process_date AS ProcessDate, pc.process_end_wt AS ProcessEndWt, pc.process_quantity AS ProcessQuantity,
+                   j.job_status AS JobStatus, j.line_num AS JobLineNum
+            FROM process_coil pc
+            LEFT JOIN ab_job j ON j.ab_job_num = pc.ab_job_num
+            WHERE pc.coil_abc_num = :id
+            ORDER BY pc.process_date
+            """;
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<CoilProcessing>(new CommandDefinition(sql, new { id = coilAbcNum }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<CoilInventoryGroup>> GetCoilInventorySummaryAsync(string groupBy, CancellationToken ct)
+    {
+        // groupBy maps to a fixed column via an allowlist — never interpolated raw.
+        var col = groupBy.ToLowerInvariant() switch
+        {
+            "alloy" => "coil_alloy2",
+            "location" => "coil_location",
+            _ => throw new ArgumentException($"Unsupported groupBy '{groupBy}'. Use 'alloy' or 'location'.", nameof(groupBy))
+        };
+        var sql = $"""
+            SELECT {col} AS "Key", COUNT(*) AS Count, SUM(net_wt) AS TotalNetWt, SUM(net_wt_balance) AS TotalBalance
+            FROM coil
+            GROUP BY {col}
+            ORDER BY {col}
+            """;
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<CoilInventoryGroup>(new CommandDefinition(sql, cancellationToken: ct));
+        return rows.AsList();
+    }
 
     public async Task<Coil?> GetCoilAsync(long coilAbcNum, CancellationToken ct)
     {

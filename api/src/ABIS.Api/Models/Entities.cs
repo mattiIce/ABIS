@@ -115,6 +115,29 @@ public sealed class TestResult
     public decimal? Width { get; set; }
 }
 
+/// <summary>A coil's processing history entry: a <c>process_coil</c> row joined
+/// with a few attributes of the consuming job.</summary>
+public sealed class CoilProcessing
+{
+    public long AbJobNum { get; set; }
+    public long CoilAbcNum { get; set; }
+    public int? ProcessCoilStatus { get; set; }
+    public DateTime? ProcessDate { get; set; }
+    public decimal? ProcessEndWt { get; set; }
+    public decimal? ProcessQuantity { get; set; }
+    public int? JobStatus { get; set; }
+    public long? JobLineNum { get; set; }
+}
+
+/// <summary>One row of a coil inventory rollup (weight on hand grouped by a key).</summary>
+public sealed class CoilInventoryGroup
+{
+    public string? Key { get; set; }
+    public long Count { get; set; }
+    public decimal? TotalNetWt { get; set; }
+    public decimal? TotalBalance { get; set; }
+}
+
 /// <summary>A customer / trading partner (table <c>customer</c>).</summary>
 public sealed class Customer
 {

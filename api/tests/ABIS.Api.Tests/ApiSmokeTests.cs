@@ -72,6 +72,15 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Coil_inventory_demo_page_is_served()
+    {
+        var bare = _factory.CreateClient();
+        var resp = await bare.GetAsync("/ui/coils.html");
+        resp.EnsureSuccessStatusCode();
+        Assert.Contains("ABIS Coil Inventory", await resp.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task List_jobs_returns_paged_envelope()
     {
         var body = await _client.GetFromJsonAsync<JsonElement>("/api/jobs");
@@ -253,6 +262,36 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
         var body = await _client.GetFromJsonAsync<JsonElement>("/api/lookups/alloys");
         var alloys = body.EnumerateArray().Select(e => e.GetString()).ToList();
         Assert.Contains("3003", alloys);
+    }
+
+    [Fact]
+    public async Task Coils_filter_by_alloy()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/coils?alloy=3003");
+        Assert.Equal(2, body.GetProperty("totalCount").GetInt32());
+    }
+
+    [Fact]
+    public async Task Coil_inventory_summary_by_alloy()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/coils/summary?groupBy=alloy");
+        var keys = body.EnumerateArray().Select(g => g.GetProperty("key").GetString()).ToList();
+        Assert.Contains("3003", keys);
+        Assert.Contains("5052", keys);
+    }
+
+    [Fact]
+    public async Task Coil_inventory_summary_bad_groupby_is_400()
+    {
+        var resp = await _client.GetAsync("/api/coils/summary?groupBy=bogus");
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Coil_processing_history_is_served()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/coils/5001/processing");
+        Assert.Equal(1, body.GetArrayLength());
     }
 
     [Fact]

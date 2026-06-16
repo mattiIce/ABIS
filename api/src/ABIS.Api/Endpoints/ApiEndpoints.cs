@@ -63,17 +63,33 @@ public static class ApiEndpoints
                     : Results.NotFound())
            .WithName("PatchJob").WithTags("Jobs");
 
-        // ---- Coils ------------------------------------------------------
+        // ---- Coils (inventory) -----------------------------------------
         api.MapGet("/coils", async (IAbisRepository repo, CancellationToken ct,
-                int page = 1, int pageSize = 25, int? status = null) =>
-                Results.Ok(await repo.GetCoilsAsync(page, pageSize, status, ct)))
+                int page = 1, int pageSize = 25, int? status = null,
+                string? alloy = null, string? location = null, long? customerId = null) =>
+                Results.Ok(await repo.GetCoilsAsync(page, pageSize, status, alloy, location, customerId, ct)))
            .WithName("ListCoils").WithTags("Coils");
+
+        // Inventory rollup: weight on hand grouped by alloy or location.
+        api.MapGet("/coils/summary", async (IAbisRepository repo, CancellationToken ct, string groupBy = "alloy") =>
+            {
+                var g = groupBy.ToLowerInvariant();
+                if (g is not ("alloy" or "location"))
+                    return Results.ValidationProblem(new Dictionary<string, string[]>
+                        { ["groupBy"] = ["groupBy must be 'alloy' or 'location'."] });
+                return Results.Ok(await repo.GetCoilInventorySummaryAsync(g, ct));
+            })
+           .WithName("CoilInventorySummary").WithTags("Coils");
 
         api.MapGet("/coils/{coilAbcNum:long}", async (long coilAbcNum, IAbisRepository repo, CancellationToken ct) =>
                 await repo.GetCoilAsync(coilAbcNum, ct) is { } coil
                     ? Results.Ok(coil)
                     : Results.NotFound())
            .WithName("GetCoil").WithTags("Coils");
+
+        api.MapGet("/coils/{coilAbcNum:long}/processing", async (long coilAbcNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetCoilProcessingAsync(coilAbcNum, ct)))
+           .WithName("GetCoilProcessing").WithTags("Coils");
 
         api.MapPost("/coils", async (CoilWrite body, IAbisRepository repo, CancellationToken ct) =>
             {

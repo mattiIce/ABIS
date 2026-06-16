@@ -46,20 +46,24 @@ The Development profile (`appsettings.Development.json`) uses
 `Provider=Sqlite`, `Seed=true`, so the API comes up populated with sample data
 and needs no external database.
 
-### Order-entry demo UI
+### Demo UIs
 
-`wwwroot/ui/index.html` is a dependency-free (vanilla JS, no build step) page
-that exercises the order-entry flow end-to-end — search/filter orders, view an
-order's header + customer + lines, and save a new order with line items. It
-serves as a **Path C greenfield reference** (see
-[`../docs/PHASE3_PILOT_PLAN.md`](../docs/PHASE3_PILOT_PLAN.md)) and a manual
-test harness. Paste the dev API key (`dev-local-key`) into the header field.
+Dependency-free (vanilla JS, no build step) pages under `wwwroot/ui/`, serving as
+**Path C greenfield references** (see
+[`../docs/PHASE3_PILOT_PLAN.md`](../docs/PHASE3_PILOT_PLAN.md)) and manual test
+harnesses. Paste the dev API key (`dev-local-key`) into the header field; the
+two pages cross-link.
+
+- **`/ui/index.html`** — order entry: search/filter orders, view header +
+  customer + lines, save a new order with line items.
+- **`/ui/coils.html`** — coil inventory: filter coils, view a coil + its
+  processing history, receive a coil, and an alloy/location weight rollup.
 
 ## Test
 
 ```sh
 cd api
-dotnet test                                # 59 tests: repository + HTTP smoke
+dotnet test                                # 67 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -92,8 +96,10 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/jobs/{abJobNum}/scrap` | Scrap skids for a job |
 | `POST /api/jobs` | Create a production job → 201 |
 | `PATCH /api/jobs/{abJobNum}` | Update job status / notes / men / finish time |
-| `GET /api/coils?page&pageSize&status` | List coils (paged) |
+| `GET /api/coils?page&pageSize&status&alloy&location&customerId` | List coils (paged, filterable) |
+| `GET /api/coils/summary?groupBy=alloy\|location` | Inventory weight rollup (count + net wt + balance) |
 | `GET /api/coils/{coilAbcNum}` | One coil |
+| `GET /api/coils/{coilAbcNum}/processing` | A coil's processing history (consuming jobs) |
 | `POST /api/coils` | Create a coil on receipt (requires `coilAlloy2`) → 201 |
 | `PATCH /api/coils/{coilAbcNum}` | Update coil status / location / notes |
 | `GET /api/orders?page&pageSize&customerId&po` | List customer orders (paged, filterable) |

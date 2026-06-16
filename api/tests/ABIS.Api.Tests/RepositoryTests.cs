@@ -347,6 +347,38 @@ public sealed class RepositoryTests : IDisposable
         Assert.Equal(alloys.Distinct().Count(), alloys.Count);
     }
 
+    // ---- Coil inventory (inv_coil pilot support) -----------------------
+
+    [Fact]
+    public async Task GetCoils_filters_by_alloy_and_location()
+    {
+        var byAlloy = await _repo.GetCoilsAsync(1, 25, null, alloy: "3003", null, null, CancellationToken.None);
+        Assert.Equal(2, byAlloy.TotalCount);
+        Assert.All(byAlloy.Items, c => Assert.Equal("3003", c.CoilAlloy2));
+
+        var byLoc = await _repo.GetCoilsAsync(1, 25, null, null, location: "A-", null, CancellationToken.None);
+        Assert.Equal(2, byLoc.TotalCount);   // A-01, A-02
+    }
+
+    [Fact]
+    public async Task GetCoilProcessing_returns_job_usage()
+    {
+        var usage = await _repo.GetCoilProcessingAsync(5001, CancellationToken.None);
+        Assert.Single(usage);
+        Assert.Equal(1001, usage[0].AbJobNum);
+        Assert.Equal(110, usage[0].JobLineNum);   // joined from ab_job
+    }
+
+    [Fact]
+    public async Task GetCoilInventorySummary_rolls_up_weight_by_alloy()
+    {
+        var summary = await _repo.GetCoilInventorySummaryAsync("alloy", CancellationToken.None);
+        var g3003 = summary.Single(x => x.Key == "3003");
+        Assert.Equal(2, g3003.Count);
+        Assert.Equal(23000m, g3003.TotalNetWt);   // 12000 + 11000
+        Assert.Equal(2, summary.Single(x => x.Key == "5052").Count);
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }
