@@ -68,6 +68,19 @@ dotnet test                                # 67 tests: repository + HTTP smoke
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
 
+### OpenAPI contract
+
+The Swagger/OpenAPI document is served at `/swagger/v1/swagger.json` at runtime.
+To emit it as a file (e.g. for client codegen) — CI also does this and uploads it
+as the `openapi` artifact:
+
+```sh
+cd api
+dotnet build src/ABIS.Api/ABIS.Api.csproj -c Release
+dotnet tool restore
+dotnet tool run swagger tofile --output openapi.json src/ABIS.Api/bin/Release/net8.0/ABIS.Api.dll v1
+```
+
 ## Container
 
 ```sh

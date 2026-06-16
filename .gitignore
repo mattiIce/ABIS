@@ -9,6 +9,9 @@
 *.db-shm
 *.db-wal
 
+# Generated OpenAPI contract (produced in CI as an artifact)
+openapi.json
+
 # IDE / OS cruft
 .vs/
 .idea/
