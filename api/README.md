@@ -84,7 +84,7 @@ CI compiles this on every run, so a contract change that breaks the typed UI fai
 
 ```sh
 cd api
-dotnet test                                # 84 tests: repository + HTTP smoke
+dotnet test                                # 90 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -199,9 +199,12 @@ never fails the request. Read it back via `GET /api/audit-log`.
 **Write semantics.** `POST /api/customers` requires `customerName` (else 400) and
 returns 201 with a `Location` header. `PATCH` applies a partial update — omitted
 (null) fields are left unchanged (so a field cannot be cleared to null via PATCH),
-and an unknown id returns 404. The customer id is server-assigned via `MAX+1`
-inside a transaction; a production Oracle deployment should back this with a
-sequence for concurrency.
+and an unknown id returns 404. Ids are server-assigned inside a transaction by the
+connection factory's dialect-specific next-id SQL: `MAX+1` on the SQLite dev
+fixture (single-writer, keeps seed ids tidy) and a **sequence `NEXTVAL` on Oracle**
+(concurrency-safe). Sequence names default to the `{table}_seq` convention and are
+overridable per table — see *Configuration* below. *(The audit-log insert still
+uses `MAX+1`; it is append-only and best-effort.)*
 
 ## Authentication
 
@@ -238,9 +241,23 @@ export ASPNETCORE_ENVIRONMENT="Production"
 dotnet run --project src/ABIS.Api
 ```
 
+**Sequences (Oracle).** Inserts draw ids from a sequence per table. By default the
+name follows `{table}_seq` (`Database__SequenceNameFormat`, default `{0}_seq`);
+override individual tables for names that differ:
+
+```sh
+export Database__SequenceNameFormat="{0}_seq"          # ab_job -> ab_job_seq
+export Database__Sequences__ab_job="ABIS.AB_JOB_S"     # per-table override (schema-qualified ok)
+export Database__Sequences__coil="COIL_SEQ"
+```
+
+Resolved names are validated as plain/scheme-qualified identifiers before use.
+**Confirm the real sequence names against the database** (Phase 1) — these are
+conventions, not recovered facts.
+
 The repository SQL is engine-portable (`:name` parameters; columns aliased to
-model property names; dialect-specific paging supplied by the connection
-factory). The Oracle path is wired and compiles, but is **not exercised by CI**
+model property names; dialect-specific paging and next-id supplied by the
+connection factory). The Oracle path is wired and compiles, but is **not exercised by CI**
 (no Oracle instance available) — validate it against a real database before
 relying on it. The model property names and table shapes mirror the *partial*,
 recovered data model; reconcile against the real schema (Phase 1) as it is

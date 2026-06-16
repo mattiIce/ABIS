@@ -616,11 +616,12 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
-    /// <summary>Next id via MAX+1, run inside the caller's transaction. Table/column
-    /// are internal constants (not user input). Production Oracle should use a sequence.</summary>
-    private static Task<long> NextIdAsync(DbConnection conn, DbTransaction tx, string table, string idColumn, CancellationToken ct) =>
+    /// <summary>Next id for an insert, run inside the caller's transaction. The
+    /// dialect-specific SQL (MAX+1 on SQLite, a sequence NEXTVAL on Oracle) comes
+    /// from the connection factory. Table/column are internal constants.</summary>
+    private Task<long> NextIdAsync(DbConnection conn, DbTransaction tx, string table, string idColumn, CancellationToken ct) =>
         conn.ExecuteScalarAsync<long>(new CommandDefinition(
-            $"SELECT COALESCE(MAX({idColumn}), 0) + 1 FROM {table}", transaction: tx, cancellationToken: ct));
+            _factory.NextIdQuery(table, idColumn), transaction: tx, cancellationToken: ct));
 
     /// <summary>Merge two anonymous parameter objects into one Dapper parameter bag.</summary>
     private static DynamicParameters Merge(object a, object b)

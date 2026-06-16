@@ -91,7 +91,11 @@ the B-vs-C commitment until after a measured pilot.
       unreachable) alongside the dependency-free `GET /health` liveness check.
 - [x] **Typed contract + client codegen**: every endpoint declares its response
       types (`.Produces<T>()`), so the OpenAPI doc carries real schemas; CI emits a
-      typed TypeScript client (NSwag) as the `ts-client` artifact.
+      typed TypeScript client (NSwag) as the `ts-client` artifact. A `clientapp/`
+      demo (`/ui/typed.html`) consumes that client, compiled in CI.
+- [x] **Concurrency-safe ids**: the connection factory supplies dialect-specific
+      next-id SQL — `MAX+1` on SQLite (dev), sequence `NEXTVAL` on Oracle (prod),
+      with a configurable `{table}_seq` convention.
 - [x] **Write surface across core entities**: customers, order headers, order
       items, jobs, coils, sheet skids, and scrap skids (POST/PUT, server-assigned
       ids, validation, 201/400/404) plus operational PATCH on jobs and coils —

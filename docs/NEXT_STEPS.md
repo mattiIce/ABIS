@@ -32,7 +32,7 @@ curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0 --inst
 export PATH="$HOME/.dotnet:$PATH"
 
 cd api
-dotnet test                                   # 84 tests (repository + HTTP)
+dotnet test                                   # 90 tests (repository + HTTP)
 dotnet run --project src/ABIS.Api             # Dev profile: seeds SQLite, no DB needed
 # API key for /api/*: dev-local-key  (header X-Api-Key)
 # Demo UIs: http://localhost:5xxx/ui/index.html , /ui/coils.html , /ui/qa.html
@@ -75,11 +75,14 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
   `/ui/app/`; `/ui/typed.html` is the coil screen driven by it. CI compiles it so
   a contract change that breaks the typed UI fails the build. Next: other client
   languages via `openapi-generator`; migrate a real module onto the typed client.
-- **Write hardening:** optimistic concurrency (rowversion/ETag), a soft-delete
-  policy decision, and replacing the `MAX+1` id assignment with **Oracle
-  sequences** once the DB is known (search `NextIdAsync`). True concurrency needs
-  a rowversion column the recovered schema doesn't have — confirm against the real
-  schema before adding one.
+- ✅ **ID generation hardened** — done: ids come from the connection factory's
+  dialect-specific next-id SQL — `MAX+1` on SQLite (dev), a sequence `NEXTVAL` on
+  Oracle (concurrency-safe), names via the `{table}_seq` convention with per-table
+  overrides (`Database:Sequences`). Real sequence names still need DB confirmation.
+- **Write hardening (remaining):** optimistic concurrency (rowversion/ETag) and a
+  soft-delete policy. True concurrency needs a rowversion column the recovered
+  schema doesn't have — confirm against the real schema before adding one. The
+  audit-log insert still uses `MAX+1` (append-only, best-effort).
 - **More module slices** following the recipe below (e.g. `quotation`,
   `daily_prod`) as Phase-1's full schema lands.
 - **Expand the recovered data model** by exporting more DataWindows to text and
