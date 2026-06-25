@@ -229,3 +229,29 @@ public sealed class AuditEntry
     public int? Success { get; set; }
     public string? Notes { get; set; }
 }
+
+/// <summary>A part-number master record (table <c>part_num</c>).</summary>
+public sealed class Part
+{
+    public long PartNumId { get; set; }
+    public long? CustomerId { get; set; }
+    public long? EnduserId { get; set; }
+    public string? EnduserPartNum { get; set; }
+    public string? SheetType { get; set; }
+    public string? Alloy { get; set; }
+    public string? Temper { get; set; }
+    public decimal? Gauge { get; set; }
+}
+
+/// <summary>A die / tooling record (table <c>die</c>).</summary>
+public sealed class Die
+{
+    public long DieId { get; set; }
+    public string? DieName { get; set; }
+    public int? Status { get; set; }
+    public string? ToolNum { get; set; }
+    public string? PartName { get; set; }
+    public decimal? GrossWeight { get; set; }
+    public string? Location { get; set; }
+    public string? Description { get; set; }
+}

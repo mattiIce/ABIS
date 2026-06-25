@@ -88,6 +88,14 @@ public static class SqliteFixture
 
             CREATE TABLE opc_action_log (
                 opc_log_id INTEGER PRIMARY KEY, time_stamp TEXT, source TEXT, success INTEGER, notes TEXT);
+
+            CREATE TABLE part_num (
+                part_num_id INTEGER PRIMARY KEY, customer_id INTEGER, enduser_id INTEGER,
+                enduser_part_num TEXT, sheet_type TEXT, alloy TEXT, temper TEXT, gauge REAL);
+
+            CREATE TABLE die (
+                die_id INTEGER PRIMARY KEY, die_name TEXT, status INTEGER, tool_num TEXT,
+                part_name TEXT, gross_weight REAL, location TEXT, description TEXT);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -115,6 +123,27 @@ public static class SqliteFixture
                 new { OrderItemNum = 7001L, OrderAbcNum = (long?)9001L, EnduserPartNum = "PN-3003-A", Alloy2 = "3003", Temper = "H14", Gauge = 0.125m, GaugeP = 0.005m, GaugeM = 0.005m, Surface = "MILL", Flatness = "STD", SheetType = "SHEET", MaterialEndUse = "HVAC", OrderItemDesc = "3003 sheet", PiecesSkid = 50, TheoreticalUnitWt = 12.5m, UnitPrice = 1.25m, ItemCreatedDttm = (DateTime?)d },
                 new { OrderItemNum = 7002L, OrderAbcNum = (long?)9001L, EnduserPartNum = "PN-5052-B", Alloy2 = "5052", Temper = "H32", Gauge = 0.0625m, GaugeP = 0.004m, GaugeM = 0.004m, Surface = "MILL", Flatness = "TIGHT", SheetType = "SHEET", MaterialEndUse = "MARINE", OrderItemDesc = "5052 sheet", PiecesSkid = 40, TheoreticalUnitWt = 8.0m, UnitPrice = 1.5m, ItemCreatedDttm = (DateTime?)d },
                 new { OrderItemNum = 7003L, OrderAbcNum = (long?)9002L, EnduserPartNum = "PN-3003-C", Alloy2 = "3003", Temper = "H14", Gauge = 0.25m, GaugeP = 0.01m, GaugeM = 0.01m, Surface = "BRUSHED", Flatness = "STD", SheetType = "PLATE", MaterialEndUse = "GENERAL", OrderItemDesc = "3003 plate", PiecesSkid = 25, TheoreticalUnitWt = 25.0m, UnitPrice = 1.75m, ItemCreatedDttm = (DateTime?)d }
+            });
+
+        conn.Execute("""
+            INSERT INTO part_num (part_num_id, customer_id, enduser_id, enduser_part_num, sheet_type, alloy, temper, gauge)
+            VALUES (:PartNumId, :CustomerId, :EnduserId, :EnduserPartNum, :SheetType, :Alloy, :Temper, :Gauge)
+            """,
+            new[]
+            {
+                new { PartNumId = 6001L, CustomerId = (long?)4001L, EnduserId = (long?)null, EnduserPartNum = "PN-3003-A", SheetType = "SHEET", Alloy = "3003", Temper = "H14", Gauge = (decimal?)0.125m },
+                new { PartNumId = 6002L, CustomerId = (long?)4001L, EnduserId = (long?)null, EnduserPartNum = "PN-5052-B", SheetType = "SHEET", Alloy = "5052", Temper = "H32", Gauge = (decimal?)0.0625m },
+                new { PartNumId = 6003L, CustomerId = (long?)4002L, EnduserId = (long?)null, EnduserPartNum = "PN-3003-C", SheetType = "PLATE", Alloy = "3003", Temper = "H14", Gauge = (decimal?)0.25m }
+            });
+
+        conn.Execute("""
+            INSERT INTO die (die_id, die_name, status, tool_num, part_name, gross_weight, location, description)
+            VALUES (:DieId, :DieName, :Status, :ToolNum, :PartName, :GrossWeight, :Location, :Description)
+            """,
+            new[]
+            {
+                new { DieId = 2001L, DieName = "DIE-ALPHA", Status = (int?)1, ToolNum = "T-100", PartName = "BRACKET-A", GrossWeight = (decimal?)1250.0m, Location = "RACK-1", Description = "Alpha progressive die" },
+                new { DieId = 2002L, DieName = "DIE-BETA", Status = (int?)0, ToolNum = "T-200", PartName = "PANEL-B", GrossWeight = (decimal?)3400.0m, Location = "RACK-2", Description = "Beta blank die" }
             });
 
         conn.Execute("""

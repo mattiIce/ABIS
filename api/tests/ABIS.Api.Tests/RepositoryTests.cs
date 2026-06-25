@@ -476,6 +476,49 @@ public sealed class RepositoryTests : IDisposable
         Assert.All(job1001, s => Assert.Equal(1001, s.AbJobNum));
     }
 
+    // ---- parts & dies --------------------------------------------------
+
+    [Fact]
+    public async Task GetParts_lists_and_filters()
+    {
+        var all = await _repo.GetPartsAsync(1, 25, customerId: null, alloy: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(3, all.TotalCount);
+
+        var byCust = await _repo.GetPartsAsync(1, 25, customerId: 4001, alloy: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, byCust.TotalCount);
+        Assert.All(byCust.Items, p => Assert.Equal(4001, p.CustomerId));
+
+        var byAlloy = await _repo.GetPartsAsync(1, 25, customerId: null, alloy: "5052", orderBy: null, CancellationToken.None);
+        Assert.Single(byAlloy.Items);
+    }
+
+    [Fact]
+    public async Task GetPart_returns_one_and_null_for_unknown()
+    {
+        var part = await _repo.GetPartAsync(6001, CancellationToken.None);
+        Assert.Equal("PN-3003-A", part!.EnduserPartNum);
+        Assert.Null(await _repo.GetPartAsync(999999, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetDies_lists_and_filters_by_status()
+    {
+        var all = await _repo.GetDiesAsync(1, 25, status: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, all.TotalCount);
+
+        var active = await _repo.GetDiesAsync(1, 25, status: 1, orderBy: null, CancellationToken.None);
+        Assert.Single(active.Items);
+        Assert.Equal("DIE-ALPHA", active.Items[0].DieName);
+    }
+
+    [Fact]
+    public async Task GetDie_returns_one_and_null_for_unknown()
+    {
+        var die = await _repo.GetDieAsync(2002, CancellationToken.None);
+        Assert.Equal("DIE-BETA", die!.DieName);
+        Assert.Null(await _repo.GetDieAsync(999999, CancellationToken.None));
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }

@@ -87,6 +87,17 @@ public sealed class AbisRepository : IAbisRepository
         opc_log_id AS OpcLogId, time_stamp AS TimeStamp, source AS Source, success AS Success, notes AS Notes
         """;
 
+    private const string PartCols = """
+        part_num_id AS PartNumId, customer_id AS CustomerId, enduser_id AS EnduserId,
+        enduser_part_num AS EnduserPartNum, sheet_type AS SheetType, alloy AS Alloy,
+        temper AS Temper, gauge AS Gauge
+        """;
+
+    private const string DieCols = """
+        die_id AS DieId, die_name AS DieName, status AS Status, tool_num AS ToolNum,
+        part_name AS PartName, gross_weight AS GrossWeight, location AS Location, description AS Description
+        """;
+
     private async Task<DbConnection> OpenAsync(CancellationToken ct)
     {
         var conn = _factory.Create();
@@ -656,6 +667,35 @@ public sealed class AbisRepository : IAbisRepository
 
         await tx.CommitAsync(ct);
         return (await GetOrderDetailAsync(orderId, ct))!;
+    }
+
+    public Task<PagedResult<Part>> GetPartsAsync(int page, int pageSize, long? customerId, string? alloy, string? orderBy, CancellationToken ct)
+    {
+        var p = new DynamicParameters();
+        var conditions = new List<string>();
+        if (customerId is not null) { conditions.Add("customer_id = :customerId"); p.Add("customerId", customerId); }
+        if (alloy is not null) { conditions.Add("alloy = :alloy"); p.Add("alloy", alloy); }
+        var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
+        return PageAsync<Part>(PartCols, "part_num", orderBy ?? "part_num_id", where, p, page, pageSize, ct);
+    }
+
+    public async Task<Part?> GetPartAsync(long partNumId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<Part>(new CommandDefinition(
+            $"SELECT {PartCols} FROM part_num WHERE part_num_id = :id", new { id = partNumId }, cancellationToken: ct));
+    }
+
+    public Task<PagedResult<Die>> GetDiesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct) =>
+        PageAsync<Die>(DieCols, "die", orderBy ?? "die_id",
+            status is null ? null : "status = :status",
+            new { status }, page, pageSize, ct);
+
+    public async Task<Die?> GetDieAsync(long dieId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<Die>(new CommandDefinition(
+            $"SELECT {DieCols} FROM die WHERE die_id = :id", new { id = dieId }, cancellationToken: ct));
     }
 
     public async Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct)

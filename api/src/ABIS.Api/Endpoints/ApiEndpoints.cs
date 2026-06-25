@@ -287,6 +287,46 @@ public static class ApiEndpoints
            .WithSummary("Replace an order line item (by order + line number).")
            .Produces<OrderItem>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
+        // ---- Parts (part-number master) --------------------------------
+        api.MapGet("/parts", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, long? customerId = null, string? alloy = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("parts", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetPartsAsync(page, pageSize, customerId, alloy, orderBy, ct));
+            })
+           .WithName("ListParts").WithTags("Parts")
+           .WithSummary("List part-number master records (paged, sortable; filter by customerId/alloy).")
+           .Produces<PagedResult<Part>>().ProducesValidationProblem();
+
+        api.MapGet("/parts/{partNumId:long}", async (long partNumId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetPartAsync(partNumId, ct) is { } part
+                    ? Results.Ok(part)
+                    : Results.NotFound())
+           .WithName("GetPart").WithTags("Parts")
+           .WithSummary("Get one part-number record by id.")
+           .Produces<Part>().Produces(StatusCodes.Status404NotFound);
+
+        // ---- Dies (die / tooling) --------------------------------------
+        api.MapGet("/dies", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, int? status = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("dies", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetDiesAsync(page, pageSize, status, orderBy, ct));
+            })
+           .WithName("ListDies").WithTags("Dies")
+           .WithSummary("List dies/tooling (paged, sortable; filter by status).")
+           .Produces<PagedResult<Die>>().ProducesValidationProblem();
+
+        api.MapGet("/dies/{dieId:long}", async (long dieId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetDieAsync(dieId, ct) is { } die
+                    ? Results.Ok(die)
+                    : Results.NotFound())
+           .WithName("GetDie").WithTags("Dies")
+           .WithSummary("Get one die by id.")
+           .Produces<Die>().Produces(StatusCodes.Status404NotFound);
+
         // ---- Test results (QA) -----------------------------------------
         api.MapGet("/test-results", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, int? testType = null, string? position = null,

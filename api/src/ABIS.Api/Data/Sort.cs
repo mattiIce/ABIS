@@ -57,6 +57,16 @@ public static class Sort
             ("customerId", "customer_id"), ("name", "customer_name"), ("shortName", "customer_short_name")),
             DefaultOrderBy: "customer_id", TieBreaker: "customer_id"),
 
+        ["parts"] = new(Cols(
+            ("partNumId", "part_num_id"), ("customerId", "customer_id"), ("partNum", "enduser_part_num"),
+            ("alloy", "alloy"), ("temper", "temper"), ("gauge", "gauge")),
+            DefaultOrderBy: "part_num_id", TieBreaker: "part_num_id"),
+
+        ["dies"] = new(Cols(
+            ("dieId", "die_id"), ("dieName", "die_name"), ("status", "status"),
+            ("toolNum", "tool_num"), ("location", "location")),
+            DefaultOrderBy: "die_id", TieBreaker: "die_id"),
+
         ["sheetSkids"] = new(Cols(
             ("sheetSkidNum", "sheet_skid_num"), ("abJobNum", "ab_job_num"), ("netWt", "sheet_net_wt"),
             ("pieces", "skid_pieces"), ("skidDate", "skid_date")),

@@ -65,6 +65,12 @@ public interface IAbisRepository
     Task<PagedResult<TestResult>> GetTestResultsAsync(int page, int pageSize, int? testType, string? position, DateTime? from, DateTime? to, string? orderBy, CancellationToken ct);
     Task<PagedResult<TempTestResult>> GetTempTestResultsAsync(int page, int pageSize, int? testType, string? position, DateTime? from, DateTime? to, string? orderBy, CancellationToken ct);
 
+    // ---- Parts & dies (read) -------------------------------------------
+    Task<PagedResult<Part>> GetPartsAsync(int page, int pageSize, long? customerId, string? alloy, string? orderBy, CancellationToken ct);
+    Task<Part?> GetPartAsync(long partNumId, CancellationToken ct);
+    Task<PagedResult<Die>> GetDiesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct);
+    Task<Die?> GetDieAsync(long dieId, CancellationToken ct);
+
     // ---- Lookups (reference data for data-entry screens) ---------------
     Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct);
 
