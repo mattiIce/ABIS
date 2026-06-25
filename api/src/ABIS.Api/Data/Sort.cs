@@ -87,6 +87,21 @@ public static class Sort
             ("probDateTime", "probdatetime"), ("assignedTo", "assignedto")),
             DefaultOrderBy: "maint_log_id DESC", TieBreaker: "maint_log_id"),
 
+        ["carriers"] = new(Cols(
+            ("carrierId", "carrier_id"), ("scac", "scac"), ("name", "carrier_full_name"),
+            ("state", "carrier_state"), ("status", "status")),
+            DefaultOrderBy: "carrier_id", TieBreaker: "carrier_id"),
+
+        ["shifts"] = new(Cols(
+            ("shiftNum", "shift_num"), ("lineNum", "line_num"), ("startTime", "start_time"),
+            ("status", "shift_data_status")),
+            DefaultOrderBy: "shift_num DESC", TieBreaker: "shift_num"),
+
+        ["downtime"] = new(Cols(
+            ("instanceNum", "instance_num"), ("abJobNum", "ab_job_num"), ("shiftNum", "shift_num"),
+            ("lineNum", "line_num"), ("startingTime", "starting_time")),
+            DefaultOrderBy: "instance_num DESC", TieBreaker: "instance_num"),
+
         ["sheetSkids"] = new(Cols(
             ("sheetSkidNum", "sheet_skid_num"), ("abJobNum", "ab_job_num"), ("netWt", "sheet_net_wt"),
             ("pieces", "skid_pieces"), ("skidDate", "skid_date")),

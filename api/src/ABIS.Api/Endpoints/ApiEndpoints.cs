@@ -413,6 +413,66 @@ public static class ApiEndpoints
            .WithSummary("Get one maintenance log entry by id.")
            .Produces<MaintLog>().Produces(StatusCodes.Status404NotFound);
 
+        // ---- Carriers --------------------------------------------------
+        api.MapGet("/carriers", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, int? status = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("carriers", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetCarriersAsync(page, pageSize, status, orderBy, ct));
+            })
+           .WithName("ListCarriers").WithTags("Carriers")
+           .WithSummary("List carriers / trucking partners (paged, sortable; filter by status).")
+           .Produces<PagedResult<Carrier>>().ProducesValidationProblem();
+
+        api.MapGet("/carriers/{carrierId:long}", async (long carrierId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetCarrierAsync(carrierId, ct) is { } carrier
+                    ? Results.Ok(carrier)
+                    : Results.NotFound())
+           .WithName("GetCarrier").WithTags("Carriers")
+           .WithSummary("Get one carrier by id.")
+           .Produces<Carrier>().Produces(StatusCodes.Status404NotFound);
+
+        // ---- Shifts ----------------------------------------------------
+        api.MapGet("/shifts", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, long? lineNum = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("shifts", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetShiftsAsync(page, pageSize, lineNum, orderBy, ct));
+            })
+           .WithName("ListShifts").WithTags("Shifts")
+           .WithSummary("List production shifts, newest first (paged, sortable; filter by lineNum).")
+           .Produces<PagedResult<Shift>>().ProducesValidationProblem();
+
+        api.MapGet("/shifts/{shiftNum:long}", async (long shiftNum, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetShiftAsync(shiftNum, ct) is { } shift
+                    ? Results.Ok(shift)
+                    : Results.NotFound())
+           .WithName("GetShift").WithTags("Shifts")
+           .WithSummary("Get one shift by id.")
+           .Produces<Shift>().Produces(StatusCodes.Status404NotFound);
+
+        // ---- Downtime instances ----------------------------------------
+        api.MapGet("/downtime", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, long? abJobNum = null, long? shiftNum = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("downtime", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetDowntimeInstancesAsync(page, pageSize, abJobNum, shiftNum, orderBy, ct));
+            })
+           .WithName("ListDowntime").WithTags("Downtime")
+           .WithSummary("List downtime instances, newest first (paged, sortable; filter by abJobNum/shiftNum).")
+           .Produces<PagedResult<DowntimeInstance>>().ProducesValidationProblem();
+
+        api.MapGet("/downtime/{instanceNum:long}", async (long instanceNum, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetDowntimeInstanceAsync(instanceNum, ct) is { } dt
+                    ? Results.Ok(dt)
+                    : Results.NotFound())
+           .WithName("GetDowntimeInstance").WithTags("Downtime")
+           .WithSummary("Get one downtime instance by id.")
+           .Produces<DowntimeInstance>().Produces(StatusCodes.Status404NotFound);
+
         // ---- Test results (QA) -----------------------------------------
         api.MapGet("/test-results", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, int? testType = null, string? position = null,

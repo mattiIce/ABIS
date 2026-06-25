@@ -81,6 +81,120 @@
         }
       }
     },
+    "/api/carriers": {
+      "get": {
+        "tags": [
+          "Carriers"
+        ],
+        "summary": "List carriers / trucking partners (paged, sortable; filter by status).",
+        "operationId": "ListCarriers",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dir",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CarrierPagedResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/carriers/{carrierId}": {
+      "get": {
+        "tags": [
+          "Carriers"
+        ],
+        "summary": "Get one carrier by id.",
+        "operationId": "GetCarrier",
+        "parameters": [
+          {
+            "name": "carrierId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Carrier"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/coils": {
       "get": {
         "tags": [
@@ -702,6 +816,128 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Die"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/downtime": {
+      "get": {
+        "tags": [
+          "Downtime"
+        ],
+        "summary": "List downtime instances, newest first (paged, sortable; filter by abJobNum/shiftNum).",
+        "operationId": "ListDowntime",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          },
+          {
+            "name": "abJobNum",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "shiftNum",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dir",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DowntimeInstancePagedResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/downtime/{instanceNum}": {
+      "get": {
+        "tags": [
+          "Downtime"
+        ],
+        "summary": "Get one downtime instance by id.",
+        "operationId": "GetDowntimeInstance",
+        "parameters": [
+          {
+            "name": "instanceNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DowntimeInstance"
                 }
               }
             }
@@ -2206,6 +2442,120 @@
         }
       }
     },
+    "/api/shifts": {
+      "get": {
+        "tags": [
+          "Shifts"
+        ],
+        "summary": "List production shifts, newest first (paged, sortable; filter by lineNum).",
+        "operationId": "ListShifts",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          },
+          {
+            "name": "lineNum",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dir",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiftPagedResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/shifts/{shiftNum}": {
+      "get": {
+        "tags": [
+          "Shifts"
+        ],
+        "summary": "Get one shift by id.",
+        "operationId": "GetShift",
+        "parameters": [
+          {
+            "name": "shiftNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Shift"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/shipments": {
       "get": {
         "tags": [
@@ -3058,6 +3408,81 @@
         },
         "additionalProperties": false
       },
+      "Carrier": {
+        "type": "object",
+        "properties": {
+          "carrierId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "scac": {
+            "type": "string",
+            "nullable": true
+          },
+          "carrierFullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "carrierTypeCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "carrierCity": {
+            "type": "string",
+            "nullable": true
+          },
+          "carrierState": {
+            "type": "string",
+            "nullable": true
+          },
+          "carrierPhoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CarrierPagedResult": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Carrier"
+            },
+            "nullable": true
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
       "Coil": {
         "type": "object",
         "properties": {
@@ -3584,6 +4009,81 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Die"
+            },
+            "nullable": true
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DowntimeInstance": {
+        "type": "object",
+        "properties": {
+          "instanceNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "abJobNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "lineNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "startingTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endingTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "shiftNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DowntimeInstancePagedResult": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DowntimeInstance"
             },
             "nullable": true
           },
@@ -4647,6 +5147,90 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Shift": {
+        "type": "object",
+        "properties": {
+          "shiftNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lineNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "scheduleType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "dtTotal": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "operatorInitial": {
+            "type": "string",
+            "nullable": true
+          },
+          "shiftDataStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ShiftPagedResult": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Shift"
+            },
+            "nullable": true
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
           }
         },
         "additionalProperties": false

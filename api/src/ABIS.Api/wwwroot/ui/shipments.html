@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ABIS Shipping &amp; Receiving (Path C demo)</title>
+<style>
+  :root { --bd:#d0d7de; --bg:#f6f8fa; --ac:#0969da; }
+  * { box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 0; color: #1f2328; }
+  header { background:#24292f; color:#fff; padding:10px 16px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; font-weight:600; }
+  header nav { display:flex; gap:12px; }
+  header nav a { color:#9ecbff; text-decoration:none; }
+  header .key { margin-left:auto; display:flex; gap:6px; align-items:center; }
+  main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns:1fr 1fr; }
+  section { border:1px solid var(--bd); border-radius:8px; padding:14px; }
+  section.wide { grid-column:1 / -1; }
+  h2 { font-size:14px; margin:0 0 10px; text-transform:uppercase; letter-spacing:.04em; color:#57606a; }
+  label { display:block; font-size:12px; color:#57606a; margin:6px 0 2px; }
+  input, select, button { font:inherit; padding:6px 8px; border:1px solid var(--bd); border-radius:6px; }
+  button { background:var(--ac); color:#fff; border-color:var(--ac); cursor:pointer; }
+  button.secondary { background:#fff; color:var(--ac); }
+  table { width:100%; border-collapse:collapse; margin-top:8px; }
+  th, td { text-align:left; padding:5px 6px; border-bottom:1px solid var(--bd); font-size:13px; }
+  th { color:#57606a; font-weight:600; }
+  td.num, th.num { text-align:right; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:end; }
+  .muted { color:#8b949e; }
+  .pill { background:var(--bg); border:1px solid var(--bd); border-radius:12px; padding:1px 8px; font-size:12px; }
+  .err { color:#cf222e; }
+  tbody tr.click { cursor:pointer; }
+  tbody tr.click:hover { background:var(--bg); }
+</style>
+</head>
+<body>
+<header>
+  <h1>ABIS Shipping &amp; Receiving <span class="pill">Path C demo</span></h1>
+  <nav>
+    <a href="/ui/index.html">Order entry</a>
+    <a href="/ui/coils.html">Coil inventory</a>
+    <a href="/ui/qa.html">QA results</a>
+    <a href="/ui/typed.html">Typed client</a>
+    <a href="/ui/shipments.html">Shipping</a>
+  </nav>
+  <div class="key">
+    <label for="apiKey" style="color:#fff;margin:0">X-Api-Key</label>
+    <input id="apiKey" placeholder="dev-local-key" style="width:180px" />
+  </div>
+</header>
+
+<main>
+  <section class="wide">
+    <h2>Find shipments</h2>
+    <div class="row">
+      <div><label>Customer id</label><input id="fCust" type="number" style="width:120px" /></div>
+      <button id="btnSearch">Search</button>
+      <span id="searchMsg" class="muted"></span>
+    </div>
+    <table id="shipTbl">
+      <thead><tr><th>Packing list</th><th>BOL</th><th>Carrier</th><th>Customer</th>
+        <th>Vehicle</th><th>Status</th><th>Date sent</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Shipment detail</h2>
+    <div id="detail" class="muted">Select a shipment to view it (with its carrier).</div>
+  </section>
+
+  <section>
+    <h2>Receiving BOLs</h2>
+    <div class="row">
+      <div><label>Status</label><input id="rStatus" type="number" style="width:90px" /></div>
+      <button class="secondary" id="btnRecv">Refresh</button>
+      <span id="recvMsg" class="muted"></span>
+    </div>
+    <table id="recvTbl">
+      <thead><tr><th>Id</th><th>BOL</th><th class="num">Customer</th><th>Created by</th><th>Received</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const keyInput = $("#apiKey");
+keyInput.value = localStorage.getItem("abis_api_key") || "dev-local-key";
+keyInput.addEventListener("change", () => localStorage.setItem("abis_api_key", keyInput.value));
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    ...opts,
+    headers: { "Content-Type": "application/json", "X-Api-Key": keyInput.value, ...(opts.headers || {}) }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.status === 204 ? null : res.json();
+}
+const day = v => (v || "").slice(0, 10);
+
+async function search() {
+  const p = new URLSearchParams();
+  if ($("#fCust").value) p.set("customerId", $("#fCust").value);
+  $("#searchMsg").textContent = "Loading…";
+  try {
+    const page = await api(`/api/shipments?${p}`);
+    $("#shipTbl tbody").innerHTML = page.items.map(s => `
+      <tr class="click" data-id="${s.packingList}">
+        <td>${s.packingList}</td><td>${s.billOfLading ?? ""}</td><td>${s.carrierId ?? ""}</td>
+        <td>${s.customerId ?? ""}</td><td>${s.vehicleId ?? ""}</td>
+        <td>${s.shipmentStatus ?? ""}</td><td>${day(s.dateSent)}</td></tr>`).join("");
+    document.querySelectorAll("#shipTbl tbody tr").forEach(tr => tr.onclick = () => loadDetail(tr.dataset.id));
+    $("#searchMsg").textContent = `${page.totalCount} shipment(s)`;
+  } catch (e) { $("#searchMsg").innerHTML = `<span class="err">${e.message} — check the API key</span>`; }
+}
+
+async function loadDetail(id) {
+  $("#detail").textContent = "Loading…";
+  try {
+    const s = await api(`/api/shipments/${id}`);
+    let carrier = "";
+    if (s.carrierId != null) {
+      try { const c = await api(`/api/carriers/${s.carrierId}`); carrier = `${c.carrierFullName ?? ""} (${c.scac ?? ""})`; }
+      catch { carrier = `id ${s.carrierId}`; }
+    }
+    $("#detail").innerHTML = `
+      <div><b>Packing list ${s.packingList}</b> · BOL ${s.billOfLading ?? ""}</div>
+      <div class="muted">customer ${s.customerId ?? ""} · vehicle ${s.vehicleId ?? ""} · status ${s.shipmentStatus ?? ""}</div>
+      <div>Carrier: ${carrier || "—"}</div>
+      <div class="muted">scheduled ${day(s.shipmentScheduledDateTime)} · sent ${day(s.dateSent)} · actual ${day(s.shipmentActualedDateTime)}</div>
+      <div>${s.shipmentNotes ?? ""}</div>`;
+  } catch (e) { $("#detail").innerHTML = `<span class="err">${e.message}</span>`; }
+}
+
+async function loadReceiving() {
+  const p = new URLSearchParams();
+  if ($("#rStatus").value) p.set("status", $("#rStatus").value);
+  $("#recvMsg").textContent = "Loading…";
+  try {
+    const page = await api(`/api/receiving-bols?${p}`);
+    $("#recvTbl tbody").innerHTML = page.items.map(r => `<tr>
+      <td>${r.receivingBolId}</td><td>${r.bol ?? ""}</td><td class="num">${r.customerId ?? ""}</td>
+      <td>${r.createdBy ?? ""}</td><td>${day(r.receivedDate)}</td><td>${r.status ?? ""}</td></tr>`).join("");
+    $("#recvMsg").textContent = `${page.totalCount} BOL(s)`;
+  } catch (e) { $("#recvMsg").innerHTML = `<span class="err">${e.message}</span>`; }
+}
+
+$("#btnSearch").onclick = search;
+$("#btnRecv").onclick = loadReceiving;
+
+(async () => { search(); loadReceiving(); })();
+</script>
+</body>
+</html>

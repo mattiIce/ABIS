@@ -295,6 +295,45 @@ public sealed class ScanLog
     public string? Note { get; set; }
 }
 
+/// <summary>A carrier / trucking partner (table <c>carrier</c>).</summary>
+public sealed class Carrier
+{
+    public long CarrierId { get; set; }
+    public string? Scac { get; set; }
+    public string? CarrierFullName { get; set; }
+    public string? CarrierTypeCode { get; set; }
+    public string? CarrierCity { get; set; }
+    public string? CarrierState { get; set; }
+    public string? CarrierPhoneNumber { get; set; }
+    public int? Status { get; set; }
+}
+
+/// <summary>A production shift (table <c>shift</c>).</summary>
+public sealed class Shift
+{
+    public long ShiftNum { get; set; }
+    public DateTime? StartTime { get; set; }
+    public DateTime? EndTime { get; set; }
+    public long? LineNum { get; set; }
+    public int? ScheduleType { get; set; }
+    public decimal? DtTotal { get; set; }
+    public string? OperatorInitial { get; set; }
+    public int? ShiftDataStatus { get; set; }
+    public string? Note { get; set; }
+}
+
+/// <summary>A downtime instance on a line/job (table <c>dt_instance</c>).</summary>
+public sealed class DowntimeInstance
+{
+    public long InstanceNum { get; set; }
+    public long? AbJobNum { get; set; }
+    public long? LineNum { get; set; }
+    public DateTime? StartingTime { get; set; }
+    public DateTime? EndingTime { get; set; }
+    public string? Note { get; set; }
+    public long? ShiftNum { get; set; }
+}
+
 /// <summary>A maintenance log entry (table <c>maint_log</c>).</summary>
 public sealed class MaintLog
 {
