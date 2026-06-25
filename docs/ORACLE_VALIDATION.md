@@ -8,6 +8,43 @@ makes that validation turnkey once you can provide a connection.
 > Use a **non-production** Oracle (a test/staging copy of the ABIS schema). The API
 > issues real SQL; point it at prod only with explicit sign-off.
 
+## Validation results — run against Oracle 11g (2026-06-25)
+
+The seam was run against the live ABIS database (**Oracle 11g**, SID `abc11`).
+Summary: the **read path is fully validated**; the **write path surfaced two
+schema mismatches** and is deferred (the API is read-first).
+
+**Passed**
+
+- Connectivity / readiness probe (`/health/ready` → `ready`).
+- List + paging **bind order** (`/api/coils?pageSize=2&page=2` returns the true
+  second page, not a repeat of page 1).
+- Sorting + PK tie-breaker (`/api/jobs?sort=jobStatus&dir=desc`).
+- Filters (`/api/coils?alloy=…`) and aggregation rollups (`/api/coils/summary`),
+  against real data (~149k coils).
+
+**Bugs found and fixed** (only a live 11g exposed these; CI runs SQLite)
+
+- `ORA-00933` — the Oracle paging clause used the 12c+ `OFFSET … FETCH NEXT`
+  syntax, invalid on 11g. Replaced with the `ROWNUM` inline-view form (PR #4).
+- `ORA-00911` — that ROWNUM view used the alias `__p`; Oracle rejects unquoted
+  identifiers starting with `_`. Renamed to `pg` (PR #5).
+
+**Open write-path findings (deferred — need schema/DBA input)**
+
+- **Sequences don't exist.** `POST /api/customers` → `ORA-02289: sequence does
+  not exist` for `customer_seq`. The `{table}_seq` convention does not match the
+  schema. Before enabling writes, confirm how ABIS assigns ids (the legacy PB9
+  app likely uses `MAX+1`, or sequences under other names) and either switch the
+  Oracle `NextIdQuery` to `MAX+1` or map real names via `Database__Sequences__<table>`.
+- **Audit table missing.** Every request's audit write → `ORA-00942: table or
+  view does not exist` for `opc_action_log` (swallowed as a warning, so requests
+  still succeed — auditing silently no-ops). Confirm the real audit/log table
+  name and `GRANT`s, or make the audit no-op explicit when the table is absent.
+
+> Note: the read tests above were run with a temporary, read-only DB account.
+> Write validation needs an account with INSERT + sequence privileges.
+
 ## 1. Connectivity smoke (no schema needed)
 
 Confirms the driver connects and the dialect probe works (`SELECT 1 FROM dual`):
