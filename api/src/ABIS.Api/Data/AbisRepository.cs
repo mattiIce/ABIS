@@ -116,6 +116,14 @@ public sealed class AbisRepository : IAbisRepository
         scan_station AS ScanStation, note AS Note
         """;
 
+    private const string MaintLogCols = """
+        maint_log_id AS MaintLogId, maint_log_status AS MaintLogStatus, groupdepartment_id AS GroupDepartmentId,
+        systemequipment AS SystemEquipment, subsystemequipment AS SubsystemEquipment, itemdevice AS ItemDevice,
+        probdatetime AS ProbDateTime, prob_details AS ProbDetails, actions AS Actions, author AS Author,
+        reportedby AS ReportedBy, entereddatetime AS EnteredDateTime, assignedto AS AssignedTo,
+        completeddatetime AS CompletedDateTime, completedby AS CompletedBy, laborhours AS LaborHours, prob_cost AS ProbCost
+        """;
+
     private async Task<DbConnection> OpenAsync(CancellationToken ct)
     {
         var conn = _factory.Create();
@@ -755,6 +763,31 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         return await conn.QuerySingleOrDefaultAsync<ScanLog>(new CommandDefinition(
             $"SELECT {ScanLogCols} FROM scan_log WHERE scan_id = :id", new { id = scanId }, cancellationToken: ct));
+    }
+
+    public async Task<IReadOnlyList<ScanLog>> GetJobScansAsync(long abJobNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<ScanLog>(new CommandDefinition(
+            $"SELECT {ScanLogCols} FROM scan_log WHERE ab_job_num = :id ORDER BY scan_id", new { id = abJobNum }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public Task<PagedResult<MaintLog>> GetMaintLogsAsync(int page, int pageSize, string? status, long? groupDepartmentId, string? orderBy, CancellationToken ct)
+    {
+        var p = new DynamicParameters();
+        var conditions = new List<string>();
+        if (status is not null) { conditions.Add("maint_log_status = :status"); p.Add("status", status); }
+        if (groupDepartmentId is not null) { conditions.Add("groupdepartment_id = :groupDepartmentId"); p.Add("groupDepartmentId", groupDepartmentId); }
+        var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
+        return PageAsync<MaintLog>(MaintLogCols, "maint_log", orderBy ?? "maint_log_id DESC", where, p, page, pageSize, ct);
+    }
+
+    public async Task<MaintLog?> GetMaintLogAsync(long maintLogId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<MaintLog>(new CommandDefinition(
+            $"SELECT {MaintLogCols} FROM maint_log WHERE maint_log_id = :id", new { id = maintLogId }, cancellationToken: ct));
     }
 
     public async Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct)

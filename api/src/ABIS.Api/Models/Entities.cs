@@ -294,3 +294,25 @@ public sealed class ScanLog
     public string? ScanStation { get; set; }
     public string? Note { get; set; }
 }
+
+/// <summary>A maintenance log entry (table <c>maint_log</c>).</summary>
+public sealed class MaintLog
+{
+    public long MaintLogId { get; set; }
+    public string? MaintLogStatus { get; set; }
+    public long? GroupDepartmentId { get; set; }
+    public string? SystemEquipment { get; set; }
+    public string? SubsystemEquipment { get; set; }
+    public string? ItemDevice { get; set; }
+    public DateTime? ProbDateTime { get; set; }
+    public string? ProbDetails { get; set; }
+    public string? Actions { get; set; }
+    public string? Author { get; set; }
+    public string? ReportedBy { get; set; }
+    public DateTime? EnteredDateTime { get; set; }
+    public string? AssignedTo { get; set; }
+    public DateTime? CompletedDateTime { get; set; }
+    public string? CompletedBy { get; set; }
+    public decimal? LaborHours { get; set; }
+    public decimal? ProbCost { get; set; }
+}

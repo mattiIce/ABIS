@@ -563,6 +563,37 @@ public sealed class RepositoryTests : IDisposable
         Assert.All(job1001.Items, s => Assert.Equal(1001, s.AbJobNum));
     }
 
+    [Fact]
+    public async Task GetJobScans_returns_scans_for_job()
+    {
+        var scans = await _repo.GetJobScansAsync(1001, CancellationToken.None);
+        Assert.Equal(2, scans.Count);
+        Assert.All(scans, s => Assert.Equal(1001, s.AbJobNum));
+    }
+
+    // ---- maintenance log -----------------------------------------------
+
+    [Fact]
+    public async Task GetMaintLogs_lists_newest_first_and_filters_by_status()
+    {
+        var all = await _repo.GetMaintLogsAsync(1, 25, status: null, groupDepartmentId: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, all.TotalCount);
+        Assert.Equal(3002, all.Items[0].MaintLogId);   // maint_log_id DESC
+
+        var open = await _repo.GetMaintLogsAsync(1, 25, status: "OPEN", groupDepartmentId: null, orderBy: null, CancellationToken.None);
+        Assert.Single(open.Items);
+        Assert.Equal(3001, open.Items[0].MaintLogId);
+    }
+
+    [Fact]
+    public async Task GetMaintLog_returns_one_and_null_for_unknown()
+    {
+        var entry = await _repo.GetMaintLogAsync(3002, CancellationToken.None);
+        Assert.Equal("CLOSED", entry!.MaintLogStatus);
+        Assert.Equal(2.5m, entry.LaborHours);
+        Assert.Null(await _repo.GetMaintLogAsync(999999, CancellationToken.None));
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }

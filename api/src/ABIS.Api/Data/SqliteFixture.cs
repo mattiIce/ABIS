@@ -110,6 +110,12 @@ public static class SqliteFixture
             CREATE TABLE scan_log (
                 scan_id INTEGER PRIMARY KEY, scan_datetime TEXT, ab_job_num INTEGER,
                 scan_station TEXT, note TEXT);
+
+            CREATE TABLE maint_log (
+                maint_log_id INTEGER PRIMARY KEY, maint_log_status TEXT, groupdepartment_id INTEGER,
+                systemequipment TEXT, subsystemequipment TEXT, itemdevice TEXT, probdatetime TEXT,
+                prob_details TEXT, actions TEXT, author TEXT, reportedby TEXT, entereddatetime TEXT,
+                assignedto TEXT, completeddatetime TEXT, completedby TEXT, laborhours REAL, prob_cost REAL);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -191,6 +197,20 @@ public static class SqliteFixture
                 new { ScanId = 1L, ScanDatetime = (DateTime?)d, AbJobNum = (long?)1001L, ScanStation = "PACK-1", Note = "Skid packed" },
                 new { ScanId = 2L, ScanDatetime = (DateTime?)d.AddMinutes(30), AbJobNum = (long?)1001L, ScanStation = "SHIP-1", Note = "Staged" },
                 new { ScanId = 3L, ScanDatetime = (DateTime?)d.AddHours(1), AbJobNum = (long?)1003L, ScanStation = "PACK-1", Note = "Skid packed" }
+            });
+
+        conn.Execute("""
+            INSERT INTO maint_log (maint_log_id, maint_log_status, groupdepartment_id, systemequipment, subsystemequipment,
+                itemdevice, probdatetime, prob_details, actions, author, reportedby, entereddatetime, assignedto,
+                completeddatetime, completedby, laborhours, prob_cost)
+            VALUES (:MaintLogId, :MaintLogStatus, :GroupDepartmentId, :SystemEquipment, :SubsystemEquipment,
+                :ItemDevice, :ProbDateTime, :ProbDetails, :Actions, :Author, :ReportedBy, :EnteredDateTime, :AssignedTo,
+                :CompletedDateTime, :CompletedBy, :LaborHours, :ProbCost)
+            """,
+            new[]
+            {
+                new { MaintLogId = 3001L, MaintLogStatus = "OPEN", GroupDepartmentId = (long?)10L, SystemEquipment = "LINE 110", SubsystemEquipment = "STACKER", ItemDevice = "MOTOR", ProbDateTime = (DateTime?)d, ProbDetails = "Bearing noise", Actions = "Inspect", Author = "tech1", ReportedBy = "op1", EnteredDateTime = (DateTime?)d, AssignedTo = "tech2", CompletedDateTime = (DateTime?)null, CompletedBy = (string?)null, LaborHours = (decimal?)null, ProbCost = (decimal?)null },
+                new { MaintLogId = 3002L, MaintLogStatus = "CLOSED", GroupDepartmentId = (long?)20L, SystemEquipment = "LINE 120", SubsystemEquipment = "UNCOILER", ItemDevice = "HYDRAULICS", ProbDateTime = (DateTime?)d.AddDays(-1), ProbDetails = "Leak", Actions = "Replaced seal", Author = "tech1", ReportedBy = "op2", EnteredDateTime = (DateTime?)d.AddDays(-1), AssignedTo = "tech1", CompletedDateTime = (DateTime?)d, CompletedBy = "tech1", LaborHours = (decimal?)2.5m, ProbCost = (decimal?)150.0m }
             });
 
         conn.Execute("""

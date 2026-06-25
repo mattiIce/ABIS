@@ -387,6 +387,32 @@ public static class ApiEndpoints
            .WithSummary("Get one scan event by id.")
            .Produces<ScanLog>().Produces(StatusCodes.Status404NotFound);
 
+        api.MapGet("/jobs/{abJobNum:long}/scans", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetJobScansAsync(abJobNum, ct)))
+           .WithName("GetJobScans").WithTags("Jobs")
+           .WithSummary("List shop-floor scan events for a job.")
+           .Produces<IEnumerable<ScanLog>>();
+
+        // ---- Maintenance log -------------------------------------------
+        api.MapGet("/maint-logs", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, string? status = null, long? groupDepartmentId = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("maintLogs", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetMaintLogsAsync(page, pageSize, status, groupDepartmentId, orderBy, ct));
+            })
+           .WithName("ListMaintLogs").WithTags("Maintenance")
+           .WithSummary("List maintenance log entries, newest first (paged, sortable; filter by status/groupDepartmentId).")
+           .Produces<PagedResult<MaintLog>>().ProducesValidationProblem();
+
+        api.MapGet("/maint-logs/{maintLogId:long}", async (long maintLogId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetMaintLogAsync(maintLogId, ct) is { } entry
+                    ? Results.Ok(entry)
+                    : Results.NotFound())
+           .WithName("GetMaintLog").WithTags("Maintenance")
+           .WithSummary("Get one maintenance log entry by id.")
+           .Produces<MaintLog>().Produces(StatusCodes.Status404NotFound);
+
         // ---- Test results (QA) -----------------------------------------
         api.MapGet("/test-results", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, int? testType = null, string? position = null,

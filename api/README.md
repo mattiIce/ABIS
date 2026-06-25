@@ -89,7 +89,7 @@ running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ```sh
 cd api
-dotnet test                                # 111 tests: repository + HTTP smoke
+dotnet test                                # 114 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -193,6 +193,9 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/receiving-bols/{receivingBolId}` | One receiving BOL |
 | `GET /api/scan-logs?page&pageSize&abJobNum&sort&dir` | List shop-floor scan events, newest first (paged, filterable, sortable) |
 | `GET /api/scan-logs/{scanId}` | One scan event |
+| `GET /api/jobs/{abJobNum}/scans` | Scan events for a job |
+| `GET /api/maint-logs?page&pageSize&status&groupDepartmentId&sort&dir` | List maintenance log entries, newest first (paged, filterable, sortable) |
+| `GET /api/maint-logs/{maintLogId}` | One maintenance log entry |
 | `GET /api/test-results?page&pageSize&testType&position&from&to&sort&dir` | List posted mechanical test results (paged, filterable, sortable) |
 | `GET /api/temp-test-results?page&pageSize&testType&position&from&to&sort&dir` | List in-progress (working-set) test results (paged, filterable, sortable) |
 | `GET /api/lookups/alloys` | Distinct alloys (dropdown reference data) |

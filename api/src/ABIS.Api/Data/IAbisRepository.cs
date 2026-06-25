@@ -78,6 +78,9 @@ public interface IAbisRepository
     Task<ReceivingBol?> GetReceivingBolAsync(long receivingBolId, CancellationToken ct);
     Task<PagedResult<ScanLog>> GetScanLogsAsync(int page, int pageSize, long? abJobNum, string? orderBy, CancellationToken ct);
     Task<ScanLog?> GetScanLogAsync(long scanId, CancellationToken ct);
+    Task<IReadOnlyList<ScanLog>> GetJobScansAsync(long abJobNum, CancellationToken ct);
+    Task<PagedResult<MaintLog>> GetMaintLogsAsync(int page, int pageSize, string? status, long? groupDepartmentId, string? orderBy, CancellationToken ct);
+    Task<MaintLog?> GetMaintLogAsync(long maintLogId, CancellationToken ct);
 
     // ---- Lookups (reference data for data-entry screens) ---------------
     Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct);

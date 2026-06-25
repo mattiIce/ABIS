@@ -82,6 +82,11 @@ public static class Sort
             ("scanDatetime", "scan_datetime")),
             DefaultOrderBy: "scan_id DESC", TieBreaker: "scan_id"),
 
+        ["maintLogs"] = new(Cols(
+            ("maintLogId", "maint_log_id"), ("status", "maint_log_status"), ("groupDepartmentId", "groupdepartment_id"),
+            ("probDateTime", "probdatetime"), ("assignedTo", "assignedto")),
+            DefaultOrderBy: "maint_log_id DESC", TieBreaker: "maint_log_id"),
+
         ["sheetSkids"] = new(Cols(
             ("sheetSkidNum", "sheet_skid_num"), ("abJobNum", "ab_job_num"), ("netWt", "sheet_net_wt"),
             ("pieces", "skid_pieces"), ("skidDate", "skid_date")),
