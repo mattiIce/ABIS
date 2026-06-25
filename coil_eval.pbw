@@ -1,0 +1,8 @@
+Save Format v3.0(19990112)
+@begin Unchecked
+@end;
+@begin Targets
+ 0 "coil_eval.pbt";
+@end;
+DefaultTarget "coil_eval.pbt";
+DefaultRemoteTarget "coil_eval.pbt";
