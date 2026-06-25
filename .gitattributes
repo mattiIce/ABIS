@@ -3,6 +3,12 @@
 *.pbl   binary linguist-generated
 *.pbd   binary
 
+# PowerBuilder runtime DLLs and binary option files: binary, and vendored so
+# they don't skew language statistics.
+*.dll   binary linguist-vendored
+*.DLL   binary linguist-vendored
+*.opt   binary
+
 # PowerBuilder exported sources are text. Keep them LF-normalized in the repo
 # so diffs are stable across platforms.
 *.srd   text
