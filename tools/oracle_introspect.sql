@@ -34,7 +34,9 @@ ORDER  BY owner, table_name;
 
 -- ---------------------------------------------------------------------------
 -- Set the owner discovered above (UPPERCASE), then everything below scopes to it.
-DEFINE OWNER = 'CHANGE_ME'
+-- For this deployment the ABIS tables are owned by the DBO schema (confirmed via
+-- step 0); change this if you point the script at a different schema/instance.
+DEFINE OWNER = 'DBO'
 -- ---------------------------------------------------------------------------
 
 PROMPT
