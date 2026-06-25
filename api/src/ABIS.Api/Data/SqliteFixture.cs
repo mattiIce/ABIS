@@ -231,7 +231,7 @@ public static class SqliteFixture
             new[]
             {
                 new { MaintLogId = 3001L, MaintLogStatus = "OPEN", GroupDepartmentId = (long?)10L, SystemEquipment = "LINE 110", SubsystemEquipment = "STACKER", ItemDevice = "MOTOR", ProbDateTime = (DateTime?)d, ProbDetails = "Bearing noise", Actions = "Inspect", Author = "tech1", ReportedBy = "op1", EnteredDateTime = (DateTime?)d, AssignedTo = "tech2", CompletedDateTime = (DateTime?)null, CompletedBy = (string?)null, LaborHours = (decimal?)null, ProbCost = (decimal?)null },
-                new { MaintLogId = 3002L, MaintLogStatus = "CLOSED", GroupDepartmentId = (long?)20L, SystemEquipment = "LINE 120", SubsystemEquipment = "UNCOILER", ItemDevice = "HYDRAULICS", ProbDateTime = (DateTime?)d.AddDays(-1), ProbDetails = "Leak", Actions = "Replaced seal", Author = "tech1", ReportedBy = "op2", EnteredDateTime = (DateTime?)d.AddDays(-1), AssignedTo = "tech1", CompletedDateTime = (DateTime?)d, CompletedBy = "tech1", LaborHours = (decimal?)2.5m, ProbCost = (decimal?)150.0m }
+                new { MaintLogId = 3002L, MaintLogStatus = "CLOSED", GroupDepartmentId = (long?)20L, SystemEquipment = "LINE 120", SubsystemEquipment = "UNCOILER", ItemDevice = "HYDRAULICS", ProbDateTime = (DateTime?)d.AddDays(-1), ProbDetails = "Leak", Actions = "Replaced seal", Author = "tech1", ReportedBy = "op2", EnteredDateTime = (DateTime?)d.AddDays(-1), AssignedTo = "tech1", CompletedDateTime = (DateTime?)d, CompletedBy = (string?)"tech1", LaborHours = (decimal?)2.5m, ProbCost = (decimal?)150.0m }
             });
 
         conn.Execute("""
