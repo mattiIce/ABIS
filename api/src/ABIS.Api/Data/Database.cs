@@ -25,9 +25,11 @@ public sealed class DatabaseOptions
     /// <summary>When true (dev only), create and seed the SQLite fixture at startup.</summary>
     public bool Seed { get; set; }
 
-    /// <summary>Oracle only: format used to derive a sequence name from a table when
-    /// no explicit mapping is given. Default <c>{0}_seq</c> (e.g. <c>coil</c> →
-    /// <c>coil_seq</c>). The real names must be confirmed against the database.</summary>
+    /// <summary>Oracle only: format used to derive a sequence name from the table's
+    /// <em>id column</em> when no explicit mapping is given. Default <c>{0}_seq</c>
+    /// (e.g. id column <c>coil_abc_num</c> → <c>coil_abc_num_seq</c>, which matches
+    /// the live ABIS convention <c>COIL_ABC_NUM_SEQ</c> — Oracle identifiers are
+    /// case-insensitive). Confirmed against the DBO schema (see DATA_MODEL.md).</summary>
     public string SequenceNameFormat { get; set; } = "{0}_seq";
 
     /// <summary>Oracle only: explicit <c>table → sequence name</c> overrides for
@@ -109,18 +111,21 @@ public sealed class DbConnectionFactory : IDbConnectionFactory
         // Single-writer dev fixture: MAX+1 is adequate and keeps the seed ids tidy.
         SqlDialect.Sqlite => $"SELECT COALESCE(MAX({idColumn}), 0) + 1 FROM {table}",
         // Production: a real sequence avoids the MAX+1 race under concurrent writers.
-        SqlDialect.Oracle => $"SELECT {ResolveSequence(table)}.NEXTVAL FROM dual",
+        SqlDialect.Oracle => $"SELECT {ResolveSequence(table, idColumn)}.NEXTVAL FROM dual",
         _ => throw new InvalidOperationException($"Unsupported dialect {Dialect}.")
     };
 
-    /// <summary>Resolves the Oracle sequence for a table (explicit override, else
-    /// the <see cref="DatabaseOptions.SequenceNameFormat"/> convention) and validates
-    /// it is a plain (optionally schema-qualified) identifier before interpolation.</summary>
-    private string ResolveSequence(string table)
+    /// <summary>Resolves the Oracle sequence for a table: an explicit per-table
+    /// override (<c>Database:Sequences</c>) if present, else the
+    /// <see cref="DatabaseOptions.SequenceNameFormat"/> convention applied to the
+    /// table's <paramref name="idColumn"/> (the live ABIS convention is
+    /// <c>{ID_COLUMN}_SEQ</c>). Validates it is a plain (optionally schema-qualified)
+    /// identifier before interpolation.</summary>
+    private string ResolveSequence(string table, string idColumn)
     {
         var name = _options.Sequences.TryGetValue(table, out var mapped) && !string.IsNullOrWhiteSpace(mapped)
             ? mapped
-            : string.Format(_options.SequenceNameFormat, table);
+            : string.Format(_options.SequenceNameFormat, idColumn);
 
         if (!Regex.IsMatch(name, @"^[A-Za-z][A-Za-z0-9_$]*(\.[A-Za-z][A-Za-z0-9_$]*)?$"))
             throw new InvalidOperationException(

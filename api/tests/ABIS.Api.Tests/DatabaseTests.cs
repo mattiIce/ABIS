@@ -25,8 +25,10 @@ public sealed class DatabaseTests
     [Fact]
     public void Oracle_next_id_uses_sequence_nextval_by_convention()
     {
+        // Convention derives the sequence from the ID COLUMN ({idColumn}_seq), matching
+        // the live ABIS names (e.g. COIL_ABC_NUM_SEQ); Oracle is case-insensitive.
         var sql = Factory("Oracle").NextIdQuery("coil", "coil_abc_num");
-        Assert.Equal("SELECT coil_seq.NEXTVAL FROM dual", sql);
+        Assert.Equal("SELECT coil_abc_num_seq.NEXTVAL FROM dual", sql);
     }
 
     [Fact]
@@ -40,7 +42,7 @@ public sealed class DatabaseTests
     public void Oracle_next_id_honors_custom_name_format()
     {
         var sql = Factory("Oracle", o => o.SequenceNameFormat = "seq_{0}").NextIdQuery("customer", "customer_id");
-        Assert.Equal("SELECT seq_customer.NEXTVAL FROM dual", sql);
+        Assert.Equal("SELECT seq_customer_id.NEXTVAL FROM dual", sql);
     }
 
     [Fact]
