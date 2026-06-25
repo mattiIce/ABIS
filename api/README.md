@@ -89,7 +89,7 @@ running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ```sh
 cd api
-dotnet test                                # 107 tests: repository + HTTP smoke
+dotnet test                                # 111 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -187,6 +187,12 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/parts/{partNumId}` | One part-number record |
 | `GET /api/dies?page&pageSize&status&sort&dir` | List dies/tooling (paged, filterable, sortable) |
 | `GET /api/dies/{dieId}` | One die |
+| `GET /api/shipments?page&pageSize&customerId&sort&dir` | List shipments / packing lists (paged, filterable, sortable) |
+| `GET /api/shipments/{packingList}` | One shipment |
+| `GET /api/receiving-bols?page&pageSize&customerId&status&sort&dir` | List inbound receiving BOLs (paged, filterable, sortable) |
+| `GET /api/receiving-bols/{receivingBolId}` | One receiving BOL |
+| `GET /api/scan-logs?page&pageSize&abJobNum&sort&dir` | List shop-floor scan events, newest first (paged, filterable, sortable) |
+| `GET /api/scan-logs/{scanId}` | One scan event |
 | `GET /api/test-results?page&pageSize&testType&position&from&to&sort&dir` | List posted mechanical test results (paged, filterable, sortable) |
 | `GET /api/temp-test-results?page&pageSize&testType&position&from&to&sort&dir` | List in-progress (working-set) test results (paged, filterable, sortable) |
 | `GET /api/lookups/alloys` | Distinct alloys (dropdown reference data) |

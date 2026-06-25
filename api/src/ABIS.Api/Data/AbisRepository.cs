@@ -98,6 +98,24 @@ public sealed class AbisRepository : IAbisRepository
         part_name AS PartName, gross_weight AS GrossWeight, location AS Location, description AS Description
         """;
 
+    private const string ShipmentCols = """
+        packing_list AS PackingList, bill_of_lading AS BillOfLading, carrier_id AS CarrierId,
+        customer_id AS CustomerId, des_sh_cust_id AS DesShCustId, vehicle_id AS VehicleId,
+        vehicle_status AS VehicleStatus, shipment_status AS ShipmentStatus,
+        shipment_scheduled_date_time AS ShipmentScheduledDateTime, date_sent AS DateSent,
+        shipment_actualed_date_time AS ShipmentActualedDateTime, shipment_notes AS ShipmentNotes
+        """;
+
+    private const string ReceivingBolCols = """
+        receiving_bol_id AS ReceivingBolId, bol AS Bol, customer_id AS CustomerId,
+        created_by AS CreatedBy, created_date AS CreatedDate, received_date AS ReceivedDate, status AS Status
+        """;
+
+    private const string ScanLogCols = """
+        scan_id AS ScanId, scan_datetime AS ScanDatetime, ab_job_num AS AbJobNum,
+        scan_station AS ScanStation, note AS Note
+        """;
+
     private async Task<DbConnection> OpenAsync(CancellationToken ct)
     {
         var conn = _factory.Create();
@@ -696,6 +714,47 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         return await conn.QuerySingleOrDefaultAsync<Die>(new CommandDefinition(
             $"SELECT {DieCols} FROM die WHERE die_id = :id", new { id = dieId }, cancellationToken: ct));
+    }
+
+    public Task<PagedResult<Shipment>> GetShipmentsAsync(int page, int pageSize, long? customerId, string? orderBy, CancellationToken ct) =>
+        PageAsync<Shipment>(ShipmentCols, "shipment", orderBy ?? "packing_list",
+            customerId is null ? null : "customer_id = :customerId",
+            new { customerId }, page, pageSize, ct);
+
+    public async Task<Shipment?> GetShipmentAsync(long packingList, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<Shipment>(new CommandDefinition(
+            $"SELECT {ShipmentCols} FROM shipment WHERE packing_list = :id", new { id = packingList }, cancellationToken: ct));
+    }
+
+    public Task<PagedResult<ReceivingBol>> GetReceivingBolsAsync(int page, int pageSize, long? customerId, int? status, string? orderBy, CancellationToken ct)
+    {
+        var p = new DynamicParameters();
+        var conditions = new List<string>();
+        if (customerId is not null) { conditions.Add("customer_id = :customerId"); p.Add("customerId", customerId); }
+        if (status is not null) { conditions.Add("status = :status"); p.Add("status", status); }
+        var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
+        return PageAsync<ReceivingBol>(ReceivingBolCols, "receiving_bol", orderBy ?? "receiving_bol_id", where, p, page, pageSize, ct);
+    }
+
+    public async Task<ReceivingBol?> GetReceivingBolAsync(long receivingBolId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<ReceivingBol>(new CommandDefinition(
+            $"SELECT {ReceivingBolCols} FROM receiving_bol WHERE receiving_bol_id = :id", new { id = receivingBolId }, cancellationToken: ct));
+    }
+
+    public Task<PagedResult<ScanLog>> GetScanLogsAsync(int page, int pageSize, long? abJobNum, string? orderBy, CancellationToken ct) =>
+        PageAsync<ScanLog>(ScanLogCols, "scan_log", orderBy ?? "scan_id DESC",
+            abJobNum is null ? null : "ab_job_num = :abJobNum",
+            new { abJobNum }, page, pageSize, ct);
+
+    public async Task<ScanLog?> GetScanLogAsync(long scanId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<ScanLog>(new CommandDefinition(
+            $"SELECT {ScanLogCols} FROM scan_log WHERE scan_id = :id", new { id = scanId }, cancellationToken: ct));
     }
 
     public async Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct)

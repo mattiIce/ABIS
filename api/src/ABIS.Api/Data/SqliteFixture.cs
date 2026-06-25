@@ -96,6 +96,20 @@ public static class SqliteFixture
             CREATE TABLE die (
                 die_id INTEGER PRIMARY KEY, die_name TEXT, status INTEGER, tool_num TEXT,
                 part_name TEXT, gross_weight REAL, location TEXT, description TEXT);
+
+            CREATE TABLE shipment (
+                packing_list INTEGER PRIMARY KEY, bill_of_lading INTEGER, carrier_id INTEGER,
+                customer_id INTEGER, des_sh_cust_id INTEGER, vehicle_id TEXT, vehicle_status INTEGER,
+                shipment_status INTEGER, shipment_scheduled_date_time TEXT, date_sent TEXT,
+                shipment_actualed_date_time TEXT, shipment_notes TEXT);
+
+            CREATE TABLE receiving_bol (
+                receiving_bol_id INTEGER PRIMARY KEY, bol TEXT, customer_id INTEGER,
+                created_by TEXT, created_date TEXT, received_date TEXT, status INTEGER);
+
+            CREATE TABLE scan_log (
+                scan_id INTEGER PRIMARY KEY, scan_datetime TEXT, ab_job_num INTEGER,
+                scan_station TEXT, note TEXT);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -144,6 +158,39 @@ public static class SqliteFixture
             {
                 new { DieId = 2001L, DieName = "DIE-ALPHA", Status = (int?)1, ToolNum = "T-100", PartName = "BRACKET-A", GrossWeight = (decimal?)1250.0m, Location = "RACK-1", Description = "Alpha progressive die" },
                 new { DieId = 2002L, DieName = "DIE-BETA", Status = (int?)0, ToolNum = "T-200", PartName = "PANEL-B", GrossWeight = (decimal?)3400.0m, Location = "RACK-2", Description = "Beta blank die" }
+            });
+
+        conn.Execute("""
+            INSERT INTO shipment (packing_list, bill_of_lading, carrier_id, customer_id, des_sh_cust_id, vehicle_id,
+                vehicle_status, shipment_status, shipment_scheduled_date_time, date_sent, shipment_actualed_date_time, shipment_notes)
+            VALUES (:PackingList, :BillOfLading, :CarrierId, :CustomerId, :DesShCustId, :VehicleId,
+                :VehicleStatus, :ShipmentStatus, :ShipmentScheduledDateTime, :DateSent, :ShipmentActualedDateTime, :ShipmentNotes)
+            """,
+            new[]
+            {
+                new { PackingList = 8801L, BillOfLading = (long?)135001L, CarrierId = (long?)1201L, CustomerId = (long?)4001L, DesShCustId = (long?)4001L, VehicleId = "TRK-100", VehicleStatus = (int?)1, ShipmentStatus = (int?)1, ShipmentScheduledDateTime = (DateTime?)d, DateSent = (DateTime?)d.AddHours(4), ShipmentActualedDateTime = (DateTime?)d.AddHours(4), ShipmentNotes = "Shipped" },
+                new { PackingList = 8802L, BillOfLading = (long?)135002L, CarrierId = (long?)1202L, CustomerId = (long?)4002L, DesShCustId = (long?)4002L, VehicleId = "TRK-200", VehicleStatus = (int?)0, ShipmentStatus = (int?)0, ShipmentScheduledDateTime = (DateTime?)d.AddDays(1), DateSent = (DateTime?)null, ShipmentActualedDateTime = (DateTime?)null, ShipmentNotes = "Scheduled" }
+            });
+
+        conn.Execute("""
+            INSERT INTO receiving_bol (receiving_bol_id, bol, customer_id, created_by, created_date, received_date, status)
+            VALUES (:ReceivingBolId, :Bol, :CustomerId, :CreatedBy, :CreatedDate, :ReceivedDate, :Status)
+            """,
+            new[]
+            {
+                new { ReceivingBolId = 5501L, Bol = "BOL-IN-001", CustomerId = (long?)4001L, CreatedBy = "recv1", CreatedDate = (DateTime?)d, ReceivedDate = (DateTime?)d.AddHours(2), Status = (int?)1 },
+                new { ReceivingBolId = 5502L, Bol = "BOL-IN-002", CustomerId = (long?)4002L, CreatedBy = "recv2", CreatedDate = (DateTime?)d.AddDays(1), ReceivedDate = (DateTime?)null, Status = (int?)0 }
+            });
+
+        conn.Execute("""
+            INSERT INTO scan_log (scan_id, scan_datetime, ab_job_num, scan_station, note)
+            VALUES (:ScanId, :ScanDatetime, :AbJobNum, :ScanStation, :Note)
+            """,
+            new[]
+            {
+                new { ScanId = 1L, ScanDatetime = (DateTime?)d, AbJobNum = (long?)1001L, ScanStation = "PACK-1", Note = "Skid packed" },
+                new { ScanId = 2L, ScanDatetime = (DateTime?)d.AddMinutes(30), AbJobNum = (long?)1001L, ScanStation = "SHIP-1", Note = "Staged" },
+                new { ScanId = 3L, ScanDatetime = (DateTime?)d.AddHours(1), AbJobNum = (long?)1003L, ScanStation = "PACK-1", Note = "Skid packed" }
             });
 
         conn.Execute("""

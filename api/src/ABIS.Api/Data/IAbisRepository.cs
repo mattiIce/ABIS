@@ -71,6 +71,14 @@ public interface IAbisRepository
     Task<PagedResult<Die>> GetDiesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct);
     Task<Die?> GetDieAsync(long dieId, CancellationToken ct);
 
+    // ---- Shipping / receiving / tracking (read) ------------------------
+    Task<PagedResult<Shipment>> GetShipmentsAsync(int page, int pageSize, long? customerId, string? orderBy, CancellationToken ct);
+    Task<Shipment?> GetShipmentAsync(long packingList, CancellationToken ct);
+    Task<PagedResult<ReceivingBol>> GetReceivingBolsAsync(int page, int pageSize, long? customerId, int? status, string? orderBy, CancellationToken ct);
+    Task<ReceivingBol?> GetReceivingBolAsync(long receivingBolId, CancellationToken ct);
+    Task<PagedResult<ScanLog>> GetScanLogsAsync(int page, int pageSize, long? abJobNum, string? orderBy, CancellationToken ct);
+    Task<ScanLog?> GetScanLogAsync(long scanId, CancellationToken ct);
+
     // ---- Lookups (reference data for data-entry screens) ---------------
     Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct);
 

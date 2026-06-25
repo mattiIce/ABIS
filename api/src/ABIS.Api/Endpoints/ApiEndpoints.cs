@@ -327,6 +327,66 @@ public static class ApiEndpoints
            .WithSummary("Get one die by id.")
            .Produces<Die>().Produces(StatusCodes.Status404NotFound);
 
+        // ---- Shipments -------------------------------------------------
+        api.MapGet("/shipments", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, long? customerId = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("shipments", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetShipmentsAsync(page, pageSize, customerId, orderBy, ct));
+            })
+           .WithName("ListShipments").WithTags("Shipments")
+           .WithSummary("List shipments / packing lists (paged, sortable; filter by customerId).")
+           .Produces<PagedResult<Shipment>>().ProducesValidationProblem();
+
+        api.MapGet("/shipments/{packingList:long}", async (long packingList, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetShipmentAsync(packingList, ct) is { } shipment
+                    ? Results.Ok(shipment)
+                    : Results.NotFound())
+           .WithName("GetShipment").WithTags("Shipments")
+           .WithSummary("Get one shipment by packing-list number.")
+           .Produces<Shipment>().Produces(StatusCodes.Status404NotFound);
+
+        // ---- Receiving BOLs --------------------------------------------
+        api.MapGet("/receiving-bols", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, long? customerId = null, int? status = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("receivingBols", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetReceivingBolsAsync(page, pageSize, customerId, status, orderBy, ct));
+            })
+           .WithName("ListReceivingBols").WithTags("Receiving")
+           .WithSummary("List inbound receiving BOLs (paged, sortable; filter by customerId/status).")
+           .Produces<PagedResult<ReceivingBol>>().ProducesValidationProblem();
+
+        api.MapGet("/receiving-bols/{receivingBolId:long}", async (long receivingBolId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetReceivingBolAsync(receivingBolId, ct) is { } bol
+                    ? Results.Ok(bol)
+                    : Results.NotFound())
+           .WithName("GetReceivingBol").WithTags("Receiving")
+           .WithSummary("Get one receiving BOL by id.")
+           .Produces<ReceivingBol>().Produces(StatusCodes.Status404NotFound);
+
+        // ---- Scan log (shop-floor tracking) ----------------------------
+        api.MapGet("/scan-logs", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, long? abJobNum = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("scanLogs", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetScanLogsAsync(page, pageSize, abJobNum, orderBy, ct));
+            })
+           .WithName("ListScanLogs").WithTags("ScanLog")
+           .WithSummary("List shop-floor scan events, newest first (paged, sortable; filter by abJobNum).")
+           .Produces<PagedResult<ScanLog>>().ProducesValidationProblem();
+
+        api.MapGet("/scan-logs/{scanId:long}", async (long scanId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetScanLogAsync(scanId, ct) is { } scan
+                    ? Results.Ok(scan)
+                    : Results.NotFound())
+           .WithName("GetScanLog").WithTags("ScanLog")
+           .WithSummary("Get one scan event by id.")
+           .Produces<ScanLog>().Produces(StatusCodes.Status404NotFound);
+
         // ---- Test results (QA) -----------------------------------------
         api.MapGet("/test-results", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, int? testType = null, string? position = null,

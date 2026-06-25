@@ -519,6 +519,50 @@ public sealed class RepositoryTests : IDisposable
         Assert.Null(await _repo.GetDieAsync(999999, CancellationToken.None));
     }
 
+    // ---- shipping / receiving / tracking -------------------------------
+
+    [Fact]
+    public async Task GetShipments_lists_and_filters_by_customer()
+    {
+        var all = await _repo.GetShipmentsAsync(1, 25, customerId: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, all.TotalCount);
+
+        var byCust = await _repo.GetShipmentsAsync(1, 25, customerId: 4001, orderBy: null, CancellationToken.None);
+        Assert.Single(byCust.Items);
+        Assert.Equal(8801, byCust.Items[0].PackingList);
+    }
+
+    [Fact]
+    public async Task GetShipment_returns_one_and_null_for_unknown()
+    {
+        var s = await _repo.GetShipmentAsync(8801, CancellationToken.None);
+        Assert.Equal(1, s!.ShipmentStatus);
+        Assert.Null(await _repo.GetShipmentAsync(999999, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetReceivingBols_lists_and_filters_by_status()
+    {
+        var all = await _repo.GetReceivingBolsAsync(1, 25, customerId: null, status: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, all.TotalCount);
+
+        var open = await _repo.GetReceivingBolsAsync(1, 25, customerId: null, status: 0, orderBy: null, CancellationToken.None);
+        Assert.Single(open.Items);
+        Assert.Equal("BOL-IN-002", open.Items[0].Bol);
+    }
+
+    [Fact]
+    public async Task GetScanLogs_lists_newest_first_and_filters_by_job()
+    {
+        var all = await _repo.GetScanLogsAsync(1, 25, abJobNum: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(3, all.TotalCount);
+        Assert.Equal(3, all.Items[0].ScanId);   // scan_id DESC
+
+        var job1001 = await _repo.GetScanLogsAsync(1, 25, abJobNum: 1001, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, job1001.TotalCount);
+        Assert.All(job1001.Items, s => Assert.Equal(1001, s.AbJobNum));
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }

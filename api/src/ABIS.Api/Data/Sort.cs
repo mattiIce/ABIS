@@ -67,6 +67,21 @@ public static class Sort
             ("toolNum", "tool_num"), ("location", "location")),
             DefaultOrderBy: "die_id", TieBreaker: "die_id"),
 
+        ["shipments"] = new(Cols(
+            ("packingList", "packing_list"), ("billOfLading", "bill_of_lading"), ("customerId", "customer_id"),
+            ("status", "shipment_status"), ("dateSent", "date_sent")),
+            DefaultOrderBy: "packing_list", TieBreaker: "packing_list"),
+
+        ["receivingBols"] = new(Cols(
+            ("receivingBolId", "receiving_bol_id"), ("bol", "bol"), ("customerId", "customer_id"),
+            ("status", "status"), ("receivedDate", "received_date")),
+            DefaultOrderBy: "receiving_bol_id", TieBreaker: "receiving_bol_id"),
+
+        ["scanLogs"] = new(Cols(
+            ("scanId", "scan_id"), ("abJobNum", "ab_job_num"), ("scanStation", "scan_station"),
+            ("scanDatetime", "scan_datetime")),
+            DefaultOrderBy: "scan_id DESC", TieBreaker: "scan_id"),
+
         ["sheetSkids"] = new(Cols(
             ("sheetSkidNum", "sheet_skid_num"), ("abJobNum", "ab_job_num"), ("netWt", "sheet_net_wt"),
             ("pieces", "skid_pieces"), ("skidDate", "skid_date")),

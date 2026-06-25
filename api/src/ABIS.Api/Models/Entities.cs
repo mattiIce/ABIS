@@ -255,3 +255,42 @@ public sealed class Die
     public string? Location { get; set; }
     public string? Description { get; set; }
 }
+
+/// <summary>A shipment / packing list (table <c>shipment</c>; PK <c>packing_list</c>).</summary>
+public sealed class Shipment
+{
+    public long PackingList { get; set; }
+    public long? BillOfLading { get; set; }
+    public long? CarrierId { get; set; }
+    public long? CustomerId { get; set; }
+    public long? DesShCustId { get; set; }
+    public string? VehicleId { get; set; }
+    public int? VehicleStatus { get; set; }
+    public int? ShipmentStatus { get; set; }
+    public DateTime? ShipmentScheduledDateTime { get; set; }
+    public DateTime? DateSent { get; set; }
+    public DateTime? ShipmentActualedDateTime { get; set; }
+    public string? ShipmentNotes { get; set; }
+}
+
+/// <summary>An inbound receiving BOL (table <c>receiving_bol</c>).</summary>
+public sealed class ReceivingBol
+{
+    public long ReceivingBolId { get; set; }
+    public string? Bol { get; set; }
+    public long? CustomerId { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTime? CreatedDate { get; set; }
+    public DateTime? ReceivedDate { get; set; }
+    public int? Status { get; set; }
+}
+
+/// <summary>A shop-floor scan event (table <c>scan_log</c>).</summary>
+public sealed class ScanLog
+{
+    public long ScanId { get; set; }
+    public DateTime? ScanDatetime { get; set; }
+    public long? AbJobNum { get; set; }
+    public string? ScanStation { get; set; }
+    public string? Note { get; set; }
+}
