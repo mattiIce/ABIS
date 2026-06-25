@@ -54,7 +54,15 @@ public sealed class DatabaseTests
     public void Paginate_is_dialect_specific()
     {
         Assert.EndsWith("LIMIT :limit OFFSET :offset", Factory("Sqlite").Paginate("SELECT 1 ORDER BY a"));
-        Assert.EndsWith("OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY", Factory("Oracle").Paginate("SELECT 1 ORDER BY a"));
+
+        // Oracle uses an 11g-compatible ROWNUM form (the 12c "OFFSET .. FETCH NEXT"
+        // clause raises ORA-00933 on 11g). It wraps the ordered query and binds
+        // :maxRow before :minRow.
+        var oracle = Factory("Oracle").Paginate("SELECT 1 ORDER BY a");
+        Assert.Equal(
+            "SELECT * FROM (SELECT __p.*, ROWNUM AS rnum FROM (SELECT 1 ORDER BY a) __p WHERE ROWNUM <= :maxRow) WHERE rnum > :minRow",
+            oracle);
+        Assert.DoesNotContain("FETCH NEXT", oracle);
     }
 
     [Fact]

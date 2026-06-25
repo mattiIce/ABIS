@@ -43,7 +43,7 @@ behaviours that differ from SQLite and so are **not** covered by CI:
 
 | Check | How | What to confirm |
 |---|---|---|
-| **Paging bind order** | `GET /api/coils?pageSize=2&page=2&sort=coilAbcNum` | Returns the *second* page (not empty / not page 1). Guards the Oracle `OFFSET … FETCH NEXT` positional binding. |
+| **Paging bind order** | `GET /api/coils?pageSize=2&page=2&sort=coilAbcNum` | Returns the *second* page (not empty / not page 1). Guards the Oracle ROWNUM pagination (`:maxRow`/`:minRow`) positional binding. 11g-compatible — the 12c `OFFSET … FETCH NEXT` clause raises ORA-00933 on 11g. |
 | **Sorting** | `GET /api/jobs?sort=jobStatus&dir=desc` | Rows ordered by status desc, with the PK tie-breaker. |
 | **Server-assigned ids (sequences)** | `POST /api/customers` | Returns `201` with a new id. Requires the table's sequence to exist — default name `{table}_seq`; override via `Database__Sequences__<table>` (see `api/README.md`). |
 | **Filters** | `GET /api/coils?alloy=3003` | Only matching rows. |

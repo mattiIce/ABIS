@@ -50,8 +50,9 @@ public interface IDbConnectionFactory
     SqlDialect Dialect { get; }
     DbConnection Create();
 
-    /// <summary>Appends the engine-specific LIMIT/OFFSET clause to a query.
-    /// Expects <c>:limit</c> and <c>:offset</c> parameters to be supplied.</summary>
+    /// <summary>Wraps an ordered query with the engine-specific pagination.
+    /// SQLite expects <c>:limit</c>/<c>:offset</c> parameters; Oracle (an 11g-compatible
+    /// ROWNUM form) expects <c>:maxRow</c> (offset + pageSize) then <c>:minRow</c> (offset).</summary>
     string Paginate(string orderedSql);
 
     /// <summary>Dialect-specific SQL that yields the next id for an insert:
@@ -83,8 +84,15 @@ public sealed class DbConnectionFactory : IDbConnectionFactory
     public string Paginate(string orderedSql) => Dialect switch
     {
         SqlDialect.Sqlite => $"{orderedSql} LIMIT :limit OFFSET :offset",
-        // Oracle 12c+ row-limiting clause.
-        SqlDialect.Oracle => $"{orderedSql} OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY",
+        // Oracle 11g-compatible ROWNUM pagination. The 12c+ "OFFSET :offset ROWS
+        // FETCH NEXT :limit ROWS ONLY" clause raises ORA-00933 on 11g, so wrap the
+        // ordered query instead: the inner inline view preserves ORDER BY, ROWNUM is
+        // assigned over the ordered rows and capped at :maxRow, then the outer query
+        // discards the first :minRow rows. :maxRow is bound before :minRow to match
+        // the order the repository appends them in (Oracle positional binding). Works
+        // on 11g and 12c+ alike.
+        SqlDialect.Oracle =>
+            $"SELECT * FROM (SELECT __p.*, ROWNUM AS rnum FROM ({orderedSql}) __p WHERE ROWNUM <= :maxRow) WHERE rnum > :minRow",
         _ => throw new InvalidOperationException($"Unsupported dialect {Dialect}.")
     };
 
