@@ -116,6 +116,18 @@ public static class SqliteFixture
                 systemequipment TEXT, subsystemequipment TEXT, itemdevice TEXT, probdatetime TEXT,
                 prob_details TEXT, actions TEXT, author TEXT, reportedby TEXT, entereddatetime TEXT,
                 assignedto TEXT, completeddatetime TEXT, completedby TEXT, laborhours REAL, prob_cost REAL);
+
+            CREATE TABLE carrier (
+                carrier_id INTEGER PRIMARY KEY, scac TEXT, carrier_full_name TEXT, carrier_type_code TEXT,
+                carrier_city TEXT, carrier_state TEXT, carrier_phone_number TEXT, status INTEGER);
+
+            CREATE TABLE shift (
+                shift_num INTEGER PRIMARY KEY, start_time TEXT, end_time TEXT, line_num INTEGER,
+                schedule_type INTEGER, dt_total REAL, operator_initial TEXT, shift_data_status INTEGER, note TEXT);
+
+            CREATE TABLE dt_instance (
+                instance_num INTEGER PRIMARY KEY, ab_job_num INTEGER, line_num INTEGER,
+                starting_time TEXT, ending_time TEXT, note TEXT, shift_num INTEGER);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -211,6 +223,37 @@ public static class SqliteFixture
             {
                 new { MaintLogId = 3001L, MaintLogStatus = "OPEN", GroupDepartmentId = (long?)10L, SystemEquipment = "LINE 110", SubsystemEquipment = "STACKER", ItemDevice = "MOTOR", ProbDateTime = (DateTime?)d, ProbDetails = "Bearing noise", Actions = "Inspect", Author = "tech1", ReportedBy = "op1", EnteredDateTime = (DateTime?)d, AssignedTo = "tech2", CompletedDateTime = (DateTime?)null, CompletedBy = (string?)null, LaborHours = (decimal?)null, ProbCost = (decimal?)null },
                 new { MaintLogId = 3002L, MaintLogStatus = "CLOSED", GroupDepartmentId = (long?)20L, SystemEquipment = "LINE 120", SubsystemEquipment = "UNCOILER", ItemDevice = "HYDRAULICS", ProbDateTime = (DateTime?)d.AddDays(-1), ProbDetails = "Leak", Actions = "Replaced seal", Author = "tech1", ReportedBy = "op2", EnteredDateTime = (DateTime?)d.AddDays(-1), AssignedTo = "tech1", CompletedDateTime = (DateTime?)d, CompletedBy = "tech1", LaborHours = (decimal?)2.5m, ProbCost = (decimal?)150.0m }
+            });
+
+        conn.Execute("""
+            INSERT INTO carrier (carrier_id, scac, carrier_full_name, carrier_type_code, carrier_city, carrier_state, carrier_phone_number, status)
+            VALUES (:CarrierId, :Scac, :CarrierFullName, :CarrierTypeCode, :CarrierCity, :CarrierState, :CarrierPhoneNumber, :Status)
+            """,
+            new[]
+            {
+                new { CarrierId = 1201L, Scac = "ABCD", CarrierFullName = "Alpha Freight", CarrierTypeCode = "TL", CarrierCity = "Detroit", CarrierState = "MI", CarrierPhoneNumber = "313-555-0101", Status = (int?)1 },
+                new { CarrierId = 1202L, Scac = "WXYZ", CarrierFullName = "Beta Logistics", CarrierTypeCode = "LTL", CarrierCity = "Toledo", CarrierState = "OH", CarrierPhoneNumber = "419-555-0202", Status = (int?)0 }
+            });
+
+        conn.Execute("""
+            INSERT INTO shift (shift_num, start_time, end_time, line_num, schedule_type, dt_total, operator_initial, shift_data_status, note)
+            VALUES (:ShiftNum, :StartTime, :EndTime, :LineNum, :ScheduleType, :DtTotal, :OperatorInitial, :ShiftDataStatus, :Note)
+            """,
+            new[]
+            {
+                new { ShiftNum = 7701L, StartTime = (DateTime?)d, EndTime = (DateTime?)d.AddHours(8), LineNum = (long?)110L, ScheduleType = (int?)1, DtTotal = (decimal?)45.0m, OperatorInitial = "JS", ShiftDataStatus = (int?)1, Note = "Day shift" },
+                new { ShiftNum = 7702L, StartTime = (DateTime?)d.AddHours(8), EndTime = (DateTime?)d.AddHours(16), LineNum = (long?)120L, ScheduleType = (int?)1, DtTotal = (decimal?)12.0m, OperatorInitial = "RM", ShiftDataStatus = (int?)0, Note = "Afternoon shift" }
+            });
+
+        conn.Execute("""
+            INSERT INTO dt_instance (instance_num, ab_job_num, line_num, starting_time, ending_time, note, shift_num)
+            VALUES (:InstanceNum, :AbJobNum, :LineNum, :StartingTime, :EndingTime, :Note, :ShiftNum)
+            """,
+            new[]
+            {
+                new { InstanceNum = 9101L, AbJobNum = (long?)1001L, LineNum = (long?)110L, StartingTime = (DateTime?)d.AddHours(1), EndingTime = (DateTime?)d.AddHours(1).AddMinutes(20), Note = "Coil change", ShiftNum = (long?)7701L },
+                new { InstanceNum = 9102L, AbJobNum = (long?)1003L, LineNum = (long?)120L, StartingTime = (DateTime?)d.AddHours(9), EndingTime = (DateTime?)d.AddHours(9).AddMinutes(10), Note = "Jam", ShiftNum = (long?)7702L },
+                new { InstanceNum = 9103L, AbJobNum = (long?)1001L, LineNum = (long?)110L, StartingTime = (DateTime?)d.AddHours(2), EndingTime = (DateTime?)d.AddHours(2).AddMinutes(5), Note = "Adjust", ShiftNum = (long?)7701L }
             });
 
         conn.Execute("""

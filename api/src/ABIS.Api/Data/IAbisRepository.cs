@@ -82,6 +82,14 @@ public interface IAbisRepository
     Task<PagedResult<MaintLog>> GetMaintLogsAsync(int page, int pageSize, string? status, long? groupDepartmentId, string? orderBy, CancellationToken ct);
     Task<MaintLog?> GetMaintLogAsync(long maintLogId, CancellationToken ct);
 
+    // ---- Operations: carriers / shifts / downtime (read) ---------------
+    Task<PagedResult<Carrier>> GetCarriersAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct);
+    Task<Carrier?> GetCarrierAsync(long carrierId, CancellationToken ct);
+    Task<PagedResult<Shift>> GetShiftsAsync(int page, int pageSize, long? lineNum, string? orderBy, CancellationToken ct);
+    Task<Shift?> GetShiftAsync(long shiftNum, CancellationToken ct);
+    Task<PagedResult<DowntimeInstance>> GetDowntimeInstancesAsync(int page, int pageSize, long? abJobNum, long? shiftNum, string? orderBy, CancellationToken ct);
+    Task<DowntimeInstance?> GetDowntimeInstanceAsync(long instanceNum, CancellationToken ct);
+
     // ---- Lookups (reference data for data-entry screens) ---------------
     Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct);
 

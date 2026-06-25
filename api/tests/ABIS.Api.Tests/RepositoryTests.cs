@@ -594,6 +594,49 @@ public sealed class RepositoryTests : IDisposable
         Assert.Null(await _repo.GetMaintLogAsync(999999, CancellationToken.None));
     }
 
+    // ---- operations: carriers / shifts / downtime ----------------------
+
+    [Fact]
+    public async Task GetCarriers_lists_and_filters_by_status()
+    {
+        var all = await _repo.GetCarriersAsync(1, 25, status: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, all.TotalCount);
+
+        var active = await _repo.GetCarriersAsync(1, 25, status: 1, orderBy: null, CancellationToken.None);
+        Assert.Single(active.Items);
+        Assert.Equal("Alpha Freight", active.Items[0].CarrierFullName);
+
+        Assert.Equal("ABCD", (await _repo.GetCarrierAsync(1201, CancellationToken.None))!.Scac);
+        Assert.Null(await _repo.GetCarrierAsync(999999, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetShifts_lists_newest_first_and_filters_by_line()
+    {
+        var all = await _repo.GetShiftsAsync(1, 25, lineNum: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, all.TotalCount);
+        Assert.Equal(7702, all.Items[0].ShiftNum);   // shift_num DESC
+
+        var line110 = await _repo.GetShiftsAsync(1, 25, lineNum: 110, orderBy: null, CancellationToken.None);
+        Assert.Single(line110.Items);
+        Assert.Equal(45.0m, line110.Items[0].DtTotal);
+    }
+
+    [Fact]
+    public async Task GetDowntime_lists_and_filters_by_job_and_shift()
+    {
+        var all = await _repo.GetDowntimeInstancesAsync(1, 25, abJobNum: null, shiftNum: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(3, all.TotalCount);
+        Assert.Equal(9103, all.Items[0].InstanceNum);   // instance_num DESC
+
+        var job1001 = await _repo.GetDowntimeInstancesAsync(1, 25, abJobNum: 1001, shiftNum: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, job1001.TotalCount);
+
+        var shift7702 = await _repo.GetDowntimeInstancesAsync(1, 25, abJobNum: null, shiftNum: 7702, orderBy: null, CancellationToken.None);
+        Assert.Single(shift7702.Items);
+        Assert.Null(await _repo.GetDowntimeInstanceAsync(999999, CancellationToken.None));
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }
