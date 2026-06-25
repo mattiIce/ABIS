@@ -116,11 +116,17 @@ public sealed class AbisRepository : IAbisRepository
             new CommandDefinition($"SELECT COUNT(*) FROM {from}{whereSql}", pageArgs, cancellationToken: ct));
 
         var sql = _factory.Paginate($"SELECT {columns} FROM {from}{whereSql} ORDER BY {orderBy}");
-        // Add offset before limit so source order matches the Oracle clause
-        // ("OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY") — Oracle binds these
-        // positionally (ODP.NET BindByName defaults to false). SQLite binds by name,
-        // so its "LIMIT :limit OFFSET :offset" is unaffected by the order.
-        var args = Merge(pageArgs, new { offset = (page - 1) * pageSize, limit = pageSize });
+        var offset = (page - 1) * pageSize;
+        // Pagination params are appended AFTER pageArgs so the overall source order
+        // matches Oracle's positional binding (ODP.NET BindByName defaults to false);
+        // SQLite binds by name, so order is irrelevant there. The two engines also use
+        // different clauses (and so different params):
+        //   Oracle (ROWNUM form): :maxRow (offset + pageSize) then :minRow (offset)
+        //   SQLite:               :limit then :offset
+        object pageParams = _factory.Dialect == SqlDialect.Oracle
+            ? new { maxRow = offset + pageSize, minRow = offset }
+            : new { limit = pageSize, offset };
+        var args = Merge(pageArgs, pageParams);
         var rows = await conn.QueryAsync<T>(new CommandDefinition(sql, args, cancellationToken: ct));
 
         return new PagedResult<T>
