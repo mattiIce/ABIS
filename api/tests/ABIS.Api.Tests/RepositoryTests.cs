@@ -637,6 +637,32 @@ public sealed class RepositoryTests : IDisposable
         Assert.Null(await _repo.GetDowntimeInstanceAsync(999999, CancellationToken.None));
     }
 
+    // ---- customer contacts & sketches ----------------------------------
+
+    [Fact]
+    public async Task GetCustomerContacts_returns_contacts_for_customer()
+    {
+        var c4001 = await _repo.GetCustomerContactsAsync(4001, CancellationToken.None);
+        Assert.Equal(2, c4001.Count);
+        Assert.All(c4001, c => Assert.Equal(4001, c.CustomerId));
+
+        Assert.Equal("Cruz", (await _repo.GetCustomerContactAsync(5603, CancellationToken.None))!.LastName);
+        Assert.Null(await _repo.GetCustomerContactAsync(999999, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetSketches_lists_and_filters_by_status()
+    {
+        var all = await _repo.GetSketchesAsync(1, 25, status: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(3, all.TotalCount);
+
+        var active = await _repo.GetSketchesAsync(1, 25, status: 1, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, active.TotalCount);
+
+        Assert.Equal("BRKT-A rev1", (await _repo.GetSketchAsync(1, CancellationToken.None))!.SketchName);
+        Assert.Null(await _repo.GetSketchAsync(999999, CancellationToken.None));
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }

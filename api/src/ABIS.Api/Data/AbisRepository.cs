@@ -116,6 +116,16 @@ public sealed class AbisRepository : IAbisRepository
         scan_station AS ScanStation, note AS Note
         """;
 
+    private const string ContactCols = """
+        contact_id AS ContactId, customer_id AS CustomerId, first_name AS FirstName, last_name AS LastName,
+        department AS Department, city AS City, state AS State, phone1 AS Phone1, email1 AS Email1
+        """;
+
+    private const string SketchCols = """
+        sketch_id AS SketchId, sketch_name AS SketchName, sketch_notes AS SketchNotes,
+        sketch_sys_note AS SketchSysNote, sketch_status AS SketchStatus
+        """;
+
     private const string CarrierCols = """
         carrier_id AS CarrierId, scac AS Scac, carrier_full_name AS CarrierFullName,
         carrier_type_code AS CarrierTypeCode, carrier_city AS CarrierCity, carrier_state AS CarrierState,
@@ -846,6 +856,34 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         return await conn.QuerySingleOrDefaultAsync<DowntimeInstance>(new CommandDefinition(
             $"SELECT {DowntimeCols} FROM dt_instance WHERE instance_num = :id", new { id = instanceNum }, cancellationToken: ct));
+    }
+
+    public async Task<IReadOnlyList<CustomerContact>> GetCustomerContactsAsync(long customerId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<CustomerContact>(new CommandDefinition(
+            $"SELECT {ContactCols} FROM customer_contact WHERE customer_id = :id ORDER BY contact_id",
+            new { id = customerId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<CustomerContact?> GetCustomerContactAsync(long contactId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<CustomerContact>(new CommandDefinition(
+            $"SELECT {ContactCols} FROM customer_contact WHERE contact_id = :id", new { id = contactId }, cancellationToken: ct));
+    }
+
+    public Task<PagedResult<Sketch>> GetSketchesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct) =>
+        PageAsync<Sketch>(SketchCols, "sketch", orderBy ?? "sketch_id",
+            status is null ? null : "sketch_status = :status",
+            new { status }, page, pageSize, ct);
+
+    public async Task<Sketch?> GetSketchAsync(long sketchId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<Sketch>(new CommandDefinition(
+            $"SELECT {SketchCols} FROM sketch WHERE sketch_id = :id", new { id = sketchId }, cancellationToken: ct));
     }
 
     public async Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct)

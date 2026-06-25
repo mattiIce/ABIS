@@ -102,6 +102,10 @@ public static class Sort
             ("lineNum", "line_num"), ("startingTime", "starting_time")),
             DefaultOrderBy: "instance_num DESC", TieBreaker: "instance_num"),
 
+        ["sketches"] = new(Cols(
+            ("sketchId", "sketch_id"), ("name", "sketch_name"), ("status", "sketch_status")),
+            DefaultOrderBy: "sketch_id", TieBreaker: "sketch_id"),
+
         ["sheetSkids"] = new(Cols(
             ("sheetSkidNum", "sheet_skid_num"), ("abJobNum", "ab_job_num"), ("netWt", "sheet_net_wt"),
             ("pieces", "skid_pieces"), ("skidDate", "skid_date")),

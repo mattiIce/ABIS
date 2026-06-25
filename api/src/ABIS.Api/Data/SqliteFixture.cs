@@ -39,6 +39,8 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS carrier;
             DROP TABLE IF EXISTS shift;
             DROP TABLE IF EXISTS dt_instance;
+            DROP TABLE IF EXISTS customer_contact;
+            DROP TABLE IF EXISTS sketch;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
@@ -137,6 +139,14 @@ public static class SqliteFixture
             CREATE TABLE dt_instance (
                 instance_num INTEGER PRIMARY KEY, ab_job_num INTEGER, line_num INTEGER,
                 starting_time TEXT, ending_time TEXT, note TEXT, shift_num INTEGER);
+
+            CREATE TABLE customer_contact (
+                contact_id INTEGER PRIMARY KEY, customer_id INTEGER, first_name TEXT, last_name TEXT,
+                department TEXT, city TEXT, state TEXT, phone1 TEXT, email1 TEXT);
+
+            CREATE TABLE sketch (
+                sketch_id INTEGER PRIMARY KEY, sketch_name TEXT, sketch_notes TEXT,
+                sketch_sys_note TEXT, sketch_status INTEGER);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -263,6 +273,28 @@ public static class SqliteFixture
                 new { InstanceNum = 9101L, AbJobNum = (long?)1001L, LineNum = (long?)110L, StartingTime = (DateTime?)d.AddHours(1), EndingTime = (DateTime?)d.AddHours(1).AddMinutes(20), Note = "Coil change", ShiftNum = (long?)7701L },
                 new { InstanceNum = 9102L, AbJobNum = (long?)1003L, LineNum = (long?)120L, StartingTime = (DateTime?)d.AddHours(9), EndingTime = (DateTime?)d.AddHours(9).AddMinutes(10), Note = "Jam", ShiftNum = (long?)7702L },
                 new { InstanceNum = 9103L, AbJobNum = (long?)1001L, LineNum = (long?)110L, StartingTime = (DateTime?)d.AddHours(2), EndingTime = (DateTime?)d.AddHours(2).AddMinutes(5), Note = "Adjust", ShiftNum = (long?)7701L }
+            });
+
+        conn.Execute("""
+            INSERT INTO customer_contact (contact_id, customer_id, first_name, last_name, department, city, state, phone1, email1)
+            VALUES (:ContactId, :CustomerId, :FirstName, :LastName, :Department, :City, :State, :Phone1, :Email1)
+            """,
+            new[]
+            {
+                new { ContactId = 5601L, CustomerId = (long?)4001L, FirstName = "Dana", LastName = "Reed", Department = "Purchasing", City = "Detroit", State = "MI", Phone1 = "313-555-1000", Email1 = "dana.reed@acme.example" },
+                new { ContactId = 5602L, CustomerId = (long?)4001L, FirstName = "Lee", LastName = "Park", Department = "Quality", City = "Detroit", State = "MI", Phone1 = "313-555-1001", Email1 = "lee.park@acme.example" },
+                new { ContactId = 5603L, CustomerId = (long?)4002L, FirstName = "Sam", LastName = "Cruz", Department = "Receiving", City = "Toledo", State = "OH", Phone1 = "419-555-2000", Email1 = "sam.cruz@beta.example" }
+            });
+
+        conn.Execute("""
+            INSERT INTO sketch (sketch_id, sketch_name, sketch_notes, sketch_sys_note, sketch_status)
+            VALUES (:SketchId, :SketchName, :SketchNotes, :SketchSysNote, :SketchStatus)
+            """,
+            new[]
+            {
+                new { SketchId = 1L, SketchName = "BRKT-A rev1", SketchNotes = "Bracket profile", SketchSysNote = "", SketchStatus = (int?)1 },
+                new { SketchId = 2L, SketchName = "PANEL-B rev2", SketchNotes = "Panel blank", SketchSysNote = "", SketchStatus = (int?)1 },
+                new { SketchId = 3L, SketchName = "BRKT-C rev1", SketchNotes = "Old revision", SketchSysNote = "", SketchStatus = (int?)0 }
             });
 
         conn.Execute("""

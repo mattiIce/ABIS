@@ -49,6 +49,8 @@ public interface IAbisRepository
     // ---- Customers (read + write) --------------------------------------
     Task<PagedResult<Customer>> GetCustomersAsync(int page, int pageSize, string? name, string? orderBy, CancellationToken ct);
     Task<Customer?> GetCustomerAsync(long customerId, CancellationToken ct);
+    Task<IReadOnlyList<CustomerContact>> GetCustomerContactsAsync(long customerId, CancellationToken ct);
+    Task<CustomerContact?> GetCustomerContactAsync(long contactId, CancellationToken ct);
     Task<Customer> CreateCustomerAsync(CustomerWrite body, CancellationToken ct);
     Task<Customer?> UpdateCustomerAsync(long customerId, CustomerWrite body, CancellationToken ct);
 
@@ -89,6 +91,8 @@ public interface IAbisRepository
     Task<Shift?> GetShiftAsync(long shiftNum, CancellationToken ct);
     Task<PagedResult<DowntimeInstance>> GetDowntimeInstancesAsync(int page, int pageSize, long? abJobNum, long? shiftNum, string? orderBy, CancellationToken ct);
     Task<DowntimeInstance?> GetDowntimeInstanceAsync(long instanceNum, CancellationToken ct);
+    Task<PagedResult<Sketch>> GetSketchesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct);
+    Task<Sketch?> GetSketchAsync(long sketchId, CancellationToken ct);
 
     // ---- Lookups (reference data for data-entry screens) ---------------
     Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct);

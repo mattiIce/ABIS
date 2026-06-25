@@ -473,6 +473,26 @@ public static class ApiEndpoints
            .WithSummary("Get one downtime instance by id.")
            .Produces<DowntimeInstance>().Produces(StatusCodes.Status404NotFound);
 
+        // ---- Sketches --------------------------------------------------
+        api.MapGet("/sketches", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, int? status = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("sketches", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetSketchesAsync(page, pageSize, status, orderBy, ct));
+            })
+           .WithName("ListSketches").WithTags("Sketches")
+           .WithSummary("List part sketches/drawings (paged, sortable; filter by status). Excludes the binary image.")
+           .Produces<PagedResult<Sketch>>().ProducesValidationProblem();
+
+        api.MapGet("/sketches/{sketchId:long}", async (long sketchId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetSketchAsync(sketchId, ct) is { } sketch
+                    ? Results.Ok(sketch)
+                    : Results.NotFound())
+           .WithName("GetSketch").WithTags("Sketches")
+           .WithSummary("Get one sketch header by id (no image).")
+           .Produces<Sketch>().Produces(StatusCodes.Status404NotFound);
+
         // ---- Test results (QA) -----------------------------------------
         api.MapGet("/test-results", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, int? testType = null, string? position = null,
@@ -518,6 +538,20 @@ public static class ApiEndpoints
            .WithName("GetCustomer").WithTags("Customers")
            .WithSummary("Get one customer by id.")
            .Produces<Customer>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapGet("/customers/{customerId:long}/contacts", async (long customerId, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetCustomerContactsAsync(customerId, ct)))
+           .WithName("GetCustomerContacts").WithTags("Customers")
+           .WithSummary("List the contacts for a customer.")
+           .Produces<IEnumerable<CustomerContact>>();
+
+        api.MapGet("/customer-contacts/{contactId:long}", async (long contactId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetCustomerContactAsync(contactId, ct) is { } contact
+                    ? Results.Ok(contact)
+                    : Results.NotFound())
+           .WithName("GetCustomerContact").WithTags("Customers")
+           .WithSummary("Get one customer contact by id.")
+           .Produces<CustomerContact>().Produces(StatusCodes.Status404NotFound);
 
         api.MapPost("/customers", async (CustomerWrite body, IAbisRepository repo, CancellationToken ct) =>
             {

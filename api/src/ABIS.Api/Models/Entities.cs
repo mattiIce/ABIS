@@ -295,6 +295,31 @@ public sealed class ScanLog
     public string? Note { get; set; }
 }
 
+/// <summary>A customer contact (table <c>customer_contact</c>).</summary>
+public sealed class CustomerContact
+{
+    public long ContactId { get; set; }
+    public long? CustomerId { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? Department { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? Phone1 { get; set; }
+    public string? Email1 { get; set; }
+}
+
+/// <summary>A part sketch / drawing header (table <c>sketch</c>). The binary
+/// <c>sketch_view</c> (LONG RAW) image is intentionally not exposed here.</summary>
+public sealed class Sketch
+{
+    public long SketchId { get; set; }
+    public string? SketchName { get; set; }
+    public string? SketchNotes { get; set; }
+    public string? SketchSysNote { get; set; }
+    public int? SketchStatus { get; set; }
+}
+
 /// <summary>A carrier / trucking partner (table <c>carrier</c>).</summary>
 public sealed class Carrier
 {
