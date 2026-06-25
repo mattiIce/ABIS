@@ -30,6 +30,15 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS process_partial_skid;
             DROP TABLE IF EXISTS temp_test_result;
             DROP TABLE IF EXISTS opc_action_log;
+            DROP TABLE IF EXISTS part_num;
+            DROP TABLE IF EXISTS die;
+            DROP TABLE IF EXISTS shipment;
+            DROP TABLE IF EXISTS receiving_bol;
+            DROP TABLE IF EXISTS scan_log;
+            DROP TABLE IF EXISTS maint_log;
+            DROP TABLE IF EXISTS carrier;
+            DROP TABLE IF EXISTS shift;
+            DROP TABLE IF EXISTS dt_instance;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
