@@ -54,10 +54,11 @@ public static class SqliteFixture
                 enduser_po TEXT, scrap_handing_type TEXT);
 
             CREATE TABLE order_item (
-                order_item_num INTEGER PRIMARY KEY, order_abc_num INTEGER, enduser_part_num TEXT, alloy2 TEXT,
+                order_item_num INTEGER, order_abc_num INTEGER, enduser_part_num TEXT, alloy2 TEXT,
                 temper TEXT, gauge REAL, gauge_p REAL, gauge_m REAL, surface TEXT, flatness TEXT,
                 sheet_type TEXT, material_end_use TEXT, order_item_desc TEXT, pieces_skid INTEGER,
-                theoretical_unit_wt REAL, unit_price REAL, item_created_dttm TEXT);
+                theoretical_unit_wt REAL, unit_price REAL, item_created_dttm TEXT,
+                PRIMARY KEY (order_abc_num, order_item_num));
 
             CREATE TABLE pst_test_result (
                 id INTEGER PRIMARY KEY AUTOINCREMENT, created_date TEXT, test_type INTEGER, position TEXT,

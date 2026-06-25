@@ -214,11 +214,14 @@ public sealed class RepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateOrderItem_assigns_id_and_sets_created_timestamp()
+    public async Task CreateOrderItem_assigns_per_order_line_number()
     {
-        var created = await _repo.CreateOrderItemAsync(
+        // order 9001 already has line numbers 7001, 7002 -> next is 7003 (scoped to
+        // the order; the composite key keeps it distinct from (9002, 7003)).
+        var created = await _repo.CreateOrderItemAsync(9001,
             new OrderItemWrite { EnduserPartNum = "PN-NEW", Alloy2 = "6061", UnitPrice = 2.0m }, CancellationToken.None);
-        Assert.Equal(7004, created.OrderItemNum);   // MAX(7003) + 1
+        Assert.Equal(7003, created.OrderItemNum);   // MAX(order_item_num) for order 9001 + 1
+        Assert.Equal(9001, created.OrderAbcNum);
         Assert.Equal("PN-NEW", created.EnduserPartNum);
         Assert.NotNull(created.ItemCreatedDttm);     // server-assigned
     }
@@ -226,10 +229,11 @@ public sealed class RepositoryTests : IDisposable
     [Fact]
     public async Task UpdateOrderItem_changes_and_unknown_returns_null()
     {
-        var updated = await _repo.UpdateOrderItemAsync(7001,
+        var updated = await _repo.UpdateOrderItemAsync(9001, 7001,
             new OrderItemWrite { EnduserPartNum = "PN-3003-A", UnitPrice = 9.99m }, CancellationToken.None);
         Assert.Equal(9.99m, updated!.UnitPrice);
-        Assert.Null(await _repo.UpdateOrderItemAsync(999999,
+        // unknown line number within a known order -> null
+        Assert.Null(await _repo.UpdateOrderItemAsync(9001, 999999,
             new OrderItemWrite { EnduserPartNum = "X" }, CancellationToken.None));
     }
 

@@ -254,35 +254,37 @@ public static class ApiEndpoints
            .WithSummary("List order line items (paged, sortable).")
            .Produces<PagedResult<OrderItem>>().ProducesValidationProblem();
 
-        api.MapGet("/order-items/{orderItemNum:long}", async (long orderItemNum, IAbisRepository repo, CancellationToken ct) =>
-                await repo.GetOrderItemAsync(orderItemNum, ct) is { } item
+        // order_item has a composite key (order + line number), so the single-item
+        // routes are nested under the owning order (see docs/DATA_MODEL.md, #10).
+        api.MapGet("/orders/{orderAbcNum:long}/items/{orderItemNum:long}", async (long orderAbcNum, long orderItemNum, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetOrderItemAsync(orderAbcNum, orderItemNum, ct) is { } item
                     ? Results.Ok(item)
                     : Results.NotFound())
            .WithName("GetOrderItem").WithTags("OrderItems")
-           .WithSummary("Get one order line item by id.")
+           .WithSummary("Get one order line item by its composite key (order + line number).")
            .Produces<OrderItem>().Produces(StatusCodes.Status404NotFound);
 
-        api.MapPost("/order-items", async (OrderItemWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPost("/orders/{orderAbcNum:long}/items", async (long orderAbcNum, OrderItemWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                var created = await repo.CreateOrderItemAsync(body, ct);
-                return Results.Created($"/api/order-items/{created.OrderItemNum}", created);
+                var created = await repo.CreateOrderItemAsync(orderAbcNum, body, ct);
+                return Results.Created($"/api/orders/{orderAbcNum}/items/{created.OrderItemNum}", created);
             })
            .WithName("CreateOrderItem").WithTags("OrderItems")
-           .WithSummary("Create an order line item.")
+           .WithSummary("Add a line item to an order (line number assigned per order).")
            .Produces<OrderItem>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/order-items/{orderItemNum:long}", async (long orderItemNum, OrderItemWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/orders/{orderAbcNum:long}/items/{orderItemNum:long}", async (long orderAbcNum, long orderItemNum, OrderItemWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateOrderItemAsync(orderItemNum, body, ct) is { } item
+                return await repo.UpdateOrderItemAsync(orderAbcNum, orderItemNum, body, ct) is { } item
                     ? Results.Ok(item)
                     : Results.NotFound();
             })
            .WithName("UpdateOrderItem").WithTags("OrderItems")
-           .WithSummary("Replace an order line item.")
+           .WithSummary("Replace an order line item (by order + line number).")
            .Produces<OrderItem>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
         // ---- Test results (QA) -----------------------------------------

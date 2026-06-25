@@ -1090,13 +1090,138 @@
             "description": "Unauthorized"
           }
         }
+      }
+    },
+    "/api/orders/{orderAbcNum}/items/{orderItemNum}": {
+      "get": {
+        "tags": [
+          "OrderItems"
+        ],
+        "summary": "Get one order line item by its composite key (order + line number).",
+        "operationId": "GetOrderItem",
+        "parameters": [
+          {
+            "name": "orderAbcNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "orderItemNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
       },
+      "put": {
+        "tags": [
+          "OrderItems"
+        ],
+        "summary": "Replace an order line item (by order + line number).",
+        "operationId": "UpdateOrderItem",
+        "parameters": [
+          {
+            "name": "orderAbcNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "orderItemNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderItemWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/orders/{orderAbcNum}/items": {
       "post": {
         "tags": [
           "OrderItems"
         ],
-        "summary": "Create an order line item.",
+        "summary": "Add a line item to an order (line number assigned per order).",
         "operationId": "CreateOrderItem",
+        "parameters": [
+          {
+            "name": "orderAbcNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1132,18 +1257,16 @@
             "description": "Unauthorized"
           }
         }
-      }
-    },
-    "/api/order-items/{orderItemNum}": {
+      },
       "get": {
         "tags": [
-          "OrderItems"
+          "Orders"
         ],
-        "summary": "Get one order line item by id.",
-        "operationId": "GetOrderItem",
+        "summary": "List the line items for an order.",
+        "operationId": "GetOrderItemsForOrder",
         "parameters": [
           {
-            "name": "orderItemNum",
+            "name": "orderAbcNum",
             "in": "path",
             "required": true,
             "schema": {
@@ -1158,66 +1281,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrderItem"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "OrderItems"
-        ],
-        "summary": "Replace an order line item.",
-        "operationId": "UpdateOrderItem",
-        "parameters": [
-          {
-            "name": "orderItemNum",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OrderItemWrite"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderItem"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrderItem"
+                  }
                 }
               }
             }
@@ -1420,44 +1487,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
-    "/api/orders/{orderAbcNum}/items": {
-      "get": {
-        "tags": [
-          "Orders"
-        ],
-        "summary": "List the line items for an order.",
-        "operationId": "GetOrderItemsForOrder",
-        "parameters": [
-          {
-            "name": "orderAbcNum",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OrderItem"
-                  }
-                }
-              }
-            }
           },
           "401": {
             "description": "Unauthorized"

@@ -40,9 +40,11 @@ public interface IAbisRepository
 
     Task<PagedResult<OrderItem>> GetOrderItemsAsync(int page, int pageSize, string? alloy, string? orderBy, CancellationToken ct);
     Task<IReadOnlyList<OrderItem>> GetOrderItemsByOrderAsync(long orderAbcNum, CancellationToken ct);
-    Task<OrderItem?> GetOrderItemAsync(long orderItemNum, CancellationToken ct);
-    Task<OrderItem> CreateOrderItemAsync(OrderItemWrite body, CancellationToken ct);
-    Task<OrderItem?> UpdateOrderItemAsync(long orderItemNum, OrderItemWrite body, CancellationToken ct);
+    // order_item has a COMPOSITE key (order_abc_num + order_item_num); order_item_num
+    // is a line number within an order, not a global id (see docs/DATA_MODEL.md, #10).
+    Task<OrderItem?> GetOrderItemAsync(long orderAbcNum, long orderItemNum, CancellationToken ct);
+    Task<OrderItem> CreateOrderItemAsync(long orderAbcNum, OrderItemWrite body, CancellationToken ct);
+    Task<OrderItem?> UpdateOrderItemAsync(long orderAbcNum, long orderItemNum, OrderItemWrite body, CancellationToken ct);
 
     // ---- Customers (read + write) --------------------------------------
     Task<PagedResult<Customer>> GetCustomersAsync(int page, int pageSize, string? name, string? orderBy, CancellationToken ct);

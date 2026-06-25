@@ -246,11 +246,13 @@ public sealed class AbisRepository : IAbisRepository
             alloy is null ? null : "alloy2 = :alloy",
             new { alloy }, page, pageSize, ct);
 
-    public async Task<OrderItem?> GetOrderItemAsync(long orderItemNum, CancellationToken ct)
+    public async Task<OrderItem?> GetOrderItemAsync(long orderAbcNum, long orderItemNum, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
+        // Composite key: order_item_num is unique only within its order_abc_num.
         return await conn.QuerySingleOrDefaultAsync<OrderItem>(new CommandDefinition(
-            $"SELECT {OrderItemCols} FROM order_item WHERE order_item_num = :id", new { id = orderItemNum }, cancellationToken: ct));
+            $"SELECT {OrderItemCols} FROM order_item WHERE order_abc_num = :ord AND order_item_num = :id",
+            new { ord = orderAbcNum, id = orderItemNum }, cancellationToken: ct));
     }
 
     public Task<PagedResult<TestResult>> GetTestResultsAsync(int page, int pageSize, int? testType, string? position, DateTime? from, DateTime? to, string? orderBy, CancellationToken ct)
@@ -423,11 +425,12 @@ public sealed class AbisRepository : IAbisRepository
         return n == 0 ? null : await GetOrderAsync(orderAbcNum, ct);
     }
 
-    public async Task<OrderItem> CreateOrderItemAsync(OrderItemWrite body, CancellationToken ct)
+    public async Task<OrderItem> CreateOrderItemAsync(long orderAbcNum, OrderItemWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
-        var id = await NextIdAsync(conn, tx, "order_item", "order_item_num", ct);
+        // order_item_num is a per-order line number (no sequence): MAX within the order + 1.
+        var id = await NextOrderItemNumAsync(conn, tx, orderAbcNum, ct);
         await conn.ExecuteAsync(new CommandDefinition(
             """
             INSERT INTO order_item (order_item_num, order_abc_num, enduser_part_num, alloy2, temper, gauge, gauge_p, gauge_m,
@@ -438,7 +441,7 @@ public sealed class AbisRepository : IAbisRepository
             """,
             new
             {
-                id, ord = body.OrderAbcNum, part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
+                id, ord = orderAbcNum, part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
                 gp = body.GaugeP, gm = body.GaugeM, surface = body.Surface, flatness = body.Flatness,
                 sheet = body.SheetType, enduse = body.MaterialEndUse, desc = body.OrderItemDesc,
                 pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice,
@@ -446,29 +449,31 @@ public sealed class AbisRepository : IAbisRepository
             },
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
-        return (await GetOrderItemAsync(id, ct))!;
+        return (await GetOrderItemAsync(orderAbcNum, id, ct))!;
     }
 
-    public async Task<OrderItem?> UpdateOrderItemAsync(long orderItemNum, OrderItemWrite body, CancellationToken ct)
+    public async Task<OrderItem?> UpdateOrderItemAsync(long orderAbcNum, long orderItemNum, OrderItemWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
+        // order_abc_num + order_item_num are the key, so they're matched in WHERE, never SET.
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
-            UPDATE order_item SET order_abc_num = :ord, enduser_part_num = :part, alloy2 = :alloy, temper = :temper,
+            UPDATE order_item SET enduser_part_num = :part, alloy2 = :alloy, temper = :temper,
                 gauge = :gauge, gauge_p = :gp, gauge_m = :gm, surface = :surface, flatness = :flatness,
                 sheet_type = :sheet, material_end_use = :enduse, order_item_desc = :desc, pieces_skid = :pieces,
                 theoretical_unit_wt = :tuw, unit_price = :price
-            WHERE order_item_num = :id
+            WHERE order_abc_num = :ord AND order_item_num = :id
             """,
             new
             {
-                ord = body.OrderAbcNum, part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
+                part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
                 gp = body.GaugeP, gm = body.GaugeM, surface = body.Surface, flatness = body.Flatness,
                 sheet = body.SheetType, enduse = body.MaterialEndUse, desc = body.OrderItemDesc,
-                pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice, id = orderItemNum
+                pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice,
+                ord = orderAbcNum, id = orderItemNum
             },
             cancellationToken: ct));
-        return n == 0 ? null : await GetOrderItemAsync(orderItemNum, ct);
+        return n == 0 ? null : await GetOrderItemAsync(orderAbcNum, orderItemNum, ct);
     }
 
     public async Task WriteAuditAsync(string source, bool success, string? notes, CancellationToken ct)
@@ -629,7 +634,7 @@ public sealed class AbisRepository : IAbisRepository
 
         foreach (var item in body.Items)
         {
-            var itemId = await NextIdAsync(conn, tx, "order_item", "order_item_num", ct);
+            var itemId = await NextOrderItemNumAsync(conn, tx, orderId, ct);
             await conn.ExecuteAsync(new CommandDefinition(
                 """
                 INSERT INTO order_item (order_item_num, order_abc_num, enduser_part_num, alloy2, temper, gauge,
@@ -668,6 +673,14 @@ public sealed class AbisRepository : IAbisRepository
     private Task<long> NextIdAsync(DbConnection conn, DbTransaction tx, string table, string idColumn, CancellationToken ct) =>
         conn.ExecuteScalarAsync<long>(new CommandDefinition(
             _factory.NextIdQuery(table, idColumn), transaction: tx, cancellationToken: ct));
+
+    /// <summary>Next line number for an order_item: MAX(order_item_num)+1 scoped to
+    /// the order. order_item has a composite key and no sequence — the line number
+    /// is assigned per order (portable SQL; runs inside the caller's transaction).</summary>
+    private static Task<long> NextOrderItemNumAsync(DbConnection conn, DbTransaction tx, long orderAbcNum, CancellationToken ct) =>
+        conn.ExecuteScalarAsync<long>(new CommandDefinition(
+            "SELECT COALESCE(MAX(order_item_num), 0) + 1 FROM order_item WHERE order_abc_num = :ord",
+            new { ord = orderAbcNum }, transaction: tx, cancellationToken: ct));
 
     /// <summary>Merge two anonymous parameter objects into one Dapper parameter bag.</summary>
     private static DynamicParameters Merge(object a, object b)
