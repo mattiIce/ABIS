@@ -45,6 +45,38 @@ schema mismatches** and is deferred (the API is read-first).
 > Note: the read tests above were run with a temporary, read-only DB account.
 > Write validation needs an account with INSERT + sequence privileges.
 
+### Schema reconciliation (from live introspection, schema owner `DBO`)
+
+A full data-dictionary dump (`tools/oracle_introspect.sql`, run against `DBO`)
+resolved the deferred findings and corrected an inferred relationship. The real
+schema has **414 tables** (vs ~40 in the recovered/inferred model).
+
+- **Sequences DO exist** — named after the **id column** (`{ID_COLUMN}_SEQ`), not
+  `{table}_seq`. So the fix for #6 is to derive the Oracle sequence from the id
+  column the repository already passes to `NextIdQuery(table, idColumn)`:
+
+  | table | id column | sequence |
+  |---|---|---|
+  | `coil` | `coil_abc_num` | `COIL_ABC_NUM_SEQ` |
+  | `ab_job` | `ab_job_num` | `AB_JOB_NUM_SEQ` |
+  | `customer` | `customer_id` | `CUSTOMER_ID_SEQ` |
+  | `customer_order` | `order_abc_num` | `ORDER_ABC_NUM_SEQ` |
+  | `sheet_skid` | `sheet_skid_num` | `SHEET_SKID_NUM_SEQ` |
+  | `scrap_skid` | `scrap_skid_num` | `SCRAP_SKID_NUM_SEQ` |
+
+- **`order_item` has a COMPOSITE primary key** (`ORDER_ITEM_NUM` + `ORDER_ABC_NUM`)
+  and **no sequence** — `order_item_num` is a *line number within an order*, not a
+  global id. This contradicts the inferred model (single `order_item_num` PK +
+  `order_abc_num` FK). The API's order-item read (single-key lookup) and create
+  (sequence-backed id) both need rework to the composite key. (Tracked: #10.)
+
+- **`opc_action_log` does not exist.** `AB_AUDIT` is a *column-level change* log
+  (`TABLE_NAME, COLUMN_NAME, VALUE_FROM, VALUE_TO, USER_ID, EVENT_DATE`), a
+  different shape than the API's action log. Candidate action/log tables:
+  `SYSTEM_LOG`, `USER_LOG` (with `SYSTEM_LOG_ID_SEQ` / `USER_LOG_ID_SEQ`).
+  Retarget the audit middleware to a real table (matching columns) or make the
+  no-op explicit. (Tracked: #7.)
+
 ## 1. Connectivity smoke (no schema needed)
 
 Confirms the driver connects and the dialect probe works (`SELECT 1 FROM dual`):
