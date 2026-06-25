@@ -77,6 +77,24 @@ schema has **414 tables** (vs ~40 in the recovered/inferred model).
   Retarget the audit middleware to a real table (matching columns) or make the
   no-op explicit. (Tracked: #7.)
 
+### DDL export findings (triggers / business logic)
+
+A full DDL+PL/SQL export (`data-model/oracle_ddl.sql`: 412 tables, 82 sequences,
+**18 triggers**, 271 functions, 64 procedures) confirms the write-path decisions:
+
+- **Ids are assigned application-side**, not by triggers. The only `BEFORE INSERT`
+  triggers on the modeled tables set *derived display numbers*
+  (`SHEET_SKID_DISPLAY_NUM_ADD`, `SCRAP_SKID_DISPLAY_NUM_ADD`) — none assign the
+  PK from a sequence. So the API's "fetch `NEXTVAL`, insert explicit id" pattern
+  is correct (#6). (Minor: those display-number triggers override any value the
+  API sends for `*_display_num` on Oracle — harmless, but the API needn't send it.)
+- **Auditing/history is trigger-based** (`COIL_HISTORY_LOG`, `SHIPMENT_HISTORY_LOG`,
+  `SKID_HISTORY_LOG`, `SCRAP_HISTORY_LOG`, `*_DELETE_LOG`, … → history/log tables),
+  *not* a single action log. This reinforces #7: the API's `opc_action_log` audit is
+  vestigial against the real schema, so the graceful no-op is the right default.
+- The export also brings the **business logic (functions/procedures) into the repo
+  as text**, supporting Phase-1 rule recovery.
+
 ## 1. Connectivity smoke (no schema needed)
 
 Confirms the driver connects and the dialect probe works (`SELECT 1 FROM dual`):
