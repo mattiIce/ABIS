@@ -90,9 +90,10 @@ public sealed class DbConnectionFactory : IDbConnectionFactory
         // assigned over the ordered rows and capped at :maxRow, then the outer query
         // discards the first :minRow rows. :maxRow is bound before :minRow to match
         // the order the repository appends them in (Oracle positional binding). Works
-        // on 11g and 12c+ alike.
+        // on 11g and 12c+ alike. The inline-view alias must start with a letter —
+        // Oracle rejects a leading underscore with ORA-00911.
         SqlDialect.Oracle =>
-            $"SELECT * FROM (SELECT __p.*, ROWNUM AS rnum FROM ({orderedSql}) __p WHERE ROWNUM <= :maxRow) WHERE rnum > :minRow",
+            $"SELECT * FROM (SELECT pg.*, ROWNUM AS rnum FROM ({orderedSql}) pg WHERE ROWNUM <= :maxRow) WHERE rnum > :minRow",
         _ => throw new InvalidOperationException($"Unsupported dialect {Dialect}.")
     };
 

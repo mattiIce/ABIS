@@ -60,9 +60,12 @@ public sealed class DatabaseTests
         // :maxRow before :minRow.
         var oracle = Factory("Oracle").Paginate("SELECT 1 ORDER BY a");
         Assert.Equal(
-            "SELECT * FROM (SELECT __p.*, ROWNUM AS rnum FROM (SELECT 1 ORDER BY a) __p WHERE ROWNUM <= :maxRow) WHERE rnum > :minRow",
+            "SELECT * FROM (SELECT pg.*, ROWNUM AS rnum FROM (SELECT 1 ORDER BY a) pg WHERE ROWNUM <= :maxRow) WHERE rnum > :minRow",
             oracle);
         Assert.DoesNotContain("FETCH NEXT", oracle);
+        // Inline-view alias must start with a letter (Oracle rejects a leading
+        // underscore with ORA-00911).
+        Assert.DoesNotContain("__p", oracle);
     }
 
     [Fact]
