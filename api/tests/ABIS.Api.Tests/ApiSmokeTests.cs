@@ -245,7 +245,7 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     [Fact]
     public async Task Create_order_item_without_part_returns_400()
     {
-        var resp = await _client.PostAsJsonAsync("/api/order-items", new { alloy2 = "3003" });
+        var resp = await _client.PostAsJsonAsync("/api/orders/9001/items", new { alloy2 = "3003" });
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 

@@ -87,6 +87,43 @@ public sealed class AbisRepository : IAbisRepository
         opc_log_id AS OpcLogId, time_stamp AS TimeStamp, source AS Source, success AS Success, notes AS Notes
         """;
 
+    private const string PartCols = """
+        part_num_id AS PartNumId, customer_id AS CustomerId, enduser_id AS EnduserId,
+        enduser_part_num AS EnduserPartNum, sheet_type AS SheetType, alloy AS Alloy,
+        temper AS Temper, gauge AS Gauge
+        """;
+
+    private const string DieCols = """
+        die_id AS DieId, die_name AS DieName, status AS Status, tool_num AS ToolNum,
+        part_name AS PartName, gross_weight AS GrossWeight, location AS Location, description AS Description
+        """;
+
+    private const string ShipmentCols = """
+        packing_list AS PackingList, bill_of_lading AS BillOfLading, carrier_id AS CarrierId,
+        customer_id AS CustomerId, des_sh_cust_id AS DesShCustId, vehicle_id AS VehicleId,
+        vehicle_status AS VehicleStatus, shipment_status AS ShipmentStatus,
+        shipment_scheduled_date_time AS ShipmentScheduledDateTime, date_sent AS DateSent,
+        shipment_actualed_date_time AS ShipmentActualedDateTime, shipment_notes AS ShipmentNotes
+        """;
+
+    private const string ReceivingBolCols = """
+        receiving_bol_id AS ReceivingBolId, bol AS Bol, customer_id AS CustomerId,
+        created_by AS CreatedBy, created_date AS CreatedDate, received_date AS ReceivedDate, status AS Status
+        """;
+
+    private const string ScanLogCols = """
+        scan_id AS ScanId, scan_datetime AS ScanDatetime, ab_job_num AS AbJobNum,
+        scan_station AS ScanStation, note AS Note
+        """;
+
+    private const string MaintLogCols = """
+        maint_log_id AS MaintLogId, maint_log_status AS MaintLogStatus, groupdepartment_id AS GroupDepartmentId,
+        systemequipment AS SystemEquipment, subsystemequipment AS SubsystemEquipment, itemdevice AS ItemDevice,
+        probdatetime AS ProbDateTime, prob_details AS ProbDetails, actions AS Actions, author AS Author,
+        reportedby AS ReportedBy, entereddatetime AS EnteredDateTime, assignedto AS AssignedTo,
+        completeddatetime AS CompletedDateTime, completedby AS CompletedBy, laborhours AS LaborHours, prob_cost AS ProbCost
+        """;
+
     private async Task<DbConnection> OpenAsync(CancellationToken ct)
     {
         var conn = _factory.Create();
@@ -246,11 +283,13 @@ public sealed class AbisRepository : IAbisRepository
             alloy is null ? null : "alloy2 = :alloy",
             new { alloy }, page, pageSize, ct);
 
-    public async Task<OrderItem?> GetOrderItemAsync(long orderItemNum, CancellationToken ct)
+    public async Task<OrderItem?> GetOrderItemAsync(long orderAbcNum, long orderItemNum, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
+        // Composite key: order_item_num is unique only within its order_abc_num.
         return await conn.QuerySingleOrDefaultAsync<OrderItem>(new CommandDefinition(
-            $"SELECT {OrderItemCols} FROM order_item WHERE order_item_num = :id", new { id = orderItemNum }, cancellationToken: ct));
+            $"SELECT {OrderItemCols} FROM order_item WHERE order_abc_num = :ord AND order_item_num = :id",
+            new { ord = orderAbcNum, id = orderItemNum }, cancellationToken: ct));
     }
 
     public Task<PagedResult<TestResult>> GetTestResultsAsync(int page, int pageSize, int? testType, string? position, DateTime? from, DateTime? to, string? orderBy, CancellationToken ct)
@@ -423,11 +462,12 @@ public sealed class AbisRepository : IAbisRepository
         return n == 0 ? null : await GetOrderAsync(orderAbcNum, ct);
     }
 
-    public async Task<OrderItem> CreateOrderItemAsync(OrderItemWrite body, CancellationToken ct)
+    public async Task<OrderItem> CreateOrderItemAsync(long orderAbcNum, OrderItemWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
-        var id = await NextIdAsync(conn, tx, "order_item", "order_item_num", ct);
+        // order_item_num is a per-order line number (no sequence): MAX within the order + 1.
+        var id = await NextOrderItemNumAsync(conn, tx, orderAbcNum, ct);
         await conn.ExecuteAsync(new CommandDefinition(
             """
             INSERT INTO order_item (order_item_num, order_abc_num, enduser_part_num, alloy2, temper, gauge, gauge_p, gauge_m,
@@ -438,7 +478,7 @@ public sealed class AbisRepository : IAbisRepository
             """,
             new
             {
-                id, ord = body.OrderAbcNum, part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
+                id, ord = orderAbcNum, part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
                 gp = body.GaugeP, gm = body.GaugeM, surface = body.Surface, flatness = body.Flatness,
                 sheet = body.SheetType, enduse = body.MaterialEndUse, desc = body.OrderItemDesc,
                 pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice,
@@ -446,29 +486,31 @@ public sealed class AbisRepository : IAbisRepository
             },
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
-        return (await GetOrderItemAsync(id, ct))!;
+        return (await GetOrderItemAsync(orderAbcNum, id, ct))!;
     }
 
-    public async Task<OrderItem?> UpdateOrderItemAsync(long orderItemNum, OrderItemWrite body, CancellationToken ct)
+    public async Task<OrderItem?> UpdateOrderItemAsync(long orderAbcNum, long orderItemNum, OrderItemWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
+        // order_abc_num + order_item_num are the key, so they're matched in WHERE, never SET.
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
-            UPDATE order_item SET order_abc_num = :ord, enduser_part_num = :part, alloy2 = :alloy, temper = :temper,
+            UPDATE order_item SET enduser_part_num = :part, alloy2 = :alloy, temper = :temper,
                 gauge = :gauge, gauge_p = :gp, gauge_m = :gm, surface = :surface, flatness = :flatness,
                 sheet_type = :sheet, material_end_use = :enduse, order_item_desc = :desc, pieces_skid = :pieces,
                 theoretical_unit_wt = :tuw, unit_price = :price
-            WHERE order_item_num = :id
+            WHERE order_abc_num = :ord AND order_item_num = :id
             """,
             new
             {
-                ord = body.OrderAbcNum, part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
+                part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
                 gp = body.GaugeP, gm = body.GaugeM, surface = body.Surface, flatness = body.Flatness,
                 sheet = body.SheetType, enduse = body.MaterialEndUse, desc = body.OrderItemDesc,
-                pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice, id = orderItemNum
+                pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice,
+                ord = orderAbcNum, id = orderItemNum
             },
             cancellationToken: ct));
-        return n == 0 ? null : await GetOrderItemAsync(orderItemNum, ct);
+        return n == 0 ? null : await GetOrderItemAsync(orderAbcNum, orderItemNum, ct);
     }
 
     public async Task WriteAuditAsync(string source, bool success, string? notes, CancellationToken ct)
@@ -629,7 +671,7 @@ public sealed class AbisRepository : IAbisRepository
 
         foreach (var item in body.Items)
         {
-            var itemId = await NextIdAsync(conn, tx, "order_item", "order_item_num", ct);
+            var itemId = await NextOrderItemNumAsync(conn, tx, orderId, ct);
             await conn.ExecuteAsync(new CommandDefinition(
                 """
                 INSERT INTO order_item (order_item_num, order_abc_num, enduser_part_num, alloy2, temper, gauge,
@@ -653,6 +695,101 @@ public sealed class AbisRepository : IAbisRepository
         return (await GetOrderDetailAsync(orderId, ct))!;
     }
 
+    public Task<PagedResult<Part>> GetPartsAsync(int page, int pageSize, long? customerId, string? alloy, string? orderBy, CancellationToken ct)
+    {
+        var p = new DynamicParameters();
+        var conditions = new List<string>();
+        if (customerId is not null) { conditions.Add("customer_id = :customerId"); p.Add("customerId", customerId); }
+        if (alloy is not null) { conditions.Add("alloy = :alloy"); p.Add("alloy", alloy); }
+        var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
+        return PageAsync<Part>(PartCols, "part_num", orderBy ?? "part_num_id", where, p, page, pageSize, ct);
+    }
+
+    public async Task<Part?> GetPartAsync(long partNumId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<Part>(new CommandDefinition(
+            $"SELECT {PartCols} FROM part_num WHERE part_num_id = :id", new { id = partNumId }, cancellationToken: ct));
+    }
+
+    public Task<PagedResult<Die>> GetDiesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct) =>
+        PageAsync<Die>(DieCols, "die", orderBy ?? "die_id",
+            status is null ? null : "status = :status",
+            new { status }, page, pageSize, ct);
+
+    public async Task<Die?> GetDieAsync(long dieId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<Die>(new CommandDefinition(
+            $"SELECT {DieCols} FROM die WHERE die_id = :id", new { id = dieId }, cancellationToken: ct));
+    }
+
+    public Task<PagedResult<Shipment>> GetShipmentsAsync(int page, int pageSize, long? customerId, string? orderBy, CancellationToken ct) =>
+        PageAsync<Shipment>(ShipmentCols, "shipment", orderBy ?? "packing_list",
+            customerId is null ? null : "customer_id = :customerId",
+            new { customerId }, page, pageSize, ct);
+
+    public async Task<Shipment?> GetShipmentAsync(long packingList, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<Shipment>(new CommandDefinition(
+            $"SELECT {ShipmentCols} FROM shipment WHERE packing_list = :id", new { id = packingList }, cancellationToken: ct));
+    }
+
+    public Task<PagedResult<ReceivingBol>> GetReceivingBolsAsync(int page, int pageSize, long? customerId, int? status, string? orderBy, CancellationToken ct)
+    {
+        var p = new DynamicParameters();
+        var conditions = new List<string>();
+        if (customerId is not null) { conditions.Add("customer_id = :customerId"); p.Add("customerId", customerId); }
+        if (status is not null) { conditions.Add("status = :status"); p.Add("status", status); }
+        var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
+        return PageAsync<ReceivingBol>(ReceivingBolCols, "receiving_bol", orderBy ?? "receiving_bol_id", where, p, page, pageSize, ct);
+    }
+
+    public async Task<ReceivingBol?> GetReceivingBolAsync(long receivingBolId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<ReceivingBol>(new CommandDefinition(
+            $"SELECT {ReceivingBolCols} FROM receiving_bol WHERE receiving_bol_id = :id", new { id = receivingBolId }, cancellationToken: ct));
+    }
+
+    public Task<PagedResult<ScanLog>> GetScanLogsAsync(int page, int pageSize, long? abJobNum, string? orderBy, CancellationToken ct) =>
+        PageAsync<ScanLog>(ScanLogCols, "scan_log", orderBy ?? "scan_id DESC",
+            abJobNum is null ? null : "ab_job_num = :abJobNum",
+            new { abJobNum }, page, pageSize, ct);
+
+    public async Task<ScanLog?> GetScanLogAsync(long scanId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<ScanLog>(new CommandDefinition(
+            $"SELECT {ScanLogCols} FROM scan_log WHERE scan_id = :id", new { id = scanId }, cancellationToken: ct));
+    }
+
+    public async Task<IReadOnlyList<ScanLog>> GetJobScansAsync(long abJobNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<ScanLog>(new CommandDefinition(
+            $"SELECT {ScanLogCols} FROM scan_log WHERE ab_job_num = :id ORDER BY scan_id", new { id = abJobNum }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public Task<PagedResult<MaintLog>> GetMaintLogsAsync(int page, int pageSize, string? status, long? groupDepartmentId, string? orderBy, CancellationToken ct)
+    {
+        var p = new DynamicParameters();
+        var conditions = new List<string>();
+        if (status is not null) { conditions.Add("maint_log_status = :status"); p.Add("status", status); }
+        if (groupDepartmentId is not null) { conditions.Add("groupdepartment_id = :groupDepartmentId"); p.Add("groupDepartmentId", groupDepartmentId); }
+        var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
+        return PageAsync<MaintLog>(MaintLogCols, "maint_log", orderBy ?? "maint_log_id DESC", where, p, page, pageSize, ct);
+    }
+
+    public async Task<MaintLog?> GetMaintLogAsync(long maintLogId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<MaintLog>(new CommandDefinition(
+            $"SELECT {MaintLogCols} FROM maint_log WHERE maint_log_id = :id", new { id = maintLogId }, cancellationToken: ct));
+    }
+
     public async Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
@@ -668,6 +805,14 @@ public sealed class AbisRepository : IAbisRepository
     private Task<long> NextIdAsync(DbConnection conn, DbTransaction tx, string table, string idColumn, CancellationToken ct) =>
         conn.ExecuteScalarAsync<long>(new CommandDefinition(
             _factory.NextIdQuery(table, idColumn), transaction: tx, cancellationToken: ct));
+
+    /// <summary>Next line number for an order_item: MAX(order_item_num)+1 scoped to
+    /// the order. order_item has a composite key and no sequence — the line number
+    /// is assigned per order (portable SQL; runs inside the caller's transaction).</summary>
+    private static Task<long> NextOrderItemNumAsync(DbConnection conn, DbTransaction tx, long orderAbcNum, CancellationToken ct) =>
+        conn.ExecuteScalarAsync<long>(new CommandDefinition(
+            "SELECT COALESCE(MAX(order_item_num), 0) + 1 FROM order_item WHERE order_abc_num = :ord",
+            new { ord = orderAbcNum }, transaction: tx, cancellationToken: ct));
 
     /// <summary>Merge two anonymous parameter objects into one Dapper parameter bag.</summary>
     private static DynamicParameters Merge(object a, object b)

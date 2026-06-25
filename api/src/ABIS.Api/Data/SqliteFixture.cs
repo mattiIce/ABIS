@@ -54,10 +54,11 @@ public static class SqliteFixture
                 enduser_po TEXT, scrap_handing_type TEXT);
 
             CREATE TABLE order_item (
-                order_item_num INTEGER PRIMARY KEY, order_abc_num INTEGER, enduser_part_num TEXT, alloy2 TEXT,
+                order_item_num INTEGER, order_abc_num INTEGER, enduser_part_num TEXT, alloy2 TEXT,
                 temper TEXT, gauge REAL, gauge_p REAL, gauge_m REAL, surface TEXT, flatness TEXT,
                 sheet_type TEXT, material_end_use TEXT, order_item_desc TEXT, pieces_skid INTEGER,
-                theoretical_unit_wt REAL, unit_price REAL, item_created_dttm TEXT);
+                theoretical_unit_wt REAL, unit_price REAL, item_created_dttm TEXT,
+                PRIMARY KEY (order_abc_num, order_item_num));
 
             CREATE TABLE pst_test_result (
                 id INTEGER PRIMARY KEY AUTOINCREMENT, created_date TEXT, test_type INTEGER, position TEXT,
@@ -87,6 +88,34 @@ public static class SqliteFixture
 
             CREATE TABLE opc_action_log (
                 opc_log_id INTEGER PRIMARY KEY, time_stamp TEXT, source TEXT, success INTEGER, notes TEXT);
+
+            CREATE TABLE part_num (
+                part_num_id INTEGER PRIMARY KEY, customer_id INTEGER, enduser_id INTEGER,
+                enduser_part_num TEXT, sheet_type TEXT, alloy TEXT, temper TEXT, gauge REAL);
+
+            CREATE TABLE die (
+                die_id INTEGER PRIMARY KEY, die_name TEXT, status INTEGER, tool_num TEXT,
+                part_name TEXT, gross_weight REAL, location TEXT, description TEXT);
+
+            CREATE TABLE shipment (
+                packing_list INTEGER PRIMARY KEY, bill_of_lading INTEGER, carrier_id INTEGER,
+                customer_id INTEGER, des_sh_cust_id INTEGER, vehicle_id TEXT, vehicle_status INTEGER,
+                shipment_status INTEGER, shipment_scheduled_date_time TEXT, date_sent TEXT,
+                shipment_actualed_date_time TEXT, shipment_notes TEXT);
+
+            CREATE TABLE receiving_bol (
+                receiving_bol_id INTEGER PRIMARY KEY, bol TEXT, customer_id INTEGER,
+                created_by TEXT, created_date TEXT, received_date TEXT, status INTEGER);
+
+            CREATE TABLE scan_log (
+                scan_id INTEGER PRIMARY KEY, scan_datetime TEXT, ab_job_num INTEGER,
+                scan_station TEXT, note TEXT);
+
+            CREATE TABLE maint_log (
+                maint_log_id INTEGER PRIMARY KEY, maint_log_status TEXT, groupdepartment_id INTEGER,
+                systemequipment TEXT, subsystemequipment TEXT, itemdevice TEXT, probdatetime TEXT,
+                prob_details TEXT, actions TEXT, author TEXT, reportedby TEXT, entereddatetime TEXT,
+                assignedto TEXT, completeddatetime TEXT, completedby TEXT, laborhours REAL, prob_cost REAL);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -114,6 +143,74 @@ public static class SqliteFixture
                 new { OrderItemNum = 7001L, OrderAbcNum = (long?)9001L, EnduserPartNum = "PN-3003-A", Alloy2 = "3003", Temper = "H14", Gauge = 0.125m, GaugeP = 0.005m, GaugeM = 0.005m, Surface = "MILL", Flatness = "STD", SheetType = "SHEET", MaterialEndUse = "HVAC", OrderItemDesc = "3003 sheet", PiecesSkid = 50, TheoreticalUnitWt = 12.5m, UnitPrice = 1.25m, ItemCreatedDttm = (DateTime?)d },
                 new { OrderItemNum = 7002L, OrderAbcNum = (long?)9001L, EnduserPartNum = "PN-5052-B", Alloy2 = "5052", Temper = "H32", Gauge = 0.0625m, GaugeP = 0.004m, GaugeM = 0.004m, Surface = "MILL", Flatness = "TIGHT", SheetType = "SHEET", MaterialEndUse = "MARINE", OrderItemDesc = "5052 sheet", PiecesSkid = 40, TheoreticalUnitWt = 8.0m, UnitPrice = 1.5m, ItemCreatedDttm = (DateTime?)d },
                 new { OrderItemNum = 7003L, OrderAbcNum = (long?)9002L, EnduserPartNum = "PN-3003-C", Alloy2 = "3003", Temper = "H14", Gauge = 0.25m, GaugeP = 0.01m, GaugeM = 0.01m, Surface = "BRUSHED", Flatness = "STD", SheetType = "PLATE", MaterialEndUse = "GENERAL", OrderItemDesc = "3003 plate", PiecesSkid = 25, TheoreticalUnitWt = 25.0m, UnitPrice = 1.75m, ItemCreatedDttm = (DateTime?)d }
+            });
+
+        conn.Execute("""
+            INSERT INTO part_num (part_num_id, customer_id, enduser_id, enduser_part_num, sheet_type, alloy, temper, gauge)
+            VALUES (:PartNumId, :CustomerId, :EnduserId, :EnduserPartNum, :SheetType, :Alloy, :Temper, :Gauge)
+            """,
+            new[]
+            {
+                new { PartNumId = 6001L, CustomerId = (long?)4001L, EnduserId = (long?)null, EnduserPartNum = "PN-3003-A", SheetType = "SHEET", Alloy = "3003", Temper = "H14", Gauge = (decimal?)0.125m },
+                new { PartNumId = 6002L, CustomerId = (long?)4001L, EnduserId = (long?)null, EnduserPartNum = "PN-5052-B", SheetType = "SHEET", Alloy = "5052", Temper = "H32", Gauge = (decimal?)0.0625m },
+                new { PartNumId = 6003L, CustomerId = (long?)4002L, EnduserId = (long?)null, EnduserPartNum = "PN-3003-C", SheetType = "PLATE", Alloy = "3003", Temper = "H14", Gauge = (decimal?)0.25m }
+            });
+
+        conn.Execute("""
+            INSERT INTO die (die_id, die_name, status, tool_num, part_name, gross_weight, location, description)
+            VALUES (:DieId, :DieName, :Status, :ToolNum, :PartName, :GrossWeight, :Location, :Description)
+            """,
+            new[]
+            {
+                new { DieId = 2001L, DieName = "DIE-ALPHA", Status = (int?)1, ToolNum = "T-100", PartName = "BRACKET-A", GrossWeight = (decimal?)1250.0m, Location = "RACK-1", Description = "Alpha progressive die" },
+                new { DieId = 2002L, DieName = "DIE-BETA", Status = (int?)0, ToolNum = "T-200", PartName = "PANEL-B", GrossWeight = (decimal?)3400.0m, Location = "RACK-2", Description = "Beta blank die" }
+            });
+
+        conn.Execute("""
+            INSERT INTO shipment (packing_list, bill_of_lading, carrier_id, customer_id, des_sh_cust_id, vehicle_id,
+                vehicle_status, shipment_status, shipment_scheduled_date_time, date_sent, shipment_actualed_date_time, shipment_notes)
+            VALUES (:PackingList, :BillOfLading, :CarrierId, :CustomerId, :DesShCustId, :VehicleId,
+                :VehicleStatus, :ShipmentStatus, :ShipmentScheduledDateTime, :DateSent, :ShipmentActualedDateTime, :ShipmentNotes)
+            """,
+            new[]
+            {
+                new { PackingList = 8801L, BillOfLading = (long?)135001L, CarrierId = (long?)1201L, CustomerId = (long?)4001L, DesShCustId = (long?)4001L, VehicleId = "TRK-100", VehicleStatus = (int?)1, ShipmentStatus = (int?)1, ShipmentScheduledDateTime = (DateTime?)d, DateSent = (DateTime?)d.AddHours(4), ShipmentActualedDateTime = (DateTime?)d.AddHours(4), ShipmentNotes = "Shipped" },
+                new { PackingList = 8802L, BillOfLading = (long?)135002L, CarrierId = (long?)1202L, CustomerId = (long?)4002L, DesShCustId = (long?)4002L, VehicleId = "TRK-200", VehicleStatus = (int?)0, ShipmentStatus = (int?)0, ShipmentScheduledDateTime = (DateTime?)d.AddDays(1), DateSent = (DateTime?)null, ShipmentActualedDateTime = (DateTime?)null, ShipmentNotes = "Scheduled" }
+            });
+
+        conn.Execute("""
+            INSERT INTO receiving_bol (receiving_bol_id, bol, customer_id, created_by, created_date, received_date, status)
+            VALUES (:ReceivingBolId, :Bol, :CustomerId, :CreatedBy, :CreatedDate, :ReceivedDate, :Status)
+            """,
+            new[]
+            {
+                new { ReceivingBolId = 5501L, Bol = "BOL-IN-001", CustomerId = (long?)4001L, CreatedBy = "recv1", CreatedDate = (DateTime?)d, ReceivedDate = (DateTime?)d.AddHours(2), Status = (int?)1 },
+                new { ReceivingBolId = 5502L, Bol = "BOL-IN-002", CustomerId = (long?)4002L, CreatedBy = "recv2", CreatedDate = (DateTime?)d.AddDays(1), ReceivedDate = (DateTime?)null, Status = (int?)0 }
+            });
+
+        conn.Execute("""
+            INSERT INTO scan_log (scan_id, scan_datetime, ab_job_num, scan_station, note)
+            VALUES (:ScanId, :ScanDatetime, :AbJobNum, :ScanStation, :Note)
+            """,
+            new[]
+            {
+                new { ScanId = 1L, ScanDatetime = (DateTime?)d, AbJobNum = (long?)1001L, ScanStation = "PACK-1", Note = "Skid packed" },
+                new { ScanId = 2L, ScanDatetime = (DateTime?)d.AddMinutes(30), AbJobNum = (long?)1001L, ScanStation = "SHIP-1", Note = "Staged" },
+                new { ScanId = 3L, ScanDatetime = (DateTime?)d.AddHours(1), AbJobNum = (long?)1003L, ScanStation = "PACK-1", Note = "Skid packed" }
+            });
+
+        conn.Execute("""
+            INSERT INTO maint_log (maint_log_id, maint_log_status, groupdepartment_id, systemequipment, subsystemequipment,
+                itemdevice, probdatetime, prob_details, actions, author, reportedby, entereddatetime, assignedto,
+                completeddatetime, completedby, laborhours, prob_cost)
+            VALUES (:MaintLogId, :MaintLogStatus, :GroupDepartmentId, :SystemEquipment, :SubsystemEquipment,
+                :ItemDevice, :ProbDateTime, :ProbDetails, :Actions, :Author, :ReportedBy, :EnteredDateTime, :AssignedTo,
+                :CompletedDateTime, :CompletedBy, :LaborHours, :ProbCost)
+            """,
+            new[]
+            {
+                new { MaintLogId = 3001L, MaintLogStatus = "OPEN", GroupDepartmentId = (long?)10L, SystemEquipment = "LINE 110", SubsystemEquipment = "STACKER", ItemDevice = "MOTOR", ProbDateTime = (DateTime?)d, ProbDetails = "Bearing noise", Actions = "Inspect", Author = "tech1", ReportedBy = "op1", EnteredDateTime = (DateTime?)d, AssignedTo = "tech2", CompletedDateTime = (DateTime?)null, CompletedBy = (string?)null, LaborHours = (decimal?)null, ProbCost = (decimal?)null },
+                new { MaintLogId = 3002L, MaintLogStatus = "CLOSED", GroupDepartmentId = (long?)20L, SystemEquipment = "LINE 120", SubsystemEquipment = "UNCOILER", ItemDevice = "HYDRAULICS", ProbDateTime = (DateTime?)d.AddDays(-1), ProbDetails = "Leak", Actions = "Replaced seal", Author = "tech1", ReportedBy = "op2", EnteredDateTime = (DateTime?)d.AddDays(-1), AssignedTo = "tech1", CompletedDateTime = (DateTime?)d, CompletedBy = "tech1", LaborHours = (decimal?)2.5m, ProbCost = (decimal?)150.0m }
             });
 
         conn.Execute("""

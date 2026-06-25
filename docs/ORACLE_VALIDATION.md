@@ -8,6 +8,93 @@ makes that validation turnkey once you can provide a connection.
 > Use a **non-production** Oracle (a test/staging copy of the ABIS schema). The API
 > issues real SQL; point it at prod only with explicit sign-off.
 
+## Validation results — run against Oracle 11g (2026-06-25)
+
+The seam was run against the live ABIS database (**Oracle 11g**, SID `abc11`).
+Summary: the **read path is fully validated**; the **write path surfaced two
+schema mismatches** and is deferred (the API is read-first).
+
+**Passed**
+
+- Connectivity / readiness probe (`/health/ready` → `ready`).
+- List + paging **bind order** (`/api/coils?pageSize=2&page=2` returns the true
+  second page, not a repeat of page 1).
+- Sorting + PK tie-breaker (`/api/jobs?sort=jobStatus&dir=desc`).
+- Filters (`/api/coils?alloy=…`) and aggregation rollups (`/api/coils/summary`),
+  against real data (~149k coils).
+
+**Bugs found and fixed** (only a live 11g exposed these; CI runs SQLite)
+
+- `ORA-00933` — the Oracle paging clause used the 12c+ `OFFSET … FETCH NEXT`
+  syntax, invalid on 11g. Replaced with the `ROWNUM` inline-view form (PR #4).
+- `ORA-00911` — that ROWNUM view used the alias `__p`; Oracle rejects unquoted
+  identifiers starting with `_`. Renamed to `pg` (PR #5).
+
+**Open write-path findings (deferred — need schema/DBA input)**
+
+- **Sequences don't exist.** `POST /api/customers` → `ORA-02289: sequence does
+  not exist` for `customer_seq`. The `{table}_seq` convention does not match the
+  schema. Before enabling writes, confirm how ABIS assigns ids (the legacy PB9
+  app likely uses `MAX+1`, or sequences under other names) and either switch the
+  Oracle `NextIdQuery` to `MAX+1` or map real names via `Database__Sequences__<table>`.
+- **Audit table missing.** Every request's audit write → `ORA-00942: table or
+  view does not exist` for `opc_action_log` (swallowed as a warning, so requests
+  still succeed — auditing silently no-ops). Confirm the real audit/log table
+  name and `GRANT`s, or make the audit no-op explicit when the table is absent.
+
+> Note: the read tests above were run with a temporary, read-only DB account.
+> Write validation needs an account with INSERT + sequence privileges.
+
+### Schema reconciliation (from live introspection, schema owner `DBO`)
+
+A full data-dictionary dump (`tools/oracle_introspect.sql`, run against `DBO`)
+resolved the deferred findings and corrected an inferred relationship. The real
+schema has **414 tables** (vs ~40 in the recovered/inferred model).
+
+- **Sequences DO exist** — named after the **id column** (`{ID_COLUMN}_SEQ`), not
+  `{table}_seq`. So the fix for #6 is to derive the Oracle sequence from the id
+  column the repository already passes to `NextIdQuery(table, idColumn)`:
+
+  | table | id column | sequence |
+  |---|---|---|
+  | `coil` | `coil_abc_num` | `COIL_ABC_NUM_SEQ` |
+  | `ab_job` | `ab_job_num` | `AB_JOB_NUM_SEQ` |
+  | `customer` | `customer_id` | `CUSTOMER_ID_SEQ` |
+  | `customer_order` | `order_abc_num` | `ORDER_ABC_NUM_SEQ` |
+  | `sheet_skid` | `sheet_skid_num` | `SHEET_SKID_NUM_SEQ` |
+  | `scrap_skid` | `scrap_skid_num` | `SCRAP_SKID_NUM_SEQ` |
+
+- **`order_item` has a COMPOSITE primary key** (`ORDER_ITEM_NUM` + `ORDER_ABC_NUM`)
+  and **no sequence** — `order_item_num` is a *line number within an order*, not a
+  global id. This contradicts the inferred model (single `order_item_num` PK +
+  `order_abc_num` FK). The API's order-item read (single-key lookup) and create
+  (sequence-backed id) both need rework to the composite key. (Tracked: #10.)
+
+- **`opc_action_log` does not exist.** `AB_AUDIT` is a *column-level change* log
+  (`TABLE_NAME, COLUMN_NAME, VALUE_FROM, VALUE_TO, USER_ID, EVENT_DATE`), a
+  different shape than the API's action log. Candidate action/log tables:
+  `SYSTEM_LOG`, `USER_LOG` (with `SYSTEM_LOG_ID_SEQ` / `USER_LOG_ID_SEQ`).
+  Retarget the audit middleware to a real table (matching columns) or make the
+  no-op explicit. (Tracked: #7.)
+
+### DDL export findings (triggers / business logic)
+
+A full DDL+PL/SQL export (`data-model/oracle_ddl.sql`: 412 tables, 82 sequences,
+**18 triggers**, 271 functions, 64 procedures) confirms the write-path decisions:
+
+- **Ids are assigned application-side**, not by triggers. The only `BEFORE INSERT`
+  triggers on the modeled tables set *derived display numbers*
+  (`SHEET_SKID_DISPLAY_NUM_ADD`, `SCRAP_SKID_DISPLAY_NUM_ADD`) — none assign the
+  PK from a sequence. So the API's "fetch `NEXTVAL`, insert explicit id" pattern
+  is correct (#6). (Minor: those display-number triggers override any value the
+  API sends for `*_display_num` on Oracle — harmless, but the API needn't send it.)
+- **Auditing/history is trigger-based** (`COIL_HISTORY_LOG`, `SHIPMENT_HISTORY_LOG`,
+  `SKID_HISTORY_LOG`, `SCRAP_HISTORY_LOG`, `*_DELETE_LOG`, … → history/log tables),
+  *not* a single action log. This reinforces #7: the API's `opc_action_log` audit is
+  vestigial against the real schema, so the graceful no-op is the right default.
+- The export also brings the **business logic (functions/procedures) into the repo
+  as text**, supporting Phase-1 rule recovery.
+
 ## 1. Connectivity smoke (no schema needed)
 
 Confirms the driver connects and the dialect probe works (`SELECT 1 FROM dual`):

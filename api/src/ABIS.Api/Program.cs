@@ -16,6 +16,12 @@ builder.Services.AddSingleton(dbOptions);
 builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
 builder.Services.AddScoped<IAbisRepository, AbisRepository>();
 
+// Audit middleware options: enabled by default; turn off (or it self-disables on
+// the first write failure) when the target schema has no compatible audit table.
+var auditOptions = builder.Configuration.GetSection(Abis.Api.Middleware.AuditOptions.SectionName)
+                       .Get<Abis.Api.Middleware.AuditOptions>() ?? new Abis.Api.Middleware.AuditOptions();
+builder.Services.AddSingleton(auditOptions);
+
 // API-key authentication: secure the /api surface. Endpoints just require an
 // authenticated principal, so the scheme can later be swapped for OAuth/OIDC.
 var apiKeyOptions = builder.Configuration.GetSection(ApiKeyOptions.SectionName).Get<ApiKeyOptions>()

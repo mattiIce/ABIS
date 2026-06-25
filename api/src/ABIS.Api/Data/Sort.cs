@@ -57,6 +57,36 @@ public static class Sort
             ("customerId", "customer_id"), ("name", "customer_name"), ("shortName", "customer_short_name")),
             DefaultOrderBy: "customer_id", TieBreaker: "customer_id"),
 
+        ["parts"] = new(Cols(
+            ("partNumId", "part_num_id"), ("customerId", "customer_id"), ("partNum", "enduser_part_num"),
+            ("alloy", "alloy"), ("temper", "temper"), ("gauge", "gauge")),
+            DefaultOrderBy: "part_num_id", TieBreaker: "part_num_id"),
+
+        ["dies"] = new(Cols(
+            ("dieId", "die_id"), ("dieName", "die_name"), ("status", "status"),
+            ("toolNum", "tool_num"), ("location", "location")),
+            DefaultOrderBy: "die_id", TieBreaker: "die_id"),
+
+        ["shipments"] = new(Cols(
+            ("packingList", "packing_list"), ("billOfLading", "bill_of_lading"), ("customerId", "customer_id"),
+            ("status", "shipment_status"), ("dateSent", "date_sent")),
+            DefaultOrderBy: "packing_list", TieBreaker: "packing_list"),
+
+        ["receivingBols"] = new(Cols(
+            ("receivingBolId", "receiving_bol_id"), ("bol", "bol"), ("customerId", "customer_id"),
+            ("status", "status"), ("receivedDate", "received_date")),
+            DefaultOrderBy: "receiving_bol_id", TieBreaker: "receiving_bol_id"),
+
+        ["scanLogs"] = new(Cols(
+            ("scanId", "scan_id"), ("abJobNum", "ab_job_num"), ("scanStation", "scan_station"),
+            ("scanDatetime", "scan_datetime")),
+            DefaultOrderBy: "scan_id DESC", TieBreaker: "scan_id"),
+
+        ["maintLogs"] = new(Cols(
+            ("maintLogId", "maint_log_id"), ("status", "maint_log_status"), ("groupDepartmentId", "groupdepartment_id"),
+            ("probDateTime", "probdatetime"), ("assignedTo", "assignedto")),
+            DefaultOrderBy: "maint_log_id DESC", TieBreaker: "maint_log_id"),
+
         ["sheetSkids"] = new(Cols(
             ("sheetSkidNum", "sheet_skid_num"), ("abJobNum", "ab_job_num"), ("netWt", "sheet_net_wt"),
             ("pieces", "skid_pieces"), ("skidDate", "skid_date")),

@@ -254,36 +254,164 @@ public static class ApiEndpoints
            .WithSummary("List order line items (paged, sortable).")
            .Produces<PagedResult<OrderItem>>().ProducesValidationProblem();
 
-        api.MapGet("/order-items/{orderItemNum:long}", async (long orderItemNum, IAbisRepository repo, CancellationToken ct) =>
-                await repo.GetOrderItemAsync(orderItemNum, ct) is { } item
+        // order_item has a composite key (order + line number), so the single-item
+        // routes are nested under the owning order (see docs/DATA_MODEL.md, #10).
+        api.MapGet("/orders/{orderAbcNum:long}/items/{orderItemNum:long}", async (long orderAbcNum, long orderItemNum, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetOrderItemAsync(orderAbcNum, orderItemNum, ct) is { } item
                     ? Results.Ok(item)
                     : Results.NotFound())
            .WithName("GetOrderItem").WithTags("OrderItems")
-           .WithSummary("Get one order line item by id.")
+           .WithSummary("Get one order line item by its composite key (order + line number).")
            .Produces<OrderItem>().Produces(StatusCodes.Status404NotFound);
 
-        api.MapPost("/order-items", async (OrderItemWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPost("/orders/{orderAbcNum:long}/items", async (long orderAbcNum, OrderItemWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                var created = await repo.CreateOrderItemAsync(body, ct);
-                return Results.Created($"/api/order-items/{created.OrderItemNum}", created);
+                var created = await repo.CreateOrderItemAsync(orderAbcNum, body, ct);
+                return Results.Created($"/api/orders/{orderAbcNum}/items/{created.OrderItemNum}", created);
             })
            .WithName("CreateOrderItem").WithTags("OrderItems")
-           .WithSummary("Create an order line item.")
+           .WithSummary("Add a line item to an order (line number assigned per order).")
            .Produces<OrderItem>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/order-items/{orderItemNum:long}", async (long orderItemNum, OrderItemWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/orders/{orderAbcNum:long}/items/{orderItemNum:long}", async (long orderAbcNum, long orderItemNum, OrderItemWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateOrderItemAsync(orderItemNum, body, ct) is { } item
+                return await repo.UpdateOrderItemAsync(orderAbcNum, orderItemNum, body, ct) is { } item
                     ? Results.Ok(item)
                     : Results.NotFound();
             })
            .WithName("UpdateOrderItem").WithTags("OrderItems")
-           .WithSummary("Replace an order line item.")
+           .WithSummary("Replace an order line item (by order + line number).")
            .Produces<OrderItem>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+
+        // ---- Parts (part-number master) --------------------------------
+        api.MapGet("/parts", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, long? customerId = null, string? alloy = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("parts", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetPartsAsync(page, pageSize, customerId, alloy, orderBy, ct));
+            })
+           .WithName("ListParts").WithTags("Parts")
+           .WithSummary("List part-number master records (paged, sortable; filter by customerId/alloy).")
+           .Produces<PagedResult<Part>>().ProducesValidationProblem();
+
+        api.MapGet("/parts/{partNumId:long}", async (long partNumId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetPartAsync(partNumId, ct) is { } part
+                    ? Results.Ok(part)
+                    : Results.NotFound())
+           .WithName("GetPart").WithTags("Parts")
+           .WithSummary("Get one part-number record by id.")
+           .Produces<Part>().Produces(StatusCodes.Status404NotFound);
+
+        // ---- Dies (die / tooling) --------------------------------------
+        api.MapGet("/dies", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, int? status = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("dies", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetDiesAsync(page, pageSize, status, orderBy, ct));
+            })
+           .WithName("ListDies").WithTags("Dies")
+           .WithSummary("List dies/tooling (paged, sortable; filter by status).")
+           .Produces<PagedResult<Die>>().ProducesValidationProblem();
+
+        api.MapGet("/dies/{dieId:long}", async (long dieId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetDieAsync(dieId, ct) is { } die
+                    ? Results.Ok(die)
+                    : Results.NotFound())
+           .WithName("GetDie").WithTags("Dies")
+           .WithSummary("Get one die by id.")
+           .Produces<Die>().Produces(StatusCodes.Status404NotFound);
+
+        // ---- Shipments -------------------------------------------------
+        api.MapGet("/shipments", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, long? customerId = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("shipments", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetShipmentsAsync(page, pageSize, customerId, orderBy, ct));
+            })
+           .WithName("ListShipments").WithTags("Shipments")
+           .WithSummary("List shipments / packing lists (paged, sortable; filter by customerId).")
+           .Produces<PagedResult<Shipment>>().ProducesValidationProblem();
+
+        api.MapGet("/shipments/{packingList:long}", async (long packingList, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetShipmentAsync(packingList, ct) is { } shipment
+                    ? Results.Ok(shipment)
+                    : Results.NotFound())
+           .WithName("GetShipment").WithTags("Shipments")
+           .WithSummary("Get one shipment by packing-list number.")
+           .Produces<Shipment>().Produces(StatusCodes.Status404NotFound);
+
+        // ---- Receiving BOLs --------------------------------------------
+        api.MapGet("/receiving-bols", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, long? customerId = null, int? status = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("receivingBols", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetReceivingBolsAsync(page, pageSize, customerId, status, orderBy, ct));
+            })
+           .WithName("ListReceivingBols").WithTags("Receiving")
+           .WithSummary("List inbound receiving BOLs (paged, sortable; filter by customerId/status).")
+           .Produces<PagedResult<ReceivingBol>>().ProducesValidationProblem();
+
+        api.MapGet("/receiving-bols/{receivingBolId:long}", async (long receivingBolId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetReceivingBolAsync(receivingBolId, ct) is { } bol
+                    ? Results.Ok(bol)
+                    : Results.NotFound())
+           .WithName("GetReceivingBol").WithTags("Receiving")
+           .WithSummary("Get one receiving BOL by id.")
+           .Produces<ReceivingBol>().Produces(StatusCodes.Status404NotFound);
+
+        // ---- Scan log (shop-floor tracking) ----------------------------
+        api.MapGet("/scan-logs", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, long? abJobNum = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("scanLogs", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetScanLogsAsync(page, pageSize, abJobNum, orderBy, ct));
+            })
+           .WithName("ListScanLogs").WithTags("ScanLog")
+           .WithSummary("List shop-floor scan events, newest first (paged, sortable; filter by abJobNum).")
+           .Produces<PagedResult<ScanLog>>().ProducesValidationProblem();
+
+        api.MapGet("/scan-logs/{scanId:long}", async (long scanId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetScanLogAsync(scanId, ct) is { } scan
+                    ? Results.Ok(scan)
+                    : Results.NotFound())
+           .WithName("GetScanLog").WithTags("ScanLog")
+           .WithSummary("Get one scan event by id.")
+           .Produces<ScanLog>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapGet("/jobs/{abJobNum:long}/scans", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetJobScansAsync(abJobNum, ct)))
+           .WithName("GetJobScans").WithTags("Jobs")
+           .WithSummary("List shop-floor scan events for a job.")
+           .Produces<IEnumerable<ScanLog>>();
+
+        // ---- Maintenance log -------------------------------------------
+        api.MapGet("/maint-logs", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, string? status = null, long? groupDepartmentId = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("maintLogs", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetMaintLogsAsync(page, pageSize, status, groupDepartmentId, orderBy, ct));
+            })
+           .WithName("ListMaintLogs").WithTags("Maintenance")
+           .WithSummary("List maintenance log entries, newest first (paged, sortable; filter by status/groupDepartmentId).")
+           .Produces<PagedResult<MaintLog>>().ProducesValidationProblem();
+
+        api.MapGet("/maint-logs/{maintLogId:long}", async (long maintLogId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetMaintLogAsync(maintLogId, ct) is { } entry
+                    ? Results.Ok(entry)
+                    : Results.NotFound())
+           .WithName("GetMaintLog").WithTags("Maintenance")
+           .WithSummary("Get one maintenance log entry by id.")
+           .Produces<MaintLog>().Produces(StatusCodes.Status404NotFound);
 
         // ---- Test results (QA) -----------------------------------------
         api.MapGet("/test-results", async (IAbisRepository repo, CancellationToken ct,

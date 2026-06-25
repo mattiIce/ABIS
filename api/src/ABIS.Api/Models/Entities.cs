@@ -229,3 +229,90 @@ public sealed class AuditEntry
     public int? Success { get; set; }
     public string? Notes { get; set; }
 }
+
+/// <summary>A part-number master record (table <c>part_num</c>).</summary>
+public sealed class Part
+{
+    public long PartNumId { get; set; }
+    public long? CustomerId { get; set; }
+    public long? EnduserId { get; set; }
+    public string? EnduserPartNum { get; set; }
+    public string? SheetType { get; set; }
+    public string? Alloy { get; set; }
+    public string? Temper { get; set; }
+    public decimal? Gauge { get; set; }
+}
+
+/// <summary>A die / tooling record (table <c>die</c>).</summary>
+public sealed class Die
+{
+    public long DieId { get; set; }
+    public string? DieName { get; set; }
+    public int? Status { get; set; }
+    public string? ToolNum { get; set; }
+    public string? PartName { get; set; }
+    public decimal? GrossWeight { get; set; }
+    public string? Location { get; set; }
+    public string? Description { get; set; }
+}
+
+/// <summary>A shipment / packing list (table <c>shipment</c>; PK <c>packing_list</c>).</summary>
+public sealed class Shipment
+{
+    public long PackingList { get; set; }
+    public long? BillOfLading { get; set; }
+    public long? CarrierId { get; set; }
+    public long? CustomerId { get; set; }
+    public long? DesShCustId { get; set; }
+    public string? VehicleId { get; set; }
+    public int? VehicleStatus { get; set; }
+    public int? ShipmentStatus { get; set; }
+    public DateTime? ShipmentScheduledDateTime { get; set; }
+    public DateTime? DateSent { get; set; }
+    public DateTime? ShipmentActualedDateTime { get; set; }
+    public string? ShipmentNotes { get; set; }
+}
+
+/// <summary>An inbound receiving BOL (table <c>receiving_bol</c>).</summary>
+public sealed class ReceivingBol
+{
+    public long ReceivingBolId { get; set; }
+    public string? Bol { get; set; }
+    public long? CustomerId { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTime? CreatedDate { get; set; }
+    public DateTime? ReceivedDate { get; set; }
+    public int? Status { get; set; }
+}
+
+/// <summary>A shop-floor scan event (table <c>scan_log</c>).</summary>
+public sealed class ScanLog
+{
+    public long ScanId { get; set; }
+    public DateTime? ScanDatetime { get; set; }
+    public long? AbJobNum { get; set; }
+    public string? ScanStation { get; set; }
+    public string? Note { get; set; }
+}
+
+/// <summary>A maintenance log entry (table <c>maint_log</c>).</summary>
+public sealed class MaintLog
+{
+    public long MaintLogId { get; set; }
+    public string? MaintLogStatus { get; set; }
+    public long? GroupDepartmentId { get; set; }
+    public string? SystemEquipment { get; set; }
+    public string? SubsystemEquipment { get; set; }
+    public string? ItemDevice { get; set; }
+    public DateTime? ProbDateTime { get; set; }
+    public string? ProbDetails { get; set; }
+    public string? Actions { get; set; }
+    public string? Author { get; set; }
+    public string? ReportedBy { get; set; }
+    public DateTime? EnteredDateTime { get; set; }
+    public string? AssignedTo { get; set; }
+    public DateTime? CompletedDateTime { get; set; }
+    public string? CompletedBy { get; set; }
+    public decimal? LaborHours { get; set; }
+    public decimal? ProbCost { get; set; }
+}

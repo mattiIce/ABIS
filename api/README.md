@@ -89,7 +89,7 @@ running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ```sh
 cd api
-dotnet test                                # 103 tests: repository + HTTP smoke
+dotnet test                                # 114 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -169,9 +169,9 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `POST /api/orders/with-items` | Create an order + its line items in one transaction → 201 |
 | `PUT /api/orders/{orderAbcNum}` | Replace an order header |
 | `GET /api/order-items?page&pageSize&alloy&sort&dir` | List order items (paged, sortable) |
-| `GET /api/order-items/{orderItemNum}` | One order item |
-| `POST /api/order-items` | Create an order item (requires `enduserPartNum`) → 201 |
-| `PUT /api/order-items/{orderItemNum}` | Replace an order item |
+| `GET /api/orders/{orderAbcNum}/items/{orderItemNum}` | One order line item (composite key) |
+| `POST /api/orders/{orderAbcNum}/items` | Add a line item to an order (line number assigned per order, requires `enduserPartNum`) → 201 |
+| `PUT /api/orders/{orderAbcNum}/items/{orderItemNum}` | Replace an order line item |
 | `GET /api/customers?page&pageSize&name&sort&dir` | List customers (paged, sortable) |
 | `GET /api/customers/{customerId}` | One customer |
 | `POST /api/customers` | Create a customer (server-assigned id) → 201 |
@@ -183,6 +183,19 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/scrap-skids/{scrapSkidNum}` | One scrap skid |
 | `POST /api/scrap-skids` | Create a scrap skid (requires `scrapAbJobNum`) → 201 |
 | `GET /api/partial-skids?page&pageSize&sort&dir` | List in-process partial skids (paged, sortable) |
+| `GET /api/parts?page&pageSize&customerId&alloy&sort&dir` | List part-number master records (paged, filterable, sortable) |
+| `GET /api/parts/{partNumId}` | One part-number record |
+| `GET /api/dies?page&pageSize&status&sort&dir` | List dies/tooling (paged, filterable, sortable) |
+| `GET /api/dies/{dieId}` | One die |
+| `GET /api/shipments?page&pageSize&customerId&sort&dir` | List shipments / packing lists (paged, filterable, sortable) |
+| `GET /api/shipments/{packingList}` | One shipment |
+| `GET /api/receiving-bols?page&pageSize&customerId&status&sort&dir` | List inbound receiving BOLs (paged, filterable, sortable) |
+| `GET /api/receiving-bols/{receivingBolId}` | One receiving BOL |
+| `GET /api/scan-logs?page&pageSize&abJobNum&sort&dir` | List shop-floor scan events, newest first (paged, filterable, sortable) |
+| `GET /api/scan-logs/{scanId}` | One scan event |
+| `GET /api/jobs/{abJobNum}/scans` | Scan events for a job |
+| `GET /api/maint-logs?page&pageSize&status&groupDepartmentId&sort&dir` | List maintenance log entries, newest first (paged, filterable, sortable) |
+| `GET /api/maint-logs/{maintLogId}` | One maintenance log entry |
 | `GET /api/test-results?page&pageSize&testType&position&from&to&sort&dir` | List posted mechanical test results (paged, filterable, sortable) |
 | `GET /api/temp-test-results?page&pageSize&testType&position&from&to&sort&dir` | List in-progress (working-set) test results (paged, filterable, sortable) |
 | `GET /api/lookups/alloys` | Distinct alloys (dropdown reference data) |

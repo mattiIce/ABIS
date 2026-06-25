@@ -214,11 +214,14 @@ public sealed class RepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateOrderItem_assigns_id_and_sets_created_timestamp()
+    public async Task CreateOrderItem_assigns_per_order_line_number()
     {
-        var created = await _repo.CreateOrderItemAsync(
+        // order 9001 already has line numbers 7001, 7002 -> next is 7003 (scoped to
+        // the order; the composite key keeps it distinct from (9002, 7003)).
+        var created = await _repo.CreateOrderItemAsync(9001,
             new OrderItemWrite { EnduserPartNum = "PN-NEW", Alloy2 = "6061", UnitPrice = 2.0m }, CancellationToken.None);
-        Assert.Equal(7004, created.OrderItemNum);   // MAX(7003) + 1
+        Assert.Equal(7003, created.OrderItemNum);   // MAX(order_item_num) for order 9001 + 1
+        Assert.Equal(9001, created.OrderAbcNum);
         Assert.Equal("PN-NEW", created.EnduserPartNum);
         Assert.NotNull(created.ItemCreatedDttm);     // server-assigned
     }
@@ -226,10 +229,11 @@ public sealed class RepositoryTests : IDisposable
     [Fact]
     public async Task UpdateOrderItem_changes_and_unknown_returns_null()
     {
-        var updated = await _repo.UpdateOrderItemAsync(7001,
+        var updated = await _repo.UpdateOrderItemAsync(9001, 7001,
             new OrderItemWrite { EnduserPartNum = "PN-3003-A", UnitPrice = 9.99m }, CancellationToken.None);
         Assert.Equal(9.99m, updated!.UnitPrice);
-        Assert.Null(await _repo.UpdateOrderItemAsync(999999,
+        // unknown line number within a known order -> null
+        Assert.Null(await _repo.UpdateOrderItemAsync(9001, 999999,
             new OrderItemWrite { EnduserPartNum = "X" }, CancellationToken.None));
     }
 
@@ -470,6 +474,124 @@ public sealed class RepositoryTests : IDisposable
         var job1001 = await _repo.GetJobPartialSkidsAsync(1001, CancellationToken.None);
         Assert.Equal(2, job1001.Count);
         Assert.All(job1001, s => Assert.Equal(1001, s.AbJobNum));
+    }
+
+    // ---- parts & dies --------------------------------------------------
+
+    [Fact]
+    public async Task GetParts_lists_and_filters()
+    {
+        var all = await _repo.GetPartsAsync(1, 25, customerId: null, alloy: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(3, all.TotalCount);
+
+        var byCust = await _repo.GetPartsAsync(1, 25, customerId: 4001, alloy: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, byCust.TotalCount);
+        Assert.All(byCust.Items, p => Assert.Equal(4001, p.CustomerId));
+
+        var byAlloy = await _repo.GetPartsAsync(1, 25, customerId: null, alloy: "5052", orderBy: null, CancellationToken.None);
+        Assert.Single(byAlloy.Items);
+    }
+
+    [Fact]
+    public async Task GetPart_returns_one_and_null_for_unknown()
+    {
+        var part = await _repo.GetPartAsync(6001, CancellationToken.None);
+        Assert.Equal("PN-3003-A", part!.EnduserPartNum);
+        Assert.Null(await _repo.GetPartAsync(999999, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetDies_lists_and_filters_by_status()
+    {
+        var all = await _repo.GetDiesAsync(1, 25, status: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, all.TotalCount);
+
+        var active = await _repo.GetDiesAsync(1, 25, status: 1, orderBy: null, CancellationToken.None);
+        Assert.Single(active.Items);
+        Assert.Equal("DIE-ALPHA", active.Items[0].DieName);
+    }
+
+    [Fact]
+    public async Task GetDie_returns_one_and_null_for_unknown()
+    {
+        var die = await _repo.GetDieAsync(2002, CancellationToken.None);
+        Assert.Equal("DIE-BETA", die!.DieName);
+        Assert.Null(await _repo.GetDieAsync(999999, CancellationToken.None));
+    }
+
+    // ---- shipping / receiving / tracking -------------------------------
+
+    [Fact]
+    public async Task GetShipments_lists_and_filters_by_customer()
+    {
+        var all = await _repo.GetShipmentsAsync(1, 25, customerId: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, all.TotalCount);
+
+        var byCust = await _repo.GetShipmentsAsync(1, 25, customerId: 4001, orderBy: null, CancellationToken.None);
+        Assert.Single(byCust.Items);
+        Assert.Equal(8801, byCust.Items[0].PackingList);
+    }
+
+    [Fact]
+    public async Task GetShipment_returns_one_and_null_for_unknown()
+    {
+        var s = await _repo.GetShipmentAsync(8801, CancellationToken.None);
+        Assert.Equal(1, s!.ShipmentStatus);
+        Assert.Null(await _repo.GetShipmentAsync(999999, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetReceivingBols_lists_and_filters_by_status()
+    {
+        var all = await _repo.GetReceivingBolsAsync(1, 25, customerId: null, status: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, all.TotalCount);
+
+        var open = await _repo.GetReceivingBolsAsync(1, 25, customerId: null, status: 0, orderBy: null, CancellationToken.None);
+        Assert.Single(open.Items);
+        Assert.Equal("BOL-IN-002", open.Items[0].Bol);
+    }
+
+    [Fact]
+    public async Task GetScanLogs_lists_newest_first_and_filters_by_job()
+    {
+        var all = await _repo.GetScanLogsAsync(1, 25, abJobNum: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(3, all.TotalCount);
+        Assert.Equal(3, all.Items[0].ScanId);   // scan_id DESC
+
+        var job1001 = await _repo.GetScanLogsAsync(1, 25, abJobNum: 1001, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, job1001.TotalCount);
+        Assert.All(job1001.Items, s => Assert.Equal(1001, s.AbJobNum));
+    }
+
+    [Fact]
+    public async Task GetJobScans_returns_scans_for_job()
+    {
+        var scans = await _repo.GetJobScansAsync(1001, CancellationToken.None);
+        Assert.Equal(2, scans.Count);
+        Assert.All(scans, s => Assert.Equal(1001, s.AbJobNum));
+    }
+
+    // ---- maintenance log -----------------------------------------------
+
+    [Fact]
+    public async Task GetMaintLogs_lists_newest_first_and_filters_by_status()
+    {
+        var all = await _repo.GetMaintLogsAsync(1, 25, status: null, groupDepartmentId: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, all.TotalCount);
+        Assert.Equal(3002, all.Items[0].MaintLogId);   // maint_log_id DESC
+
+        var open = await _repo.GetMaintLogsAsync(1, 25, status: "OPEN", groupDepartmentId: null, orderBy: null, CancellationToken.None);
+        Assert.Single(open.Items);
+        Assert.Equal(3001, open.Items[0].MaintLogId);
+    }
+
+    [Fact]
+    public async Task GetMaintLog_returns_one_and_null_for_unknown()
+    {
+        var entry = await _repo.GetMaintLogAsync(3002, CancellationToken.None);
+        Assert.Equal("CLOSED", entry!.MaintLogStatus);
+        Assert.Equal(2.5m, entry.LaborHours);
+        Assert.Null(await _repo.GetMaintLogAsync(999999, CancellationToken.None));
     }
 
     public void Dispose()
