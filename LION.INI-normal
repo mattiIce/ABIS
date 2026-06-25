@@ -1,0 +1,83 @@
+[APPLICATION]
+location=office
+@location=shop
+@location=scan
+
+
+
+[Database]
+@DBMS=O71 ORACLE v7.1
+DBMS=O90 Oracle9i (9.0.1)
+Database=
+UserId=
+DatabasePassword=
+LogPassword=
+@ServerName=@NT_ORACLE
+@ServerName=PDB_ABC01
+ServerName=BDB_ABC01
+@ServerName=@pdb_abc01
+@ServerName=@db02new_abc01
+LogId=
+Lock=
+DbParm=
+Prompt=0
+
+[EDI]
+reynolds_870_out=i:\data\edi_archive
+reynolds_856_out=i:\data\edi_archive
+reynolds_856_in=i:\data\edi_archive
+kaiser_870_out=i:\data\edi_archive
+kaiser_856_out=i:\data\edi_archive
+kaiser_856_in=i:\data\edi_archive
+alcan_856_out=i:\data\edi_archive
+alcan_870_out=i:\data\edi_archive
+alcan_856_in=i:\data\edi_archive
+ford_856_out=i:\data\edi_archive
+van_out = c:\import
+
+[EMAIL]
+email_out=c:\temp
+apps=C:\Program Files\Netscape\Communicator\Program\netscape.exe -compose 
+
+[QUOTATION]
+file_path = i:\data\quotation
+
+[ABCO]
+ford_supply_code=R0P7A
+DUNS=039630926
+van_id=301007080
+gm_communication_code=ALV
+
+[ALCAN]
+gs03_gm_856 = GM
+gs03_ford_856 = FORD
+
+[REPORT]
+file_path =i:\data\report
+
+[FOLDERS]
+@job_folder_base=P:\JobFolder\
+job_folder_base=\\Albl-pdc\ejobfolder$
+@job_folder_base=Y:\
+scan_base=s:\
+abis_base=C:\Abis\
+
+[QC]
+file_path = \\nt_server_4300\quality
+
+[FRAME]
+@default_frame=w_da_frame
+@default_frame=dual
+@default_sheet=w_scale_item_selection
+
+[SCAN]
+station = 2
+folder_base = \\albl-pdc\ejobfolder$
+local_folder_base = c:\scanner
+
+
+[SCALE]
+Scale_mode=simulate
+@Scale_mode=real
+scale_printer=Zebra  Z4M Plus (200dpi)
+Save_then_print_mode=NO

@@ -1,0 +1,22 @@
+[DataBase]
+DBMS=O73 ORACLE 7.3
+Database=
+UserId=
+DatabasePassword = 
+LogId=bl110
+LogPassword=albl
+ServerName=@pdb_abc01
+DbParm=
+[OPCItems]
+RemoteHost=bl110
+DeviceName=Device110.
+Idle=idle
+Continue=continue
+Spm=spm2
+Spmchange=spmchange
+Cntreset1=cntreset1
+Cntreset2=cntreset2
+Strokecnt1=strokecnt1
+Strokecnt2=strokecnt1b
+Strokecnt3=strokecnt2
+Bypass=bypass
