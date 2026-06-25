@@ -21,7 +21,7 @@ PLCs over OPC).
 |---|---|
 | [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md) | **Start here to continue** — handoff guide: current state, prioritized next steps, environment notes, the module-slice recipe, and solved gotchas. |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | As-is architecture: stack, 2-tier topology, the two app targets (`lion` + the `da` data-acquisition app), module map, integration surface, the Aug-2025 PB migration, and build-readiness issues. |
-| [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | Partial database model (20 tables / 140 columns) recovered from the DataWindow sources, with explicit and inferred relationships. |
+| [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | **Full database model (412 tables)** recovered from a live Oracle data-dictionary dump of the `DBO` schema — real columns, PKs, FKs, indexes, and sequences. Supersedes the earlier partial DataWindow-inferred model. |
 | [`docs/OBJECT_INVENTORY.md`](docs/OBJECT_INVENTORY.md) | Approximate object inventory (~1,345 DataWindows, ~588 windows, …) recovered from the compiled libraries, per-library and grouped by domain. |
 | [`docs/MODERNIZATION_ROADMAP.md`](docs/MODERNIZATION_ROADMAP.md) | Strategic options, a recommended hybrid/strangler-fig approach, and a phased plan with concrete next steps. |
 | [`docs/PHASE3_PILOT_PLAN.md`](docs/PHASE3_PILOT_PLAN.md) | The Phase 3 bake-off: piloting Appeon PowerServer vs. greenfield-on-the-API, with a scoring rubric and candidate modules. |
@@ -32,12 +32,17 @@ The docs are backed by deterministic extractors (Python 3, standard library
 only — no dependencies). Re-run them any time the sources change:
 
 ```sh
-python3 tools/extract_schema.py .      # -> docs/data-model/schema.json + DATA_MODEL tables
+python3 tools/ingest_oracle_schema.py  # live Oracle dump -> docs/data-model/oracle_schema.json + docs/DATA_MODEL.md
+python3 tools/extract_schema.py .      # DataWindow cross-check -> docs/data-model/schema.json
 python3 tools/extract_inventory.py .   # -> docs/inventory/objects.json
 ```
 
+- `tools/ingest_oracle_schema.py` parses a live Oracle data-dictionary dump
+  (`docs/data-model/oracle_schema.txt`, produced by `tools/oracle_introspect.sql`)
+  into the full schema — this is the **authoritative** source for `DATA_MODEL.md`.
 - `tools/extract_schema.py` parses the exported DataWindow/query sources
-  (`*.srd`, `*.srq`) for `table.column` bindings, types, and joins.
+  (`*.srd`, `*.srq`) for `table.column` bindings, types, and joins (now a partial
+  cross-check; superseded by the live model above).
 - `tools/extract_inventory.py` scans the compiled `*.pbl` libraries (ANSI **and**
   UTF-16LE, since the live libraries are Unicode after the 2025 migration) for
   object names, grouped by PowerBuilder naming convention.
