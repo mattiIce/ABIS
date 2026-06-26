@@ -51,6 +51,12 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS edi_log;
             DROP TABLE IF EXISTS edi_type;
             DROP TABLE IF EXISTS customer_edi;
+            DROP TABLE IF EXISTS scrap_type;
+            DROP TABLE IF EXISTS product_type;
+            DROP TABLE IF EXISTS recovery_report_customer;
+            DROP TABLE IF EXISTS cust_scrap_type_needed;
+            DROP TABLE IF EXISTS opc_log;
+            DROP TABLE IF EXISTS opc_log_details;
             DROP TABLE IF EXISTS sales_quote;
             DROP TABLE IF EXISTS sales_reminder;
             DROP TABLE IF EXISTS sales_probability;
