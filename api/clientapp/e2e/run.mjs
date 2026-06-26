@@ -23,6 +23,7 @@ import {
   PartWrite,
   CarrierWrite,
   ScanLogWrite,
+  SketchWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -109,6 +110,20 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
     bol: 'E2E-BOL', customerId: 4001, createdBy: 'e2e', status: 1,
   }));
   assert.equal(updated.status, 1);
+});
+
+// The sketches SPA's flow: create a sketch, then load + replace it (typed).
+test('sketches flow: create, get, update sketch (typed)', async () => {
+  const created = await client.createSketch(new SketchWrite({
+    sketchName: 'E2E-SKETCH', sketchStatus: 1, sketchNotes: 'e2e notes',
+  }));
+  assert.ok(created.sketchId > 0);
+  const got = await client.getSketch(created.sketchId);
+  assert.equal(got.sketchName, 'E2E-SKETCH');
+  const updated = await client.updateSketch(created.sketchId, new SketchWrite({
+    sketchName: 'E2E-SKETCH', sketchStatus: 0, sketchNotes: 'updated',
+  }));
+  assert.equal(updated.sketchStatus, 0);
 });
 
 // The scan SPA's flow: record a scan (append-only), then read it + list by job (typed).
