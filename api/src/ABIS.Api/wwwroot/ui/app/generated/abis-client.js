@@ -10807,6 +10807,7 @@ export class TempTestResult {
     }
     init(_data) {
         if (_data) {
+            this.coilOrgNum = _data["coilOrgNum"];
             this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : undefined;
             this.testType = _data["testType"];
             this.position = _data["position"];
@@ -10827,6 +10828,7 @@ export class TempTestResult {
     }
     toJSON(data) {
         data = typeof data === 'object' ? data : {};
+        data["coilOrgNum"] = this.coilOrgNum;
         data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : undefined;
         data["testType"] = this.testType;
         data["position"] = this.position;
@@ -10893,6 +10895,8 @@ export class TestResult {
     }
     init(_data) {
         if (_data) {
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.sourceId = _data["sourceId"];
             this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : undefined;
             this.testType = _data["testType"];
             this.position = _data["position"];
@@ -10913,6 +10917,8 @@ export class TestResult {
     }
     toJSON(data) {
         data = typeof data === 'object' ? data : {};
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["sourceId"] = this.sourceId;
         data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : undefined;
         data["testType"] = this.testType;
         data["position"] = this.position;

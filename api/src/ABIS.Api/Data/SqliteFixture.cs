@@ -90,10 +90,14 @@ public static class SqliteFixture
                 theoretical_unit_wt REAL, unit_price REAL, item_created_dttm TEXT,
                 PRIMARY KEY (order_abc_num, order_item_num));
 
+            -- Posted mechanical test results. The real PK is the composite
+            -- (coil_abc_num, position, created_date, source_id) per oracle_ddl.sql;
+            -- coil_abc_num ties a result to its coil, source_id to the capture source.
             CREATE TABLE pst_test_result (
-                id INTEGER PRIMARY KEY AUTOINCREMENT, created_date TEXT, test_type INTEGER, position TEXT,
-                yts_val REAL, uts_val REAL, elong_val REAL, n_val REAL, r_val REAL,
-                thickness REAL, width REAL);
+                coil_abc_num INTEGER, position TEXT, created_date TEXT, source_id INTEGER,
+                test_type INTEGER, yts_val REAL, uts_val REAL, elong_val REAL, n_val REAL, r_val REAL,
+                thickness REAL, width REAL,
+                PRIMARY KEY (coil_abc_num, position, created_date, source_id));
 
             CREATE TABLE customer (
                 customer_id INTEGER PRIMARY KEY, customer_full_name TEXT, customer_short_name TEXT,
@@ -109,8 +113,11 @@ public static class SqliteFixture
                 scrap_type INTEGER, scrap_net_wt REAL, scrap_tare_wt REAL, scrap_location TEXT,
                 scrap_notes TEXT, skid_scrap_status INTEGER, scrap_date TEXT);
 
+            -- In-progress mechanical test results (heap table in Oracle — no PK). The
+            -- surrogate id is a SQLite convenience; coil_org_num ties a working result to
+            -- its coil by org number (the legacy capture path populates it).
             CREATE TABLE temp_test_result (
-                id INTEGER PRIMARY KEY AUTOINCREMENT, created_date TEXT, test_type INTEGER, position TEXT,
+                id INTEGER PRIMARY KEY AUTOINCREMENT, coil_org_num TEXT, created_date TEXT, test_type INTEGER, position TEXT,
                 yts REAL, uts REAL, elongation REAL, n REAL, r REAL, thickness REAL, width REAL);
 
             CREATE TABLE process_partial_skid (
@@ -445,14 +452,14 @@ public static class SqliteFixture
             });
 
         conn.Execute("""
-            INSERT INTO pst_test_result (created_date, test_type, position, yts_val, uts_val, elong_val, n_val, r_val, thickness, width)
-            VALUES (:CreatedDate, :TestType, :Position, :YtsVal, :UtsVal, :ElongVal, :NVal, :RVal, :Thickness, :Width)
+            INSERT INTO pst_test_result (coil_abc_num, source_id, created_date, test_type, position, yts_val, uts_val, elong_val, n_val, r_val, thickness, width)
+            VALUES (:CoilAbcNum, :SourceId, :CreatedDate, :TestType, :Position, :YtsVal, :UtsVal, :ElongVal, :NVal, :RVal, :Thickness, :Width)
             """,
             new[]
             {
-                new { CreatedDate = (DateTime?)d, TestType = (int?)1, Position = "T", YtsVal = 45.0m, UtsVal = 50.0m, ElongVal = 12.5m, NVal = 0.25m, RVal = 0.5m, Thickness = 0.125m, Width = 48.5m },
-                new { CreatedDate = (DateTime?)d.AddHours(1), TestType = (int?)3, Position = "M", YtsVal = 46.0m, UtsVal = 51.0m, ElongVal = 12.0m, NVal = 0.25m, RVal = 0.5m, Thickness = 0.125m, Width = 48.5m },
-                new { CreatedDate = (DateTime?)d.AddHours(2), TestType = (int?)4, Position = "B", YtsVal = 44.0m, UtsVal = 49.0m, ElongVal = 13.0m, NVal = 0.25m, RVal = 0.5m, Thickness = 0.0625m, Width = 60.0m }
+                new { CoilAbcNum = 5001L, SourceId = 1L, CreatedDate = (DateTime?)d, TestType = (int?)1, Position = "T", YtsVal = 45.0m, UtsVal = 50.0m, ElongVal = 12.5m, NVal = 0.25m, RVal = 0.5m, Thickness = 0.125m, Width = 48.5m },
+                new { CoilAbcNum = 5001L, SourceId = 1L, CreatedDate = (DateTime?)d.AddHours(1), TestType = (int?)3, Position = "M", YtsVal = 46.0m, UtsVal = 51.0m, ElongVal = 12.0m, NVal = 0.25m, RVal = 0.5m, Thickness = 0.125m, Width = 48.5m },
+                new { CoilAbcNum = 5003L, SourceId = 1L, CreatedDate = (DateTime?)d.AddHours(2), TestType = (int?)4, Position = "B", YtsVal = 44.0m, UtsVal = 49.0m, ElongVal = 13.0m, NVal = 0.25m, RVal = 0.5m, Thickness = 0.0625m, Width = 60.0m }
             });
 
         conn.Execute("""
@@ -489,13 +496,13 @@ public static class SqliteFixture
             });
 
         conn.Execute("""
-            INSERT INTO temp_test_result (created_date, test_type, position, yts, uts, elongation, n, r, thickness, width)
-            VALUES (:CreatedDate, :TestType, :Position, :Yts, :Uts, :Elongation, :N, :R, :Thickness, :Width)
+            INSERT INTO temp_test_result (coil_org_num, created_date, test_type, position, yts, uts, elongation, n, r, thickness, width)
+            VALUES (:CoilOrgNum, :CreatedDate, :TestType, :Position, :Yts, :Uts, :Elongation, :N, :R, :Thickness, :Width)
             """,
             new[]
             {
-                new { CreatedDate = (DateTime?)d, TestType = (int?)1, Position = "T", Yts = 40.0m, Uts = 48.0m, Elongation = 11.0m, N = 0.24m, R = 0.48m, Thickness = 0.125m, Width = 48.5m },
-                new { CreatedDate = (DateTime?)d.AddHours(1), TestType = (int?)1, Position = "M", Yts = 41.0m, Uts = 49.0m, Elongation = 11.5m, N = 0.24m, R = 0.48m, Thickness = 0.125m, Width = 48.5m }
+                new { CoilOrgNum = "ORG-5001", CreatedDate = (DateTime?)d, TestType = (int?)1, Position = "T", Yts = 40.0m, Uts = 48.0m, Elongation = 11.0m, N = 0.24m, R = 0.48m, Thickness = 0.125m, Width = 48.5m },
+                new { CoilOrgNum = "ORG-5001", CreatedDate = (DateTime?)d.AddHours(1), TestType = (int?)1, Position = "M", Yts = 41.0m, Uts = 49.0m, Elongation = 11.5m, N = 0.24m, R = 0.48m, Thickness = 0.125m, Width = 48.5m }
             });
 
         conn.Execute("""

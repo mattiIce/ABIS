@@ -1,0 +1,26 @@
+$PBExportHeader$d_pn_sheet_type.srd
+$PBExportComments$list all type currently in the system
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=442 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=part_num_id dbname="part_num.part_num_id" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=sheet_type dbname="part_num.sheet_type" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=customer_id dbname="part_num.customer_id" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=item_desc dbname="part_num.item_desc" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"part_num~" ) COLUMN(NAME=~"part_num.part_num_id~") COLUMN(NAME=~"part_num.sheet_type~") COLUMN(NAME=~"part_num.customer_id~") COLUMN(NAME=~"part_num.item_desc~")) " update="PART_NUM" updatewhere=1 updatekeyinplace=no )
+text(band=detail alignment="1" text="Part Num Id:" border="0" color="33554432" x="29" y="3" height="51" width="271" html.valueishtml="0"  name=part_num_id_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=10 border="0" color="33554432" x="315" y="3" height="61" width="263" format="[general]" html.valueishtml="0"  name=part_num_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Sheet Type:" border="0" color="33554432" x="29" y="112" height="51" width="271" html.valueishtml="0"  name=sheet_type_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=20 border="0" color="33554432" x="315" y="112" height="61" width="417" format="[general]" html.valueishtml="0"  name=sheet_type visible="1" edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Customer Id:" border="0" color="33554432" x="29" y="221" height="51" width="271" html.valueishtml="0"  name=customer_id_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=30 border="0" color="33554432" x="315" y="221" height="61" width="263" format="[general]" html.valueishtml="0"  name=customer_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Item Desc:" border="0" color="33554432" x="29" y="330" height="51" width="271" html.valueishtml="0"  name=item_desc_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=40 border="0" color="33554432" x="315" y="330" height="61" width="2809" format="[general]" html.valueishtml="0"  name=item_desc visible="1" edit.limit=255 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

@@ -1,0 +1,80 @@
+$PBExportHeader$d_coil_list_editor_by_bol.srd
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+header(height=64 color="536870912" )
+summary(height=70 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=74 color="536870912" )
+table(column=(type=char(32) updatewhereclause=yes name=coil_number dbname="inbound_coil.coil_number" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=inbound_coil_status_status dbname="inbound_coil_status.status" values="Coming	0/Imported	1/Damaged	2/Pending	3/" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=inbound_coil_status_damaged_fault dbname="inbound_coil_status.damaged_fault" values="No Damage	0/Producer	1/Carrier	2/Current Proc'r//WH	3/Undetermined	4/Previous Proc'r//WH	5/Previous Int'l Proc'r	6/" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=inbound_coil_status_damaged_code dbname="inbound_coil_status.damaged_code" values="No Damage	0/Carrier Damage//WH	420/Coil Break	220/Collapsed Coil//WH	222/Cracks	227/Dents	104/Edge Damage	106/Friction	277/Loading Damage	454/Loss(General)	259/Order Entry Error	472/Physical Properties	481/Stain	152/Tarped Improperly	371/Texture	372/Twist	374/" )
+ column=(type=char(40) updatewhereclause=yes name=alloy dbname="inbound_coil.alloy" )
+ column=(type=char(8) updatewhereclause=yes name=temper dbname="inbound_coil.temper" )
+ column=(type=decimal(0) updatewhereclause=yes name=net_weight dbname="inbound_coil.net_weight" )
+ column=(type=decimal(0) updatewhereclause=yes name=gross_weight dbname="inbound_coil.gross_weight" )
+ column=(type=decimal(2) updatewhereclause=yes name=lineal_feed dbname="inbound_coil.lineal_feed" )
+ column=(type=decimal(2) updatewhereclause=yes name=coil_width dbname="inbound_coil.coil_width" )
+ column=(type=decimal(4) updatewhereclause=yes name=coil_gauge dbname="inbound_coil.coil_gauge" )
+ column=(type=number updatewhereclause=yes name=density dbname="inbound_coil.density" )
+ column=(type=char(40) updatewhereclause=yes name=lot dbname="inbound_coil.lot" )
+ column=(type=char(40) updatewhereclause=yes name=pack_id dbname="inbound_coil.pack_id" )
+ column=(type=decimal(0) updatewhereclause=yes key=yes name=inbound_coil_status_edi_file_id dbname="inbound_coil_status.edi_file_id" )
+ column=(type=char(40) updatewhereclause=yes key=yes name=inbound_coil_status_bol dbname="inbound_coil_status.bol" )
+ column=(type=decimal(0) updatewhereclause=yes key=yes name=inbound_coil_status_item_num dbname="inbound_coil_status.item_num" )
+ retrieve="  SELECT ~"INBOUND_COIL~".~"COIL_NUMBER~",
+   		~"INBOUND_COIL_STATUS~".~"STATUS~",   
+         ~"INBOUND_COIL_STATUS~".~"DAMAGED_FAULT~",   
+         ~"INBOUND_COIL_STATUS~".~"DAMAGED_CODE~",   
+         ~"INBOUND_COIL~".~"ALLOY~",   
+         ~"INBOUND_COIL~".~"TEMPER~",   
+         ~"INBOUND_COIL~".~"NET_WEIGHT~",   
+         ~"INBOUND_COIL~".~"GROSS_WEIGHT~",   
+         ~"INBOUND_COIL~".~"LINEAL_FEED~",   
+         ~"INBOUND_COIL~".~"COIL_WIDTH~",   
+         ~"INBOUND_COIL~".~"COIL_GAUGE~",   
+         ~"INBOUND_COIL~".~"DENSITY~",   
+         ~"INBOUND_COIL~".~"LOT~",   
+         ~"INBOUND_COIL~".~"PACK_ID~",
+			~"INBOUND_COIL_STATUS~".~"EDI_FILE_ID~", 
+			~"INBOUND_COIL_STATUS~".~"BOL~",
+			~"INBOUND_COIL_STATUS~".~"ITEM_NUM~"
+    FROM ~"INBOUND_COIL~", ~"INBOUND_COIL_STATUS~"   
+    WHERE ( ~"INBOUND_COIL~".~"EDI_FILE_ID~" = ~"INBOUND_COIL_STATUS~".~"EDI_FILE_ID~" ) AND 
+			( ~"INBOUND_COIL~".~"BOL~" = ~"INBOUND_COIL_STATUS~".~"BOL~" ) AND 
+         ( ~"INBOUND_COIL~".~"ITEM_NUM~" = ~"INBOUND_COIL_STATUS~".~"ITEM_NUM~" ) AND  
+         ( ~"INBOUND_COIL~".~"BOL~" = :as_bol ) AND  
+         ( ~"INBOUND_COIL~".~"EDI_FILE_ID~" = :ai_edi_file_id ) AND  
+         ( ~"INBOUND_COIL~".~"ITEM_NUM~" = :ai_item_num )   " update="INBOUND_COIL_STATUS" updatewhere=0 updatekeyinplace=no arguments=(("as_bol", string),("ai_edi_file_id", number),("ai_item_num", number)) )
+text(band=header alignment="2" text="Alloy"border="6" color="0" x="1551" y="3" height="51" width="143"  name=alloy_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Temper"border="6" color="0" x="1712" y="3" height="51" width="223"  name=temper_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Net Weight"border="6" color="0" x="1949" y="3" height="51" width="318"  name=net_weight_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Gross Weight"border="6" color="0" x="2282" y="3" height="51" width="355"  name=gross_weight_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Lineal Feed"border="6" color="0" x="2651" y="3" height="51" width="333"  name=lineal_feed_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Coil Width"border="6" color="0" x="2999" y="3" height="51" width="289"  name=coil_width_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Coil Gauge"border="6" color="0" x="3302" y="3" height="51" width="318"  name=coil_gauge_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Density"border="6" color="0" x="3635" y="3" height="51" width="219"  name=density_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Status:"border="6" color="0" x="417" y="3" height="51" width="205"  name=status_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Damaged Fault"border="6" color="0" x="636" y="3" height="51" width="439"  name=damaged_fault_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Damaged Code"border="6" color="0" x="1086" y="3" height="51" width="446"  name=damaged_code_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Lot"border="6" color="0" x="3869" y="3" height="51" width="399"  name=lot_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Pack Id:"border="6" color="0" x="4279" y="3" height="51" width="410"  name=pack_id_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+text(band=header alignment="2" text="Coil Org Number"border="6" color="0" x="0" y="3" height="51" width="402"  name=coil_number_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=6 alignment="2" tabsequence=32766 border="5" color="0" x="1712" y="3" height="61" width="223" format="[general]"  name=temper edit.limit=8 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=7 alignment="2" tabsequence=32766 border="5" color="0" x="1949" y="3" height="61" width="318" format="[general]"  name=net_weight edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=8 alignment="2" tabsequence=32766 border="5" color="0" x="2282" y="3" height="61" width="355" format="[general]"  name=gross_weight edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=9 alignment="2" tabsequence=32766 border="5" color="0" x="2651" y="3" height="61" width="333" format="[general]"  name=lineal_feed edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=10 alignment="2" tabsequence=32766 border="5" color="0" x="2999" y="3" height="61" width="289" format="[general]"  name=coil_width edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=11 alignment="2" tabsequence=32766 border="5" color="0" x="3302" y="3" height="61" width="318" format="[general]"  name=coil_gauge edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=12 alignment="2" tabsequence=32766 border="5" color="0" x="3635" y="3" height="61" width="219" format="[general]"  name=density edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=3 alignment="2" tabsequence=10 border="5" color="0" x="636" y="0" height="61" width="439" format="[general]"  name=inbound_coil_status_damaged_fault ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.useasborder=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=4 alignment="2" tabsequence=20 border="5" color="0" x="1086" y="0" height="61" width="446" format="[general]"  name=inbound_coil_status_damaged_code ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.useasborder=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=13 alignment="2" tabsequence=32766 border="5" color="0" x="3869" y="3" height="61" width="399" format="[general]"  name=lot edit.limit=40 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=5 alignment="2" tabsequence=32766 border="5" color="0" x="1551" y="3" height="61" width="143" format="[general]"  name=alloy edit.limit=40 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="5" color="0" x="417" y="3" height="61" width="205" format="[general]"  name=inbound_coil_status_status ddlb.limit=0 ddlb.allowedit=no ddlb.case=any  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=14 alignment="2" tabsequence=32766 border="5" color="0" x="4279" y="3" height="61" width="410" format="[general]"  name=pack_id edit.limit=40 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="5" color="0" x="7" y="6" height="51" width="402" format="[general]"  name=coil_number edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=17 alignment="0" tabsequence=32766 border="0" color="0" x="4707" y="6" height="51" width="4" format="[general]"  name=inbound_coil_status_item_num edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="82042848" )
+column(band=detail id=15 alignment="0" tabsequence=32766 border="0" color="0" x="4707" y="13" height="51" width="4" format="[General]"  name=inbound_coil_status_edi_file_id edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=16 alignment="0" tabsequence=32766 border="0" color="0" x="4707" y="16" height="42" width="4" format="[general]"  name=inbound_coil_status_bol edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

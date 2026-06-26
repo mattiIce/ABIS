@@ -9346,6 +9346,10 @@
       "TempTestResult": {
         "type": "object",
         "properties": {
+          "coilOrgNum": {
+            "type": "string",
+            "nullable": true
+          },
           "createdDate": {
             "type": "string",
             "format": "date-time",
@@ -9437,6 +9441,16 @@
       "TestResult": {
         "type": "object",
         "properties": {
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "sourceId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
           "createdDate": {
             "type": "string",
             "format": "date-time",

@@ -1,0 +1,63 @@
+$PBExportHeader$d_order_item_4part.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=68 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=68 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=order_abc_num dbname="order_item.order_abc_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_num dbname="order_item.order_item_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=customer_id dbname="part_num.customer_id" )
+ column=(type=char(18) updatewhereclause=yes name=customer_short_name dbname="customer.customer_short_name" )
+ column=(type=decimal(0) updatewhereclause=yes name=part_num_id dbname="part_num.part_num_id" )
+ column=(type=char(255) updatewhereclause=yes name=item_desc dbname="part_num.item_desc" )
+ column=(type=decimal(0) updatewhereclause=yes name=item_status dbname="order_item.item_status" )
+ column=(type=char(8) updatewhereclause=yes name=item_status_desc dbname="item_status_desc" )
+ retrieve="select   order_item.order_abc_num,
+         order_item.order_item_num,
+         part_num.customer_id, 
+         customer.customer_short_name, 
+         part_num.part_num_id, 
+         part_num.item_desc,
+         order_item.item_status,         
+         case order_item.item_status
+           when 0 then
+             'Done'
+           when 2 then
+             'New'
+           when 3 then
+             'Canceled'
+           when 4 then
+             'OnHold'
+           else
+             '??????'
+         end item_status_desc
+from     part_num
+         join order_item on part_num.part_num_id = order_item.part_num_id
+         join customer on customer.customer_id = part_num.customer_id
+where    part_num.part_num_id = :al_part_num_id
+and      order_item.item_status not in (0, 3) /* 0 - Done, 3 - Canceled. These statuses are OK to obsolete a part */
+order by order_item.order_abc_num,
+         order_item.order_item_num" arguments=(("al_part_num_id", number)) )
+text(band=header alignment="0" text="Order Abc Num" border="2" color="33554432" x="5" y="4" height="56" width="384" html.valueishtml="0"  name=order_abc_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Order Item Num" border="2" color="33554432" x="407" y="4" height="56" width="402" html.valueishtml="0"  name=order_item_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Customer Id" border="2" color="33554432" x="827" y="4" height="56" width="315" html.valueishtml="0"  name=customer_id_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Customer Short Name" border="2" color="33554432" x="1161" y="4" height="56" width="562" html.valueishtml="0"  name=customer_short_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Part Num Id" border="2" color="33554432" x="1742" y="4" height="56" width="288" html.valueishtml="0"  name=part_num_id_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Item Desc" border="2" color="33554432" x="2048" y="4" height="56" width="951" html.valueishtml="0"  name=item_desc_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Item Status" border="2" color="33554432" x="3017" y="4" height="56" width="288" html.valueishtml="0"  name=item_status_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Item Status Desc" border="2" color="33554432" x="3323" y="4" height="56" width="430" html.valueishtml="0"  name=item_status_desc_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="2" color="33554432" x="5" y="4" height="56" width="384" format="[general]" html.valueishtml="0"  name=order_abc_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="2" color="33554432" x="407" y="4" height="56" width="402" format="[general]" html.valueishtml="0"  name=order_item_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="2" color="33554432" x="827" y="4" height="56" width="315" format="[general]" html.valueishtml="0"  name=customer_id visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="2" color="33554432" x="1161" y="4" height="56" width="562" format="[general]" html.valueishtml="0"  name=customer_short_name visible="1" edit.limit=18 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="2" color="33554432" x="1742" y="4" height="56" width="288" format="[general]" html.valueishtml="0"  name=part_num_id visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="2" color="33554432" x="2048" y="4" height="56" width="951" format="[general]" html.valueishtml="0"  name=item_desc visible="1" edit.limit=255 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="2" color="33554432" x="3017" y="4" height="56" width="288" format="[general]" html.valueishtml="0"  name=item_status visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=8 alignment="0" tabsequence=32766 border="2" color="33554432" x="3323" y="4" height="56" width="430" format="[general]" html.valueishtml="0"  name=item_status_desc visible="1" edit.limit=8 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

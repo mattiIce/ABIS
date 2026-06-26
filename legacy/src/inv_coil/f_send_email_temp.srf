@@ -1,0 +1,48 @@
+$PBExportHeader$f_send_email_temp.srf
+global type f_send_email_temp from function_object
+end type
+
+forward prototypes
+global function integer f_send_email_temp ()
+end prototypes
+
+global function integer f_send_email_temp ();MailSession ims_mailsess
+MailReturncode imrc_returncode
+MailMessage imm_mailmessage
+MailRecipient imrp_mailrecipient
+
+Ims_mailsess = create MailSession
+
+Imrc_returncode = ims_mailsess.maillogon(maildownload!)
+	
+If imrc_returncode <> mailreturnsuccess! Then
+    Messagebox ("Warning", "Click OK on next screen to enable e-mail")
+    Imrc_returncode = ims_mailsess.maillogon(maildownload!)
+    If imrc_returncode <> mailreturnsuccess! Then
+          Messagebox ("ERROR", "Email session not established")
+          Return -1
+	End if
+End if
+
+imrp_mailrecipient.name = "jqni@albl.com"
+Imm_mailmessage.recipient[1] = imrp_mailrecipient
+Imm_mailmessage.subject = "test from powerbuilder"
+Imm_mailmessage.receiptrequested = FALSE
+Imm_mailmessage.notetext = "hi"
+Imrc_returncode = ims_mailsess.mailsend(imm_mailmessage)
+
+If imrc_returncode <> mailreturnsuccess! Then
+    Messagebox ("ERROR", "Email failed")
+    Return -1
+Else
+    //Messagebox ("Message", "Email sent")
+End if
+
+
+
+Ims_mailsess.maillogoff()
+Destroy ims_mailsess
+
+RETURN 1
+end function
+

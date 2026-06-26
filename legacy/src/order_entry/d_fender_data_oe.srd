@@ -1,0 +1,46 @@
+$PBExportHeader$d_fender_data_oe.srd
+$PBExportComments$fender's specification w/o picture
+release 9;
+datawindow(units=0 timer_interval=0 color=65280 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=416 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_item_num dbname="fender.order_item_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_abc_num dbname="fender.order_abc_num" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=fe_die1 dbname="fender.fe_die1" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=fe_die2 dbname="fender.fe_die2" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=fe_side dbname="fender.fe_side" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=fe_side_plus dbname="fender.fe_side_plus" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=fe_side_minus dbname="fender.fe_side_minus" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_part_num_id dbname="order_item.part_num_id" )
+ retrieve="  SELECT ~"FENDER~".~"ORDER_ITEM_NUM~",   
+         ~"FENDER~".~"ORDER_ABC_NUM~",   
+         ~"FENDER~".~"FE_DIE1~",   
+         ~"FENDER~".~"FE_DIE2~",   
+         ~"FENDER~".~"FE_SIDE~",   
+         ~"FENDER~".~"FE_SIDE_PLUS~",   
+         ~"FENDER~".~"FE_SIDE_MINUS~",   
+         ~"ORDER_ITEM~".~"PART_NUM_ID~"  
+    FROM ~"FENDER~",   
+         ~"ORDER_ITEM~"  
+   WHERE ( ~"FENDER~".~"ORDER_ITEM_NUM~" = ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~" ) and
+			( ~"FENDER~".~"ORDER_ABC_NUM~" = ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" ) and  
+   		(~"FENDER~".~"ORDER_ABC_NUM~" = :al_order)    
+" update="FENDER" updatewhere=1 updatekeyinplace=yes arguments=(("al_order", number)) )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="5" color="0" x="1243" y="256" height="61" width="406" format="[general]" html.valueishtml="0"  name=fe_die1 visible="1" edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="5" color="0" x="1243" y="336" height="61" width="406" format="[general]" html.valueishtml="0"  name=fe_die2 visible="1" edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+text(band=detail alignment="1" text="Die1:" border="0" color="0" x="1068" y="259" height="51" width="143" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="Die2:" border="0" color="0" x="1068" y="339" height="51" width="143" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=7 alignment="1" tabsequence=32766 border="5" color="0" x="1243" y="176" height="61" width="406" format="[general]" html.valueishtml="0"  name=fe_side_minus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+text(band=detail alignment="1" text="Minus:" border="0" color="0" x="1024" y="182" height="51" width="187" html.valueishtml="0"  name=t_3 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=5 alignment="1" tabsequence=32766 border="5" color="0" x="1243" y="16" height="61" width="406" format="[general]" html.valueishtml="0"  name=fe_side visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+text(band=detail alignment="1" text="Width:" border="0" color="0" x="1031" y="22" height="51" width="179" html.valueishtml="0"  name=t_4 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=6 alignment="1" tabsequence=32766 border="5" color="0" x="1243" y="96" height="61" width="406" format="[general]" html.valueishtml="0"  name=fe_side_plus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+text(band=detail alignment="1" text="Plus:" border="0" color="0" x="1072" y="102" height="51" width="139" html.valueishtml="0"  name=t_5 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=8 alignment="0" tabsequence=0 border="0" color="0" x="73" y="99" height="51" width="947" format="[General]" html.valueishtml="0"  name=order_item_part_num_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

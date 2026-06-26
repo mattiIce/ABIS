@@ -109,8 +109,9 @@ public sealed class CustomerOrderWrite
 /// server-side on create.</summary>
 public sealed class OrderItemWrite
 {
-    /// <summary>Owning order (inferred FK). Optional for a standalone item; set by
-    /// the server when creating an order with embedded items.</summary>
+    /// <summary>Owning order — part of the order_item composite PK (confirmed real in
+    /// the back-check). Optional for a standalone item; set by the server when creating
+    /// an order with embedded items.</summary>
     public long? OrderAbcNum { get; set; }
     public string? EnduserPartNum { get; set; }
     public string? Alloy2 { get; set; }

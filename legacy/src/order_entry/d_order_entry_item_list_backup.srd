@@ -1,0 +1,126 @@
+$PBExportHeader$d_order_entry_item_list_backup.srd
+$PBExportComments$list items for an order in order entry window
+release 9;
+datawindow(units=0 timer_interval=0 color=80269524 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=61 color="536870912" )
+summary(height=3 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=64 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_item_num dbname="order_item.order_item_num" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=sheet_type dbname="order_item.sheet_type" values="Rectangle	Rectangle/Circle	Circle/Parallelogram	Parallelogram/Fender	Fender/Chevron	Chevron/Trapezoid	Trapezoid/L.Trapezoid	L.Trapezoid/R.Trapezoid	R.Trapezoid/Other	Other/Reinforcement	Reinforcement/Liftgate	Liftgate/" )
+ column=(type=char(22) update=yes updatewhereclause=yes name=enduser_part_num dbname="order_item.enduser_part_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=quantity dbname="order_item.quantity" )
+ column=(type=char(8) update=yes updatewhereclause=yes name=alloy2 dbname="order_item.alloy2" )
+ column=(type=char(8) update=yes updatewhereclause=yes name=temper dbname="order_item.temper" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=gauge dbname="order_item.gauge" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=supplier_code dbname="order_item.supplier_code" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=item_status dbname="order_item.item_status" values="Done	0/New	2/OnHold	4/Canceled	3/" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_abc_num dbname="order_item.order_abc_num" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=order_item_desc dbname="order_item.order_item_desc" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=quantity_plus dbname="order_item.quantity_plus" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=material_end_use dbname="order_item.material_end_use" )
+ column=(type=datetime update=yes updatewhereclause=yes name=item_due_date dbname="order_item.item_due_date" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=quantity_minus dbname="order_item.quantity_minus" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=max_skid_wt dbname="order_item.max_skid_wt" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=gauge_p dbname="order_item.gauge_p" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=gauge_m dbname="order_item.gauge_m" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=sh_toleranc_minus dbname="order_item.sh_toleranc_minus" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=surface dbname="order_item.surface" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=sh_tolerance_plus dbname="order_item.sh_tolerance_plus" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=flatness dbname="order_item.flatness" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=oil_stencil_interleave dbname="order_item.oil_stencil_interleave" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=processing_other_spec dbname="order_item.processing_other_spec" )
+ column=(type=char(100) update=yes updatewhereclause=yes name=packaging_spec1 dbname="order_item.packaging_spec1" )
+ column=(type=char(100) update=yes updatewhereclause=yes name=packaging_spec2 dbname="order_item.packaging_spec2" )
+ column=(type=char(100) update=yes updatewhereclause=yes name=packaging_spec3 dbname="order_item.packaging_spec3" )
+ column=(type=char(100) update=yes updatewhereclause=yes name=packaging_spec4 dbname="order_item.packaging_spec4" )
+ column=(type=char(100) update=yes updatewhereclause=yes name=packaging_spec5 dbname="order_item.packaging_spec5" )
+ column=(type=char(100) update=yes updatewhereclause=yes name=packaging_spec6 dbname="order_item.packaging_spec6" )
+ column=(type=char(100) update=yes updatewhereclause=yes name=packaging_spec7 dbname="order_item.packaging_spec7" )
+ column=(type=char(100) update=yes updatewhereclause=yes name=packaging_bands dbname="order_item.packaging_bands" )
+ column=(type=char(100) update=yes updatewhereclause=yes name=packaging_other_spec dbname="order_item.packaging_other_spec" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=item_note dbname="order_item.item_note" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=unit_price dbname="order_item.unit_price" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=theoretical_unit_wt dbname="order_item.theoretical_unit_wt" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=pieces_skid dbname="order_item.pieces_skid" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=pieces_skid_plus dbname="order_item.pieces_skid_plus" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=pieces_skid_minus dbname="order_item.pieces_skid_minus" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=item_attachments dbname="order_item.item_attachments" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=govt_contract_num dbname="order_item.govt_contract_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=stacks_skid dbname="order_item.stacks_skid" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=item_charge dbname="order_item.item_charge" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=part_num_id dbname="order_item.part_num_id" )
+ column=(type=char(3) update=yes updatewhereclause=yes name=part_copied dbname="order_item.part_copied" )
+ retrieve="  SELECT ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~",   
+         ~"ORDER_ITEM~".~"SHEET_TYPE~",   
+         ~"ORDER_ITEM~".~"ENDUSER_PART_NUM~",   
+         ~"ORDER_ITEM~".~"QUANTITY~",   
+         ~"ORDER_ITEM~".~"ALLOY2~",   
+         ~"ORDER_ITEM~".~"TEMPER~",   
+         ~"ORDER_ITEM~".~"GAUGE~",   
+         ~"ORDER_ITEM~".~"SUPPLIER_CODE~",   
+         ~"ORDER_ITEM~".~"ITEM_STATUS~",   
+         ~"ORDER_ITEM~".~"ORDER_ABC_NUM~",   
+         ~"ORDER_ITEM~".~"ORDER_ITEM_DESC~",   
+         ~"ORDER_ITEM~".~"QUANTITY_PLUS~",   
+         ~"ORDER_ITEM~".~"MATERIAL_END_USE~",   
+         ~"ORDER_ITEM~".~"ITEM_DUE_DATE~",   
+         ~"ORDER_ITEM~".~"QUANTITY_MINUS~",   
+         ~"ORDER_ITEM~".~"MAX_SKID_WT~",   
+         ~"ORDER_ITEM~".~"GAUGE_P~",   
+         ~"ORDER_ITEM~".~"GAUGE_M~",   
+         ~"ORDER_ITEM~".~"SH_TOLERANC_MINUS~",   
+         ~"ORDER_ITEM~".~"SURFACE~",   
+         ~"ORDER_ITEM~".~"SH_TOLERANCE_PLUS~",   
+         ~"ORDER_ITEM~".~"FLATNESS~",   
+         ~"ORDER_ITEM~".~"OIL_STENCIL_INTERLEAVE~",   
+         ~"ORDER_ITEM~".~"PROCESSING_OTHER_SPEC~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC1~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC2~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC3~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC4~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC5~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC6~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC7~",   
+         ~"ORDER_ITEM~".~"PACKAGING_BANDS~",   
+         ~"ORDER_ITEM~".~"PACKAGING_OTHER_SPEC~",   
+         ~"ORDER_ITEM~".~"ITEM_NOTE~",   
+         ~"ORDER_ITEM~".~"UNIT_PRICE~",   
+         ~"ORDER_ITEM~".~"THEORETICAL_UNIT_WT~",   
+         ~"ORDER_ITEM~".~"PIECES_SKID~",   
+         ~"ORDER_ITEM~".~"PIECES_SKID_PLUS~",   
+         ~"ORDER_ITEM~".~"PIECES_SKID_MINUS~",   
+         ~"ORDER_ITEM~".~"ITEM_ATTACHMENTS~",   
+         ~"ORDER_ITEM~".~"GOVT_CONTRACT_NUM~",   
+         ~"ORDER_ITEM~".~"STACKS_SKID~",
+			~"ORDER_ITEM~".~"ITEM_CHARGE~",
+			~"ORDER_ITEM~".~"PART_NUM_ID~",
+			~"ORDER_ITEM~".~"PART_COPIED~" 
+    FROM ~"ORDER_ITEM~"  
+   WHERE ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" = :ab_job_num    
+" update="ORDER_ITEM" updatewhere=2 updatekeyinplace=yes arguments=(("ab_job_num", number)) )
+text(band=header alignment="2" text="Item" border="6" color="0" x="7" y="10" height="48" width="128" html.valueishtml="0"  name=order_item_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+text(band=header alignment="2" text="Sheet Type" border="6" color="0" x="146" y="10" height="48" width="406" html.valueishtml="0"  name=sheet_type_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+text(band=header alignment="2" text="User Part #" border="6" color="0" x="563" y="10" height="48" width="516" html.valueishtml="0"  name=enduser_part_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+text(band=header alignment="2" text="Quan. lbs" border="6" color="0" x="1090" y="10" height="48" width="271" html.valueishtml="0"  name=quantity_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+text(band=header alignment="2" text="Alloy" border="6" color="0" x="1371" y="10" height="48" width="161" html.valueishtml="0"  name=alloy2_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+text(band=header alignment="2" text="Temp." border="6" color="0" x="1540" y="10" height="48" width="227" html.valueishtml="0"  name=temper_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+text(band=header alignment="2" text="Gauge" border="6" color="0" x="1766" y="10" height="48" width="230" html.valueishtml="0"  name=gauge_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+text(band=header alignment="2" text="Supplier Code" border="6" color="0" x="2000" y="10" height="48" width="527" html.valueishtml="0"  name=supplier_code_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+text(band=header alignment="2" text="Status" border="6" color="0" x="2534" y="10" height="48" width="384" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="12632256" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="5" color="0" x="4" y="0" height="58" width="128" format="[general]" html.valueishtml="0"  name=order_item_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+column(band=detail id=2 alignment="0" tabsequence=20 border="5" color="0" x="143" y="3" height="54" width="406" format="[general]" html.valueishtml="0" protect="0~tif( isNull( part_num_id ), 0, 1 )"  name=sheet_type visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.vscrollbar=yes ddlb.useasborder=yes ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="16777215~tif( isNull( part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="5" color="0" x="560" y="3" height="54" width="516" format="[general]" html.valueishtml="0"  name=enduser_part_num visible="1" edit.limit=38 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="5" color="0" x="1086" y="3" height="54" width="271" format="[general]" html.valueishtml="0"  name=quantity visible="1" editmask.mask="###,###,###" editmask.imemode=0 editmask.focusrectangle=no  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="2" tabsequence=32766 border="5" color="0" x="1368" y="3" height="54" width="161" format="[general]" html.valueishtml="0"  name=alloy2 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=6 alignment="2" tabsequence=32766 border="5" color="0" x="1536" y="3" height="54" width="227" format="[general]" html.valueishtml="0"  name=temper visible="1" edit.limit=8 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=7 alignment="2" tabsequence=32766 border="5" color="0" x="1763" y="3" height="54" width="230" format="[general]" html.valueishtml="0"  name=gauge visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=8 alignment="2" tabsequence=32766 border="5" color="0" x="1997" y="3" height="54" width="527" format="[general]" html.valueishtml="0"  name=supplier_code visible="1" edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=9 alignment="0" tabsequence=10 border="5" color="0" x="2531" y="3" height="54" width="384" format="[general]" html.valueishtml="0"  name=item_status visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.useasborder=yes ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=10 alignment="2" tabsequence=32766 border="5" color="0" x="2922" y="3" height="51" width="4" format="[general]" html.valueishtml="0"  name=order_abc_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

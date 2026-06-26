@@ -52,12 +52,14 @@ public sealed class AbisRepository : IAbisRepository
         """;
 
     private const string TestCols = """
+        coil_abc_num AS CoilAbcNum, source_id AS SourceId,
         created_date AS CreatedDate, test_type AS TestType, position AS Position, yts_val AS YtsVal,
         uts_val AS UtsVal, elong_val AS ElongVal, n_val AS NVal, r_val AS RVal,
         thickness AS Thickness, width AS Width
         """;
 
     private const string TempTestCols = """
+        coil_org_num AS CoilOrgNum,
         created_date AS CreatedDate, test_type AS TestType, position AS Position, yts AS Yts,
         uts AS Uts, elongation AS Elongation, n AS N, r AS R, thickness AS Thickness, width AS Width
         """;

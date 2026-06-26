@@ -332,8 +332,15 @@ test('shipping flow: listShipments, getShipment, patch dispatch (typed)', async 
 test('qa-results flow: listTestResults + listTempTestResults (typed)', async () => {
   const posted = await client.listTestResults(1, 10, undefined, undefined, undefined, undefined, undefined, undefined);
   assert.ok(Array.isArray(posted.items));
+  // Back-check: a posted result carries its coil linkage (coil_abc_num + source_id),
+  // the real pst_test_result composite-PK members that had been dropped.
+  assert.ok(posted.items.length > 0);
+  assert.ok(posted.items.every((r) => typeof r.coilAbcNum === 'number' && typeof r.sourceId === 'number'));
+  assert.ok(posted.items.some((r) => r.coilAbcNum === 5001));
   const temp = await client.listTempTestResults(1, 10, undefined, undefined, undefined, undefined, undefined, undefined);
   assert.ok(Array.isArray(temp.items));
+  // In-progress results carry coil_org_num (the coil match by org number).
+  assert.ok(temp.items.every((r) => typeof r.coilOrgNum === 'string' && r.coilOrgNum.length > 0));
 });
 
 // The coil-inventory SPA's flow: weight rollup, processing history, inline patch.

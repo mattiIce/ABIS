@@ -1,0 +1,20 @@
+$PBExportHeader$d_scale_scrap_info.srd
+$PBExportComments$list  scrap skid info for scale application
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=83 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=scrap_skid_scrap_tare_wt dbname="scrap_skid.scrap_tare_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_return_scrap_item_num dbname="return_scrap_item.return_scrap_item_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_return_item_net_wt dbname="return_scrap_item.return_item_net_wt" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"scrap_skid~" )  TABLE(NAME=~"scrap_skid_detail~" )  TABLE(NAME=~"return_scrap_item~" ) COLUMN(NAME=~"scrap_skid.scrap_tare_wt~") COLUMN(NAME=~"return_scrap_item.return_scrap_item_num~") COLUMN(NAME=~"return_scrap_item.return_item_net_wt~")    JOIN (LEFT=~"scrap_skid_detail.scrap_skid_num~"    OP =~"=~"RIGHT=~"scrap_skid.scrap_skid_num~" )    JOIN (LEFT=~"return_scrap_item.return_scrap_item_num~"    OP =~"=~"RIGHT=~"scrap_skid_detail.return_scrap_item_num~" )WHERE(    EXP1 =~"~~~"SCRAP_SKID~~~".~~~"SCRAP_SKID_NUM~~~"~"   OP =~"=~"    EXP2 =~":al_skid~" ) ) ARG(NAME = ~"al_skid~" TYPE = number) " arguments=(("al_skid", number)) )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="33554432" x="44" y="16" height="61" width="699" format="[general]" html.valueishtml="0"  name=scrap_skid_scrap_tare_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=32766 border="0" color="33554432" x="783" y="6" height="61" width="955" format="[general]" html.valueishtml="0"  name=return_scrap_item_return_scrap_item_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=32766 border="0" color="33554432" x="1777" y="6" height="61" width="1050" format="[general]" html.valueishtml="0"  name=return_scrap_item_return_item_net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

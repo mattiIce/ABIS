@@ -1,0 +1,53 @@
+$PBExportHeader$d_x1shape_data_oe.srd
+$PBExportComments$X shape's specification w/o picture
+release 9;
+datawindow(units=0 timer_interval=0 color=65280 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=3 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=547 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_item_num dbname="x1_shape.order_item_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_abc_num dbname="x1_shape.order_abc_num" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=x_1 dbname="x1_shape.x_1" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=x_2 dbname="x1_shape.x_2" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=x_3 dbname="x1_shape.x_3" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=x_4 dbname="x1_shape.x_4" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=x_5 dbname="x1_shape.x_5" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=x_6 dbname="x1_shape.x_6" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=x_die dbname="x1_shape.x_die" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_part_num_id dbname="order_item.part_num_id" )
+ retrieve="  SELECT ~"X1_SHAPE~".~"ORDER_ITEM_NUM~",   
+         ~"X1_SHAPE~".~"ORDER_ABC_NUM~",   
+         ~"X1_SHAPE~".~"X_1~",   
+         ~"X1_SHAPE~".~"X_2~",   
+         ~"X1_SHAPE~".~"X_3~",   
+         ~"X1_SHAPE~".~"X_4~",   
+         ~"X1_SHAPE~".~"X_5~",   
+         ~"X1_SHAPE~".~"X_6~",   
+         ~"X1_SHAPE~".~"X_DIE~",   
+         ~"ORDER_ITEM~".~"PART_NUM_ID~"  
+    FROM ~"X1_SHAPE~",   
+         ~"ORDER_ITEM~"  
+   WHERE ( ~"X1_SHAPE~".~"ORDER_ITEM_NUM~" = ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~" ) and  
+         ( ~"X1_SHAPE~".~"ORDER_ABC_NUM~" = ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" ) and  
+   		( ~"X1_SHAPE~".~"ORDER_ABC_NUM~" = :al_order_num)    
+" update="X1_SHAPE" updatewhere=1 updatekeyinplace=yes arguments=(("al_order_num", number)) )
+column(band=detail id=3 alignment="1" tabsequence=32766 border="5" color="0" x="936" y="19" height="51" width="300" format="[general]" html.valueishtml="0"  name=x_1 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+column(band=detail id=5 alignment="1" tabsequence=32766 border="5" color="0" x="936" y="205" height="51" width="300" format="[general]" html.valueishtml="0"  name=x_3 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+column(band=detail id=6 alignment="1" tabsequence=32766 border="5" color="0" x="936" y="298" height="51" width="300" format="[general]" html.valueishtml="0"  name=x_4 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+column(band=detail id=7 alignment="1" tabsequence=32766 border="5" color="0" x="936" y="390" height="51" width="300" format="[general]" html.valueishtml="0"  name=x_5 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+column(band=detail id=8 alignment="1" tabsequence=32766 border="5" color="0" x="936" y="483" height="51" width="300" format="[general]" html.valueishtml="0"  name=x_6 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="5" color="0" x="936" y="112" height="51" width="300" format="[general]" html.valueishtml="0"  name=x_2 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+text(band=detail alignment="1" text="Width:" border="0" color="0" x="713" y="19" height="51" width="179" html.valueishtml="0"  name=x_1_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="Length:" border="0" color="0" x="673" y="112" height="51" width="219" html.valueishtml="0"  name=x_2_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="X 3:" border="0" color="0" x="655" y="205" height="51" width="238" html.valueishtml="0"  name=x_3_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="X 4:" border="0" color="0" x="655" y="298" height="51" width="238" html.valueishtml="0"  name=x_4_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="X 5:" border="0" color="0" x="655" y="390" height="54" width="238" html.valueishtml="0"  name=x_5_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="X 6:" border="0" color="0" x="655" y="486" height="51" width="238" html.valueishtml="0"  name=x_6_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=9 alignment="0" tabsequence=32766 border="0" color="0" x="1236" y="0" height="51" width="399" format="[general]" html.valueishtml="0"  name=x_die visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+column(band=detail id=10 alignment="0" tabsequence=0 border="0" color="0" x="15" y="301" height="51" width="505" format="[General]" html.valueishtml="0"  name=order_item_part_num_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

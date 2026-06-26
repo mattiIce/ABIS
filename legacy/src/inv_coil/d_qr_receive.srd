@@ -1,0 +1,49 @@
+$PBExportHeader$d_qr_receive.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=67108864 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=74 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=67 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=customer_id dbname="receiving_bol.customer_id" )
+ column=(type=char(18) updatewhereclause=yes name=customer_short_name dbname="customer.customer_short_name" )
+ column=(type=datetime updatewhereclause=yes name=created_date dbname="receiving_bol.created_date" )
+ column=(type=char(40) updatewhereclause=yes name=bol dbname="inbound_coil_status.bol" )
+ column=(type=char(32) updatewhereclause=yes name=coil_number dbname="inbound_coil_status.coil_number" )
+ column=(type=decimal(0) updatewhereclause=yes name=coil_abc_num dbname="receiving_bol_coil.coil_abc_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=edi_file_id dbname="inbound_coil_status.edi_file_id" )
+ retrieve="select distinct 
+			receiving_bol.customer_id,
+			customer.customer_short_name,
+			receiving_bol.created_date,
+			inbound_coil_status.bol,
+			inbound_coil_status.coil_number,
+			receiving_bol_coil.coil_abc_num,
+			inbound_coil_status.edi_file_id
+from   	receiving_bol_coil
+       	join receiving_bol on receiving_bol_coil.receiving_bol_id = receiving_bol.receiving_bol_id
+       	join inbound_coil_status on inbound_coil_status.bol = receiving_bol.bol
+			join customer on customer.customer_id = receiving_bol.customer_id
+where  	receiving_bol.customer_id = :al_customer_id
+and    	inbound_coil_status.bol = :as_bol
+and      inbound_coil_status.coil_number = :as_coil_number
+and      receiving_bol_coil.coil_abc_num = :al_coil_abc_num
+order by	receiving_bol.customer_id, receiving_bol.created_date, inbound_coil_status.bol" arguments=(("al_customer_id", number),("as_bol", string),("as_coil_number", string),("al_coil_abc_num", number)) )
+text(band=header alignment="0" text="EDI File ID" border="6" color="33554432" x="0" y="10" height="51" width="263" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Customer" border="6" color="33554432" x="278" y="10" height="51" width="644" html.valueishtml="0"  name=customer_short_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="BOL" border="6" color="33554432" x="936" y="10" height="51" width="644" html.valueishtml="0"  name=bol_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Coil ABC Number" border="6" color="33554432" x="2191" y="10" height="51" width="443" html.valueishtml="0"  name=coil_abc_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Created Date" border="6" color="33554432" x="2648" y="10" height="51" width="501" html.valueishtml="0"  name=created_date_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Coil Org Number" border="6" color="33554432" x="1595" y="10" height="51" width="581" html.valueishtml="0"  name=coil_number_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="0" color="0" x="0" y="6" height="51" width="263" format="[general]" html.valueishtml="0"  name=edi_file_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="936" y="6" height="51" width="644" format="[general]" html.valueishtml="0"  name=bol visible="1" edit.limit=40 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="33554432" x="2191" y="6" height="51" width="443" format="[general]" html.valueishtml="0"  name=coil_abc_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="2648" y="6" height="51" width="501" format="[shortdate] [time]" html.valueishtml="0"  name=created_date visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="0" x="1595" y="0" height="51" width="581" format="[general]" html.valueishtml="0"  name=coil_number visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="0" x="278" y="6" height="51" width="644" format="[general]" html.valueishtml="0"  name=customer_short_name visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 
