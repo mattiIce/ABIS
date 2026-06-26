@@ -1,0 +1,19 @@
+$PBExportHeader$d_qc_skid_list.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=115 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=58 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=sheet_skid_detail_sheet_skid_num dbname="sheet_skid_detail.sheet_skid_num" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"production_sheet_item~" )  TABLE(NAME=~"sheet_skid_detail~" ) COLUMN(NAME=~"sheet_skid_detail.sheet_skid_num~")    JOIN (LEFT=~"sheet_skid_detail.prod_item_num~"    OP =~"=~"RIGHT=~"production_sheet_item.prod_item_num~" )WHERE(    EXP1 =~"~~~"PRODUCTION_SHEET_ITEM~~~".~~~"COIL_ABC_NUM~~~"~"   OP =~"=~"    EXP2 =~":al_coil~"    LOGIC =~"and~" ) WHERE(    EXP1 =~"~~~"PRODUCTION_SHEET_ITEM~~~".~~~"AB_JOB_NUM~~~"~"   OP =~"=~"    EXP2 =~":al_job~" ) ) ARG(NAME = ~"al_coil~" TYPE = number)  ARG(NAME = ~"al_job~" TYPE = number) " arguments=(("al_coil", number),("al_job", number)) )
+text(band=header alignment="2" text="Sheet Skid Detail
+Sheet Skid Num" border="0" color="33554432" x="7" y="6" height="102" width="402" html.valueishtml="0"  name=sheet_skid_detail_sheet_skid_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="33554432" x="7" y="7" height="61" width="402" format="[general]" html.valueishtml="0"  name=sheet_skid_detail_sheet_skid_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="0" expression="~"Skid ~" + string( sheet_skid_detail_sheet_skid_num )"border="0" color="33554432" x="417" y="10" height="51" width="172" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

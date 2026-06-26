@@ -1,0 +1,54 @@
+$PBExportHeader$d_orig_skid_data_4wh_skid.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=48 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=61 color="536870912" )
+table(column=(type=char(32) updatewhereclause=yes name=coil_org_num dbname="coil.coil_org_num" )
+ column=(type=char(18) updatewhereclause=yes name=lot_num dbname="coil.lot_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_net_wt dbname="sheet_skid.sheet_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_tare_wt dbname="sheet_skid.sheet_tare_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=skid_pieces dbname="sheet_skid.skid_pieces" )
+ column=(type=decimal(0) updatewhereclause=yes name=coil_abc_num dbname="coil.coil_abc_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=prod_item_net_wt dbname="production_sheet_item.prod_item_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=prod_item_pieces dbname="production_sheet_item.prod_item_pieces" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_skid_num dbname="sheet_skid.sheet_skid_num" )
+ retrieve="select   coil.coil_org_num,
+         coil.lot_num,
+         sheet_skid.sheet_net_wt,
+         sheet_skid.sheet_tare_wt,
+         sheet_skid.skid_pieces,
+         coil.coil_abc_num,
+         production_sheet_item.prod_item_net_wt,
+         production_sheet_item.prod_item_pieces,
+			sheet_skid.sheet_skid_num
+from     production_sheet_item
+         join sheet_skid_detail on sheet_skid_detail.prod_item_num = production_sheet_item.prod_item_num
+         join sheet_skid on sheet_skid.sheet_skid_num = sheet_skid_detail.sheet_skid_num
+         join coil on coil.coil_abc_num = production_sheet_item.coil_abc_num
+where    sheet_skid.sheet_skid_num = :al_sheet_skid_num" arguments=(("al_sheet_skid_num", number)) )
+text(band=header alignment="0" text="Lot Num" border="0" color="33554432" x="731" y="3" height="51" width="417" html.valueishtml="0"  name=coil_lot_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Sheet Net Wt" border="0" color="33554432" x="1152" y="3" height="51" width="304" html.valueishtml="0"  name=sheet_skid_sheet_net_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Coil Org Num" border="0" color="33554432" x="4" y="3" height="51" width="494" html.valueishtml="0"  name=coil_coil_org_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Skid Pieces" border="0" color="33554432" x="2377" y="3" height="51" width="271" html.valueishtml="0"  name=sheet_skid_skid_pieces_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Coil Abc Num" border="0" color="33554432" x="2842" y="0" height="51" width="315" html.valueishtml="0"  name=coil_coil_abc_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Prod Item Net Wt" border="0" color="33554432" x="3390" y="3" height="51" width="519" html.valueishtml="0"  name=production_sheet_item_prod_item_net_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Sheet Tare Wt" border="0" color="33554432" x="1733" y="0" height="51" width="333" html.valueishtml="0"  name=sheet_tare_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Prod Item Pieces" border="0" color="33554432" x="3913" y="3" height="51" width="519" html.valueishtml="0"  name=production_sheet_item_prod_item_pieces_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Sheet Skid Num" border="0" color="33554432" x="4495" y="3" height="51" width="450" html.valueishtml="0"  name=sheet_skid_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="731" y="3" height="61" width="417" format="[general]" html.valueishtml="0"  name=lot_num visible="1" edit.limit=18 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="1152" y="3" height="61" width="263" format="[general]" html.valueishtml="0"  name=sheet_net_wt visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="4" y="3" height="61" width="494" format="[general]" html.valueishtml="0"  name=coil_org_num visible="1" edit.limit=32 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="33554432" x="2377" y="3" height="61" width="263" format="[general]" html.valueishtml="0"  name=skid_pieces visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="33554432" x="2842" y="0" height="61" width="263" format="[general]" html.valueishtml="0"  name=coil_abc_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="0" color="33554432" x="3390" y="3" height="61" width="263" format="[general]" html.valueishtml="0"  name=prod_item_net_wt visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="1733" y="0" height="61" width="263" format="[general]" html.valueishtml="0"  name=sheet_tare_wt visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=8 alignment="0" tabsequence=32766 border="0" color="33554432" x="3913" y="3" height="61" width="428" format="[general]" html.valueishtml="0"  name=prod_item_pieces visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=9 alignment="0" tabsequence=32766 border="0" color="33554432" x="4495" y="3" height="51" width="428" format="[general]" html.valueishtml="0"  name=sheet_skid_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

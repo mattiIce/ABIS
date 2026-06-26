@@ -1,0 +1,19 @@
+$PBExportHeader$d_daily_prod_dt_details.srd
+$PBExportComments$DT instance details for daily production
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=80 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=instance_num dbname="DT_INSTANCE_DETAIL.INSTANCE_NUM" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=instance_item dbname="DT_INSTANCE_DETAIL.INSTANCE_ITEM" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=id dbname="DT_INSTANCE_DETAIL.ID" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=duration dbname="DT_INSTANCE_DETAIL.DURATION" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=note dbname="DT_INSTANCE_DETAIL.NOTE" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"DT_INSTANCE_DETAIL~" ) COLUMN(NAME=~"DT_INSTANCE_DETAIL.INSTANCE_NUM~") COLUMN(NAME=~"DT_INSTANCE_DETAIL.INSTANCE_ITEM~") COLUMN(NAME=~"DT_INSTANCE_DETAIL.ID~") COLUMN(NAME=~"DT_INSTANCE_DETAIL.DURATION~") COLUMN(NAME=~"DT_INSTANCE_DETAIL.NOTE~")) " update="DT_INSTANCE_DETAIL" updatewhere=1 updatekeyinplace=yes )
+column(band=detail id=1 alignment="1" tabsequence=10 border="0" color="0" x="37" y="6" height="61" width="263" format="[general]"  name=instance_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=20 border="0" color="0" x="322" y="10" height="61" width="263" format="[general]"  name=instance_item edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=30 border="0" color="0" x="614" y="3" height="61" width="263" format="[general]"  name=id edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="1" tabsequence=40 border="0" color="0" x="1020" y="10" height="61" width="263" format="[general]"  name=duration edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=50 border="0" color="0" x="1503" y="10" height="61" width="2809" format="[general]"  name=note edit.limit=255 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

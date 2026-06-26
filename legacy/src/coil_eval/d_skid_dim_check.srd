@@ -1,0 +1,66 @@
+$PBExportHeader$d_skid_dim_check.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=621 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=sheet_skid_num dbname="sheet_skid_dimension_check.sheet_skid_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=pc_number dbname="sheet_skid_dimension_check.pc_number" )
+ column=(type=decimal(5) updatewhereclause=yes name=gauge dbname="sheet_skid_dimension_check.gauge" )
+ column=(type=decimal(5) updatewhereclause=yes name=width dbname="sheet_skid_dimension_check.width" )
+ column=(type=decimal(5) updatewhereclause=yes name=length_oper dbname="sheet_skid_dimension_check.length_oper" )
+ column=(type=decimal(5) updatewhereclause=yes name=length_drive dbname="sheet_skid_dimension_check.length_drive" )
+ column=(type=decimal(5) updatewhereclause=yes name=square dbname="sheet_skid_dimension_check.square" )
+ column=(type=decimal(5) updatewhereclause=yes name=head_dimension dbname="sheet_skid_dimension_check.head_dimension" )
+ column=(type=decimal(0) updatewhereclause=yes name=all_cut_edge dbname="sheet_skid_dimension_check.all_cut_edge" values="OK	1/OK	0" )
+ column=(type=decimal(0) updatewhereclause=yes name=in_spec dbname="sheet_skid_dimension_check.in_spec" values="YES	1/YES	0" )
+ column=(type=char(15) updatewhereclause=yes name=checked_by dbname="sheet_skid_dimension_check.checked_by" )
+ column=(type=char(25) updatewhereclause=yes name=note dbname="sheet_skid_dimension_check.note" )
+ column=(type=decimal(0) updatewhereclause=yes name=dimension_check_num dbname="sheet_skid_dimension_check.dimension_check_num" )
+ retrieve="  SELECT ~"SHEET_SKID_DIMENSION_CHECK~".~"SHEET_SKID_NUM~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"PC_NUMBER~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"GAUGE~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"WIDTH~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"LENGTH_OPER~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"LENGTH_DRIVE~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"SQUARE~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"HEAD_DIMENSION~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"ALL_CUT_EDGE~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"IN_SPEC~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"CHECKED_BY~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"NOTE~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"DIMENSION_CHECK_NUM~"  
+    FROM ~"SHEET_SKID_DIMENSION_CHECK~"  
+   WHERE ( ~"SHEET_SKID_DIMENSION_CHECK~".~"SHEET_SKID_NUM~" = :al_skid_num ) AND  
+         ( ~"SHEET_SKID_DIMENSION_CHECK~".~"PC_NUMBER~" = :ai_pc_num )    
+" arguments=(("al_skid_num", number),("ai_pc_num", number)) )
+column(band=detail id=12 alignment="0" tabsequence=100 border="2" color="33554432" x="424" y="515" height="96" width="1328" format="[general]" html.valueishtml="0"  name=note visible="1" edit.limit=25 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Note:" border="5" color="33554432" x="7" y="515" height="96" width="402" html.valueishtml="0"  name=note_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=2 alignment="0" tabsequence=110 border="2" color="33554432" x="424" y="3" height="96" width="395" format="[general]" html.valueishtml="0"  name=pc_number visible="1" editmask.spin=yes editmask.mask="##" editmask.imemode=0 editmask.spinrange="1~~99" editmask.spinincr=1 editmask.focusrectangle=no  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="PC #" border="5" color="33554432" x="7" y="3" height="96" width="402" html.valueishtml="0"  name=pc_num_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=detail alignment="0" text="In Spec" border="5" color="33554432" x="7" y="413" height="96" width="402" html.valueishtml="0"  name=in_spec_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=10 alignment="0" tabsequence=80 border="2" color="33554432" x="424" y="413" height="96" width="395" format="[General]" html.valueishtml="0"  name=in_spec visible="1" checkbox.text="YES" checkbox.on="1" checkbox.off="0" checkbox.scale=yes checkbox.threed=no  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="536870912~tif(   in_spec  = 1, 65280, 255 )" )
+text(band=detail alignment="0" text="All Cut Edges" border="5" color="33554432" x="7" y="310" height="96" width="402" html.valueishtml="0"  name=all_cut_edge_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=9 alignment="0" tabsequence=70 border="2" color="33554432" x="424" y="310" height="96" width="395" format="[General]" html.valueishtml="0"  name=all_cut_edge visible="1" checkbox.text="OK" checkbox.on="1" checkbox.off="0" checkbox.scale=yes checkbox.threed=no  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="553648127~tif(  all_cut_edge = 1, 65280, 255 )" )
+text(band=detail alignment="0" text="Width" border="5" color="33554432" x="7" y="208" height="96" width="402" html.valueishtml="0"  name=width_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=4 alignment="0" tabsequence=20 border="2" color="33554432" x="424" y="208" height="96" width="395" format="[General]" html.valueishtml="0"  name=width visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.required=yes ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="536870912~tif(    width  = 0, 255, RGB(255,255,255) )" )
+text(band=detail alignment="0" text="Gauge" border="5" color="33554432" x="7" y="106" height="96" width="402" html.valueishtml="0"  name=gauge_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=3 alignment="0" tabsequence=10 border="2" color="33554432" x="424" y="106" height="96" width="395" format="[General]" html.valueishtml="0"  name=gauge visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.required=yes ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="536870912~tif(   gauge  = 0, 255, RGB(255,255,255) )" )
+column(band=detail id=7 alignment="0" tabsequence=50 border="2" color="33554432" x="1357" y="0" height="96" width="395" format="[General]" html.valueishtml="0"  name=square visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.required=yes ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="536870912~tif(    square   = 0, 255, RGB(255,255,255) )" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="2" color="33554432" x="1755" y="3" height="96" width="154" format="[General]" html.valueishtml="0"  name=sheet_skid_num visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Square:" border="5" color="33554432" x="830" y="3" height="96" width="512" html.valueishtml="0"  name=square_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=detail alignment="0" text="Checked By:" border="5" color="33554432" x="830" y="413" height="96" width="512" html.valueishtml="0"  name=checked_by_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=11 alignment="0" tabsequence=90 border="2" color="33554432" x="1357" y="413" height="96" width="395" format="[general]" html.valueishtml="0"  name=checked_by visible="1" edit.limit=15 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Head Dimension:" border="5" color="33554432" x="830" y="310" height="96" width="512" html.valueishtml="0"  name=head_dimension_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=8 alignment="0" tabsequence=60 border="2" color="33554432" x="1357" y="310" height="96" width="395" format="[General]" html.valueishtml="0"  name=head_dimension visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Length Drive" border="5" color="33554432" x="830" y="208" height="96" width="512" html.valueishtml="0"  name=length_drive_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=6 alignment="0" tabsequence=40 border="2" color="33554432" x="1357" y="208" height="96" width="395" format="[General]" html.valueishtml="0"  name=length_drive visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Length Oper" border="5" color="33554432" x="830" y="106" height="96" width="512" html.valueishtml="0"  name=length_oper_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=5 alignment="0" tabsequence=30 border="2" color="33554432" x="1357" y="106" height="96" width="395" format="[General]" html.valueishtml="0"  name=length_oper visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=13 alignment="0" tabsequence=120 border="0" color="33554432" x="1909" y="0" height="70" width="622" format="[general]" html.valueishtml="0"  name=dimension_check_num visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

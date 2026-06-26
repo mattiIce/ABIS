@@ -1,0 +1,102 @@
+$PBExportHeader$f_save_qa_customer_quality_many_skids.srf
+global type f_save_qa_customer_quality_many_skids from function_object
+end type
+
+forward prototypes
+global function integer f_save_qa_customer_quality_many_skids (long al_customer_id, long al_ab_job_num, long al_coil_abc_num, long al_skids[], str_all_data_types astr_all_data_types[])
+end prototypes
+
+global function integer f_save_qa_customer_quality_many_skids (long al_customer_id, long al_ab_job_num, long al_coil_abc_num, long al_skids[], str_all_data_types astr_all_data_types[]);//Alex_Gerlants. 1260_Incoming_Customer_Quality. Begin
+/*
+Function:	f_save_qa_customer_quality_many_skids
+Returns:		integer
+Arguments:	value	long						al_customer_id
+				value	long						al_ab_job_num
+				value	long						al_coil_abc_num
+				value	long						al_skids[]		         <== sheet_skid_num to save information for
+				value	str_all_data_types	astr_all_data_types[]	<== One or more defects to save for each skid in al_sheet_skid_num[]
+*/
+
+Long						ll_customer_id, ll_sheet_skid_num, ll_rows
+Integer					li_defect_code, li_albl_disp_code, li_cust_disp_code, li_number_of_skids, li_i
+Integer					li_row_inserted, li_rtn, li_j, li_number_of_defects
+DateTime					ldt_qa_record_date
+String					ls_note, ls_user_id, ls_skid_string
+DataStore				lds_qa_customer_quality_skid
+
+lds_qa_customer_quality_skid = Create DataStore
+lds_qa_customer_quality_skid.DataObject = "d_qa_customer_quality_skid_2"
+lds_qa_customer_quality_skid.SetTransObject(sqlca)
+
+ldt_qa_record_date = DateTime(Today(), Now())
+li_number_of_skids = UpperBound(al_skids[])
+
+For li_i = 1 To li_number_of_skids
+	ll_sheet_skid_num = al_skids[][li_i]
+	ls_skid_string = ls_skid_string + String(ll_sheet_skid_num) + ", "
+	li_number_of_defects = UpperBound(astr_all_data_types[])
+	
+	For li_j = 1 To li_number_of_defects
+		li_defect_code = astr_all_data_types[li_j].integer_var[1]
+		li_albl_disp_code = astr_all_data_types[li_j].integer_var[2]
+		li_cust_disp_code = astr_all_data_types[li_j].integer_var[3]
+		ls_note = astr_all_data_types[li_j].string_var[1]
+		ls_user_id = astr_all_data_types[li_j].string_var[2]
+		
+		ll_rows = lds_qa_customer_quality_skid.Retrieve(al_customer_id, al_coil_abc_num, ll_sheet_skid_num, li_defect_code)
+		
+		li_rtn = 1 //Initialize before Case
+		
+		Choose Case ll_rows
+			Case 0 //Row does not exist
+				li_row_inserted = lds_qa_customer_quality_skid.InsertRow(0)
+				
+				If li_row_inserted > 0 Then
+					lds_qa_customer_quality_skid.Object.customer_id[li_row_inserted] = al_customer_id
+					lds_qa_customer_quality_skid.Object.ab_job_num[li_row_inserted] = al_ab_job_num
+					lds_qa_customer_quality_skid.Object.coil_abc_num[li_row_inserted] = al_coil_abc_num
+					lds_qa_customer_quality_skid.Object.sheet_skid_num[li_row_inserted] = ll_sheet_skid_num
+					lds_qa_customer_quality_skid.Object.defect_code[li_row_inserted] = li_defect_code
+					lds_qa_customer_quality_skid.Object.albl_disp_code[li_row_inserted] = li_albl_disp_code
+					lds_qa_customer_quality_skid.Object.cust_disp_code[li_row_inserted] = li_cust_disp_code
+					lds_qa_customer_quality_skid.Object.qa_record_date[li_row_inserted] = ldt_qa_record_date
+					lds_qa_customer_quality_skid.Object.note[li_row_inserted] = ls_note
+					lds_qa_customer_quality_skid.Object.user_id[li_row_inserted] = ls_user_id
+				End If
+			Case 1 //Row exists for key columns ll_customer_id, ll_sheet_skid_num, li_defect_code
+				lds_qa_customer_quality_skid.Object.albl_disp_code[1] = li_albl_disp_code
+				lds_qa_customer_quality_skid.Object.cust_disp_code[1] = li_cust_disp_code
+				lds_qa_customer_quality_skid.Object.qa_record_date[1] = ldt_qa_record_date
+				lds_qa_customer_quality_skid.Object.note[1] = ls_note
+				lds_qa_customer_quality_skid.Object.user_id[1] = ls_user_id
+			Case Else //DB error
+				li_rtn = -1
+		End Choose
+		
+		If li_rtn = 1 Then //OK
+			li_rtn = lds_qa_customer_quality_skid.Update()
+					
+			//If li_rtn = 1 Then //OK
+			//	commit using sqlca;
+			//Else
+			//	rollback using sqlca;
+			//End If
+		End If
+	Next
+Next //For li_i = 1 To li_number_of_skids
+
+//Remove the last comma
+ls_skid_string = Left(ls_skid_string, Len(ls_skid_string) - 2)
+
+If li_rtn = 1 Then //OK
+	commit using sqlca;
+	MessageBox("Success", "QA update successful for skids " + ls_skid_string)
+Else	//Error
+	rollback using sqlca;
+	MessageBox("Failure", "QA update failed for skids " + ls_skid_string)
+End If
+
+Return li_rtn
+//Alex_Gerlants. 1260_Incoming_Customer_Quality. End
+end function
+

@@ -1,0 +1,22 @@
+$PBExportHeader$d_daily_prod_summary_coil_info.srd
+$PBExportComments$daily production summary report coil and job info
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no grid.lines=0 )
+header(height=64 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=74 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=shift_coil_shift_num dbname="SHIFT_COIL.SHIFT_NUM" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_coil_ab_job_num dbname="SHIFT_COIL.AB_JOB_NUM" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_coil_coil_abc_num dbname="SHIFT_COIL.COIL_ABC_NUM" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_coil_coil_end_status dbname="SHIFT_COIL.COIL_END_STATUS" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"SHIFT~" )  TABLE(NAME=~"SHIFT_COIL~" ) COLUMN(NAME=~"SHIFT_COIL.SHIFT_NUM~") COLUMN(NAME=~"SHIFT_COIL.AB_JOB_NUM~") COLUMN(NAME=~"SHIFT_COIL.COIL_ABC_NUM~") COLUMN(NAME=~"SHIFT_COIL.COIL_END_STATUS~")    JOIN (LEFT=~"SHIFT_COIL.SHIFT_NUM~"    OP =~"=~"RIGHT=~"SHIFT.SHIFT_NUM~" )WHERE(    EXP1 =~"To_Date(SHIFT.START_TIME)~"   OP =~"=~"    EXP2 =~":ad_date~" ) ) ARG(NAME = ~"ad_date~" TYPE = date) " arguments=(("ad_date", date)) )
+text(band=header alignment="2" text="Shift Num"border="0" color="0" x="7" y="6" height="51" width="227"  name=shift_coil_shift_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Ab Job Num"border="0" color="0" x="241" y="6" height="51" width="282"  name=shift_coil_ab_job_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Coil Abc Num"border="0" color="0" x="530" y="6" height="51" width="315"  name=shift_coil_coil_abc_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Coil End Status"border="0" color="0" x="852" y="6" height="51" width="351"  name=shift_coil_coil_end_status_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="0" x="7" y="6" height="48" width="227" format="[General]"  name=shift_coil_shift_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=32766 border="0" color="0" x="241" y="6" height="48" width="282" format="[General]"  name=shift_coil_ab_job_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=32766 border="0" color="0" x="530" y="6" height="48" width="315" format="[General]"  name=shift_coil_coil_abc_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="0" color="0" x="852" y="6" height="48" width="351" format="[General]"  name=shift_coil_coil_end_status edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

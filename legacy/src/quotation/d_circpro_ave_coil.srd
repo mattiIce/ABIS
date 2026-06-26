@@ -1,0 +1,18 @@
+$PBExportHeader$d_circpro_ave_coil.srd
+$PBExportComments$list display in circlepro2 average coil info tabpage
+release 5;
+datawindow(units=2 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 250 print.margin.right = 250 print.margin.top = 250 print.margin.bottom = 250 print.paper.source = 0 print.paper.size = 0 print.prompt=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=158 color="536870912" )
+table(column=(type=char(50) updatewhereclause=no name=desc dbname="Desc" )
+ column=(type=char(10) updatewhereclause=no name=cal1 dbname="Cal1" )
+ column=(type=char(10) updatewhereclause=no name=cal2 dbname="Cal2" )
+ column=(type=char(10) updatewhereclause=no name=cal3 dbname="Cal3" )
+ column=(type=char(10) updatewhereclause=no name=cal4 dbname="Cal4" )
+ )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="6" color="0" x="0" y="16" height="133" width="2500" format=""  name=desc edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="1" tabsequence=32766 border="6" color="0" x="2533" y="16" height="133" width="600" format="[general]"  name=cal1 edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=3 alignment="1" tabsequence=32766 border="6" color="0" x="3175" y="16" height="133" width="600" format="[general]"  name=cal2 edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="6" color="0" x="3816" y="16" height="133" width="600" format="[general]"  name=cal3 edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=5 alignment="1" tabsequence=32766 border="6" color="0" x="4450" y="16" height="133" width="600" format="[general]"  name=cal4 edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )

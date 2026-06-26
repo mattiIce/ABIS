@@ -1,0 +1,34 @@
+$PBExportHeader$d_daily_prod_report_msr_comment.srd
+$PBExportComments$monthly summary report comments part
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=560 color="536870912" )
+table(column=(type=datetime updatewhereclause=yes name=start_time dbname="SHIFT.START_TIME" )
+ column=(type=datetime updatewhereclause=yes name=end_time dbname="SHIFT.END_TIME" )
+ column=(type=decimal(0) updatewhereclause=yes name=schedule_type dbname="SHIFT.SCHEDULE_TYPE" )
+ column=(type=char(1024) updatewhereclause=yes name=note dbname="SHIFT.NOTE" )
+ retrieve="  SELECT SHIFT.START_TIME,   
+         SHIFT.END_TIME,   
+         SHIFT.SCHEDULE_TYPE,   
+         SHIFT.NOTE   
+    FROM SHIFT   
+ 	WHERE ( ( SHIFT.LINE_NUM = :al_line) ) and
+         ( To_Char(SHIFT.START_TIME, 'Mon') = 'Feb' ) and
+         ( To_Char(SHIFT.START_TIME, 'YYYY') = '2005' ) and
+			NOT( SHIFT.Note is NULL)
+ORDER BY SHIFT.START_TIME
+
+" arguments=(("al_line", number),("as_month", string)) )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="0" x="7" y="198" height="288" width="3394" format="[general]"  name=note edit.limit=1024 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Comment:"border="0" color="0" x="7" y="138" height="58" width="293"  name=note_t  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Date:"border="0" color="0" x="7" y="3" height="58" width="154"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="2" expression=" start_time "border="0" color="0" x="168" y="6" height="51" width="395" format="mm/dd/yyyy"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="Shift:"border="0" color="0" x="571" y="3" height="58" width="150"  name=schedule_type_t  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=3 alignment="2" tabsequence=32766 border="0" color="0" x="728" y="3" height="61" width="263" format="[general]"  name=schedule_type edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Start Time:"border="0" color="0" x="7" y="70" height="58" width="315"  name=start_time_t  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="0" color="0" x="322" y="70" height="58" width="530" format="hh:mm"  name=start_time edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="End Time:"border="0" color="0" x="859" y="70" height="58" width="282"  name=end_time_t  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="0" color="0" x="1148" y="70" height="58" width="545" format="hh:mm"  name=end_time edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

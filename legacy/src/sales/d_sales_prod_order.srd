@@ -1,0 +1,377 @@
+$PBExportHeader$d_sales_prod_order.srd
+$PBExportComments$Print production order
+release 9;
+datawindow(units=0 timer_interval=0 color=1090519039 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 2 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=4013 color="536870912"  height.autosize=yes)
+table(column=(type=decimal(0) updatewhereclause=yes name=ab_job_ab_job_num dbname="ab_job.ab_job_num" )
+ column=(type=decimal(2) updatewhereclause=yes name=ab_job_material_yield dbname="ab_job.material_yield" )
+ column=(type=datetime updatewhereclause=yes name=ab_job_time_date_started dbname="ab_job.time_date_started" )
+ column=(type=datetime updatewhereclause=yes name=ab_job_time_date_finished dbname="ab_job.time_date_finished" )
+ column=(type=decimal(0) updatewhereclause=yes name=ab_job_number_of_men_used dbname="ab_job.number_of_men_used" )
+ column=(type=char(18) updatewhereclause=yes name=customer_customer_short_name dbname="customer.customer_short_name" )
+ column=(type=decimal(0) updatewhereclause=yes name=customer_order_order_abc_num dbname="customer_order.order_abc_num" )
+ column=(type=char(18) updatewhereclause=yes name=customer_order_scrap_handing_type dbname="customer_order.scrap_handing_type" )
+ column=(type=decimal(0) updatewhereclause=yes name=customer_order_sheet_handling_type dbname="customer_order.sheet_handling_type" values="Normal sheet handling	0/Do not combine coils	1/" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_quantity dbname="order_item.quantity" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_quantity_plus dbname="order_item.quantity_plus" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_quantity_minus dbname="order_item.quantity_minus" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_max_skid_wt dbname="order_item.max_skid_wt" )
+ column=(type=char(8) updatewhereclause=yes name=order_item_temper dbname="order_item.temper" )
+ column=(type=decimal(5) updatewhereclause=yes name=order_item_gauge dbname="order_item.gauge" )
+ column=(type=decimal(6) updatewhereclause=yes name=order_item_gauge_p dbname="order_item.gauge_p" )
+ column=(type=decimal(6) updatewhereclause=yes name=order_item_gauge_m dbname="order_item.gauge_m" )
+ column=(type=char(18) updatewhereclause=yes name=order_item_sh_toleranc_minus dbname="order_item.sh_toleranc_minus" )
+ column=(type=char(18) updatewhereclause=yes name=order_item_sh_tolerance_plus dbname="order_item.sh_tolerance_plus" )
+ column=(type=char(255) updatewhereclause=yes name=order_item_flatness dbname="order_item.flatness" )
+ column=(type=char(255) updatewhereclause=yes name=order_item_oil_stencil_interleave dbname="order_item.oil_stencil_interleave" )
+ column=(type=char(255) updatewhereclause=yes name=order_item_processing_other_spec dbname="order_item.processing_other_spec" )
+ column=(type=char(100) updatewhereclause=yes name=order_item_packaging_bands dbname="order_item.packaging_bands" )
+ column=(type=char(255) updatewhereclause=yes name=order_item_material_end_use dbname="order_item.material_end_use" )
+ column=(type=char(255) updatewhereclause=yes name=order_item_surface dbname="order_item.surface" )
+ column=(type=char(1024) updatewhereclause=yes name=ab_job_sketch_job_note dbname="ab_job.sketch_job_note" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_pieces_skid dbname="order_item.pieces_skid" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_pieces_skid_plus dbname="order_item.pieces_skid_plus" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_pieces_skid_minus dbname="order_item.pieces_skid_minus" )
+ column=(type=char(16) updatewhereclause=yes name=sketch_jpg_sketch_name dbname="sketch_jpg.sketch_name" )
+ column=(type=decimal(5) updatewhereclause=yes name=order_item_theoretical_unit_wt dbname="order_item.theoretical_unit_wt" )
+ column=(type=char(255) updatewhereclause=yes name=order_item_item_attachments dbname="order_item.item_attachments" )
+ column=(type=char(255) updatewhereclause=yes name=order_item_item_note dbname="order_item.item_note" )
+ column=(type=char(18) updatewhereclause=yes name=order_item_sheet_type dbname="order_item.sheet_type" )
+ column=(type=decimal(0) updatewhereclause=yes name=ab_job_job_process_quantity dbname="ab_job.job_process_quantity" )
+ column=(type=decimal(0) updatewhereclause=yes name=ab_job_job_sheet_wt dbname="ab_job.job_sheet_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=ab_job_job_skid dbname="ab_job.job_skid" )
+ column=(type=decimal(0) updatewhereclause=yes name=ab_job_job_pieces_skid dbname="ab_job.job_pieces_skid" )
+ column=(type=decimal(5) updatewhereclause=yes name=ab_job_pitch dbname="ab_job.pitch" )
+ column=(type=decimal(6) updatewhereclause=yes name=ab_job_pitch_plus dbname="ab_job.pitch_plus" )
+ column=(type=decimal(6) updatewhereclause=yes name=ab_job_pitch_minus dbname="ab_job.pitch_minus" )
+ column=(type=char(100) updatewhereclause=yes name=order_item_packaging_other_spec dbname="order_item.packaging_other_spec" )
+ column=(type=char(255) updatewhereclause=yes name=ab_job_job_notes dbname="ab_job.job_notes" )
+ column=(type=char(100) updatewhereclause=yes name=order_item_packaging_spec1 dbname="order_item.packaging_spec1" )
+ column=(type=char(100) updatewhereclause=yes name=order_item_packaging_spec2 dbname="order_item.packaging_spec2" )
+ column=(type=char(100) updatewhereclause=yes name=order_item_packaging_spec3 dbname="order_item.packaging_spec3" )
+ column=(type=char(100) updatewhereclause=yes name=order_item_packaging_spec4 dbname="order_item.packaging_spec4" )
+ column=(type=char(100) updatewhereclause=yes name=order_item_packaging_spec5 dbname="order_item.packaging_spec5" )
+ column=(type=char(100) updatewhereclause=yes name=order_item_packaging_spec6 dbname="order_item.packaging_spec6" )
+ column=(type=char(100) updatewhereclause=yes name=order_item_packaging_spec7 dbname="order_item.packaging_spec7" )
+ column=(type=char(8) updatewhereclause=yes name=order_item_alloy2 dbname="order_item.alloy2" )
+ column=(type=decimal(5) updatewhereclause=yes name=metal_density_metal_density dbname="metal_density.metal_density" )
+ column=(type=char(255) updatewhereclause=yes name=line_line_desc dbname="line.line_desc" )
+ column=(type=char(18) updatewhereclause=yes name=trapezoid_tr_die1 dbname="trapezoid.tr_die1" )
+ column=(type=char(18) updatewhereclause=yes name=right_trapezoid_rtr_die1 dbname="right_trapezoid.rtr_die1" )
+ column=(type=char(18) updatewhereclause=yes name=reinforcement_re_die1 dbname="reinforcement.re_die1" )
+ column=(type=char(18) updatewhereclause=yes name=rectangle_rt_die1 dbname="rectangle.rt_die1" )
+ column=(type=char(18) updatewhereclause=yes name=parallelogram_p_die1 dbname="parallelogram.p_die1" )
+ column=(type=char(18) updatewhereclause=yes name=chevron_ch_die dbname="chevron.ch_die" )
+ column=(type=char(18) updatewhereclause=yes name=circle_c_die1 dbname="circle.c_die1" )
+ column=(type=char(18) updatewhereclause=yes name=left_trapezoid_ltr_die1 dbname="left_trapezoid.ltr_die1" )
+ column=(type=char(18) updatewhereclause=yes name=fender_fe_die1 dbname="fender.fe_die1" )
+ column=(type=char(18) updatewhereclause=yes name=liftgate_shape_li_die1 dbname="liftgate_shape.li_die1" )
+ column=(type=char(18) updatewhereclause=yes name=x1_shape_x_die dbname="x1_shape.x_die" )
+ column=(type=char(255) updatewhereclause=yes name=ab_job_job_reference_codes dbname="ab_job.job_reference_codes" )
+ retrieve="  SELECT ~"AB_JOB~".~"AB_JOB_NUM~",   
+         ~"AB_JOB~".~"MATERIAL_YIELD~",   
+         ~"AB_JOB~".~"TIME_DATE_STARTED~",   
+         ~"AB_JOB~".~"TIME_DATE_FINISHED~",   
+         ~"AB_JOB~".~"NUMBER_OF_MEN_USED~",   
+         ~"CUSTOMER~".~"CUSTOMER_SHORT_NAME~",   
+         ~"CUSTOMER_ORDER~".~"ORDER_ABC_NUM~",   
+         ~"CUSTOMER_ORDER~".~"SCRAP_HANDING_TYPE~",
+			~"CUSTOMER_ORDER~".~"SHEET_HANDLING_TYPE~",   
+         ~"ORDER_ITEM~".~"QUANTITY~",   
+         ~"ORDER_ITEM~".~"QUANTITY_PLUS~",   
+         ~"ORDER_ITEM~".~"QUANTITY_MINUS~",   
+         ~"ORDER_ITEM~".~"MAX_SKID_WT~",   
+         ~"ORDER_ITEM~".~"TEMPER~",   
+         ~"ORDER_ITEM~".~"GAUGE~",   
+         ~"ORDER_ITEM~".~"GAUGE_P~",   
+         ~"ORDER_ITEM~".~"GAUGE_M~",   
+         ~"ORDER_ITEM~".~"SH_TOLERANC_MINUS~",   
+         ~"ORDER_ITEM~".~"SH_TOLERANCE_PLUS~",   
+         ~"ORDER_ITEM~".~"FLATNESS~",   
+         ~"ORDER_ITEM~".~"OIL_STENCIL_INTERLEAVE~",   
+         ~"ORDER_ITEM~".~"PROCESSING_OTHER_SPEC~",   
+         ~"ORDER_ITEM~".~"PACKAGING_BANDS~",   
+         ~"ORDER_ITEM~".~"MATERIAL_END_USE~",   
+         ~"ORDER_ITEM~".~"SURFACE~",   
+         ~"AB_JOB~".~"SKETCH_JOB_NOTE~",   
+         ~"ORDER_ITEM~".~"PIECES_SKID~",   
+         ~"ORDER_ITEM~".~"PIECES_SKID_PLUS~",   
+         ~"ORDER_ITEM~".~"PIECES_SKID_MINUS~",   
+         ~"SKETCH_JPG~".~"SKETCH_NAME~",   
+         ~"ORDER_ITEM~".~"THEORETICAL_UNIT_WT~",   
+         ~"ORDER_ITEM~".~"ITEM_ATTACHMENTS~",   
+         ~"ORDER_ITEM~".~"ITEM_NOTE~",   
+         ~"ORDER_ITEM~".~"SHEET_TYPE~",   
+         ~"AB_JOB~".~"JOB_PROCESS_QUANTITY~",   
+         ~"AB_JOB~".~"JOB_SHEET_WT~",   
+         ~"AB_JOB~".~"JOB_SKID~",   
+         ~"AB_JOB~".~"JOB_PIECES_SKID~",   
+         ~"AB_JOB~".~"PITCH~",   
+         ~"AB_JOB~".~"PITCH_PLUS~",   
+         ~"AB_JOB~".~"PITCH_MINUS~",   
+         ~"ORDER_ITEM~".~"PACKAGING_OTHER_SPEC~",   
+         ~"AB_JOB~".~"JOB_NOTES~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC1~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC2~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC3~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC4~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC5~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC6~",   
+         ~"ORDER_ITEM~".~"PACKAGING_SPEC7~",   
+         ~"ORDER_ITEM~".~"ALLOY2~",   
+         ~"METAL_DENSITY~".~"METAL_DENSITY~",   
+         ~"LINE~".~"LINE_DESC~",   
+         ~"TRAPEZOID~".~"TR_DIE1~",   
+         ~"RIGHT_TRAPEZOID~".~"RTR_DIE1~",   
+         ~"REINFORCEMENT~".~"RE_DIE1~",   
+         ~"RECTANGLE~".~"RT_DIE1~",   
+         ~"PARALLELOGRAM~".~"P_DIE1~",   
+         ~"CHEVRON~".~"CH_DIE~",   
+         ~"CIRCLE~".~"C_DIE1~",   
+         ~"LEFT_TRAPEZOID~".~"LTR_DIE1~",
+			~"FENDER~".~"FE_DIE1~",   
+         ~"LIFTGATE_SHAPE~".~"LI_DIE1~",
+			~"X1_SHAPE~".~"X_DIE~",
+			~"AB_JOB~".~"JOB_REFERENCE_CODES~"  
+    FROM ~"AB_JOB~",   
+         ~"CUSTOMER~",   
+         ~"CUSTOMER_ORDER~",   
+         ~"ORDER_ITEM~",   
+         ~"SKETCH_JPG~",   
+         ~"METAL_DENSITY~",   
+         ~"LINE~",   
+         ~"CHEVRON~",   
+         ~"CIRCLE~",   
+         ~"LEFT_TRAPEZOID~",   
+         ~"LIFTGATE_SHAPE~",   
+         ~"PARALLELOGRAM~",   
+         ~"RECTANGLE~",   
+         ~"REINFORCEMENT~",   
+         ~"RIGHT_TRAPEZOID~",
+			~"FENDER~",   
+         ~"TRAPEZOID~",
+			~"X1_SHAPE~"  
+   WHERE ( ab_job.sketch_id = sketch_jpg.sketch_id (+)) and  
+         ( order_item.alloy2 = metal_density.metal_alloy (+)) and  
+         ( ab_job.line_num = line.line_num (+)) and  
+         ( ab_job.order_item_num = chevron.order_item_num (+)) and  
+         ( ab_job.order_abc_num = chevron.order_abc_num (+)) and  
+         ( ab_job.order_item_num = circle.order_item_num (+)) and  
+         ( ab_job.order_abc_num = circle.order_abc_num (+)) and  
+         ( ab_job.order_item_num = left_trapezoid.order_item_num (+)) and  
+         ( ab_job.order_abc_num = left_trapezoid.order_abc_num (+)) and  
+         ( ab_job.order_item_num = liftgate_shape.order_item_num (+)) and  
+         ( ab_job.order_abc_num = liftgate_shape.order_abc_num (+)) and  
+         ( ab_job.order_item_num = parallelogram.order_item_num (+)) and  
+         ( ab_job.order_abc_num = parallelogram.order_abc_num (+)) and  
+         ( ab_job.order_item_num = rectangle.order_item_num (+)) and  
+         ( ab_job.order_abc_num = rectangle.order_abc_num (+)) and  
+         ( ab_job.order_item_num = reinforcement.order_item_num (+)) and  
+         ( ab_job.order_abc_num = reinforcement.order_abc_num (+)) and  
+         ( ab_job.order_item_num = right_trapezoid.order_item_num (+)) and  
+         ( ab_job.order_abc_num = right_trapezoid.order_abc_num (+)) and  
+         ( ab_job.order_item_num = fender.order_item_num (+)) and  
+         ( ab_job.order_abc_num = fender.order_abc_num (+)) and  
+         ( ab_job.order_item_num = trapezoid.order_item_num (+)) and  
+         ( ab_job.order_abc_num = trapezoid.order_abc_num (+)) and
+			( ab_job.order_abc_num = x1_shape.order_abc_num (+)) and  
+         ( ~"CUSTOMER_ORDER~".~"ENDUSER_ID~" = ~"CUSTOMER~".~"CUSTOMER_ID~" ) and  
+         ( ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" = ~"CUSTOMER_ORDER~".~"ORDER_ABC_NUM~" ) and  
+         ( ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~" = ~"AB_JOB~".~"ORDER_ITEM_NUM~" ) and  
+         ( ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" = ~"AB_JOB~".~"ORDER_ABC_NUM~" ) and  
+         ( ( ~"AB_JOB~".~"AB_JOB_NUM~" = :al_prod_id ) )    
+" arguments=(("al_prod_id", number)) )
+text(band=detail alignment="0" text="LINE" border="0" color="0" x="4" y="13" height="64" width="139" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=53 alignment="0" tabsequence=32766 border="0" color="0" x="161" y="13" height="64" width="432" format="[general]" html.valueishtml="0"  name=line_line_desc visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="154" y1="77" x2="589" y2="77"  name=l_1 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+compute(band=detail alignment="1" expression="~"*P~" + String( ab_job_ab_job_num) + ~" * ~""border="0" color="0" x="1382" y="3" height="86" width="1982" format="" html.valueishtml="0"  name=job_num_barcode visible="1"  font.face="C39 Low 36pt LJ4" font.height="-16" font.weight="400"  font.family="0" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="2" text="PRODUCTION ORDER" border="0" color="0" x="7" y="93" height="112" width="3339" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-16" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="QF 015" border="0" color="0" x="2458" y="109" height="80" width="296" html.valueishtml="0"  name=t_3 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+compute(band=detail alignment="0" expression="today()"border="0" color="0" x="2842" y="112" height="77" width="483" format="[general]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="1" text="AB JOB No." border="0" color="0" x="2469" y="221" height="64" width="362" html.valueishtml="0"  name=ab_job_ab_job_num_t visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="0" color="0" x="2867" y="211" height="64" width="443" format="[general]" html.valueishtml="0"  name=ab_job_ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="2842" y1="285" x2="3306" y2="285"  name=l_2 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="CUSTOMER" border="0" color="0" x="66" y="317" height="64" width="351" html.valueishtml="0"  name=customer_customer_short_name_t visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="                                                            " border="0" color="0" x="435" y="317" height="64" width="794" html.valueishtml="0"  name=cust_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="ENDUSER" border="0" color="0" x="1254" y="317" height="64" width="296" html.valueishtml="0"  name=t_4 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="0" x="1562" y="317" height="64" width="797" format="[general]" html.valueishtml="0"  name=customer_customer_short_name visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="ABCO ORDER No.  " border="0" color="0" x="2381" y="317" height="64" width="556" html.valueishtml="0"  name=customer_order_order_abc_num_t visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=7 alignment="2" tabsequence=32766 border="0" color="0" x="2944" y="317" height="64" width="333" format="[general]" html.valueishtml="0"  name=customer_order_order_abc_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="435" y1="397" x2="1232" y2="397"  name=l_3 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="1558" y1="397" x2="2355" y2="397"  name=l_4 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="2937" y1="397" x2="3280" y2="397"  name=l_5 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="ORDER QTY" border="0" color="0" x="66" y="448" height="64" width="358" html.valueishtml="0"  name=t_5 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=35 alignment="2" tabsequence=32766 border="0" color="0" x="450" y="448" height="64" width="315" format="[General]" html.valueishtml="0"  name=ab_job_job_process_quantity visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="MAT. REC'D" border="0" color="0" x="775" y="448" height="64" width="344" html.valueishtml="0"  name=t_6 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="2" text="                           " border="0" color="0" x="1145" y="445" height="64" width="300" html.valueishtml="0"  name=total_coil_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="SHIP TOL." border="0" color="0" x="1463" y="445" height="64" width="289" html.valueishtml="0"  name=t_7 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=19 alignment="2" tabsequence=32766 border="0" color="0" x="1774" y="416" height="61" width="183" format="[general]" html.valueishtml="0"  name=order_item_sh_tolerance_plus visible="1" edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=18 alignment="2" tabsequence=32766 border="0" color="0" x="1774" y="480" height="61" width="183" format="[general]" html.valueishtml="0"  name=order_item_sh_toleranc_minus visible="1" edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="2" text="ALLOY" border="0" color="0" x="1975" y="445" height="64" width="205" html.valueishtml="0"  name=order_item_alloy_t visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=51 alignment="1" tabsequence=32766 border="0" color="0" x="2191" y="445" height="64" width="197" format="[general]" html.valueishtml="0"  name=order_item_alloy2 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text=" -" border="0" color="0" x="2384" y="445" height="64" width="44" html.valueishtml="0"  name=t_8 visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=14 alignment="0" tabsequence=32766 border="0" color="0" x="2436" y="448" height="61" width="179" format="[general]" html.valueishtml="0"  name=order_item_temper visible="1" edit.limit=8 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="TYPE" border="0" color="0" x="2629" y="448" height="64" width="154" html.valueishtml="0"  name=order_item_type_t visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=34 alignment="0" tabsequence=32766 border="0" color="0" x="2798" y="445" height="64" width="479" format="[general]" html.valueishtml="0"  name=order_item_sheet_type visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="435" y1="557" x2="772" y2="557"  name=l_6 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="1119" y1="557" x2="1445" y2="557"  name=l_7 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="1774" y1="557" x2="1957" y2="557"  name=l_8 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="2169" y1="557" x2="2586" y2="557"  name=l_9 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="2801" y1="557" x2="3277" y2="557"  name=l_10 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="SCRAP" border="0" color="0" x="69" y="605" height="64" width="227" html.valueishtml="0"  name=customer_order_scrap_handing_type_t visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=8 alignment="0" tabsequence=32766 border="0" color="0" x="307" y="605" height="64" width="611" format="[general]" html.valueishtml="0"  name=customer_order_scrap_handing_type visible="1" edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="MAX SKID WT" border="0" color="0" x="922" y="605" height="64" width="424" html.valueishtml="0"  name=order_item_max_skid_wt_t visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=13 alignment="2" tabsequence=32766 border="0" color="0" x="1357" y="605" height="64" width="304" format="[general]" html.valueishtml="0"  name=order_item_max_skid_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="EST SKID WT" border="0" color="0" x="1671" y="605" height="64" width="399" html.valueishtml="0"  name=t_9 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="2" expression="ceiling(   ab_job_job_pieces_skid *  order_item_theoretical_unit_wt )"border="0" color="0" x="2085" y="605" height="64" width="307" format="[general]" html.valueishtml="0"  name=t_est_skid_wt visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="329" y1="685" x2="911" y2="685"  name=l_11 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="1360" y1="685" x2="1668" y2="685"  name=l_12 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="2074" y1="685" x2="2377" y2="685"  name=l_13 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="PC.WGT." border="0" color="0" x="69" y="736" height="64" width="263" html.valueishtml="0"  name=t_10 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=15 alignment="0" tabsequence=32766 border="0" color="0" x="344" y="736" height="61" width="260" format="[general]" html.valueishtml="0"  name=order_item_gauge visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="+" border="0" color="0" x="614" y="701" height="64" width="37" html.valueishtml="0"  name=t_11 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=16 alignment="1" tabsequence=32766 border="0" color="0" x="647" y="701" height="54" width="190" format="[general]" html.valueishtml="0"  name=order_item_gauge_p visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="                        " border="0" color="0" x="911" y="736" height="64" width="249" html.valueishtml="0"  name=w_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="            " border="0" color="0" x="1159" y="701" height="54" width="212" html.valueishtml="0"  name=w_p_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="-" border="0" color="0" x="614" y="765" height="64" width="26" html.valueishtml="0"  name=t_12 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=17 alignment="1" tabsequence=32766 border="0" color="0" x="647" y="765" height="64" width="190" format="[general]" html.valueishtml="0"  name=order_item_gauge_m visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="X" border="0" color="0" x="848" y="733" height="70" width="44" html.valueishtml="0"  name=t_13 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="            " border="0" color="0" x="1159" y="768" height="61" width="212" html.valueishtml="0"  name=w_m_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="X" border="0" color="0" x="1390" y="733" height="67" width="40" html.valueishtml="0"  name=t_14 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="                " border="0" color="0" x="1445" y="733" height="64" width="234" html.valueishtml="0"  name=l_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="            " border="0" color="0" x="1686" y="704" height="61" width="208" html.valueishtml="0"  name=l_p_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="            " border="0" color="0" x="1686" y="768" height="61" width="208" html.valueishtml="0"  name=l_m_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="X" border="0" color="0" x="1920" y="733" height="70" width="40" html.valueishtml="0"  name=t_15 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=52 alignment="2" tabsequence=32766 border="0" color="0" x="1986" y="733" height="64" width="249" format="[general]" html.valueishtml="0"  name=metal_density_metal_density visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="=" border="0" color="0" x="2256" y="733" height="80" width="48" html.valueishtml="0"  name=t_16 visible="1"  font.face="Arial" font.height="-12" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=31 alignment="2" tabsequence=32766 border="0" color="0" x="2311" y="739" height="64" width="271" format="" html.valueishtml="0"  name=order_item_theoretical_unit_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="Die#" border="0" color="0" x="2611" y="736" height="77" width="183" html.valueishtml="0"  name=t_17 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=59 alignment="0" tabsequence=32766 border="0" color="0" x="2827" y="749" height="64" width="530" format="[general]" html.valueishtml="0"  name=chevron_ch_die visible="1" dddw.name=d_die_list_per_chevron dddw.displaycolumn=die_die_name dddw.datacolumn=die_die_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=57 alignment="0" tabsequence=32766 border="0" color="0" x="2827" y="742" height="64" width="530" format="[general]" html.valueishtml="0"  name=rectangle_rt_die1 visible="1" dddw.name=d_die_list_per_rectangle dddw.displaycolumn=die_die_name dddw.datacolumn=die_die_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=61 alignment="0" tabsequence=32766 border="0" color="0" x="2823" y="742" height="64" width="530" format="[general]" html.valueishtml="0"  name=left_trapezoid_ltr_die1 visible="1" dddw.name=d_die_list_per_trapezoid dddw.displaycolumn=die_die_name dddw.datacolumn=die_die_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=58 alignment="0" tabsequence=32766 border="0" color="0" x="2827" y="739" height="64" width="530" format="[general]" html.valueishtml="0"  name=parallelogram_p_die1 visible="1" dddw.name=d_die_list_per_parallelogram dddw.displaycolumn=die_die_name dddw.datacolumn=die_die_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=55 alignment="0" tabsequence=32766 border="0" color="0" x="2823" y="736" height="64" width="527" format="[general]" html.valueishtml="0"  name=right_trapezoid_rtr_die1 visible="1" dddw.name=d_die_list_per_trapezoid dddw.displaycolumn=die_die_name dddw.datacolumn=die_die_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=63 alignment="0" tabsequence=32766 border="0" color="0" x="2823" y="746" height="64" width="530" format="[general]" html.valueishtml="0"  name=liftgate_shape_li_die1 visible="1" dddw.name=d_die_list_per_liftgate dddw.displaycolumn=die_die_name dddw.datacolumn=die_die_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=60 alignment="0" tabsequence=32766 border="0" color="0" x="2823" y="742" height="64" width="530" format="[general]" html.valueishtml="0"  name=circle_c_die1 visible="1" dddw.name=d_die_list_per_circle dddw.displaycolumn=die_die_name dddw.datacolumn=die_die_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=54 alignment="0" tabsequence=32766 border="0" color="0" x="2827" y="742" height="64" width="527" format="[general]" html.valueishtml="0"  name=trapezoid_tr_die1 visible="1" dddw.name=d_die_list_per_trapezoid dddw.displaycolumn=die_die_name dddw.datacolumn=die_die_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=56 alignment="0" tabsequence=32766 border="0" color="0" x="2820" y="739" height="64" width="530" format="[general]" html.valueishtml="0"  name=reinforcement_re_die1 visible="1" dddw.name=d_die_list_per_reinforcement dddw.displaycolumn=die_die_name dddw.datacolumn=die_die_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=62 alignment="0" tabsequence=32766 border="0" color="0" x="2823" y="736" height="64" width="494" format="[general]" html.valueishtml="0"  name=fender_fe_die1 visible="1" dddw.name=d_die_list_per_fender dddw.displaycolumn=die_die_name dddw.datacolumn=die_die_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="1986" y1="835" x2="2249" y2="835"  name=l_14 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="336" y1="845" x2="834" y2="845"  name=l_15 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="900" y1="845" x2="1360" y2="845"  name=l_16 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="1445" y1="845" x2="1902" y2="845"  name=l_17 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="2319" y1="845" x2="2597" y2="845"  name=l_18 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+column(band=detail id=41 alignment="2" tabsequence=32766 border="0" color="0" x="2637" y="813" height="54" width="11" format="[General]" html.valueishtml="0"  name=ab_job_pitch_minus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=39 alignment="2" tabsequence=32766 border="0" color="0" x="2754" y="797" height="64" width="4" format="[General]" html.valueishtml="0"  name=ab_job_pitch visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=40 alignment="2" tabsequence=32766 border="0" color="0" x="2783" y="813" height="54" width="7" format="[General]" html.valueishtml="0"  name=ab_job_pitch_plus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="2867" y1="832" x2="3277" y2="832"  name=l_19 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="MATERIAL YIELD" border="0" color="0" x="69" y="880" height="64" width="497" html.valueishtml="0"  name=ab_job_material_yield_t visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="0" color="0" x="578" y="877" height="64" width="271" format="[general]" html.valueishtml="0"  name=ab_job_material_yield visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="MAX SCRAP WGT." border="0" color="0" x="863" y="880" height="64" width="541" html.valueishtml="0"  name=t_18 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="2" expression=" ab_job_job_process_quantity  -  ab_job_job_sheet_wt "border="0" color="0" x="1415" y="877" height="64" width="369" format="[general]" html.valueishtml="0"  name=scrap_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="SHEET WGT." border="0" color="0" x="1796" y="877" height="64" width="384" html.valueishtml="0"  name=t_19 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=36 alignment="2" tabsequence=32766 border="0" color="0" x="2191" y="877" height="64" width="388" format="[General]" html.valueishtml="0"  name=ab_job_job_sheet_wt visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="No./SKIDS" border="0" color="0" x="2586" y="883" height="64" width="300" html.valueishtml="0"  name=t_20 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=37 alignment="2" tabsequence=32766 border="0" color="0" x="2896" y="877" height="64" width="267" format="[General]" html.valueishtml="0"  name=ab_job_job_skid visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="578" y1="957" x2="848" y2="957"  name=l_20 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="1401" y1="957" x2="1785" y2="957"  name=l_21 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="2194" y1="957" x2="2582" y2="957"  name=l_22 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="2904" y1="957" x2="3149" y2="957"  name=l_23 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+rectangle(band=detail x="69" y="1011" height="1248" width="3076"  name=r_1 visible="1" brush.hatch="7" brush.color="553648127" pen.style="0" pen.width="7" pen.color="33554432"  background.mode="2" background.color="0" )
+text(band=detail alignment="0" text="Notes:" border="0" color="0" x="150" y="1021" height="51" width="139" html.valueishtml="0"  name=t_21 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=26 alignment="0" tabsequence=32766 border="0" color="0" x="377" y="1024" height="189" width="1353" format="[general]" html.valueishtml="0"  name=ab_job_sketch_job_note visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Lot No." border="0" color="0" x="1971" y="1037" height="48" width="154" html.valueishtml="0"  name=t_22 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="2209" y1="1008" x2="2209" y2="2243"  name=l_24 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Ticket No." border="0" color="0" x="2337" y="1037" height="48" width="223" html.valueishtml="0"  name=t_23 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Coil/Skid" border="0" color="0" x="2640" y="1037" height="48" width="216" html.valueishtml="0"  name=t_24 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Wgt." border="0" color="0" x="2966" y="1037" height="48" width="102" html.valueishtml="0"  name=t_25 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="1851" y1="1101" x2="3138" y2="1101"  name=l_25 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Sketch # " border="0" color="0" x="150" y="1219" height="54" width="208" html.valueishtml="0"  name=t_26 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="391" y1="1283" x2="1664" y2="1283"  name=l_26 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+bitmap(band=detail filename=".\efsketch.jpg" x="106" y="1325" height="899" width="1701" border="0"  name=p_1 visible="1" )
+line(band=detail x1="1847" y1="1011" x2="1847" y2="2253"  name=l_27 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="536870912" )
+report(band=detail dataobject="d_report_ab_job_coil" x="1851" y="1101" height="1024" width="1291" border="0"  height.autosize=yes criteria="" nest_arguments=(("al_prod_id")) trail_footer = yes  name=dw_1 visible="1"  slideleft=yes  slideup=directlyabove )
+report(band=detail dataobject="d_report_ab_job_partial" x="1851" y="2141" height="112" width="1291" border="0"  height.autosize=yes criteria="" nest_arguments=(("al_prod_id")) trail_footer = yes  name=dw_2 visible="1"  slideleft=yes  slideup=directlyabove )
+line(band=detail x1="2629" y1="1011" x2="2629" y2="2253"  name=l_28 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="536870912" )
+line(band=detail x1="2875" y1="1021" x2="2875" y2="2253"  name=l_29 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="NOTES:" border="0" color="0" x="66" y="2269" height="48" width="190" html.valueishtml="0"  name=t_27 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=43 alignment="0" tabsequence=32766 border="0" color="0" x="260" y="2269" height="64" width="3013" format="[general]" html.valueishtml="0"  name=ab_job_job_notes visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="    " border="0" color="0" x="260" y="2336" height="61" width="66" html.valueishtml="0"  name=partial_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="PROCESSING" border="0" color="0" x="59" y="2397" height="54" width="406" html.valueishtml="0"  name=t_28 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="1.) MATERIAL END USE" border="0" color="0" x="113" y="2461" height="48" width="475" html.valueishtml="0"  name=t_29 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=24 alignment="0" tabsequence=32766 border="0" color="0" x="614" y="2461" height="54" width="1960" format="[general]" html.valueishtml="0"  name=order_item_material_end_use visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="614" y1="2525" x2="2611" y2="2525"  name=l_30 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="2.) SURFACE" border="0" color="0" x="113" y="2531" height="48" width="274" html.valueishtml="0"  name=t_30 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=25 alignment="0" tabsequence=32766 border="0" color="0" x="424" y="2531" height="58" width="2176" format="[general]" html.valueishtml="0"  name=order_item_surface visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="2" text="JOB NOTES" border="0" color="0" x="2809" y="2509" height="51" width="344" html.valueishtml="0"  name=t_31 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="421" y1="2589" x2="2611" y2="2589"  name=l_31 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="3.) FLATNESS" border="0" color="0" x="113" y="2605" height="48" width="293" html.valueishtml="0"  name=order_item_flatness_t visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="450" y1="2659" x2="2611" y2="2659"  name=l_32 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+column(band=detail id=20 alignment="0" tabsequence=32766 border="0" color="0" x="450" y="2605" height="54" width="2136" format="[general]" html.valueishtml="0"  name=order_item_flatness visible="1" edit.limit=50 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="4.) OIL,STENCIL OR INTERLEAVE" border="0" color="0" x="113" y="2672" height="48" width="677" html.valueishtml="0"  name=order_item_oil_stencil_interleave_t visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=21 alignment="0" tabsequence=32766 border="0" color="0" x="819" y="2669" height="112" width="1748" format="[general]" html.valueishtml="0"  name=order_item_oil_stencil_interleave visible="1" edit.limit=50 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="819" y1="2771" x2="2615" y2="2771"  name=l_33 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="5.) ATTACHMENTS" border="0" color="0" x="113" y="2784" height="48" width="399" html.valueishtml="0"  name=t_32 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="519" y1="2845" x2="2611" y2="2845"  name=l_34 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+column(band=detail id=32 alignment="0" tabsequence=32766 border="0" color="0" x="527" y="2784" height="61" width="2048" format="[general]" html.valueishtml="0"  name=order_item_item_attachments visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="6.) OTHER " border="0" color="0" x="113" y="2861" height="48" width="223" html.valueishtml="0"  name=order_item_processing_other_spec_t visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=22 alignment="0" tabsequence=32766 border="0" color="0" x="362" y="2861" height="51" width="2213" format="[general]" html.valueishtml="0"  name=order_item_processing_other_spec visible="1" edit.limit=50 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="366" y1="2912" x2="2611" y2="2912"  name=l_35 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="PACKAGING " border="0" color="0" x="59" y="2941" height="51" width="384" html.valueishtml="0"  name=t_33 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="1.)" border="0" color="0" x="102" y="3011" height="48" width="62" html.valueishtml="0"  name=t_34 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="194" y1="3059" x2="2611" y2="3059"  name=l_36 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+column(band=detail id=44 alignment="0" tabsequence=32766 border="0" color="0" x="205" y="2995" height="64" width="2359" format="[general]" html.valueishtml="0"  name=order_item_packaging_spec1 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="2.)" border="0" color="0" x="113" y="3085" height="48" width="66" html.valueishtml="0"  name=t_35 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="194" y1="3133" x2="2611" y2="3133"  name=l_37 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+column(band=detail id=45 alignment="0" tabsequence=32766 border="0" color="0" x="205" y="3069" height="64" width="2359" format="[general]" html.valueishtml="0"  name=order_item_packaging_spec2 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="3.)" border="0" color="0" x="113" y="3152" height="48" width="66" html.valueishtml="0"  name=t_36 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="194" y1="3200" x2="2611" y2="3200"  name=l_38 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+column(band=detail id=46 alignment="0" tabsequence=32766 border="0" color="0" x="205" y="3136" height="64" width="2359" format="[general]" html.valueishtml="0"  name=order_item_packaging_spec3 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="4.)" border="0" color="0" x="113" y="3229" height="48" width="66" html.valueishtml="0"  name=t_37 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="194" y1="3277" x2="2611" y2="3277"  name=l_39 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+column(band=detail id=47 alignment="0" tabsequence=32766 border="0" color="0" x="205" y="3213" height="64" width="2359" format="[general]" html.valueishtml="0"  name=order_item_packaging_spec4 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="5.)" border="0" color="0" x="113" y="3293" height="48" width="66" html.valueishtml="0"  name=t_38 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="194" y1="3344" x2="2611" y2="3344"  name=l_40 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+column(band=detail id=48 alignment="0" tabsequence=32766 border="0" color="0" x="205" y="3280" height="64" width="2359" format="[general]" html.valueishtml="0"  name=order_item_packaging_spec5 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="6.)" border="0" color="0" x="113" y="3360" height="48" width="66" html.valueishtml="0"  name=t_39 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="194" y1="3411" x2="2611" y2="3411"  name=l_41 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+column(band=detail id=49 alignment="0" tabsequence=32766 border="0" color="0" x="205" y="3347" height="64" width="2359" format="[general]" html.valueishtml="0"  name=order_item_packaging_spec6 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="7.)" border="0" color="0" x="113" y="3437" height="48" width="66" html.valueishtml="0"  name=t_40 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="194" y1="3485" x2="2611" y2="3485"  name=l_42 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+column(band=detail id=50 alignment="0" tabsequence=32766 border="0" color="0" x="205" y="3421" height="64" width="2359" format="[general]" html.valueishtml="0"  name=order_item_packaging_spec7 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="8.) BANDS" border="0" color="0" x="113" y="3501" height="48" width="223" html.valueishtml="0"  name=t_41 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="9.) OTHER" border="0" color="0" x="113" y="3571" height="48" width="219" html.valueishtml="0"  name=t_42 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="ITEM NOTES" border="0" color="0" x="110" y="3632" height="51" width="325" html.valueishtml="0"  name=t_43 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=33 alignment="0" tabsequence=32766 border="0" color="0" x="424" y="3642" height="118" width="2150" format="[general]" html.valueishtml="0"  name=order_item_item_note visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="435" y1="3770" x2="2611" y2="3770"  name=l_43 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+column(band=detail id=65 alignment="0" tabsequence=32766 border="1" color="0" x="2648" y="2579" height="1117" width="827" format="[general]" html.valueishtml="0"  name=ab_job_job_reference_codes visible="1" edit.limit=254 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="380" y1="3549" x2="2611" y2="3549"  name=l_44 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="380" y1="3629" x2="2611" y2="3629"  name=l_45 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+column(band=detail id=23 alignment="0" tabsequence=32766 border="0" color="0" x="384" y="3488" height="61" width="2198" format="[general]" html.valueishtml="0"  name=order_item_packaging_bands visible="1" edit.limit=50 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=42 alignment="0" tabsequence=32766 border="0" color="0" x="384" y="3565" height="64" width="2198" format="[general]" html.valueishtml="0"  name=order_item_packaging_other_spec visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="ESTIMATED START" border="0" color="0" x="66" y="3805" height="64" width="567" html.valueishtml="0"  name=ab_job_time_date_started_t visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="0" x="647" y="3805" height="64" width="527" format="mm/dd/yyyy hh:mm" html.valueishtml="0"  name=ab_job_time_date_started visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="ACTUAL NUMBER OF MEN USED(" border="0" color="0" x="1207" y="3805" height="64" width="976" html.valueishtml="0"  name=ab_job_number_of_men_used_t visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=5 alignment="2" tabsequence=32766 border="0" color="0" x="2180" y="3808" height="61" width="117" format="[general]" html.valueishtml="0"  name=ab_job_number_of_men_used visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text=")" border="0" color="0" x="2300" y="3808" height="64" width="26" html.valueishtml="0"  name=t_44 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="2319" y1="3869" x2="2743" y2="3869"  name=l_46 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="640" y1="3885" x2="1192" y2="3885"  name=l_47 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="ACTUAL START" border="0" color="0" x="168" y="3885" height="64" width="464" html.valueishtml="0"  name=t_45 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text=" FINISH" border="0" color="0" x="1306" y="3885" height="64" width="219" html.valueishtml="0"  name=t_46 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="640" y1="3949" x2="1247" y2="3949"  name=l_48 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="1543" y1="3949" x2="2202" y2="3949"  name=l_49 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="PC./SKID" border="0" color="0" x="2465" y="579" height="64" width="274" html.valueishtml="0"  name=t_47 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=38 alignment="2" tabsequence=32766 border="0" color="0" x="2768" y="579" height="64" width="432" format="[General]" html.valueishtml="0"  name=ab_job_job_pieces_skid visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="2757" y1="653" x2="3218" y2="653"  name=l_50 visible="1" pen.style="0" pen.width="7" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="2" text="*" border="0" color="0" x="2469" y="659" height="64" width="18" html.valueishtml="0"  name=t_48 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=9 alignment="0" tabsequence=32766 border="0" color="0" x="2498" y="659" height="64" width="881" format="[general]" html.valueishtml="0"  name=customer_order_sheet_handling_type visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=64 alignment="0" tabsequence=32766 border="0" color="0" x="2827" y="742" height="64" width="483" format="[general]" html.valueishtml="0"  name=x1_shape_x_die visible="1" dddw.name=d_die_list_per_x1 dddw.displaycolumn=die_die_name dddw.datacolumn=die_die_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=30 alignment="0" tabsequence=32766 border="0" color="0" x="377" y="1219" height="58" width="900" format="[general]" html.valueishtml="0"  name=sketch_jpg_sketch_name visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

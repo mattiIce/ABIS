@@ -1,0 +1,228 @@
+$PBExportHeader$f_get_bol_totals.srf
+global type f_get_bol_totals from function_object
+end type
+
+forward prototypes
+global function integer f_get_bol_totals (long al_bill_of_lading, long al_packing_list, n_tr_abc01 atr, ref string as_package)
+end prototypes
+
+global function integer f_get_bol_totals (long al_bill_of_lading, long al_packing_list, n_tr_abc01 atr, ref string as_package);//Alex Gerlants. 03/29/2021. 1141_Add_Packing_List_To_All_BOLs. Begin
+/*
+Function:	f_get_bol_totals
+Returns:		integer	<==  	 0 if al_bill_of_lading is a single-stop
+									 1 if al_bill_of_lading is a multi-stop
+									 2 if al_bill_of_lading is a multi-stop BOL and shipment.shipment_reference_codes is automatically populated before
+									-1 if DB error
+Arguments:	value			long			al_bill_of_lading
+				value			long			al_packing_list
+				value			n_tr_abc01	atr
+				reference	string 		as_package
+*/
+
+Integer					li_rtn = 1, li_count
+Long						ll_i, ll_number_temp, ll_wt_temp, ll_pos
+Long						ll_rows_sheet_skid, ll_rows_scrap_skid, ll_rows_rej_coil, ll_net_wt_balance
+Long						ll_total_wt_sheet_skid, ll_total_wt_scrap_skid, ll_total_wt_rej_coil
+String					ls_sheet_skid_display_num, ls_scrap_skid_display_num
+String					ls_skid_list_sheet_skid, ls_skid_list_scrap_skid, ls_coil_list_rej_coil
+String					ls_string_sheet_skid, ls_string_scrap_skid, ls_string_rej_coil
+String					ls_shipment_reference_codes, ls_coil_org_num
+DataStore				lds_sheet_skids_4bol, lds_scrap_skids_4bol, lds_rej_coils_4bol
+str_all_data_types	lstr_all_data_types
+
+select	count(distinct packing_list)
+into		:li_count
+from		shipment
+where		shipment.bill_of_lading = :al_bill_of_lading
+using		atr;
+
+Choose Case atr.sqlcode
+	Case 0 //OK
+		//
+	Case 100 //al_bill_of_lading does not exist in table shipment. Should not happen
+		MessageBox("Shipment does not exist", "Shipment " + String(al_packing_list) + "does not exist~n~Please contact abis support")
+		li_rtn = -1
+	Case Else //DB error
+		MessageBox("Database error in function f_get_bol_totals ", "Database error in function f_get_bol_totals while selecting data from table shipment for bill_of_lading " + String(al_packing_list) + &
+												"~n~rPlease contact abis support.~n~rError:~n~r" + atr.SqlErrText)
+		li_rtn = -1
+End Choose
+
+If li_rtn = 1 Then //OK above
+	If li_count < 2 Then //Single-stop BOL
+		li_rtn = 0
+	End If
+End If
+
+If li_rtn = 1 Then //al_bill_of_lading is a multi-stop BOL
+	//Check if the string is already in shipment.shipment_reference_codes for al_packing_list
+	//If it is there, just take as_package from shipment.shipment_reference_codes
+	select	nvl(shipment.shipment_reference_codes, '')
+	into		:ls_shipment_reference_codes
+	from		shipment
+	where		shipment.packing_list = :al_packing_list
+	using		atr;
+	
+	Choose Case atr.sqlcode
+		Case 0 //OK
+			If Len(ls_shipment_reference_codes) > 0 Then
+				ll_pos = Pos(ls_shipment_reference_codes, "Shipping with BOL", 1)
+				
+				If ll_pos > 0 Then
+					as_package = ls_shipment_reference_codes
+					li_rtn = 2
+				End If
+			End If
+		Case 100 //al_bill_of_lading does not exist in table shipment. Should not happen
+			MessageBox("Shipment does not exist", "Shipment " + String(al_packing_list) + "does not exist~n~Please contact abis support")
+			li_rtn = -1
+		Case Else //DB error
+			MessageBox("Database error in function f_get_bol_totals ", "Database error in function f_get_bol_totals while selecting data from table shipment for bill_of_lading " + String(al_packing_list) + &
+													"~n~rPlease contact abis support.~n~rError:~n~r" + atr.SqlErrText)
+			li_rtn = -1
+	End Choose
+End If
+
+If li_rtn = 1 Then //al_bill_of_lading is a multi-stop BOL and shipment.shipment_reference_codes is not populated before
+	If IsValid(lds_sheet_skids_4bol) Then Destroy lds_sheet_skids_4bol
+	If IsValid(lds_scrap_skids_4bol) Then Destroy lds_scrap_skids_4bol
+	If IsValid(lds_rej_coils_4bol) Then Destroy lds_rej_coils_4bol
+	
+	lds_sheet_skids_4bol = Create DataStore
+	lds_sheet_skids_4bol.DataObject = "d_sheet_skids_4bol"
+	lds_sheet_skids_4bol.SetTransObject(atr)
+	
+	lds_scrap_skids_4bol = Create DataStore
+	lds_scrap_skids_4bol.DataObject = "d_scrap_skids_4bol"
+	lds_scrap_skids_4bol.SetTransObject(atr)
+	
+	lds_rej_coils_4bol = Create DataStore
+	lds_rej_coils_4bol.DataObject = "d_rej_coils_4bol"
+	lds_rej_coils_4bol.SetTransObject(atr)
+	
+	ll_rows_sheet_skid = lds_sheet_skids_4bol.Retrieve(al_bill_of_lading)
+	
+	Choose Case ll_rows_sheet_skid
+		Case 0 //OK. al_bill_of_lading does not have sheet skids
+			//
+		Case Is > 0 //OK. al_bill_of_lading has sheet skids
+			
+		Case Else //DB error
+			MessageBox("Database error in function f_get_bol_totals ", "Database error in function f_get_bol_totals while selecting data " + &
+													"from tables shipment, sheet_skid, sheet_packing_item for shipment " + String(al_packing_list) + &
+													"~n~rPlease contact abis support.~n~rError:~n~r" + atr.SqlErrText)
+			li_rtn = -1
+	End Choose
+	
+	If li_rtn = 1 Then //OK above	
+		ll_rows_scrap_skid = lds_scrap_skids_4bol.Retrieve(al_bill_of_lading)
+		
+		Choose Case ll_rows_scrap_skid
+			Case 0 //OK. al_bill_of_lading does not have scrap skids
+				//
+			Case Is > 0 //OK. al_bill_of_lading has scrap skids
+				
+			Case Else //DB error
+				MessageBox("Database error in function f_get_bol_totals ", "Database error in function f_get_bol_totals while selecting data " + &
+														"from tables shipment, scrap_skid, scrap_packing_item for shipment " + String(al_packing_list) + &
+														"~n~rPlease contact abis support.~n~rError:~n~r" + atr.SqlErrText)
+				li_rtn = -1
+		End Choose
+	End If	
+	
+	If li_rtn = 1 Then //OK above
+		ll_rows_rej_coil = lds_rej_coils_4bol.Retrieve(al_bill_of_lading)
+		
+		Choose Case ll_rows_rej_coil
+			Case 0 //OK. al_bill_of_lading does not have returned or rejected coils
+				//
+			Case Is > 0 //OK. al_bill_of_lading has returned or rejected coils
+				
+			Case Else //DB error
+				MessageBox("Database error in function f_get_bol_totals ", "Database error in function f_get_bol_totals while selecting data " + &
+														"from tables shipment, reject_coil_packing_item, coil for shipment " + String(al_packing_list) + &
+														"~n~rPlease contact abis support.~n~rError:~n~r" + atr.SqlErrText)
+				li_rtn = -1
+		End Choose
+	End If
+End If
+
+//----------------------------------------------------------------------------------
+
+If li_rtn = 1 Then //OK above
+	If ll_rows_sheet_skid > 0 Then
+		For ll_i = 1 To ll_rows_sheet_skid
+			ll_number_temp = lds_sheet_skids_4bol.Object.sheet_skid_num[ll_i]
+			ls_sheet_skid_display_num = lds_sheet_skids_4bol.Object.sheet_skid_display_num[ll_i]
+			ll_wt_temp = lds_sheet_skids_4bol.Object.sheet_net_wt[ll_i] + lds_sheet_skids_4bol.Object.sheet_tare_wt[ll_i]
+
+			ls_skid_list_sheet_skid = ls_skid_list_sheet_skid + ls_sheet_skid_display_num + ", "
+			ll_total_wt_sheet_skid = ll_total_wt_sheet_skid + ll_wt_temp
+		Next
+		
+		//ls_skid_list_sheet_skid = ls_skid_list_sheet_skid + ls_skid_list_sheet_skid + ls_skid_list_sheet_skid //TEST ONLY TEST ONLY TEST ONLY TEST ONLY TEST ONLY
+		
+		//Remove the last comma
+		ls_skid_list_sheet_skid = Left(ls_skid_list_sheet_skid, Len(ls_skid_list_sheet_skid) - 2)
+		
+		ls_string_sheet_skid = String(ll_rows_sheet_skid) + " Sheet Skids. Total Gross Weight " + String(ll_total_wt_sheet_skid)
+		//ls_string_sheet_skid = ls_string_sheet_skid + "Sheet Skid List: " + ls_skid_list_sheet_skid
+		lstr_all_data_types.string_var[1] = ls_string_sheet_skid + "~n   "
+	Else
+		lstr_all_data_types.string_var[1] = ""
+	End If
+		
+	If ll_rows_scrap_skid > 0 Then
+		For ll_i = 1 To ll_rows_scrap_skid
+			ll_number_temp = lds_scrap_skids_4bol.Object.scrap_skid_num[ll_i]
+			ls_scrap_skid_display_num = lds_scrap_skids_4bol.Object.scrap_skid_display_num[ll_i]
+			ll_wt_temp = lds_scrap_skids_4bol.Object.scrap_net_wt[ll_i] + lds_scrap_skids_4bol.Object.scrap_tare_wt[ll_i]
+
+			ls_skid_list_scrap_skid = ls_skid_list_scrap_skid + ls_scrap_skid_display_num + ", "
+			ll_total_wt_scrap_skid = ll_total_wt_scrap_skid + ll_wt_temp
+		Next
+		
+		//Remove the last comma
+		ls_skid_list_scrap_skid = Left(ls_skid_list_scrap_skid, Len(ls_skid_list_scrap_skid) - 2)
+		
+		ls_string_scrap_skid = String(ll_rows_scrap_skid) + " Scrap Skids. Total Gross Weight " + String(ll_total_wt_scrap_skid)
+		//ls_string_scrap_skid = ls_string_scrap_skid + "Scrap Skid List: " + ls_skid_list_scrap_skid
+		
+		lstr_all_data_types.string_var[2] = ls_string_scrap_skid + "~n   "			
+	Else
+		lstr_all_data_types.string_var[2] = ""
+	End If
+	
+	If ll_rows_rej_coil > 0 Then
+		For ll_i = 1 To ll_rows_rej_coil
+			ls_coil_org_num = lds_rej_coils_4bol.Object.coil_org_num[ll_i]
+			ll_net_wt_balance = lds_rej_coils_4bol.Object.net_wt_balance[ll_i]
+			
+			ls_coil_list_rej_coil = ls_coil_list_rej_coil + ls_coil_org_num + ", "
+			ll_total_wt_rej_coil = ll_total_wt_rej_coil + ll_net_wt_balance
+		Next
+		
+		//Remove the last comma
+		ls_coil_list_rej_coil = Left(ls_coil_list_rej_coil, Len(ls_coil_list_rej_coil) - 2)
+
+		ls_string_rej_coil = String(ll_rows_rej_coil) + " coil(s). Total Gross Weight " + String(ll_total_wt_rej_coil)
+		//ls_string_rej_coil = ls_string_rej_coil + "Customer Coil Number List: " + ls_coil_list_rej_coil
+		
+		lstr_all_data_types.string_var[3] = ls_string_rej_coil + "~n   "
+	Else
+		lstr_all_data_types.string_var[3] = ""
+	End If
+	
+	If IsValid(lds_sheet_skids_4bol) Then Destroy lds_sheet_skids_4bol
+	If IsValid(lds_scrap_skids_4bol) Then Destroy lds_scrap_skids_4bol
+	If IsValid(lds_rej_coils_4bol) Then Destroy lds_rej_coils_4bol
+	
+	//MessageBox("Function f_get_bol_totals", ls_string_sheet_skid + "~n" + ls_string_scrap_skid + "~n" + ls_string_rej_coil + "~n")
+	
+	as_package = "Shipping with BOL " + String(al_bill_of_lading) + ":~n" + lstr_all_data_types.string_var[1] + lstr_all_data_types.string_var[2] + lstr_all_data_types.string_var[3]
+End If
+
+Return li_rtn
+//Alex Gerlants. 03/29/2021. 1141_Add_Packing_List_To_All_BOLs. End
+end function
+

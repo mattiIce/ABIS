@@ -1,0 +1,24 @@
+$PBExportHeader$d_recovery_customer_list.srd
+$PBExportComments$list all customer w/ recovery report
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=134 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes key=yes name=customer_id dbname="recovery_report_customer.customer_id" )
+ column=(type=char(64) updatewhereclause=yes key=yes name=customer_name dbname="recovery_report_customer.customer_name" )
+ column=(type=decimal(0) updatewhereclause=yes name=auto_only dbname="recovery_report_customer.auto_only" )
+ column=(type=decimal(0) updatewhereclause=yes name=comm_only dbname="recovery_report_customer.comm_only" )
+ column=(type=decimal(0) updatewhereclause=yes name=all_products dbname="recovery_report_customer.all_products" )
+ retrieve="PBSELECT( VERSION(400) DISTINCT ()TABLE(NAME=~"recovery_report_customer~" ) COLUMN(NAME=~"recovery_report_customer.customer_id~") COLUMN(NAME=~"recovery_report_customer.customer_name~") COLUMN(NAME=~"recovery_report_customer.auto_only~") COLUMN(NAME=~"recovery_report_customer.comm_only~") COLUMN(NAME=~"recovery_report_customer.all_products~")) ORDER(NAME=~"recovery_report_customer.customer_name~" ASC=yes ) " update="RECOVERY_REPORT_CUSTOMER" updatewhere=0 updatekeyinplace=no )
+column(band=detail id=1 alignment="0" tabsequence=0 border="0" color="33554432" x="4" y="0" height="64" width="1419" html.valueishtml="0"  name=customer_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="System" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="134" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=0 border="0" color="33554432" x="1423" y="0" height="64" width="2114" html.valueishtml="0"  name=customer_name visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="System" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="134" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=0 border="0" color="33554432" x="3536" y="0" height="64" width="1419" html.valueishtml="0"  name=auto_only visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="System" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="134" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=0 border="0" color="33554432" x="4955" y="0" height="64" width="1419" html.valueishtml="0"  name=comm_only visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="System" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="134" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=0 border="0" color="33554432" x="6374" y="0" height="64" width="1419" html.valueishtml="0"  name=all_products visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="System" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="134" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

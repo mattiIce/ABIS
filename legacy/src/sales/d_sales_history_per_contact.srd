@@ -1,0 +1,59 @@
+$PBExportHeader$d_sales_history_per_contact.srd
+$PBExportComments$list all sales per contact
+release 9;
+datawindow(units=0 timer_interval=0 color=134217752 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=186 color="536870912" )
+table(column=(type=char(18) updatewhereclause=yes name=customer_customer_short_name dbname="customer.customer_short_name" )
+ column=(type=char(18) updatewhereclause=yes name=customer_contact_first_name dbname="customer_contact.first_name" )
+ column=(type=char(18) updatewhereclause=yes name=customer_contact_last_name dbname="customer_contact.last_name" )
+ column=(type=decimal(0) updatewhereclause=yes name=sales_quote_quote_id dbname="sales_quote.quote_id" )
+ column=(type=decimal(0) updatewhereclause=yes name=sales_quote_quote_revision_id dbname="sales_quote.quote_revision_id" )
+ column=(type=decimal(0) updatewhereclause=yes name=sales_quote_contact_id dbname="sales_quote.contact_id" )
+ column=(type=char(128) updatewhereclause=yes name=sales_quote_end_use dbname="sales_quote.end_use" )
+ column=(type=char(128) updatewhereclause=yes name=sales_quote_part_shape dbname="sales_quote.part_shape" )
+ column=(type=decimal(5) updatewhereclause=yes name=sales_quote_gauge dbname="sales_quote.gauge" )
+ column=(type=decimal(5) updatewhereclause=yes name=sales_quote_width dbname="sales_quote.width" )
+ column=(type=decimal(5) updatewhereclause=yes name=sales_quote_length dbname="sales_quote.length" )
+ column=(type=char(32) updatewhereclause=yes name=sales_quote_alloy dbname="sales_quote.alloy" )
+ column=(type=char(16) updatewhereclause=yes name=sales_quote_temper dbname="sales_quote.temper" )
+ column=(type=decimal(0) updatewhereclause=yes name=sales_quote_total_lb_processed dbname="sales_quote.total_lb_processed" )
+ column=(type=datetime updatewhereclause=yes name=sales_quote_created_date dbname="sales_quote.created_date" )
+ column=(type=datetime updatewhereclause=yes name=sales_quote_valid_date dbname="sales_quote.valid_date" )
+ column=(type=decimal(0) updatewhereclause=yes name=sales_quote_quote_status dbname="sales_quote.quote_status" values="Expired	0/Active	1/Order	3/" )
+ retrieve="  SELECT ~"CUSTOMER~".~"CUSTOMER_SHORT_NAME~",   
+         ~"CUSTOMER_CONTACT~".~"FIRST_NAME~",   
+         ~"CUSTOMER_CONTACT~".~"LAST_NAME~",
+			~"SALES_QUOTE~".~"QUOTE_ID~",
+  			~"SALES_QUOTE~".~"QUOTE_REVISION_ID~",
+         ~"SALES_QUOTE~".~"CONTACT_ID~",
+         ~"SALES_QUOTE~".~"END_USE~",   
+         ~"SALES_QUOTE~".~"PART_SHAPE~",   
+         ~"SALES_QUOTE~".~"GAUGE~",   
+         ~"SALES_QUOTE~".~"WIDTH~",   
+         ~"SALES_QUOTE~".~"LENGTH~",   
+         ~"SALES_QUOTE~".~"ALLOY~",   
+         ~"SALES_QUOTE~".~"TEMPER~",   
+         ~"SALES_QUOTE~".~"TOTAL_LB_PROCESSED~",   
+         ~"SALES_QUOTE~".~"CREATED_DATE~",
+			~"SALES_QUOTE~".~"VALID_DATE~",
+			~"SALES_QUOTE~".~"QUOTE_STATUS~"   
+    FROM ~"CUSTOMER~",   
+         ~"CUSTOMER_CONTACT~",   
+         ~"SALES_QUOTE~",   
+         ~"SALES_PROBABILITY~"  
+   WHERE ( ~"SALES_QUOTE~".~"CONTACT_ID~" = ~"CUSTOMER_CONTACT~".~"CONTACT_ID~" ) and  
+         ( ~"SALES_QUOTE~".~"CUSTOMER_ID~" = ~"CUSTOMER~".~"CUSTOMER_ID~" ) and  
+         ( ~"SALES_QUOTE~".~"CONTACT_ID~" = :al_contact ) 
+" arguments=(("al_contact", number)) )
+compute(band=detail alignment="0" expression=" customer_customer_short_name   + ~"  End Use: ~" +  sales_quote_end_use + ~" Total LB: ~" +  String( sales_quote_total_lb_processed)"border="5" color="33554432" x="300" y="6" height="115" width="1525" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Description:" border="0" color="33554432" x="0" y="10" height="51" width="296" html.valueishtml="0"  name=customer_customer_short_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=17 alignment="2" tabsequence=32766 border="0" color="33554432~tcase(  sales_quote_quote_status  when 0 then RGB(0,0,0)  when 1 then RGB(0,255,0) when 3 then RGB(255,223, 0) else RGB(0,0,0))" x="852" y="125" height="54" width="421" format="[General]" html.valueishtml="0"  name=sales_quote_quote_status visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Quote Status:" border="0" color="33554432" x="534" y="128" height="51" width="311" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

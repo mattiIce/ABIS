@@ -1,0 +1,18 @@
+$PBExportHeader$d_current_shift_job_coil_cust_coil_num.srd
+$PBExportComments$list all job/coils assigned to current shift - number of coils
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=70 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=3 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=coil_abc_num dbname="process_coil.coil_abc_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=process_quantity dbname="process_coil.process_quantity" )
+ column=(type=decimal(0) updatewhereclause=yes name=current_wt dbname="process_coil.current_wt" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"process_coil~" ) COLUMN(NAME=~"process_coil.coil_abc_num~") COLUMN(NAME=~"process_coil.process_quantity~") COLUMN(NAME=~"process_coil.current_wt~")WHERE(    EXP1 =~"~~~"PROCESS_COIL~~~".~~~"AB_JOB_NUM~~~"~"   OP =~"=~"    EXP2 =~":al_job~" ) ) ARG(NAME = ~"al_job~" TYPE = number) " arguments=(("al_job", number)) )
+compute(band=summary alignment="2" expression="count(  coil_abc_num  for all )"border="0" color="33554432" x="0" y="3" height="61" width="282" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

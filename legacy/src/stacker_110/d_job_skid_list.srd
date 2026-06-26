@@ -1,0 +1,128 @@
+$PBExportHeader$d_job_skid_list.srd
+$PBExportComments$list all skid created in this job
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=64 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=58 color="536870912" )
+detail(height=67 color="536870912" )
+table(column=(type=number updatewhereclause=yes name=sheet_skid_sheet_skid_num dbname="sheet_skid.sheet_skid_num" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_ab_job_num dbname="sheet_skid.ab_job_num" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_sheet_net_wt dbname="sheet_skid.sheet_net_wt" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_sheet_tare_wt dbname="sheet_skid.sheet_tare_wt" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_skid_sheet_status dbname="sheet_skid.skid_sheet_status" )
+ column=(type=datetime updatewhereclause=yes name=sheet_skid_skid_date dbname="sheet_skid.skid_date" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_detail_prod_item_num dbname="sheet_skid_detail.prod_item_num" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_detail_sheet_skid_num dbname="sheet_skid_detail.sheet_skid_num" )
+ column=(type=number updatewhereclause=yes name=production_sheet_item_prod_item_num dbname="production_sheet_item.prod_item_num" )
+ column=(type=number updatewhereclause=yes name=production_sheet_item_coil_abc_num dbname="production_sheet_item.coil_abc_num" )
+ column=(type=number updatewhereclause=yes name=production_sheet_item_ab_job_num dbname="production_sheet_item.ab_job_num" )
+ column=(type=number updatewhereclause=yes name=production_sheet_item_prod_item_status dbname="production_sheet_item.prod_item_status" values="Gone	0/InProcess	1/New	2/OnHold	4/Sample	12/NonConf	11/" )
+ column=(type=number updatewhereclause=yes name=production_sheet_item_prod_item_net_wt dbname="production_sheet_item.prod_item_net_wt" )
+ column=(type=number updatewhereclause=yes name=production_sheet_item_prod_item_theoreti dbname="production_sheet_item.prod_item_theoretical_wt" )
+ column=(type=datetime updatewhereclause=yes name=production_sheet_item_prod_item_date dbname="production_sheet_item.prod_item_date" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_sheet_theoretical_wt dbname="sheet_skid.sheet_theoretical_wt" )
+ column=(type=char(255) updatewhereclause=yes name=production_sheet_item_prod_item_note dbname="production_sheet_item.prod_item_note" )
+ column=(type=char(18) updatewhereclause=yes name=production_sheet_item_prod_item_placemen dbname="production_sheet_item.prod_item_placement" values="Edge	Edge/Center	Center/Edge//Center	Edge//Center/" )
+ column=(type=number updatewhereclause=yes name=production_sheet_item_prod_item_pieces dbname="production_sheet_item.prod_item_pieces" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_skid_pieces dbname="sheet_skid.skid_pieces" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_skid_type_if_whed dbname="sheet_skid.skid_type_if_whed" )
+ retrieve="  SELECT ~"SHEET_SKID~".~"SHEET_SKID_NUM~",   
+         ~"SHEET_SKID~".~"AB_JOB_NUM~",   
+         ~"SHEET_SKID~".~"SHEET_NET_WT~",   
+         ~"SHEET_SKID~".~"SHEET_TARE_WT~",   
+         ~"SHEET_SKID~".~"SKID_SHEET_STATUS~",   
+         ~"SHEET_SKID~".~"SKID_DATE~",   
+         ~"SHEET_SKID_DETAIL~".~"PROD_ITEM_NUM~",   
+         ~"SHEET_SKID_DETAIL~".~"SHEET_SKID_NUM~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NUM~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"COIL_ABC_NUM~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"AB_JOB_NUM~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_STATUS~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NET_WT~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_THEORETICAL_WT~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_DATE~",   
+         ~"SHEET_SKID~".~"SHEET_THEORETICAL_WT~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NOTE~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_PLACEMENT~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_PIECES~",   
+         ~"SHEET_SKID~".~"SKID_PIECES~",   
+         ~"SHEET_SKID~".~"SKID_TYPE_IF_WHED~"  
+    FROM ~"PRODUCTION_SHEET_ITEM~",   
+         ~"SHEET_SKID~",   
+         ~"SHEET_SKID_DETAIL~"  
+   WHERE ( ~"SHEET_SKID_DETAIL~".~"SHEET_SKID_NUM~" = ~"SHEET_SKID~".~"SHEET_SKID_NUM~" ) and  
+         ( ~"SHEET_SKID_DETAIL~".~"PROD_ITEM_NUM~" = ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NUM~" ) and  
+         ( (  ~"SHEET_SKID~".~"AB_JOB_NUM~" = :al_job_num  ) )   
+UNION
+  SELECT ~"SHEET_SKID~".~"SHEET_SKID_NUM~",   
+         ~"SHEET_SKID~".~"AB_JOB_NUM~",   
+         ~"SHEET_SKID~".~"SHEET_NET_WT~",   
+         ~"SHEET_SKID~".~"SHEET_TARE_WT~",   
+         ~"SHEET_SKID~".~"SKID_SHEET_STATUS~",   
+         ~"SHEET_SKID~".~"SKID_DATE~",   
+         ~"SHEET_SKID_DETAIL~".~"PROD_ITEM_NUM~",   
+         ~"SHEET_SKID_DETAIL~".~"SHEET_SKID_NUM~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NUM~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"COIL_ABC_NUM~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"AB_JOB_NUM~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_STATUS~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NET_WT~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_THEORETICAL_WT~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_DATE~",   
+         ~"SHEET_SKID~".~"SHEET_THEORETICAL_WT~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NOTE~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_PLACEMENT~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_PIECES~",   
+         ~"SHEET_SKID~".~"SKID_PIECES~",   
+         ~"SHEET_SKID~".~"SKID_TYPE_IF_WHED~"  
+    FROM ~"PRODUCTION_SHEET_ITEM~",   
+         ~"SHEET_SKID~",   
+         ~"SHEET_SKID_DETAIL~",
+			~"PROCESS_PARTIAL_SKID~"  
+   WHERE ( ~"SHEET_SKID_DETAIL~".~"SHEET_SKID_NUM~" = ~"SHEET_SKID~".~"SHEET_SKID_NUM~" ) and  
+         ( ~"SHEET_SKID_DETAIL~".~"PROD_ITEM_NUM~" = ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NUM~" ) and  
+			( ~"PROCESS_PARTIAL_SKID~".~"SHEET_SKID_NUM~" = ~"SHEET_SKID~".~"SHEET_SKID_NUM~" ) and  
+         ( (  ~"PROCESS_PARTIAL_SKID~".~"AB_JOB_NUM~" = :al_job_num  ) )    
+ 
+" data.storage=disk arguments=(("al_job_num", number))  sort="sheet_skid_sheet_skid_num A production_sheet_item_prod_item_num A " )
+text(band=header alignment="2" text="Skid No." border="6" color="0" x="7" y="10" height="51" width="256" html.valueishtml="0"  name=sheet_skid_sheet_skid_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="Net" border="6" color="0" x="274" y="10" height="51" width="219" html.valueishtml="0"  name=sheet_skid_sheet_net_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="Tare" border="6" color="0" x="505" y="10" height="51" width="165" html.valueishtml="0"  name=sheet_skid_sheet_tare_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="PCs" border="6" color="0" x="677" y="10" height="51" width="179" html.valueishtml="0"  name=sheet_skid_skid_pieces_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="Status" border="6" color="0" x="859" y="10" height="51" width="329" html.valueishtml="0"  name=sheet_skid_skid_sheet_status_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="Created" border="6" color="0" x="1200" y="10" height="51" width="263" html.valueishtml="0"  name=sheet_skid_skid_date_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text=" iCoil ABC No." border="6" color="0" x="1474" y="10" height="51" width="340" html.valueishtml="0"  name=production_sheet_item_coil_abc_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" font.italic="1" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="iJob No." border="6" color="0" x="1825" y="10" height="51" width="252" html.valueishtml="0"  name=production_sheet_item_ab_job_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" font.italic="1" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="iStatus" border="6" color="0" x="2092" y="10" height="51" width="263" html.valueishtml="0"  name=production_sheet_item_prod_item_status_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" font.italic="1" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="iPCs" border="6" color="0" x="2359" y="10" height="51" width="165" html.valueishtml="0"  name=production_sheet_item_prod_item_pieces_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" font.italic="1" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="iNet" border="6" color="0" x="2531" y="10" height="51" width="168" html.valueishtml="0"  name=production_sheet_item_prod_item_net_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" font.italic="1" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="iTheo" border="6" color="0" x="2703" y="10" height="51" width="176" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" font.italic="1" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="Item Date" border="6" color="0" x="2889" y="10" height="51" width="464" html.valueishtml="0"  name=production_sheet_item_prod_item_date_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" font.italic="1" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="iTheoWT" border="6" color="0" x="3365" y="10" height="51" width="282" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" font.italic="1" background.mode="2" background.color="15793151" )
+text(band=header alignment="2" text="iPlacement" border="6" color="0" x="3653" y="10" height="51" width="296" html.valueishtml="0"  name=place_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" font.italic="1" background.mode="2" background.color="15793151" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="5" color="0" x="7" y="3" height="54" width="256" format="[general]" html.valueishtml="0"  name=sheet_skid_sheet_skid_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=3 alignment="2" tabsequence=32766 border="5" color="0" x="278" y="3" height="54" width="216" format="[general]" html.valueishtml="0" protect="0~tif( sheet_skid_skid_sheet_status = 0 , 1, 0 )"  name=sheet_skid_sheet_net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="5" color="0" x="505" y="3" height="54" width="168" format="[general]" html.valueishtml="0" protect="0~tif( sheet_skid_skid_sheet_status = 0 , 1, 0 )"  name=sheet_skid_sheet_tare_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=20 alignment="2" tabsequence=32766 border="5" color="0" x="680" y="3" height="54" width="168" format="[general]" html.valueishtml="0"  name=sheet_skid_skid_pieces visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=5 alignment="1" tabsequence=32766 border="5" color="0" x="859" y="0" height="54" width="325" format="[general]" html.valueishtml="0" protect="0~tif( sheet_skid_skid_sheet_status = 0 , 1, 0 )"  name=sheet_skid_skid_sheet_status visible="1" dddw.name=d_dddw_skid_status_desc dddw.displaycolumn=skid_status_desc dddw.datacolumn=skid_status_code dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="5" color="0" x="1203" y="3" height="54" width="260" format="[shortdate] [time]" html.valueishtml="0" protect="0~tif( sheet_skid_skid_sheet_status = 0 , 1, 0 )"  name=sheet_skid_skid_date visible="1" editmask.mask="mm/dd/yyyy" editmask.imemode=0 editmask.focusrectangle=no  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=10 alignment="0" tabsequence=32766 border="5" color="0~tif((production_sheet_item_ab_job_num <>  al_job_num) OR ( sheet_skid_skid_sheet_status = 7)  , RGB(0,75,0),  RGB(0,0,0) )" x="1474" y="3" height="54" width="344" format="[general]" html.valueishtml="0" protect="0~tif( (sheet_skid_skid_sheet_status = 0) OR ( production_sheet_item_ab_job_num <>  al_job_num )  , 1, 0 )"  name=production_sheet_item_coil_abc_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=11 alignment="2" tabsequence=32766 border="5" color="0~tif((production_sheet_item_ab_job_num <>  al_job_num) OR ( sheet_skid_skid_sheet_status = 7)  , RGB(0,75,0),  RGB(0,0,0) )" x="1825" y="3" height="54" width="256" format="[general]" html.valueishtml="0" protect="0~tif( (sheet_skid_skid_sheet_status = 0) OR ( production_sheet_item_ab_job_num <>  al_job_num )  , 1, 0 )"  name=production_sheet_item_ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=21 alignment="0" tabsequence=32766 border="0" color="0" x="3968" y="0" height="58" width="4" format="[General]" html.valueishtml="0"  name=sheet_skid_skid_type_if_whed visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=12 alignment="1" tabsequence=32766 border="5" color="0~tif((production_sheet_item_ab_job_num <>  al_job_num) OR ( sheet_skid_skid_sheet_status = 7)  , RGB(0,75,0),  RGB(0,0,0) )" x="2092" y="3" height="54" width="256" format="[general]" html.valueishtml="0" protect="0~tif( (sheet_skid_skid_sheet_status = 0) OR ( production_sheet_item_ab_job_num <>  al_job_num )  , 1, 0 )"  name=production_sheet_item_prod_item_status visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=19 alignment="2" tabsequence=32766 border="5" color="0" x="2370" y="3" height="54" width="154" format="[general]" html.valueishtml="0"  name=production_sheet_item_prod_item_pieces visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=13 alignment="1" tabsequence=32766 border="5" color="0~tif((production_sheet_item_ab_job_num <>  al_job_num) OR ( sheet_skid_skid_sheet_status = 7)  , RGB(0,75,0),  RGB(0,0,0) )" x="2531" y="3" height="54" width="168" format="[general]" html.valueishtml="0" protect="0~tif( (sheet_skid_skid_sheet_status = 0) OR ( production_sheet_item_ab_job_num <>  al_job_num )  , 1, 0 )"  name=production_sheet_item_prod_item_net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=14 alignment="1" tabsequence=32766 border="5" color="0~tif((production_sheet_item_ab_job_num <>  al_job_num) OR ( sheet_skid_skid_sheet_status = 7)  , RGB(0,75,0),  RGB(0,0,0) )" x="2706" y="3" height="54" width="179" format="[general]" html.valueishtml="0" protect="0~tif( (sheet_skid_skid_sheet_status = 0) OR ( production_sheet_item_ab_job_num <>  al_job_num )  , 1, 0 )"  name=production_sheet_item_prod_item_theoreti visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=15 alignment="0" tabsequence=32766 border="5" color="0~tif((production_sheet_item_ab_job_num <>  al_job_num) OR ( sheet_skid_skid_sheet_status = 7)  , RGB(0,75,0),  RGB(0,0,0) )" x="2893" y="3" height="54" width="461" format="[shortdate] [time]" html.valueishtml="0" protect="0~tif( (sheet_skid_skid_sheet_status = 0) OR ( production_sheet_item_ab_job_num <>  al_job_num )  , 1, 0 )"  name=production_sheet_item_prod_item_date visible="1" editmask.mask="mm/dd/yyyy hh:mm" editmask.imemode=0 editmask.focusrectangle=no  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=16 alignment="2" tabsequence=32766 border="5" color="0" x="3365" y="3" height="54" width="282" format="[general]" html.valueishtml="0"  name=sheet_skid_sheet_theoretical_wt visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=18 alignment="0" tabsequence=32766 border="5" color="0" x="3657" y="3" height="54" width="293" format="[general]" html.valueishtml="0"  name=production_sheet_item_prod_item_placemen visible="1" ddlb.limit=0 ddlb.allowedit=yes ddlb.case=any ddlb.nilisnull=yes ddlb.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="79741120" x="3961" y="6" height="48" width="4" format="[general]" html.valueishtml="0"  name=sheet_skid_ab_job_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=footer alignment="2" expression="~"Number of skids: ~" + String(count(  sheet_skid_sheet_skid_num  for all DISTINCT )) + ~"   ~" + ~"Total pieces: ~" + String(sum(if(production_sheet_item_ab_job_num =  al_job_num, production_sheet_item_prod_item_pieces , 0 ))) + ~"   ~" + ~"Total net wt: ~" +  String(sum(if(production_sheet_item_ab_job_num =  al_job_num,  production_sheet_item_prod_item_net_wt , 0 ))) + ~" LBs~""border="0" color="0" x="102" y="7" height="45" width="2512" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-7" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+
+sparse(names="sheet_skid_sheet_skid_num	sheet_skid_sheet_net_wt	sheet_skid_sheet_tare_wt	sheet_skid_skid_sheet_status	sheet_skid_skid_date")htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

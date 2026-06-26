@@ -1,0 +1,33 @@
+$PBExportHeader$d_schedule_profile.srd
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no grid.lines=0 )
+header(height=77 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=10 color="536870912" )
+detail(height=90 color="536870912" )
+table(column=(type=char(20) updatewhereclause=yes name=description dbname="line_schedule_profile.description" )
+ column=(type=datetime updatewhereclause=yes name=first_shift_start dbname="line_schedule_profile.first_shift_start" )
+ column=(type=datetime updatewhereclause=yes name=first_shift_end dbname="line_schedule_profile.first_shift_end" )
+ column=(type=decimal(0) updatewhereclause=yes name=first_shift_off dbname="line_schedule_profile.first_shift_off" )
+ column=(type=datetime updatewhereclause=yes name=second_shift_start dbname="line_schedule_profile.second_shift_start" )
+ column=(type=datetime updatewhereclause=yes name=second_shift_end dbname="line_schedule_profile.second_shift_end" )
+ column=(type=decimal(0) updatewhereclause=yes name=second_shift_off dbname="line_schedule_profile.second_shift_off" )
+ column=(type=datetime updatewhereclause=yes name=third_shift_start dbname="line_schedule_profile.third_shift_start" )
+ column=(type=datetime updatewhereclause=yes name=third_shift_end dbname="line_schedule_profile.third_shift_end" )
+ column=(type=decimal(0) updatewhereclause=yes name=third_shift_off dbname="line_schedule_profile.third_shift_off" )
+ retrieve="  SELECT ~"LINE_SCHEDULE_PROFILE~".~"DESCRIPTION~",   
+         ~"LINE_SCHEDULE_PROFILE~".~"FIRST_SHIFT_START~",   
+         ~"LINE_SCHEDULE_PROFILE~".~"FIRST_SHIFT_END~",   
+         ~"LINE_SCHEDULE_PROFILE~".~"FIRST_SHIFT_OFF~",   
+         ~"LINE_SCHEDULE_PROFILE~".~"SECOND_SHIFT_START~",   
+         ~"LINE_SCHEDULE_PROFILE~".~"SECOND_SHIFT_END~",   
+         ~"LINE_SCHEDULE_PROFILE~".~"SECOND_SHIFT_OFF~",   
+         ~"LINE_SCHEDULE_PROFILE~".~"THIRD_SHIFT_START~",   
+         ~"LINE_SCHEDULE_PROFILE~".~"THIRD_SHIFT_END~",   
+         ~"LINE_SCHEDULE_PROFILE~".~"THIRD_SHIFT_OFF~"  
+    FROM ~"LINE_SCHEDULE_PROFILE~"  
+   WHERE ~"LINE_SCHEDULE_PROFILE~".~"LINE_ID~" = :ai_line_id    
+" arguments=(("ai_line_id", number)) )
+text(band=header alignment="2" text="Schedule"border="6" color="0" x="7" y="6" height="64" width="589"  name=description_t  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="0" x="7" y="3" height="80" width="589" format="[general]"  name=description  tag="description" pointer="Arrow!" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

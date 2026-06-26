@@ -1,0 +1,15 @@
+$PBExportHeader$d_daily_prod_line_schedule.srd
+$PBExportComments$line and schedule_type info
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=96 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes name=line_num dbname="LINE_SCHEDULE.LINE_NUM" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=schedule_type dbname="LINE_SCHEDULE.SCHEDULE_TYPE" )
+ column=(type=char(255) updatewhereclause=yes name=line_line_desc dbname="LINE.LINE_DESC" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"LINE_SCHEDULE~" )  TABLE(NAME=~"LINE~" ) COLUMN(NAME=~"LINE_SCHEDULE.LINE_NUM~") COLUMN(NAME=~"LINE_SCHEDULE.SCHEDULE_TYPE~") COLUMN(NAME=~"LINE.LINE_DESC~")    JOIN (LEFT=~"LINE_SCHEDULE.LINE_NUM~"    OP =~"=~"RIGHT=~"LINE.LINE_NUM~" )) ORDER(NAME=~"LINE_SCHEDULE.LINE_NUM~" ASC=yes )  ORDER(NAME=~"LINE_SCHEDULE.SCHEDULE_TYPE~" ASC=yes ) " )
+column(band=detail id=1 alignment="1" tabsequence=10 border="0" color="0" x="26" y="13" height="61" width="263" format="[general]"  name=line_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=20 border="0" color="0" x="344" y="19" height="61" width="263" format="[general]"  name=schedule_type edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=0 border="0" color="0" x="651" y="13" height="51" width="2809"  name=line_line_desc  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

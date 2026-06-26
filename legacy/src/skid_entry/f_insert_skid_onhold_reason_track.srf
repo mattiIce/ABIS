@@ -1,0 +1,74 @@
+$PBExportHeader$f_insert_skid_onhold_reason_track.srf
+global type f_insert_skid_onhold_reason_track from function_object
+end type
+
+forward prototypes
+global function integer f_insert_skid_onhold_reason_track (str_all_data_types astr_all_data_types, n_tr_abc01 atr)
+end prototypes
+
+global function integer f_insert_skid_onhold_reason_track (str_all_data_types astr_all_data_types, n_tr_abc01 atr);//Alex Gerlants. 04/05/2022. 1516_OnHold_Reason. Begin
+/*
+Function:	f_insert_skid_onhold_reason_track
+Returns:		integer  1 if OK
+                    -1 if DB error
+Arguments:	value	str_all_data_types	astr_all_data_types
+				value	n_tr_abc01				atr
+*/
+
+Integer	li_rtn = 1 //Initialize to OK
+Integer	li_pre_status, li_cur_status, li_pre_onhold_reason_code, li_cur_onhold_reason_code
+Long		ll_sheet_skid_num
+DateTime	ldt_log_date
+String	ls_modified_by, ls_new_skid
+
+ll_sheet_skid_num          = astr_all_data_types.long_var[1]
+ldt_log_date               = astr_all_data_types.datetime_var[1]
+li_pre_status              = astr_all_data_types.integer_var[1]
+li_cur_status              = astr_all_data_types.integer_var[2]
+li_pre_onhold_reason_code  = astr_all_data_types.integer_var[3]
+li_cur_onhold_reason_code  = astr_all_data_types.integer_var[4]
+ls_modified_by             = astr_all_data_types.string_var[1]
+ls_new_skid						= astr_all_data_types.string_var[2]
+
+If li_pre_onhold_reason_code = -99 Then //li_pre_onhold_reason_code is NULL
+	SetNull(li_pre_onhold_reason_code)
+End If
+
+If li_cur_onhold_reason_code = -99 Then //li_cur_onhold_reason_code is NULL
+	SetNull(li_cur_onhold_reason_code)
+End If
+
+insert into skid_onhold_reason_track
+(
+   sheet_skid_num,
+   log_date,
+   pre_status,
+   cur_status,
+	pre_onhold_reason_code,
+	cur_onhold_reason_code,
+   modified_by,
+	new_skid
+)
+values 
+(
+   :ll_sheet_skid_num,
+   :ldt_log_date,
+   :li_pre_status,
+   :li_cur_status,
+	:li_pre_onhold_reason_code,
+	:li_cur_onhold_reason_code,
+   :ls_modified_by,
+	:ls_new_skid
+)
+using	atr;
+
+If atr.sqlcode <> 0 Then
+	li_rtn = -1
+	MessageBox("Database error", "Database error in f_insert_skid_onhold_reason_track while inserting a row into table skid_onhold_reason_track " + &
+						"for sheet skid " + String(ll_sheet_skid_num) + "~n~rError:~n~r" + atr.SqlErrText)
+End If
+
+Return li_rtn
+//Alex Gerlants. 04/05/2022. 1516_OnHold_Reason. End
+end function
+

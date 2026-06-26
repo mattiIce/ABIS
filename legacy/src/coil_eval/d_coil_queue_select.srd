@@ -1,0 +1,50 @@
+$PBExportHeader$d_coil_queue_select.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=15793151 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=90 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=109 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=shift_coil_job_coil_abc_num dbname="shift_coil_job.coil_abc_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_coil_job_ab_job_num dbname="shift_coil_job.ab_job_num" )
+ column=(type=char(32) updatewhereclause=yes name=coil_coil_org_num dbname="coil.coil_org_num" )
+ column=(type=char(255) updatewhereclause=yes name=order_item_order_item_desc dbname="order_item.order_item_desc" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_coil_job_status dbname="shift_coil_job.status" )
+ column=(type=decimal(0) updatewhereclause=yes name=coil_net_wt_balance dbname="coil.net_wt_balance" )
+ column=(type=decimal(0) updatewhereclause=yes name=coil_coil_status dbname="coil.coil_status" values="New	2/Done	0/Rebanded	7/Rejected	3/InProcess	1/Onhole	4/Transit	5/Return	6/Retry	8/Gone	10/" )
+ retrieve="  SELECT ~"SHIFT_COIL_JOB~".~"COIL_ABC_NUM~",   
+         ~"SHIFT_COIL_JOB~".~"AB_JOB_NUM~",   
+         ~"COIL~".~"COIL_ORG_NUM~",   
+         ~"ORDER_ITEM~".~"ORDER_ITEM_DESC~",   
+         ~"SHIFT_COIL_JOB~".~"STATUS~",   
+         ~"COIL~".~"NET_WT_BALANCE~",   
+         ~"COIL~".~"COIL_STATUS~"  
+    FROM ~"SHIFT_COIL_JOB~",   
+         ~"COIL~",   
+         ~"AB_JOB~",   
+         ~"ORDER_ITEM~"  
+   WHERE ( ~"COIL~".~"COIL_ABC_NUM~" = ~"SHIFT_COIL_JOB~".~"COIL_ABC_NUM~" ) and  
+         ( ~"AB_JOB~".~"AB_JOB_NUM~" = ~"SHIFT_COIL_JOB~".~"AB_JOB_NUM~" ) and  
+         ( ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~" = ~"AB_JOB~".~"ORDER_ITEM_NUM~" ) and  
+         ( ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" = ~"AB_JOB~".~"ORDER_ABC_NUM~" ) and  
+         ( ~"SHIFT_COIL_JOB~".~"SHIFT_NUM~" = :al_shift )" arguments=(("al_shift", number)) )
+text(band=header alignment="2" text="Coil " border="6" color="0" x="7" y="6" height="77" width="446" html.valueishtml="0"  name=coil_coil_org_num_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="Job" border="6" color="0" x="461" y="6" height="77" width="369" html.valueishtml="0"  name=shift_coil_job_ab_job_num_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="Part#" border="6" color="0" x="837" y="6" height="77" width="1020" html.valueishtml="0"  name=order_item_order_item_desc_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Net Wt" border="6" color="0" x="1865" y="6" height="77" width="329" html.valueishtml="0"  name=coil_net_wt_balance_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Status" border="6" color="0" x="2202" y="6" height="77" width="325" html.valueishtml="0"  name=coil_coil_status_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="coil#" border="6" color="0" x="2534" y="6" height="77" width="315" html.valueishtml="0"  name=shift_coil_job_coil_abc_num_t visible="0"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Status" border="6" color="0" x="2856" y="6" height="77" width="238" html.valueishtml="0"  name=shift_coil_job_status_t visible="0"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="16711680~tif(  shift_coil_job_status = 0, RGB(0,0,255 ) , RGB( 192 , 192 , 192 )  )" x="7" y="3" height="102" width="446" format="[general]" html.valueishtml="0"  name=coil_coil_org_num visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0"font.strikethrough="0~tif(  shift_coil_job_status = 0, 0, 1 )"  background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="0" color="16711680~tif(  shift_coil_job_status = 0, RGB(0,0,255 ) , RGB( 192 , 192 , 192 )  )" x="461" y="3" height="102" width="369" format="[general]" html.valueishtml="0"  name=shift_coil_job_ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0"font.strikethrough="0~tif(  shift_coil_job_status = 0, 0, 1 )"  background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="16711680~tif(  shift_coil_job_status = 0, RGB(0,0,255 ) , RGB( 192 , 192 , 192 )  )" x="837" y="3" height="102" width="1020" format="[general]" html.valueishtml="0"  name=order_item_order_item_desc visible="1" edit.limit=255 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0"font.strikethrough="0~tif(  shift_coil_job_status = 0, 0, 1 )"  background.mode="1" background.color="553648127" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="16711680~tif(  shift_coil_job_status = 0, RGB(0,0,255 ) , RGB( 192 , 192 , 192 )  )" x="1865" y="3" height="102" width="329" format="[general]" html.valueishtml="0"  name=coil_net_wt_balance visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0"font.strikethrough="0~tif(  shift_coil_job_status = 0, 0, 1 )"  background.mode="1" background.color="553648127" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="0" color="16711680~tif(  shift_coil_job_status = 0, RGB(0,0,255 ) , RGB( 192 , 192 , 192 )  )" x="2202" y="3" height="102" width="325" format="[general]" html.valueishtml="0"  name=coil_coil_status visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0"font.strikethrough="0~tif(  shift_coil_job_status = 0, 0, 1 )"  background.mode="1" background.color="553648127" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="16711680~tif(  shift_coil_job_status = 0, RGB(0,0,255 ) , RGB( 192 , 192 , 192 )  )" x="2534" y="3" height="102" width="315" format="[general]" html.valueishtml="0"  name=shift_coil_job_coil_abc_num visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0"font.strikethrough="0~tif(  shift_coil_job_status = 0, 0, 1 )"  background.mode="1" background.color="553648127" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="16711680~tif(  shift_coil_job_status = 0, RGB(0,0,255 ) , RGB( 192 , 192 , 192 )  )" x="2856" y="3" height="102" width="238" format="[general]" html.valueishtml="0"  name=shift_coil_job_status visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0"font.strikethrough="0~tif(  shift_coil_job_status = 0, 0, 1 )"  background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

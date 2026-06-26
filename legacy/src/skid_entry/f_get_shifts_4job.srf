@@ -1,0 +1,65 @@
+$PBExportHeader$f_get_shifts_4job.srf
+global type f_get_shifts_4job from function_object
+end type
+
+forward prototypes
+global function integer f_get_shifts_4job (long al_ab_job_num, ref str_all_data_types astr_all_data_types, n_tr_abc01 atr)
+end prototypes
+
+global function integer f_get_shifts_4job (long al_ab_job_num, ref str_all_data_types astr_all_data_types, n_tr_abc01 atr);//Alex Gerlants. 12/02/2023. 2045_Add_Reprint_Skid_Tag_To_Office_Skid_Entry. Begin
+/*
+Function:	f_get_shifts_4job
+Return:		integer
+Arguments:	value			long						al_ab_job_num
+				reference	str_all_data_types	astr_all_data_types
+				value			n_tr_abc01				atr
+*/
+Integer		li_rtn = 1, li_job_status, li_rows, li_row
+DateTime		ldt_time_date_started, ldt_time_date_finished, ldt_start_time, ldt_end_time
+DataStore	lds_shifts_4job
+Long			ll_shift_num
+String		ls_shift_desc
+
+
+lds_shifts_4job = Create DataStore
+lds_shifts_4job.DataObject = "lds_d_shifts_4job"
+lds_shifts_4job.SetTransObject(atr)
+
+select	job_status, time_date_started, time_date_finished
+into		:li_job_status, :ldt_time_date_started, :ldt_time_date_finished
+from		ab_job
+where		ab_job_num = :al_ab_job_num
+using		atr;
+
+If atr.sqlcode = 0 Then  //OK
+	If li_job_status <> 0 Then //Job not done
+		li_rtn = 2
+	End If
+Else //DB error or job not found
+	li_rtn = -1 
+End If
+
+If li_rtn = 1 Then //OK so far
+	li_rows = lds_shifts_4job.Retrieve(ldt_time_date_started, ldt_time_date_finished)
+	
+	If li_rows > 0 Then
+		For li_row = 1 To li_rows
+			ll_shift_num = lds_shifts_4job.Object.shift_num[li_row]
+			astr_all_data_types.long_var[1] = ll_shift_num
+			
+			ldt_start_time = lds_shifts_4job.Object.start_time[li_row]
+			astr_all_data_types.datetime_var[1] = ldt_start_time
+			
+			ldt_end_time = lds_shifts_4job.Object.end_time[li_row]
+			astr_all_data_types.datetime_var[2] = ldt_end_time
+			
+			ls_shift_desc = lds_shifts_4job.Object.shift_desc[li_row]
+			astr_all_data_types.string_var[1] = ls_shift_desc
+		Next
+	End If
+End If
+
+Return li_rtn
+//Alex Gerlants. 12/02/2023. 2045_Add_Reprint_Skid_Tag_To_Office_Skid_Entry. End
+end function
+

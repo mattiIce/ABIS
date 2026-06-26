@@ -1,0 +1,17 @@
+$PBExportHeader$d_acct_scrap_type_list.srd
+$PBExportComments$list all scrap type per job
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=70 color="536870912"  height.autosize=yes)
+table(column=(type=decimal(0) updatewhereclause=yes name=scrap_skid_scrap_type dbname="scrap_skid.scrap_type" values="Rej.Sheet-Mill	1/Accu. Scrap	2/Others	3/Trailer	4/Rej. Sheet-Process	5/Sample	6/Tote	7/Edge Trim	8/" )
+ retrieve="PBSELECT( VERSION(400) DISTINCT ()TABLE(NAME=~"return_scrap_item~" )  TABLE(NAME=~"scrap_skid~" )  TABLE(NAME=~"scrap_skid_detail~" ) COLUMN(NAME=~"scrap_skid.scrap_type~")    JOIN (LEFT=~"scrap_skid_detail.scrap_skid_num~"    OP =~"=~"RIGHT=~"scrap_skid.scrap_skid_num~" )    JOIN (LEFT=~"scrap_skid_detail.return_scrap_item_num~"    OP =~"=~"RIGHT=~"return_scrap_item.return_scrap_item_num~" )WHERE(    EXP1 =~"~~~"RETURN_SCRAP_ITEM~~~".~~~"AB_JOB_NUM~~~"~"   OP =~"=~"    EXP2 =~":al_job~" ) ) ARG(NAME = ~"al_job~" TYPE = number) " arguments=(("al_job", number)) )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="2" color="33554432" x="161" y="6" height="61" width="1046" format="[general]" html.valueishtml="0"  name=scrap_skid_scrap_type visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+report(band=detail dataobject="d_acct_scrap_type_summary" x="1317" y="3" height="67" width="731" border="0"  height.autosize=yes criteria="" nest_arguments=((" al_job "),(" scrap_skid_scrap_type ")) trail_footer = yes  name=dw_summary visible="1"  slideleft=yes  slideup=directlyabove )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

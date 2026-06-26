@@ -1,0 +1,68 @@
+$PBExportHeader$d_pending_sales_list.srd
+$PBExportComments$list all pending sales
+release 9;
+datawindow(units=0 timer_interval=0 color=134217750 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=221 color="536870912" )
+table(column=(type=char(18) updatewhereclause=yes name=customer_customer_short_name dbname="customer.customer_short_name" )
+ column=(type=char(18) updatewhereclause=yes name=customer_contact_first_name dbname="customer_contact.first_name" )
+ column=(type=char(18) updatewhereclause=yes name=customer_contact_last_name dbname="customer_contact.last_name" )
+ column=(type=decimal(0) updatewhereclause=yes name=sales_quote_quote_id dbname="sales_quote.quote_id" )
+ column=(type=decimal(0) updatewhereclause=yes name=sales_quote_quote_revision_id dbname="sales_quote.quote_revision_id" )
+ column=(type=decimal(0) updatewhereclause=yes name=sales_quote_contact_id dbname="sales_quote.contact_id" )
+ column=(type=char(128) updatewhereclause=yes name=sales_quote_end_use dbname="sales_quote.end_use" )
+ column=(type=char(128) updatewhereclause=yes name=sales_quote_part_shape dbname="sales_quote.part_shape" )
+ column=(type=decimal(5) updatewhereclause=yes name=sales_quote_gauge dbname="sales_quote.gauge" )
+ column=(type=decimal(5) updatewhereclause=yes name=sales_quote_width dbname="sales_quote.width" )
+ column=(type=decimal(5) updatewhereclause=yes name=sales_quote_length dbname="sales_quote.length" )
+ column=(type=char(32) updatewhereclause=yes name=sales_quote_alloy dbname="sales_quote.alloy" )
+ column=(type=char(16) updatewhereclause=yes name=sales_quote_temper dbname="sales_quote.temper" )
+ column=(type=decimal(0) updatewhereclause=yes name=sales_quote_total_lb_processed dbname="sales_quote.total_lb_processed" )
+ column=(type=datetime updatewhereclause=yes name=sales_quote_created_date dbname="sales_quote.created_date" )
+ column=(type=datetime updatewhereclause=yes name=sales_quote_valid_date dbname="sales_quote.valid_date" )
+ column=(type=number updatewhereclause=yes name=latest_probability dbname="latest_probability" )
+ column=(type=number updatewhereclause=yes name=need_followup dbname="need_followup" values="Needs Followup	1/Needs Followup	0" )
+ retrieve="  SELECT ~"CUSTOMER~".~"CUSTOMER_SHORT_NAME~",   
+         ~"CUSTOMER_CONTACT~".~"FIRST_NAME~",   
+         ~"CUSTOMER_CONTACT~".~"LAST_NAME~",
+			~"SALES_QUOTE~".~"QUOTE_ID~",
+			~"SALES_QUOTE~".~"QUOTE_REVISION_ID~", 
+			~"SALES_QUOTE~".~"CONTACT_ID~",  
+         ~"SALES_QUOTE~".~"END_USE~",   
+         ~"SALES_QUOTE~".~"PART_SHAPE~",   
+         ~"SALES_QUOTE~".~"GAUGE~",   
+         ~"SALES_QUOTE~".~"WIDTH~",   
+         ~"SALES_QUOTE~".~"LENGTH~",   
+         ~"SALES_QUOTE~".~"ALLOY~",   
+         ~"SALES_QUOTE~".~"TEMPER~",   
+         ~"SALES_QUOTE~".~"TOTAL_LB_PROCESSED~",   
+         ~"SALES_QUOTE~".~"CREATED_DATE~",
+			~"SALES_QUOTE~".~"VALID_DATE~",   
+			0 latest_probability,
+			0 need_followup 
+    FROM ~"CUSTOMER~",   
+         ~"CUSTOMER_CONTACT~",   
+         ~"SALES_QUOTE~"
+   WHERE ( ~"SALES_QUOTE~".~"CONTACT_ID~" = ~"CUSTOMER_CONTACT~".~"CONTACT_ID~" ) and  
+         ( ~"SALES_QUOTE~".~"CUSTOMER_ID~" = ~"CUSTOMER~".~"CUSTOMER_ID~" ) and  
+           ( ~"SALES_QUOTE~".~"QUOTE_STATUS~" = 1 ) 
+" )
+roundrectangle(band=detail ellipseheight="35" ellipsewidth="40"x="7" y="3" height="214" width="3204"  name=rr_1 visible="1" brush.hatch="7" brush.color="553648127" pen.style="0" pen.width="4" pen.color="65535"  background.mode="1" background.color="553648127" )
+compute(band=detail alignment="0" expression=" customer_customer_short_name  + ~" Contact: ~" +   customer_contact_first_name  + ~" ~" +  customer_contact_last_name + ~"  End Use: ~" +  sales_quote_end_use + ~" Total LB: ~" +  String( sales_quote_total_lb_processed)"border="5" color="33554432" x="512" y="16" height="115" width="2194" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=18 alignment="2" tabsequence=10 border="0" color="33554432" x="2728" y="45" height="51" width="450" format="[general]" html.valueishtml="0"  name=need_followup visible="1" checkbox.text="Needs Followup" checkbox.on="1" checkbox.off="0" checkbox.lefttext=yes checkbox.scale=no checkbox.threed=yes  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+rectangle(band=detail x="172" y="147" height="54" width="998"  name=r_base1 visible="1" brush.hatch="5" brush.color="0" pen.style="0" pen.width="4" pen.color="16777215"  background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Quote Description:" border="0" color="33554432" x="11" y="19" height="58" width="490" html.valueishtml="0"  name=customer_customer_short_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+rectangle(band=detail x="1968" y="147" height="54" width="998"  name=r_1 visible="1" brush.hatch="5" brush.color="0" pen.style="0" pen.width="4" pen.color="16777215"  background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Valid:" border="0" color="33554432" x="11" y="144" height="58" width="154" html.valueishtml="0"  name=t_3 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+rectangle(band=detail x="176" y="147" height="54" width="1002~t1000  *  ((daysafter( today(),  sales_quote_valid_date  ))/(daysafter(  sales_quote_created_date ,  sales_quote_valid_date  )))"  name=r_validdays visible="1" brush.hatch="5" brush.color="0" pen.style="0" pen.width="4" pen.color="16777215"  background.mode="0" background.color="255~tif( 1000  *  ((daysafter( today(),  sales_quote_valid_date  ))/(daysafter(  sales_quote_created_date ,  sales_quote_valid_date  ))) > 500 , RGB(0, 255,0), RGB(255,0, 0))" )
+compute(band=detail alignment="2" expression="String(daysafter( today(),  sales_quote_valid_date )) + ~" days~""border="0" color="33554432" x="1181" y="147" height="51" width="223" format="[GENERAL]" html.valueishtml="0"  name=compute_2 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Probability of Sales:" border="0" color="33554432" x="1488" y="144" height="58" width="475" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+rectangle(band=detail x="1968" y="147" height="54" width="998~t1000 * (  latest_probability  /100)"  name=r_salep visible="1" brush.hatch="5" brush.color="0" pen.style="0" pen.width="4" pen.color="16777215"  background.mode="0" background.color="65280~tif (  latest_probability  > 49, RGB(191,255, 0), RGB(255,255, 0))" )
+compute(band=detail alignment="1" expression=" String( latest_probability ) + ~"%~" "border="0" color="33554432" x="2962" y="147" height="51" width="176" format="[GENERAL]" html.valueishtml="0"  name=compute_3 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

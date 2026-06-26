@@ -1,0 +1,25 @@
+$PBExportHeader$f_hoursafter.srf
+$PBExportComments$Hours between 2 datetime values. Return NULL if any of the two values is NULL.
+global type f_hoursafter from function_object
+end type
+
+forward prototypes
+global function real f_hoursafter (datetime idt_s, datetime idt_e)
+end prototypes
+
+global function real f_hoursafter (datetime idt_s, datetime idt_e);//This global function returns hours between 2 datetime values
+
+If IsNull(idt_s) OR IsNULL(idt_e) Then
+
+	long ll_null
+
+	SetNull(ll_null)
+
+	Return ll_null
+
+End If
+
+RETURN (DaysAfter(Date(idt_s), Date(idt_e)) * 24) + (SecondsAfter(Time(idt_s), Time(idt_e)) / 3600)
+
+
+end function

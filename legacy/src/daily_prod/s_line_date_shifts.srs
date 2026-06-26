@@ -1,0 +1,9 @@
+$PBExportHeader$s_line_date_shifts.srs
+global type s_line_date_shifts from structure
+	date		date_of_shifts
+	long		line_num
+	boolean		shift_1
+	boolean		shift_2
+	boolean		shift_3
+end type
+

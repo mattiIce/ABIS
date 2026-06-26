@@ -1,0 +1,24 @@
+$PBExportHeader$d_existing_coil_job_defects_office.srd
+$PBExportComments$list existing coil defects based on coil and job entered in office
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=115 color="536870912" )
+table(column=(type=char(10) updatewhereclause=yes name=scrap_type_scrap_code dbname="scrap_type.scrap_code" )
+ column=(type=char(50) updatewhereclause=yes name=scrap_type_scrap_defect dbname="scrap_type.scrap_defect" )
+ column=(type=decimal(0) updatewhereclause=yes name=recovery_scrap_worksheet_scrap_item_piece dbname="recovery_scrap_worksheet.scrap_item_piece" )
+ column=(type=decimal(0) updatewhereclause=yes name=recovery_scrap_worksheet_scrap_item_net_wt dbname="recovery_scrap_worksheet.scrap_item_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=recovery_scrap_worksheet_scrap_type_id dbname="recovery_scrap_worksheet.scrap_type_id" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"scrap_type~" )  TABLE(NAME=~"recovery_scrap_worksheet~" ) COLUMN(NAME=~"scrap_type.scrap_code~") COLUMN(NAME=~"scrap_type.scrap_defect~") COLUMN(NAME=~"recovery_scrap_worksheet.scrap_item_piece~") COLUMN(NAME=~"recovery_scrap_worksheet.scrap_item_net_wt~") COLUMN(NAME=~"recovery_scrap_worksheet.scrap_type_id~")    JOIN (LEFT=~"recovery_scrap_worksheet.scrap_type_id~"    OP =~"=~"RIGHT=~"scrap_type.scrap_type_id~" )WHERE(    EXP1 =~"( ~~~"RECOVERY_SCRAP_WORKSHEET~~~".~~~"COIL_ABC_NUM~~~"~"   OP =~"=~"    EXP2 =~":al_coil )~"    LOGIC =~"and~" ) WHERE(    EXP1 =~"( ~~~"RECOVERY_SCRAP_WORKSHEET~~~".~~~"AB_JOB_NUM~~~"~"   OP =~"=~"    EXP2 =~":al_job )~" ) ) ARG(NAME = ~"al_job~" TYPE = number)  ARG(NAME = ~"al_coil~" TYPE = number) " arguments=(("al_job", number),("al_coil", number))  sort="scrap_type_scrap_code A " )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="62" y="22" height="61" width="241" format="[general]" html.valueishtml="0"  name=scrap_type_scrap_code visible="1" edit.limit=10 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="351" y="35" height="61" width="1119" format="[general]" html.valueishtml="0"  name=scrap_type_scrap_defect visible="1" edit.limit=50 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="1470" y="32" height="51" width="947" format="[general]" html.valueishtml="0"  name=recovery_scrap_worksheet_scrap_item_piece visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="2417" y="0" height="51" width="947" format="[general]" html.valueishtml="0"  name=recovery_scrap_worksheet_scrap_item_net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=0 border="0" color="33554432" x="3365" y="0" height="51" width="947" html.valueishtml="0"  name=recovery_scrap_worksheet_scrap_type_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

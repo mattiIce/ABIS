@@ -1,0 +1,13 @@
+$PBExportHeader$d_daily_prod_spm_pershift_dataonly.srd
+$PBExportComments$SPM report based on shif used for datastore
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=224 color="536870912" )
+table(column=(type=datetime updatewhereclause=yes name=datetime dbname="LINE_SPM_STATUS.DATETIME" )
+ column=(type=decimal(1) updatewhereclause=yes name=spm dbname="LINE_SPM_STATUS.SPM" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"LINE_SPM_STATUS~" ) COLUMN(NAME=~"LINE_SPM_STATUS.DATETIME~") COLUMN(NAME=~"LINE_SPM_STATUS.SPM~")WHERE(    EXP1 =~"LINE_SPM_STATUS.DATETIME~"   OP =~">=~"    EXP2 =~":adt_s~"    LOGIC =~"and~" ) WHERE(    EXP1 =~"LINE_SPM_STATUS.DATETIME~"   OP =~"<=~"    EXP2 =~":adt_e~"    LOGIC =~"and~" ) WHERE(    EXP1 =~"LINE_SPM_STATUS.LINE_NUM~"   OP =~"=~"    EXP2 =~":al_line~" ) ) ORDER(NAME=~"LINE_SPM_STATUS.DATETIME~" ASC=yes ) ARG(NAME = ~"al_line~" TYPE = number)  ARG(NAME = ~"adt_s~" TYPE = datetime)  ARG(NAME = ~"adt_e~" TYPE = datetime) " arguments=(("al_line", number),("adt_s", datetime),("adt_e", datetime)) )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="0" x="249" y="3" height="61" width="483" format="[shortdate] [time]"  name=datetime edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=32766 border="0" color="0" x="249" y="112" height="61" width="263" format="[general]"  name=spm edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

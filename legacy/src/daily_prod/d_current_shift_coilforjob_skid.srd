@@ -1,0 +1,20 @@
+$PBExportHeader$d_current_shift_coilforjob_skid.srd
+$PBExportComments$skid info based on coil based on job
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=54 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=0 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=prod_item_pieces dbname="production_sheet_item.prod_item_pieces" )
+ column=(type=decimal(0) updatewhereclause=yes name=prod_item_net_wt dbname="production_sheet_item.prod_item_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=process_coil_process_quantity dbname="process_coil.process_quantity" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"production_sheet_item~" )  TABLE(NAME=~"process_coil~" ) COLUMN(NAME=~"production_sheet_item.prod_item_pieces~") COLUMN(NAME=~"production_sheet_item.prod_item_net_wt~") COLUMN(NAME=~"process_coil.process_quantity~")    JOIN (LEFT=~"production_sheet_item.coil_abc_num~"    OP =~"=~"RIGHT=~"process_coil.coil_abc_num~" )    JOIN (LEFT=~"production_sheet_item.ab_job_num~"    OP =~"=~"RIGHT=~"process_coil.ab_job_num~" )WHERE(    EXP1 =~"~~~"PRODUCTION_SHEET_ITEM~~~".~~~"COIL_ABC_NUM~~~"~"   OP =~"=~"    EXP2 =~":al_coil~"    LOGIC =~"and~" ) WHERE(    EXP1 =~"~~~"PRODUCTION_SHEET_ITEM~~~".~~~"AB_JOB_NUM~~~"~"   OP =~"=~"    EXP2 =~":al_job~" ) ) ARG(NAME = ~"al_job~" TYPE = number)  ARG(NAME = ~"al_coil~" TYPE = number) " arguments=(("al_job", number),("al_coil", number)) )
+compute(band=summary alignment="2" expression="sum(  prod_item_pieces  for all )"border="0" color="33554432" x="0" y="0" height="51" width="329" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=summary alignment="2" expression="sum(  prod_item_net_wt  for all )"border="0" color="33554432" x="333" y="0" height="51" width="424" format="[GENERAL]" html.valueishtml="0"  name=compute_2 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=summary alignment="2" expression="String( sum(  prod_item_net_wt  for all ) /  process_coil_process_quantity *100, ~"###.##~")"border="0" color="0" x="764" y="0" height="51" width="304" format="[GENERAL]" html.valueishtml="0"  name=compute_3 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

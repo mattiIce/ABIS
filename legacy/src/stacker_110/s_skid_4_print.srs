@@ -1,0 +1,8 @@
+$PBExportHeader$s_skid_4_print.srs
+global type s_skid_4_print from structure
+	long		skid_id
+	long		job_num
+	long		net_wt
+	long		tare_wt
+end type
+

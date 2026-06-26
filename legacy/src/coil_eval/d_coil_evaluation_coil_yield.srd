@@ -1,0 +1,28 @@
+$PBExportHeader$d_coil_evaluation_coil_yield.srd
+$PBExportComments$downtime report -final report
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=612 color="536870912"  height.autosize=yes)
+table(column=(type=decimal(0) updatewhereclause=yes name=current_wt dbname="process_coil.current_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_process_status dbname="process_coil.shift_process_status" )
+ column=(type=decimal(0) updatewhereclause=yes name=process_quantity dbname="process_coil.process_quantity" )
+ retrieve="  SELECT ~"PROCESS_COIL~".~"CURRENT_WT~",   
+         ~"PROCESS_COIL~".~"SHIFT_PROCESS_STATUS~",   
+         ~"PROCESS_COIL~".~"PROCESS_QUANTITY~"  
+    FROM ~"PROCESS_COIL~"  
+   WHERE ( ~"PROCESS_COIL~".~"COIL_ABC_NUM~" = :al_coil_num ) AND  
+         ( ~"PROCESS_COIL~".~"AB_JOB_NUM~" = :al_job_num )    
+" arguments=(("al_coil_num", number),("al_job_num", number)) )
+compute(band=detail alignment="0" expression="if(  shift_process_status = 7,  current_wt , 0)"border="0" color="33554432" x="14" y="8" height="76" width="256" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=2 alignment="1" tabsequence=32766 border="0" color="33554432" x="325" y="8" height="68" width="274" format="[general]" html.valueishtml="0"  name=shift_process_status visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="33554432" x="325" y="12" height="48" width="187" format="[General]" html.valueishtml="0"  name=current_wt visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+report(band=detail dataobject="d_coil_evaluation_skid_wt" x="722" y="32" height="136" width="384" border="0"  height.autosize=yes criteria="" nest_arguments=((" al_coil_num "),(" al_job_num ")) trail_footer = yes  name=dw_1 visible="1"  slideup=directlyabove )
+column(band=detail id=3 alignment="0" tabsequence=0 border="0" color="33554432" x="1106" y="0" height="56" width="992" html.valueishtml="0"  name=process_quantity visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0  template=(comment="" encoding="UTF-8" name="d" xml="<?xml version=~"1.0~" encoding=~"UTF-8~" standalone=~"no~"?><untitled><untitled_row __pbband=~"detail~"><current_wt/><shift_process_status>shift_process_status</shift_process_status></untitled_row></untitled>"))
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

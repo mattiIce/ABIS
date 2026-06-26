@@ -1,0 +1,12 @@
+$PBExportHeader$d_line_schedule_shift_info.srd
+$PBExportComments$shift info based on line_schedule table
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=67 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=schedule_type dbname="LINE_SCHEDULE.SCHEDULE_TYPE" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"LINE_SCHEDULE~" ) COLUMN(NAME=~"LINE_SCHEDULE.SCHEDULE_TYPE~")WHERE(    EXP1 =~"LINE_SCHEDULE.LINE_NUM~"   OP =~"=~"    EXP2 =~":al_line~" ) ) ARG(NAME = ~"al_line~" TYPE = number) " arguments=(("al_line", number)) )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="0" x="7" y="3" height="61" width="263" format="[general]"  name=schedule_type edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="0" expression="case(schedule_type  when 1 then ~"1st SHIFT~" when 2 then ~"2nd SHIFT~" when 3 then ~"3rd SHIFT~" else ~"Other SHIFTS~")"border="0" color="0" x="318" y="13" height="48" width="512" format="[general]"  name=display  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

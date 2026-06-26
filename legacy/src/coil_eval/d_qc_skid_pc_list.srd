@@ -1,0 +1,18 @@
+$PBExportHeader$d_qc_skid_pc_list.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=77 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=86 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=pc_number dbname="sheet_skid_dimension_check.pc_number" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"sheet_skid_dimension_check~" ) COLUMN(NAME=~"sheet_skid_dimension_check.pc_number~")WHERE(    EXP1 =~"~~~"SHEET_SKID_DIMENSION_CHECK~~~".~~~"SHEET_SKID_NUM~~~"~"   OP =~"=~"    EXP2 =~":al_skid_num~" ) ) ARG(NAME = ~"al_skid_num~" TYPE = number) " arguments=(("al_skid_num", number)) )
+text(band=header alignment="2" text="Pc Number" border="0" color="33554432" x="7" y="6" height="64" width="439" html.valueishtml="0"  name=pc_number_t visible="1"  font.face="System" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="33554432" x="7" y="6" height="74" width="439" format="[general]" html.valueishtml="0"  name=pc_number visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="System" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="0" expression="~"Pc# ~" + string( pc_number )"border="0" color="33554432" x="453" y="9" height="74" width="260" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="System" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

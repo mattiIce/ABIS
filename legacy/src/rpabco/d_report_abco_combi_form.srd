@@ -1,0 +1,98 @@
+$PBExportHeader$d_report_abco_combi_form.srd
+$PBExportComments$new abco form combination of packing list and bill of lading
+release 9;
+datawindow(units=0 timer_interval=0 color=1090519039 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=2438 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=134 color="536870912"  height.autosize=yes)
+table(column=(type=decimal(0) updatewhereclause=yes name=shipment_packing_list dbname="shipment.packing_list" )
+ column=(type=decimal(0) updatewhereclause=yes name=shipment_bill_of_lading dbname="shipment.bill_of_lading" )
+ column=(type=decimal(0) updatewhereclause=yes name=shipment_des_sh_cust_id dbname="shipment.des_sh_cust_id" )
+ column=(type=decimal(0) updatewhereclause=yes name=shipment_customer_id dbname="shipment.customer_id" )
+ column=(type=datetime updatewhereclause=yes name=shipment_shipment_actualed_date_time dbname="shipment.shipment_actualed_date_time" )
+ column=(type=char(32) updatewhereclause=yes name=vehicle_id dbname="shipment.vehicle_id" )
+ column=(type=char(0) updatewhereclause=yes name=item_t dbname="shipment.item_t" )
+ column=(type=char(0) updatewhereclause=yes name=ticket_t dbname="shipment.ticket_t" )
+ column=(type=char(0) updatewhereclause=yes name=lot_t dbname="shipment.lot_t" )
+ column=(type=char(0) updatewhereclause=yes name=coil_t dbname="shipment.coil_t" )
+ column=(type=char(0) updatewhereclause=yes name=pcs_t dbname="shipment.pcs_t" )
+ column=(type=char(0) updatewhereclause=yes name=ntweight_t dbname="shipment.ntweight_t" )
+ column=(type=char(0) updatewhereclause=yes name=theowt_t dbname="shipment.theowt_t" )
+ column=(type=char(0) updatewhereclause=yes name=tarewt_t dbname="shipment.tarewt_t" )
+ column=(type=char(0) updatewhereclause=yes name=grosswt_t dbname="shipment.grosswt_t" )
+ column=(type=char(0) updatewhereclause=yes name=ntweight_kg_t dbname="shipment.ntweight_kg_t" )
+ column=(type=char(0) updatewhereclause=yes name=theowt_kg_t dbname="shipment.theowt_kg_t" )
+ column=(type=char(0) updatewhereclause=yes name=tarewt_kg_t dbname="shipment.tarewt_kg_t" )
+ column=(type=char(0) updatewhereclause=yes name=grosswt_kg_t dbname="shipment.grosswt_kg_t" )
+ column=(type=char(0) updatewhereclause=yes name=comments_t_2 dbname="shipment.comments_t" )
+ column=(type=char(0) updatewhereclause=yes name=comments_t_2 dbname="shipment.comments_t_2" )
+ retrieve="  SELECT ~"SHIPMENT~".~"PACKING_LIST~",   
+         ~"SHIPMENT~".~"BILL_OF_LADING~",   
+         ~"SHIPMENT~".~"DES_SH_CUST_ID~",   
+         ~"SHIPMENT~".~"CUSTOMER_ID~",   
+         ~"SHIPMENT~".~"SHIPMENT_ACTUALED_DATE_TIME~",   
+         ~"SHIPMENT~".~"VEHICLE_ID~",
+			NULL ~"item_t~" ,
+			NULL ~"ticket_t~",
+			NULL ~"lot_t~",
+			NULL ~"coil_t~",
+  			NULL ~"pcs_t~" ,
+			NULL ~"ntweight_t~",
+			NULL ~"theowt_t~",
+			NULL ~"tarewt_t~",
+			NULL ~"grosswt_t~",
+			NULL ~"ntweight_kg_t~",
+			NULL ~"theowt_kg_t~",
+			NULL ~"tarewt_kg_t~",
+			NULL ~"grosswt_kg_t~",
+			NULL ~"comments_t~",
+			NULL ~"comments_t_2~"
+    FROM ~"SHIPMENT~"  
+   WHERE ~"SHIPMENT~".~"PACKING_LIST~" = :al_packing_list    
+" arguments=(("al_packing_list", number)) )
+text(band=header alignment="0" text="                            " border="0" color="0" x="33" y="483" height="54" width="841" html.valueishtml="0"  name=ship_via_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="                                                                                   " border="0" color="0" x="29" y="602" height="54" width="1284" html.valueishtml="0"  name=soldto_1 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="                                                                                   " border="0" color="0" x="29" y="720" height="54" width="1265" html.valueishtml="0"  name=shipto_1 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="Error" border="0" color="0" x="1243" y="2090" height="48" width="457" html.valueishtml="0"  name=t_enduser_po visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="               " border="0" color="0" x="1189" y="2157" height="45" width="446" html.valueishtml="0"  name=t_orig_po visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="Error" border="0" color="0" x="706" y="2278" height="54" width="282" html.valueishtml="0"  name=t_gauge visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="            " border="0" color="0" x="1002" y="2278" height="54" width="274" html.valueishtml="0"  name=t_width visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="           " border="0" color="0" x="1298" y="2278" height="54" width="293" html.valueishtml="0"  name=t_length visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="-" border="0" color="0" x="1902" y="2301" height="64" width="29" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="1" text="Error" border="0" color="0" x="1616" y="2307" height="54" width="289" html.valueishtml="0"  name=t_alloy visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="Error" border="0" color="0" x="1935" y="2307" height="54" width="197" html.valueishtml="0"  name=t_temper visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="                            " border="0" color="0" x="2169" y="483" height="54" width="410" html.valueishtml="0"  name=date_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="                                                                                   " border="0" color="0" x="1313" y="602" height="54" width="834" html.valueishtml="0"  name=soldto_2 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="                                                                                   " border="0" color="0" x="2150" y="602" height="54" width="391" html.valueishtml="0"  name=soldto_3 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="                                                                                   " border="0" color="0" x="2545" y="602" height="54" width="955" html.valueishtml="0"  name=soldto_4 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="                                                                                   " border="0" color="0" x="1298" y="720" height="54" width="739" html.valueishtml="0"  name=shipto_2 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="                                                                                   " border="0" color="0" x="2044" y="720" height="54" width="636" html.valueishtml="0"  name=shipto_3 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="                                                                                   " border="0" color="0" x="2684" y="720" height="54" width="812" html.valueishtml="0"  name=shipto_4 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="            " border="0" color="0" x="2128" y="2090" height="54" width="439" html.valueishtml="0"  name=t_suppliy_code visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="            " border="0" color="0" x="1894" y="2150" height="45" width="603" html.valueishtml="0"  name=t_part visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="Error" border="0" color="0" x="2169" y="2314" height="54" width="384" html.valueishtml="0"  name=t_abco_num visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="        " border="0" color="0" x="59" y="1267" height="54" width="194" html.valueishtml="0"  name=pack_no_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="ALUMINUM SHEETS" border="0" color="0" x="315" y="1309" height="54" width="1675" html.valueishtml="0"  name=pack_desc_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="           " border="0" color="0" x="3171" y="1309" height="54" width="282" html.valueishtml="0"  name=total_wt_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=20 alignment="0" tabsequence=32766 border="0" color="0" x="2575" y="10" height="54" width="625" format="[general]" html.valueishtml="0"  name=comments_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=11 alignment="2" tabsequence=32766 border="0" color="0" x="1295" y="36" height="54" width="223" format="[general]" html.valueishtml="0"  name=pcs_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=10 alignment="2" tabsequence=32766 border="0" color="0" x="947" y="36" height="54" width="344" format="[general]" html.valueishtml="0"  name=coil_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=9 alignment="2" tabsequence=32766 border="0" color="0" x="581" y="36" height="54" width="362" format="[general]" html.valueishtml="0"  name=lot_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=8 alignment="2" tabsequence=32766 border="0" color="0" x="212" y="36" height="54" width="369" format="[general]" html.valueishtml="0"  name=ticket_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=7 alignment="2" tabsequence=32766 border="0" color="0" x="4" y="36" height="54" width="201" format="[general]" html.valueishtml="0"  name=item_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=12 alignment="2" tabsequence=32766 border="0" color="0" x="1521" y="7" height="54" width="249" format="[general]" html.valueishtml="0"  name=ntweight_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=13 alignment="2" tabsequence=32766 border="0" color="0" x="1777" y="7" height="54" width="278" format="[general]" html.valueishtml="0"  name=theowt_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=16 alignment="2" tabsequence=32766 border="0" color="0" x="1518" y="71" height="54" width="252" format="[general]" html.valueishtml="0"  name=ntweight_kg_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=17 alignment="2" tabsequence=32766 border="0" color="0" x="1777" y="71" height="54" width="278" format="[general]" html.valueishtml="0"  name=theowt_kg_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=15 alignment="2" tabsequence=32766 border="0" color="0" x="2059" y="7" height="54" width="245" format="[general]" html.valueishtml="0"  name=grosswt_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=19 alignment="2" tabsequence=32766 border="0" color="0" x="2059" y="71" height="54" width="245" format="[general]" html.valueishtml="0"  name=grosswt_kg_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=14 alignment="2" tabsequence=32766 border="0" color="0" x="2311" y="7" height="54" width="249" format="[general]" html.valueishtml="0"  name=tarewt_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=18 alignment="2" tabsequence=32766 border="0" color="0" x="2308" y="71" height="54" width="252" format="[general]" html.valueishtml="0"  name=tarewt_kg_t visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=21 alignment="0" tabsequence=32766 border="0" color="0" x="2575" y="74" height="54" width="625" format="[general]" html.valueishtml="0"  name=comments_t_2 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

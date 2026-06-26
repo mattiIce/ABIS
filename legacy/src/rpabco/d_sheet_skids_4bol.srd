@@ -1,0 +1,30 @@
+$PBExportHeader$d_sheet_skids_4bol.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=58 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=67 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=sheet_skid_num dbname="sheet_skid.sheet_skid_num" )
+ column=(type=char(16) updatewhereclause=yes name=sheet_skid_display_num dbname="sheet_skid.sheet_skid_display_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_net_wt dbname="sheet_skid.sheet_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_tare_wt dbname="sheet_skid.sheet_tare_wt" )
+ retrieve="select   sheet_skid.sheet_skid_num, sheet_skid.sheet_skid_display_num, sheet_skid.sheet_net_wt, sheet_skid.sheet_tare_wt
+from     sheet_skid
+         join sheet_packing_item on sheet_skid.sheet_skid_num = sheet_packing_item.sheet_skid_num
+         join shipment on shipment.packing_list = sheet_packing_item.packing_list
+where    shipment.bill_of_lading = :al_bill_of_lading" arguments=(("al_bill_of_lading", number)) )
+text(band=header alignment="2" text="Sheet Skid Num" border="0" color="33554432" x="4" y="3" height="51" width="373" html.valueishtml="0"  name=sheet_skid_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Sheet Net Wt" border="0" color="33554432" x="1134" y="3" height="51" width="373" html.valueishtml="0"  name=sheet_net_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Sheet Tare Wt" border="0" color="33554432" x="1576" y="3" height="51" width="373" html.valueishtml="0"  name=sheet_tare_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Sheet Skid Display Num" border="0" color="33554432" x="472" y="3" height="51" width="556" html.valueishtml="0"  name=sheet_skid_display_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="33554432" x="4" y="3" height="61" width="373" format="[general]" html.valueishtml="0"  name=sheet_skid_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=32766 border="0" color="33554432" x="1134" y="3" height="61" width="373" format="[general]" html.valueishtml="0"  name=sheet_net_wt visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="0" color="33554432" x="1576" y="3" height="61" width="373" format="[general]" html.valueishtml="0"  name=sheet_tare_wt visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="475" y="3" height="51" width="556" format="[general]" html.valueishtml="0"  name=sheet_skid_display_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

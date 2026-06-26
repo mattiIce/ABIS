@@ -1,0 +1,61 @@
+$PBExportHeader$d_daily_prod_report_msr.srd
+$PBExportComments$monthly summary report
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+header(height=355 color="536870912" )
+summary(height=259 color="536870912" )
+footer(height=102 color="536870912" )
+detail(height=58 color="536870912" )
+table(column=(type=char(75) updatewhereclause=yes name=compute_0001 dbname="compute_0001" )
+ column=(type=decimal(0) updatewhereclause=yes name=compute_0002 dbname="compute_0002" )
+ column=(type=decimal(0) updatewhereclause=yes name=compute_0003 dbname="compute_0003" )
+ column=(type=decimal(0) updatewhereclause=yes name=compute_0004 dbname="compute_0004" )
+ column=(type=decimal(0) updatewhereclause=yes name=compute_0005 dbname="compute_0005" )
+ retrieve="  SELECT  To_Char(SHIFT.START_TIME, 'MM/DD/YYYY'),
+			SUM(SHIFT_COIL.PROCESS_WT), 
+			SUM((SHIFT.END_TIME - SHIFT.START_TIME) * 12),
+         SUM(SHIFT_COIL.PROCESS_WT)/SUM((SHIFT.END_TIME - SHIFT.START_TIME) * 12),
+ 			(SUM((SHIFT.END_TIME - SHIFT.START_TIME) * 12) * :al_alph)
+    FROM SHIFT,   
+         SHIFT_COIL,
+			Line 
+   WHERE ( SHIFT_COIL.SHIFT_NUM = SHIFT.SHIFT_NUM ) and  
+         ( ( SHIFT.LINE_NUM = line.line_num ) ) and
+			(line.line_num = :al_line) and
+         ( To_Char(SHIFT.START_TIME, 'Mon') = :as_month ) and
+         ( To_Char(SHIFT.START_TIME, 'YYYY') = :as_year ) 
+  	GROUP BY To_Char(SHIFT.START_TIME, 'MM/DD/YYYY')
+ORDER BY To_Char(SHIFT.START_TIME, 'MM/DD/YYYY')
+
+ " arguments=(("al_line", number),("al_alph", number),("as_line_desc", string),("as_month", string),("as_year", string)) )
+text(band=header alignment="2" text="Date"border="2" color="0" x="0" y="288" height="64" width="340"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="Actual WT"border="2" color="0" x="347" y="288" height="64" width="439"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="Daily Note/Comments"border="2" color="0" x="2370" y="288" height="64" width="1134"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=header alignment="2" expression="as_line_desc "border="0" color="0" x="15" y="61" height="115" width="3485" format="[general]"  font.face="Arial" font.height="-18" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" font.underline="1" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="Actual HR"border="2" color="0" x="786" y="288" height="64" width="325"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="Difference"border="2" color="0" x="1916" y="288" height="64" width="446"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="Goal"border="2" color="0" x="1554" y="288" height="64" width="355"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="Actual AVG"border="2" color="0" x="1119" y="288" height="64" width="435"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="2" color="0" x="0" y="3" height="51" width="340" format="[general]"  name=compute_0001 edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="2" color="0" x="347" y="3" height="51" width="439" format="[general]"  name=compute_0002 edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="2" text=""border="2" color="0" x="2370" y="3" height="51" width="1134"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=3 alignment="2" tabsequence=32766 border="2" color="0" x="786" y="3" height="51" width="325" format="[general]"  name=compute_0003 editmask.mask="###,###.##" editmask.focusrectangle=no  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="2" expression=" compute_0002 -  compute_0005 "border="2" color="0" x="1916" y="3" height="51" width="446" format="#######"  name=compute_0006  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=5 alignment="2" tabsequence=32766 border="2" color="0" x="1554" y="3" height="51" width="355" format="[general]"  name=compute_0005 editmask.mask="#######" editmask.focusrectangle=no  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="2" tabsequence=32766 border="2" color="0" x="1119" y="3" height="51" width="435" format="[general]"  name=compute_0004 editmask.mask="#######" editmask.focusrectangle=no  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=summary alignment="2" text="Total"border="2" color="0" x="0" y="6" height="64" width="340"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=summary alignment="2" expression="sum(  compute_0002  for all )"border="2" color="0" x="347" y="6" height="64" width="439" format=""  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=summary alignment="2" expression="sum(  compute_0003  for all )"border="2" color="0" x="786" y="6" height="64" width="325" format="#######.##"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=summary alignment="2" text="AVG.LBs/HR"border="2" color="0" x="585" y="185" height="64" width="527"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=summary alignment="2" expression="sum(  compute_0006  for all )"border="2" color="0" x="1916" y="6" height="64" width="446" format="########"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=summary alignment="2" text="Difference"border="2" color="0" x="1916" y="118" height="64" width="446"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=summary alignment="2" text="Goal"border="2" color="0" x="1554" y="118" height="64" width="355"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=summary alignment="2" expression="sum(  compute_0002  for all )/sum(  compute_0003  for all )"border="2" color="0" x="1119" y="6" height="64" width="435" format="#######"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=summary alignment="2" text="Actual"border="2" color="0" x="1119" y="118" height="64" width="435"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=summary alignment="2" expression="sum(  compute_0002  for all )/sum(  compute_0003  for all )"border="2" color="0" x="1119" y="185" height="64" width="435" format="#######"  name=compute_007  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=summary alignment="2" expression=" al_alph "border="2" color="0" x="1554" y="185" height="64" width="355" format="[general]"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=summary alignment="2" expression="sum(  compute_0002  for all )/sum(  compute_0003  for all ) -  al_alph "border="2" color="0" x="1916" y="185" height="64" width="446" format="#######"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=summary alignment="2" expression="sum(  compute_0005  for all )"border="2" color="0" x="1562" y="6" height="64" width="347" format="#######"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=footer alignment="2" expression="today()"border="0" color="0" x="3032" y="32" height="58" width="439" format="mm/dd/yyyy hh:mm"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=footer alignment="2" expression="'Page ' + page() + ' of ' + pageCount()"border="0" color="0" x="1320" y="32" height="58" width="695" format="[general]"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

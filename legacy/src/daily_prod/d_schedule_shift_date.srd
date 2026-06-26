@@ -1,0 +1,33 @@
+$PBExportHeader$d_schedule_shift_date.srd
+release 6;
+datawindow(units=0 timer_interval=0 color=80269524 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no grid.lines=0 )
+header(height=77 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=93 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=schedule_type dbname="shift_schedule.schedule_type" values="1st	1/2nd	2/3rd	3/" )
+ column=(type=datetime update=yes updatewhereclause=yes name=shift_starting_time dbname="shift_schedule.shift_starting_time" )
+ column=(type=datetime update=yes updatewhereclause=yes name=shift_ending_time dbname="shift_schedule.shift_ending_time" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=shift_cancelled dbname="shift_schedule.shift_cancelled" values="No	0/Cancelled	1/" )
+ column=(type=datetime update=yes updatewhereclause=yes key=yes name=shift_schedule_date dbname="shift_schedule.shift_schedule_date" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=line_num dbname="shift_schedule.line_num" )
+ retrieve="  SELECT ~"SHIFT_SCHEDULE~".~"SCHEDULE_TYPE~",   
+         ~"SHIFT_SCHEDULE~".~"SHIFT_STARTING_TIME~",   
+         ~"SHIFT_SCHEDULE~".~"SHIFT_ENDING_TIME~",   
+         ~"SHIFT_SCHEDULE~".~"SHIFT_CANCELLED~",   
+         ~"SHIFT_SCHEDULE~".~"SHIFT_SCHEDULE_DATE~",   
+         ~"SHIFT_SCHEDULE~".~"LINE_NUM~"  
+    FROM ~"SHIFT_SCHEDULE~"  
+   WHERE ( ~"SHIFT_SCHEDULE~".~"SHIFT_SCHEDULE_DATE~" = :ad_date ) AND  
+         ( ~"SHIFT_SCHEDULE~".~"LINE_NUM~" = :ai_line_id ) AND  
+         ( ~"SHIFT_SCHEDULE~".~"SCHEDULE_TYPE~" = :ai_type )    
+" update="SHIFT_SCHEDULE" updatewhere=0 updatekeyinplace=no arguments=(("ad_date", date),("ai_line_id", number),("ai_type", number)) )
+text(band=header alignment="2" text="Shift Type"border="6" color="0" x="7" y="6" height="64" width="307"  name=schedule_type_t  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+text(band=header alignment="2" text="Start"border="6" color="0" x="322" y="6" height="64" width="329"  name=shift_starting_time_t  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+text(band=header alignment="2" text="End"border="6" color="0" x="658" y="6" height="64" width="307"  name=shift_ending_time_t  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+text(band=header alignment="2" text="Cancelled"border="6" color="0" x="973" y="6" height="64" width="340"  name=shift_cancelled_t  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="0" color="16711680~tif( shift_cancelled = 1,255, 16711680)" x="7" y="3" height="86" width="307" format="[general]"  name=schedule_type ddlb.limit=0 ddlb.allowedit=no ddlb.case=any  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0"font.strikethrough="0~tif(   shift_cancelled  = 1, 1, 0 )"  background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="0" color="16711680~tif( shift_cancelled = 1,255, 16711680)" x="322" y="3" height="86" width="329" format="[time]"  name=shift_starting_time edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0"font.strikethrough="0~tif(   shift_cancelled  = 1, 1, 0 )"  background.mode="1" background.color="553648127" )
+column(band=detail id=3 alignment="2" tabsequence=32766 border="0" color="16711680~tif( shift_cancelled = 1,255, 16711680)" x="658" y="3" height="86" width="307" format="[time]"  name=shift_ending_time edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0"font.strikethrough="0~tif(   shift_cancelled  = 1, 1, 0 )"  background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="2" tabsequence=32766 border="0" color="16711680~tif( shift_cancelled = 1,255, 16711680)" x="973" y="3" height="86" width="340" format="[general]"  name=shift_cancelled ddlb.limit=0 ddlb.allowedit=no ddlb.case=any  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0"font.strikethrough="0~tif(   shift_cancelled  = 1, 1, 0 )"  background.mode="1" background.color="553648127" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

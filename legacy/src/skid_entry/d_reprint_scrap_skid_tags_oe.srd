@@ -1,0 +1,28 @@
+$PBExportHeader$d_reprint_scrap_skid_tags_oe.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=60 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=56 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=scrap_skid_num dbname="scrap_skid_detail.scrap_skid_num" )
+ retrieve="select distinct scrap_skid_detail.scrap_skid_num
+from		return_scrap_item   
+         join scrap_skid_detail on return_scrap_item.return_scrap_item_num = scrap_skid_detail.return_scrap_item_num
+         join scrap_skid on scrap_skid.scrap_skid_num = scrap_skid_detail.scrap_skid_num
+where		return_scrap_item.ab_job_num = :al_scrap_ab_job_num
+order by	scrap_skid_detail.scrap_skid_num" arguments=(("al_scrap_ab_job_num", number)) )
+text(band=header alignment="2" text="Scrap Alloy2" border="0" color="33554432" x="9061" y="4" height="52" width="293" html.valueishtml="0"  name=scrap_alloy2_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Tote Num" border="0" color="33554432" x="9353" y="4" height="52" width="224" html.valueishtml="0"  name=tote_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Scrap Skid Display Num" border="0" color="33554432" x="9582" y="4" height="52" width="558" html.valueishtml="0"  name=scrap_skid_display_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Trailer Name" border="0" color="33554432" x="10139" y="4" height="52" width="462" html.valueishtml="0"  name=trailer_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Customer Id Orig" border="0" color="33554432" x="10606" y="4" height="52" width="393" html.valueishtml="0"  name=customer_id_orig_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Scrap Handling Type" border="0" color="33554432" x="10999" y="4" height="52" width="489" html.valueishtml="0"  name=scrap_handling_type_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Scrap Skid Num" border="0" color="33554432" x="5" y="4" height="52" width="480" html.valueishtml="0"  name=scrap_skid_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="0" color="0" x="0" y="0" height="52" width="480" format="[general]" html.valueishtml="0"  name=scrap_skid_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

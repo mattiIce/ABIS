@@ -1,0 +1,27 @@
+$PBExportHeader$d_prod_item_date_4skid.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=64 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=76 color="536870912" )
+table(column=(type=datetime updatewhereclause=yes name=prod_item_date dbname="production_sheet_item.prod_item_date" )
+ column=(type=decimal(0) updatewhereclause=yes name=prod_item_num dbname="production_sheet_item.prod_item_num" )
+ retrieve="select 	production_sheet_item.prod_item_date,
+			production_sheet_item.prod_item_num
+from     production_sheet_item 
+         join sheet_skid_detail on production_sheet_item.prod_item_num = sheet_skid_detail.prod_item_num
+         join sheet_skid on sheet_skid.sheet_skid_num = sheet_skid_detail.sheet_skid_num
+         join ab_job on ab_job.ab_job_num = production_sheet_item.ab_job_num and sheet_skid.ab_job_num = ab_job.ab_job_num
+where    production_sheet_item.ab_job_num = :al_ab_job_num
+and      sheet_skid.sheet_skid_num = :al_sheet_skid_num" arguments=(("al_ab_job_num", number),("al_sheet_skid_num", number)) )
+text(band=header alignment="0" text="Prod Item Date" border="0" color="33554432" x="0" y="4" height="56" width="562" html.valueishtml="0"  name=prod_item_date_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Prod Item Num" border="0" color="33554432" x="567" y="4" height="56" width="562" html.valueishtml="0"  name=prod_item_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="5" y="4" height="68" width="503" format="[shortdate] [time]" html.valueishtml="0"  name=prod_item_date visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="562" y="0" height="56" width="992" format="[general]" html.valueishtml="0"  name=prod_item_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

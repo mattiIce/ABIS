@@ -1,0 +1,48 @@
+$PBExportHeader$d_daily_prod_dt_shift.srd
+$PBExportComments$downtime report -shift info
+release 9;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=6 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=90 color="536870912"  height.autosize=yes)
+table(column=(type=decimal(0) update=yes updatewhereclause=yes name=shift_num dbname="shift.shift_num" )
+ column=(type=datetime update=yes updatewhereclause=yes name=start_time dbname="shift.start_time" )
+ column=(type=datetime updatewhereclause=yes name=shift_end_time dbname="shift.end_time" )
+ column=(type=number updatewhereclause=yes name=compute_hours dbname="compute_0004" )
+ column=(type=number updatewhereclause=yes name=compute_dt_sce dbname="compute_0005" )
+ column=(type=char(255) updatewhereclause=yes name=line_line_desc dbname="line.line_desc" )
+ retrieve="SELECT  ~"SHIFT~".~"SHIFT_NUM~" ,
+           ~"SHIFT~".~"START_TIME~" ,
+           ~"SHIFT~".~"END_TIME~" ,
+           24 * (~"SHIFT~".~"END_TIME~" - ~"SHIFT~".~"START_TIME~"),
+				F_GET_DOWNTIME_TOTAL_SEC(~"SHIFT~".~"SHIFT_NUM~"),
+				~"LINE~".~"LINE_DESC~"     
+        FROM ~"SHIFT~" ,
+           ~"LINE~"     
+        WHERE ( ~"SHIFT~".~"LINE_NUM~" = ~"LINE~".~"LINE_NUM~" ) and ( ~"SHIFT~".~"SHIFT_NUM~" = :al_shift )   " arguments=(("al_shift", number)) )
+text(band=detail alignment="0" text="Date" border="2" color="0" x="1781" y="7" height="80" width="139" html.valueishtml="0"  name=t_3 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="2" expression="String(Date( start_time ), 'mm/dd/yyyy')"border="2" color="33554432" x="1924" y="7" height="80" width="274" format="[general]" html.valueishtml="0"  name=date visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Avg(Lb/Hr)" border="2" color="0" x="2790" y="7" height="80" width="322" html.valueishtml="0"  name=t_6 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="" border="2" color="0" x="3116" y="7" height="80" width="252" html.valueishtml="0"  name=t_7 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Line" border="2" color="0" x="4" y="7" height="80" width="121" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="2" tabsequence=30 border="2" color="0" x="486" y="7" height="80" width="252" format="mm/dd/yyyy hh:mm" html.valueishtml="0"  name=start_time visible="1" editmask.mask="hh:mm:ss" editmask.imemode=0 editmask.focusrectangle=no  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=3 alignment="2" tabsequence=32766 border="2" color="0" x="867" y="7" height="80" width="249" format="mm/dd/yyyy hh:mm" html.valueishtml="0"  name=shift_end_time visible="1" editmask.mask="hh:mm:ss" editmask.imemode=0 editmask.focusrectangle=no  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="End" border="2" color="0" x="742" y="7" height="80" width="121" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=6 alignment="2" tabsequence=32766 border="2" color="0" x="128" y="7" height="80" width="201" format="[general]" html.valueishtml="0"  name=line_line_desc visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Start" border="2" color="0" x="333" y="7" height="80" width="150" html.valueishtml="0"  name=start_time_t visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Hours" border="2" color="0" x="1119" y="7" height="80" width="176" html.valueishtml="0"  name=t_8 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="0" tabsequence=40 border="2" color="0" x="3178" y="10" height="80" width="44" format="[general]" html.valueishtml="0"  name=compute_hours visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=5 alignment="0" tabsequence=50 border="2" color="0" x="3280" y="20" height="54" width="33" format="[general]" html.valueishtml="0"  name=compute_dt_sce visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="DT" border="2" color="0" x="1470" y="7" height="80" width="110" html.valueishtml="0"  name=t_9 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="0" expression=" Round(compute_dt_sce /3600, 2)"border="2" color="0" x="1584" y="7" height="80" width="194" format="[GENERAL]" html.valueishtml="0"  name=compute_dt_hrs visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="2" expression="(24 * daysafter( date( start_time ), date( shift_end_time ) )) + (secondsafter(  Time(start_time) ,  Time(shift_end_time)  ) / 3600)"border="2" color="0" x="1298" y="7" height="80" width="168" format="##.#" html.valueishtml="0"  name=compute_1 visible="0"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="0" expression="Round(  compute_hours ,2 )"border="2" color="0" x="1298" y="7" height="80" width="168" format="[GENERAL]" html.valueishtml="0"  name=compute_shift_hrs visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Efficiency(%)" border="2" color="0" x="2202" y="7" height="80" width="380" html.valueishtml="0"  name=t_4 visible="1"  font.face="Arial" font.height="-10" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="0" expression="Round((( compute_shift_hrs - compute_dt_hrs ) /  compute_shift_hrs ) * 100, 2)"border="2" color="0" x="2586" y="7" height="80" width="201" format="[GENERAL]" html.valueishtml="0"  name=compute_efficiency visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 
