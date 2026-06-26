@@ -28,6 +28,7 @@ import {
   JobPatch,
   SheetSkidWrite,
   ScrapSkidWrite,
+  SheetSkidWarehousePatch,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -114,6 +115,17 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
     bol: 'E2E-BOL', customerId: 4001, createdBy: 'e2e', status: 1,
   }));
   assert.equal(updated.status, 1);
+});
+
+// The warehouse SPA's flow: list sheet skids + a warehouse update (location/ticket/status) (typed).
+test('warehouse flow: list sheet skids + warehouse update (typed)', async () => {
+  const list = await client.listSheetSkids(1, 5, undefined, undefined);
+  assert.ok(Array.isArray(list.items));
+  const updated = await client.updateSheetSkidWarehouse(3001, new SheetSkidWarehousePatch({
+    skidLocation: 'WH-E2E', skidTicketIfWhed: 'T-E2E', skidSheetStatus: 2,
+  }));
+  assert.equal(updated.skidLocation, 'WH-E2E');
+  assert.equal(updated.skidSheetStatus, 2);
 });
 
 // The EDI monitor's flow: list transactions, log, customer-edi setup, and types (typed, read-only).

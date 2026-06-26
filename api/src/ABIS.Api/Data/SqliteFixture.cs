@@ -92,7 +92,8 @@ public static class SqliteFixture
 
             CREATE TABLE sheet_skid (
                 sheet_skid_num INTEGER PRIMARY KEY, ab_job_num INTEGER, sheet_skid_display_num TEXT,
-                sheet_net_wt REAL, sheet_tare_wt REAL, skid_pieces INTEGER, skid_date TEXT);
+                sheet_net_wt REAL, sheet_tare_wt REAL, skid_pieces INTEGER, skid_date TEXT,
+                skid_location TEXT, skid_sheet_status INTEGER, skid_ticket_if_whed TEXT, skid_from_if_whed TEXT);
 
             CREATE TABLE scrap_skid (
                 scrap_skid_num INTEGER PRIMARY KEY, scrap_ab_job_num TEXT, scrap_alloy2 TEXT, scrap_temper TEXT,
@@ -408,14 +409,14 @@ public static class SqliteFixture
             });
 
         conn.Execute("""
-            INSERT INTO sheet_skid (sheet_skid_num, ab_job_num, sheet_skid_display_num, sheet_net_wt, sheet_tare_wt, skid_pieces, skid_date)
-            VALUES (:SheetSkidNum, :AbJobNum, :SheetSkidDisplayNum, :SheetNetWt, :SheetTareWt, :SkidPieces, :SkidDate)
+            INSERT INTO sheet_skid (sheet_skid_num, ab_job_num, sheet_skid_display_num, sheet_net_wt, sheet_tare_wt, skid_pieces, skid_date, skid_location, skid_sheet_status, skid_ticket_if_whed)
+            VALUES (:SheetSkidNum, :AbJobNum, :SheetSkidDisplayNum, :SheetNetWt, :SheetTareWt, :SkidPieces, :SkidDate, :SkidLocation, :SkidSheetStatus, :SkidTicketIfWhed)
             """,
             new[]
             {
-                new { SheetSkidNum = 3001L, AbJobNum = (long?)1001L, SheetSkidDisplayNum = "110-1001-01", SheetNetWt = 1980m, SheetTareWt = 50m, SkidPieces = (int?)100, SkidDate = (DateTime?)d.AddHours(4) },
-                new { SheetSkidNum = 3002L, AbJobNum = (long?)1001L, SheetSkidDisplayNum = "110-1001-02", SheetNetWt = 1975m, SheetTareWt = 50m, SkidPieces = (int?)100, SkidDate = (DateTime?)d.AddHours(5) },
-                new { SheetSkidNum = 3003L, AbJobNum = (long?)1003L, SheetSkidDisplayNum = "120-1003-01", SheetNetWt = 2400m, SheetTareWt = 60m, SkidPieces = (int?)80, SkidDate = (DateTime?)d.AddDays(3) }
+                new { SheetSkidNum = 3001L, AbJobNum = (long?)1001L, SheetSkidDisplayNum = "110-1001-01", SheetNetWt = 1980m, SheetTareWt = 50m, SkidPieces = (int?)100, SkidDate = (DateTime?)d.AddHours(4), SkidLocation = "WH-A-01", SkidSheetStatus = (int?)1, SkidTicketIfWhed = "T-3001" },
+                new { SheetSkidNum = 3002L, AbJobNum = (long?)1001L, SheetSkidDisplayNum = "110-1001-02", SheetNetWt = 1975m, SheetTareWt = 50m, SkidPieces = (int?)100, SkidDate = (DateTime?)d.AddHours(5), SkidLocation = "WH-A-02", SkidSheetStatus = (int?)1, SkidTicketIfWhed = (string?)null },
+                new { SheetSkidNum = 3003L, AbJobNum = (long?)1003L, SheetSkidDisplayNum = "120-1003-01", SheetNetWt = 2400m, SheetTareWt = 60m, SkidPieces = (int?)80, SkidDate = (DateTime?)d.AddDays(3), SkidLocation = (string?)null, SkidSheetStatus = (int?)0, SkidTicketIfWhed = (string?)null }
             });
 
         conn.Execute("""

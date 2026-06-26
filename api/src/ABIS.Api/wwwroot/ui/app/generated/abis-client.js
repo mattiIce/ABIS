@@ -6091,6 +6091,69 @@ export class AbisClient {
         }
         return Promise.resolve(null);
     }
+    /**
+     * Warehouse update of a sheet skid (location / ticket / status).
+     * @return OK
+     */
+    updateSheetSkidWarehouse(sheetSkidNum, body) {
+        let url_ = this.baseUrl + "/api/sheet-skids/{sheetSkidNum}/warehouse";
+        if (sheetSkidNum === undefined || sheetSkidNum === null)
+            throw new globalThis.Error("The parameter 'sheetSkidNum' must be defined.");
+        url_ = url_.replace("{sheetSkidNum}", encodeURIComponent("" + sheetSkidNum));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processUpdateSheetSkidWarehouse(_response);
+        });
+    }
+    processUpdateSheetSkidWarehouse(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = SheetSkid.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
 }
 export class AbJob {
     constructor(data) {
@@ -8708,6 +8771,10 @@ export class SheetSkid {
             this.sheetTareWt = _data["sheetTareWt"];
             this.skidPieces = _data["skidPieces"];
             this.skidDate = _data["skidDate"] ? new Date(_data["skidDate"].toString()) : undefined;
+            this.skidLocation = _data["skidLocation"];
+            this.skidSheetStatus = _data["skidSheetStatus"];
+            this.skidTicketIfWhed = _data["skidTicketIfWhed"];
+            this.skidFromIfWhed = _data["skidFromIfWhed"];
         }
     }
     static fromJS(data) {
@@ -8725,6 +8792,10 @@ export class SheetSkid {
         data["sheetTareWt"] = this.sheetTareWt;
         data["skidPieces"] = this.skidPieces;
         data["skidDate"] = this.skidDate ? this.skidDate.toISOString() : undefined;
+        data["skidLocation"] = this.skidLocation;
+        data["skidSheetStatus"] = this.skidSheetStatus;
+        data["skidTicketIfWhed"] = this.skidTicketIfWhed;
+        data["skidFromIfWhed"] = this.skidFromIfWhed;
         return data;
     }
 }
@@ -8767,6 +8838,36 @@ export class SheetSkidPagedResult {
         data["pageSize"] = this.pageSize;
         data["totalCount"] = this.totalCount;
         data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class SheetSkidWarehousePatch {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.skidLocation = _data["skidLocation"];
+            this.skidTicketIfWhed = _data["skidTicketIfWhed"];
+            this.skidSheetStatus = _data["skidSheetStatus"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new SheetSkidWarehousePatch();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["skidLocation"] = this.skidLocation;
+        data["skidTicketIfWhed"] = this.skidTicketIfWhed;
+        data["skidSheetStatus"] = this.skidSheetStatus;
         return data;
     }
 }

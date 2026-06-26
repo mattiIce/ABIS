@@ -187,6 +187,15 @@ public sealed class SheetSkidWrite
     public int? SkidPieces { get; set; }
 }
 
+/// <summary>Warehouse-side partial update of a sheet skid (the legacy w_wh_* windows):
+/// where it's stored, its warehouse ticket, and status. Only non-null fields apply.</summary>
+public sealed class SheetSkidWarehousePatch
+{
+    public string? SkidLocation { get; set; }
+    public string? SkidTicketIfWhed { get; set; }
+    public int? SkidSheetStatus { get; set; }
+}
+
 /// <summary>Create or fully replace a shipment header (table <c>shipment</c>).
 /// <c>packing_list</c> (PK) and the NOT NULL <c>bill_of_lading</c> are both
 /// server-assigned from their own sequences on create.</summary>

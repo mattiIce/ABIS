@@ -875,6 +875,20 @@ public static class ApiEndpoints
            .WithSummary("Create a finished sheet skid.")
            .Produces<SheetSkid>(StatusCodes.Status201Created).ProducesValidationProblem();
 
+        // Warehouse-side update of a finished sheet skid (the legacy w_wh_* windows):
+        // location / warehouse ticket / status. Partial — only non-null fields apply.
+        api.MapPatch("/sheet-skids/{sheetSkidNum:long}/warehouse", async (long sheetSkidNum, SheetSkidWarehousePatch body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateSheetSkidWarehouseAsync(sheetSkidNum, body, ct) is { } updated
+                    ? Results.Ok(updated)
+                    : Results.NotFound();
+            })
+           .WithName("UpdateSheetSkidWarehouse").WithTags("Warehouse")
+           .WithSummary("Warehouse update of a sheet skid (location / ticket / status).")
+           .Produces<SheetSkid>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+
         api.MapGet("/scrap-skids", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? sort = null, string? dir = null) =>
             {
@@ -1204,6 +1218,14 @@ public static class ApiEndpoints
         var e = new Dictionary<string, string[]>();
         if (body.AbJobNum <= 0) e["abJobNum"] = ["abJobNum is required."];
         Max(e, "sheetSkidDisplayNum", body.SheetSkidDisplayNum, 16);
+        return e.Count == 0 ? null : e;
+    }
+
+    private static Dictionary<string, string[]>? Validate(SheetSkidWarehousePatch body)
+    {
+        var e = new Dictionary<string, string[]>();
+        Max(e, "skidLocation", body.SkidLocation, 18);
+        Max(e, "skidTicketIfWhed", body.SkidTicketIfWhed, 32);
         return e.Count == 0 ? null : e;
     }
 

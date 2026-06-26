@@ -4995,6 +4995,64 @@
           }
         }
       }
+    },
+    "/api/sheet-skids/{sheetSkidNum}/warehouse": {
+      "patch": {
+        "tags": [
+          "Warehouse"
+        ],
+        "summary": "Warehouse update of a sheet skid (location / ticket / status).",
+        "operationId": "UpdateSheetSkidWarehouse",
+        "parameters": [
+          {
+            "name": "sheetSkidNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SheetSkidWarehousePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SheetSkid"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7521,6 +7579,23 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "skidLocation": {
+            "type": "string",
+            "nullable": true
+          },
+          "skidSheetStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "skidTicketIfWhed": {
+            "type": "string",
+            "nullable": true
+          },
+          "skidFromIfWhed": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -7557,6 +7632,25 @@
             "type": "integer",
             "format": "int32",
             "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SheetSkidWarehousePatch": {
+        "type": "object",
+        "properties": {
+          "skidLocation": {
+            "type": "string",
+            "nullable": true
+          },
+          "skidTicketIfWhed": {
+            "type": "string",
+            "nullable": true
+          },
+          "skidSheetStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
