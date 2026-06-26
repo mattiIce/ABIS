@@ -30,8 +30,8 @@ ERP/MES). It is grounded in the analysis in
   inventory, and this roadmap.
 - ✅ **Phase 2 seam started**: a read-first ASP.NET Core API over the core
   entities, with tests and CI — see [`../api/`](../api/README.md).
-- ⚠️ **Not buildable as committed**: 7 PFE/PFD libraries referenced by the
-  target are missing from the repo (see `ARCHITECTURE.md` §build-readiness).
+- ✅ **Buildable as committed**: the 7 previously-missing PFE/PFD libraries were
+  located and committed — all 50 libraries in `lion.pbt`'s LibList are now present.
 - ❌ **No API / service tier.** The client talks straight to the DB; there is no
   seam to integrate against yet.
 - ❌ **No tests, CI, or text-based source control** for the bulk of the code.
@@ -61,10 +61,13 @@ the B-vs-C commitment until after a measured pilot.
       below); add `.gitignore`/`.gitattributes` accordingly. → `.gitattributes`
       marks `.pbl`/`.pbd`/`.dll` binary and the text exports (`.srd`/`.srw`/…)
       LF-normalized; `.gitignore` excludes build output and generated artifacts.
-- [ ] Track the **7 missing PFE/PFD libraries** as a blocking issue; locate or
-      regenerate them so the app builds. **← the remaining Phase 0 blocker**
-      (user-blocked: the binary `.pbl`s must be found on a dev machine / backup /
-      the PFC install — they can't be produced from this repo).
+- [x] Track the **7 missing PFE/PFD libraries** as a blocking issue; locate or
+      regenerate them so the app builds. → **Resolved.** All 7 (`PFD_ABC.PBL`,
+      `PFE_ABC.PBL`, `pfeapsrv.pbl`, `pfedwsrv.pbl`, `pfemain.pbl`, `pfeutil.pbl`,
+      `pfewnsrv.pbl`) were located in a complete build tree whose shared `pfc*`
+      libraries are **byte-identical** to the repo's, and committed. **All 50
+      libraries in `lion.pbt`'s LibList are now present** — the target builds as
+      committed.
 - [x] Resolve the **stale backup PBLs** (`*_12032020`, `*_06092022`): removed
       from the tree (not referenced by `lion.pbt`'s LibList; recoverable from git
       history if ever needed).
