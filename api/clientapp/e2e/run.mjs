@@ -18,6 +18,8 @@ import {
   DieWrite,
   DowntimeInstanceWrite,
   ReceivingBolWrite,
+  CustomerWrite,
+  CustomerContactWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -104,6 +106,26 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
     bol: 'E2E-BOL', customerId: 4001, createdBy: 'e2e', status: 1,
   }));
   assert.equal(updated.status, 1);
+});
+
+// The customers SPA's flow: create a customer, load + replace it, add a contact (typed).
+test('customers flow: create, get, update customer + add contact (typed)', async () => {
+  const created = await client.createCustomer(new CustomerWrite({
+    customerName: 'E2E Customer', customerShortName: 'E2E', customerState: 'OH',
+  }));
+  assert.ok(created.customerId > 0);
+  const got = await client.getCustomer(created.customerId);
+  assert.equal(got.customerName, 'E2E Customer');
+  const updated = await client.updateCustomer(created.customerId, new CustomerWrite({
+    customerName: 'E2E Customer', customerShortName: 'E2E2', customerCity: 'Toledo',
+  }));
+  assert.equal(updated.customerShortName, 'E2E2');
+  const contact = await client.createCustomerContact(created.customerId, new CustomerContactWrite({
+    lastName: 'Smith', firstName: 'Pat', department: 'QA',
+  }));
+  assert.ok(contact.contactId > 0);
+  const contacts = await client.getCustomerContacts(created.customerId);
+  assert.ok(contacts.some((k) => k.contactId === contact.contactId));
 });
 
 // The maintenance SPA's flow: create a log, then load + replace it (typed).
