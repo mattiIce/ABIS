@@ -1,0 +1,31 @@
+# Run the ABIS API — and the greenfield web UIs it serves — on a server, against
+# the plant Oracle DB. The container is self-contained (the API serves the static
+# UIs from wwwroot). Quick start:
+#
+#   cp .env.example .env      # then fill in the DB connection + API key
+#   docker compose up -d --build
+#   # browse  http://<host>:${ABIS_PORT}/ui/order-entry.html
+#
+# See docs/DEPLOY.md for the full guide (TLS, keys, updates, non-prod first).
+services:
+  abis-api:
+    build:
+      context: api
+      dockerfile: Dockerfile
+    image: abis-api:latest
+    container_name: abis-api
+    ports:
+      - "${ABIS_PORT:-8080}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      # Data path: point at the plant Oracle. Seed stays false against a real DB.
+      Database__Provider: Oracle
+      Database__Seed: "false"
+      Database__ConnectionString: "${ABIS_DB_CONNECTION}"
+      # API-key auth gates /api (clients send X-Api-Key). Supply at least one key.
+      ApiKeys__Enabled: "true"
+      ApiKeys__Keys__0: "${ABIS_API_KEY}"
+      # opc_action_log is absent in the live DBO schema; auditing self-disables.
+      Audit__Enabled: "false"
+    restart: unless-stopped
+    # The image declares a HEALTHCHECK against /health/ready (Oracle connectivity).
