@@ -1,7 +1,10 @@
 using Abis.Api.Data;
+using Abis.Api.Middleware;
 using Abis.Api.Models;
 using Abis.Api.Security;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using JsonOptions = Microsoft.AspNetCore.Http.Json.JsonOptions;
 
 namespace Abis.Api.Endpoints;
 
@@ -109,13 +112,11 @@ public static class ApiEndpoints
            .WithSummary("Create a production job.")
            .Produces<AbJob>(StatusCodes.Status201Created);
 
-        api.MapPatch("/jobs/{abJobNum:long}", async (long abJobNum, JobPatch body, IAbisRepository repo, CancellationToken ct) =>
-                await repo.PatchJobAsync(abJobNum, body, ct) is { } job
-                    ? Results.Ok(job)
-                    : Results.NotFound())
+        api.MapPatch("/jobs/{abJobNum:long}", (long abJobNum, JobPatch body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
+                WithIfMatch(ctx, json, () => repo.GetJobAsync(abJobNum, ct), () => repo.PatchJobAsync(abJobNum, body, ct)))
            .WithName("PatchJob").WithTags("Jobs")
-           .WithSummary("Update a job's status, notes, men, or finish time.")
-           .Produces<AbJob>().Produces(StatusCodes.Status404NotFound);
+           .WithSummary("Update a job's status, notes, men, or finish time. Supports If-Match.")
+           .Produces<AbJob>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed);
 
         // ---- Coils (inventory) -----------------------------------------
         api.MapGet("/coils", async (IAbisRepository repo, CancellationToken ct,
@@ -169,13 +170,11 @@ public static class ApiEndpoints
            .WithSummary("Create a coil on receipt.")
            .Produces<Coil>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPatch("/coils/{coilAbcNum:long}", async (long coilAbcNum, CoilPatch body, IAbisRepository repo, CancellationToken ct) =>
-                await repo.PatchCoilAsync(coilAbcNum, body, ct) is { } coil
-                    ? Results.Ok(coil)
-                    : Results.NotFound())
+        api.MapPatch("/coils/{coilAbcNum:long}", (long coilAbcNum, CoilPatch body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
+                WithIfMatch(ctx, json, () => repo.GetCoilAsync(coilAbcNum, ct), () => repo.PatchCoilAsync(coilAbcNum, body, ct)))
            .WithName("PatchCoil").WithTags("Coils")
-           .WithSummary("Update a coil's status, location, or notes.")
-           .Produces<Coil>().Produces(StatusCodes.Status404NotFound);
+           .WithSummary("Update a coil's status, location, or notes. Supports If-Match.")
+           .Produces<Coil>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed);
 
         // ---- Orders -----------------------------------------------------
         api.MapGet("/orders", async (IAbisRepository repo, CancellationToken ct,
@@ -236,17 +235,15 @@ public static class ApiEndpoints
            .WithSummary("Create an order header and its line items in one transaction.")
            .Produces<OrderDetail>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/orders/{orderAbcNum:long}", async (long orderAbcNum, CustomerOrderWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/orders/{orderAbcNum:long}", async (long orderAbcNum, CustomerOrderWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateOrderAsync(orderAbcNum, body, ct) is { } order
-                    ? Results.Ok(order)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetOrderAsync(orderAbcNum, ct), () => repo.UpdateOrderAsync(orderAbcNum, body, ct));
             })
            .WithName("UpdateOrder").WithTags("Orders")
-           .WithSummary("Replace an order header.")
-           .Produces<CustomerOrder>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace an order header. Supports If-Match.")
+           .Produces<CustomerOrder>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
         // ---- Order items ------------------------------------------------
         api.MapGet("/order-items", async (IAbisRepository repo, CancellationToken ct,
@@ -281,17 +278,15 @@ public static class ApiEndpoints
            .WithSummary("Add a line item to an order (line number assigned per order).")
            .Produces<OrderItem>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/orders/{orderAbcNum:long}/items/{orderItemNum:long}", async (long orderAbcNum, long orderItemNum, OrderItemWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/orders/{orderAbcNum:long}/items/{orderItemNum:long}", async (long orderAbcNum, long orderItemNum, OrderItemWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateOrderItemAsync(orderAbcNum, orderItemNum, body, ct) is { } item
-                    ? Results.Ok(item)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetOrderItemAsync(orderAbcNum, orderItemNum, ct), () => repo.UpdateOrderItemAsync(orderAbcNum, orderItemNum, body, ct));
             })
            .WithName("UpdateOrderItem").WithTags("OrderItems")
-           .WithSummary("Replace an order line item (by order + line number).")
-           .Produces<OrderItem>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace an order line item (by order + line number). Supports If-Match.")
+           .Produces<OrderItem>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
         // ---- Parts (part-number master) --------------------------------
         api.MapGet("/parts", async (IAbisRepository repo, CancellationToken ct,
@@ -324,17 +319,15 @@ public static class ApiEndpoints
            .WithSummary("Create a part-number record (server-assigned id; requires customerId).")
            .Produces<Part>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/parts/{partNumId:long}", async (long partNumId, PartWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/parts/{partNumId:long}", async (long partNumId, PartWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdatePartAsync(partNumId, body, ct) is { } part
-                    ? Results.Ok(part)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetPartAsync(partNumId, ct), () => repo.UpdatePartAsync(partNumId, body, ct));
             })
            .WithName("UpdatePart").WithTags("Parts")
-           .WithSummary("Replace a part-number record.")
-           .Produces<Part>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace a part-number record. Supports If-Match.")
+           .Produces<Part>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
         // ---- Dies (die / tooling) --------------------------------------
         api.MapGet("/dies", async (IAbisRepository repo, CancellationToken ct,
@@ -367,17 +360,15 @@ public static class ApiEndpoints
            .WithSummary("Create a die/tooling record (server-assigned id; requires dieName).")
            .Produces<Die>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/dies/{dieId:long}", async (long dieId, DieWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/dies/{dieId:long}", async (long dieId, DieWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateDieAsync(dieId, body, ct) is { } die
-                    ? Results.Ok(die)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetDieAsync(dieId, ct), () => repo.UpdateDieAsync(dieId, body, ct));
             })
            .WithName("UpdateDie").WithTags("Dies")
-           .WithSummary("Replace a die/tooling record.")
-           .Produces<Die>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace a die/tooling record. Supports If-Match.")
+           .Produces<Die>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
         // ---- Shipments -------------------------------------------------
         api.MapGet("/shipments", async (IAbisRepository repo, CancellationToken ct,
@@ -410,25 +401,21 @@ public static class ApiEndpoints
            .WithSummary("Create a shipment header (packing-list and bill-of-lading numbers server-assigned).")
            .Produces<Shipment>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/shipments/{packingList:long}", async (long packingList, ShipmentWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/shipments/{packingList:long}", async (long packingList, ShipmentWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateShipmentAsync(packingList, body, ct) is { } shipment
-                    ? Results.Ok(shipment)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetShipmentAsync(packingList, ct), () => repo.UpdateShipmentAsync(packingList, body, ct));
             })
            .WithName("UpdateShipment").WithTags("Shipments")
-           .WithSummary("Replace a shipment header (packing-list and bill-of-lading numbers preserved).")
-           .Produces<Shipment>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace a shipment header (packing-list and bill-of-lading numbers preserved). Supports If-Match.")
+           .Produces<Shipment>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
-        api.MapPatch("/shipments/{packingList:long}", async (long packingList, ShipmentStatusPatch body, IAbisRepository repo, CancellationToken ct) =>
-                await repo.PatchShipmentAsync(packingList, body, ct) is { } shipment
-                    ? Results.Ok(shipment)
-                    : Results.NotFound())
+        api.MapPatch("/shipments/{packingList:long}", (long packingList, ShipmentStatusPatch body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
+                WithIfMatch(ctx, json, () => repo.GetShipmentAsync(packingList, ct), () => repo.PatchShipmentAsync(packingList, body, ct)))
            .WithName("PatchShipment").WithTags("Shipments")
-           .WithSummary("Update a shipment's dispatch status (status, vehicle status, sent/actual times, notes).")
-           .Produces<Shipment>().Produces(StatusCodes.Status404NotFound);
+           .WithSummary("Update a shipment's dispatch status (status, vehicle status, sent/actual times, notes). Supports If-Match.")
+           .Produces<Shipment>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed);
 
         // ---- Receiving BOLs --------------------------------------------
         api.MapGet("/receiving-bols", async (IAbisRepository repo, CancellationToken ct,
@@ -461,17 +448,15 @@ public static class ApiEndpoints
            .WithSummary("Create an inbound receiving BOL (requires bol and customerId).")
            .Produces<ReceivingBol>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/receiving-bols/{receivingBolId:long}", async (long receivingBolId, ReceivingBolWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/receiving-bols/{receivingBolId:long}", async (long receivingBolId, ReceivingBolWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateReceivingBolAsync(receivingBolId, body, ct) is { } bol
-                    ? Results.Ok(bol)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetReceivingBolAsync(receivingBolId, ct), () => repo.UpdateReceivingBolAsync(receivingBolId, body, ct));
             })
            .WithName("UpdateReceivingBol").WithTags("Receiving")
-           .WithSummary("Replace a receiving BOL.")
-           .Produces<ReceivingBol>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace a receiving BOL. Supports If-Match.")
+           .Produces<ReceivingBol>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
         // ---- EDI (outbound X12 transaction ledger + transmission log) --
         api.MapGet("/edi/transactions", async (IAbisRepository repo, CancellationToken ct,
@@ -572,17 +557,15 @@ public static class ApiEndpoints
            .WithSummary("Create a maintenance log entry (requires probDateTime, probDetails, author).")
            .Produces<MaintLog>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/maint-logs/{maintLogId:long}", async (long maintLogId, MaintLogWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/maint-logs/{maintLogId:long}", async (long maintLogId, MaintLogWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateMaintLogAsync(maintLogId, body, ct) is { } entry
-                    ? Results.Ok(entry)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetMaintLogAsync(maintLogId, ct), () => repo.UpdateMaintLogAsync(maintLogId, body, ct));
             })
            .WithName("UpdateMaintLog").WithTags("Maintenance")
-           .WithSummary("Replace a maintenance log entry.")
-           .Produces<MaintLog>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace a maintenance log entry. Supports If-Match.")
+           .Produces<MaintLog>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
         // ---- Carriers --------------------------------------------------
         api.MapGet("/carriers", async (IAbisRepository repo, CancellationToken ct,
@@ -615,17 +598,15 @@ public static class ApiEndpoints
            .WithSummary("Create a carrier (server-assigned id; requires carrierFullName).")
            .Produces<Carrier>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/carriers/{carrierId:long}", async (long carrierId, CarrierWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/carriers/{carrierId:long}", async (long carrierId, CarrierWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateCarrierAsync(carrierId, body, ct) is { } carrier
-                    ? Results.Ok(carrier)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetCarrierAsync(carrierId, ct), () => repo.UpdateCarrierAsync(carrierId, body, ct));
             })
            .WithName("UpdateCarrier").WithTags("Carriers")
-           .WithSummary("Replace a carrier.")
-           .Produces<Carrier>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace a carrier. Supports If-Match.")
+           .Produces<Carrier>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
         // ---- Shifts ----------------------------------------------------
         api.MapGet("/shifts", async (IAbisRepository repo, CancellationToken ct,
@@ -658,17 +639,15 @@ public static class ApiEndpoints
            .WithSummary("Create a production shift.")
            .Produces<Shift>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/shifts/{shiftNum:long}", async (long shiftNum, ShiftWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/shifts/{shiftNum:long}", async (long shiftNum, ShiftWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateShiftAsync(shiftNum, body, ct) is { } shift
-                    ? Results.Ok(shift)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetShiftAsync(shiftNum, ct), () => repo.UpdateShiftAsync(shiftNum, body, ct));
             })
            .WithName("UpdateShift").WithTags("Shifts")
-           .WithSummary("Replace a production shift.")
-           .Produces<Shift>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace a production shift. Supports If-Match.")
+           .Produces<Shift>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
         // ---- Downtime instances ----------------------------------------
         api.MapGet("/downtime", async (IAbisRepository repo, CancellationToken ct,
@@ -701,17 +680,15 @@ public static class ApiEndpoints
            .WithSummary("Log a downtime instance.")
            .Produces<DowntimeInstance>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/downtime/{instanceNum:long}", async (long instanceNum, DowntimeInstanceWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/downtime/{instanceNum:long}", async (long instanceNum, DowntimeInstanceWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateDowntimeInstanceAsync(instanceNum, body, ct) is { } dt
-                    ? Results.Ok(dt)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetDowntimeInstanceAsync(instanceNum, ct), () => repo.UpdateDowntimeInstanceAsync(instanceNum, body, ct));
             })
            .WithName("UpdateDowntimeInstance").WithTags("Downtime")
-           .WithSummary("Replace a downtime instance.")
-           .Produces<DowntimeInstance>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace a downtime instance. Supports If-Match.")
+           .Produces<DowntimeInstance>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
         // ---- Sketches --------------------------------------------------
         api.MapGet("/sketches", async (IAbisRepository repo, CancellationToken ct,
@@ -744,17 +721,15 @@ public static class ApiEndpoints
            .WithSummary("Create a sketch header (server-assigned id; requires sketchName; image not written via API).")
            .Produces<Sketch>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/sketches/{sketchId:long}", async (long sketchId, SketchWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/sketches/{sketchId:long}", async (long sketchId, SketchWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateSketchAsync(sketchId, body, ct) is { } sketch
-                    ? Results.Ok(sketch)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetSketchAsync(sketchId, ct), () => repo.UpdateSketchAsync(sketchId, body, ct));
             })
            .WithName("UpdateSketch").WithTags("Sketches")
-           .WithSummary("Replace a sketch header (image left untouched).")
-           .Produces<Sketch>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace a sketch header (image left untouched). Supports If-Match.")
+           .Produces<Sketch>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
         // ---- Test results (QA) -----------------------------------------
         api.MapGet("/test-results", async (IAbisRepository repo, CancellationToken ct,
@@ -827,17 +802,15 @@ public static class ApiEndpoints
            .WithSummary("Add a contact to a customer (server-assigned id; requires lastName).")
            .Produces<CustomerContact>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/customer-contacts/{contactId:long}", async (long contactId, CustomerContactWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/customer-contacts/{contactId:long}", async (long contactId, CustomerContactWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateCustomerContactAsync(contactId, body, ct) is { } contact
-                    ? Results.Ok(contact)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetCustomerContactAsync(contactId, ct), () => repo.UpdateCustomerContactAsync(contactId, body, ct));
             })
            .WithName("UpdateCustomerContact").WithTags("Customers")
-           .WithSummary("Replace a customer contact (owning customer unchanged).")
-           .Produces<CustomerContact>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace a customer contact (owning customer unchanged). Supports If-Match.")
+           .Produces<CustomerContact>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
         api.MapPost("/customers", async (CustomerWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
@@ -850,17 +823,15 @@ public static class ApiEndpoints
            .WithSummary("Create a customer.")
            .Produces<Customer>(StatusCodes.Status201Created).ProducesValidationProblem();
 
-        api.MapPut("/customers/{customerId:long}", async (long customerId, CustomerWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPut("/customers/{customerId:long}", async (long customerId, CustomerWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
-                return await repo.UpdateCustomerAsync(customerId, body, ct) is { } customer
-                    ? Results.Ok(customer)
-                    : Results.NotFound();
+                return await WithIfMatch(ctx, json, () => repo.GetCustomerAsync(customerId, ct), () => repo.UpdateCustomerAsync(customerId, body, ct));
             })
            .WithName("UpdateCustomer").WithTags("Customers")
-           .WithSummary("Replace a customer.")
-           .Produces<Customer>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+           .WithSummary("Replace a customer. Supports If-Match.")
+           .Produces<Customer>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
         // ---- Skids ------------------------------------------------------
         api.MapGet("/sheet-skids", async (IAbisRepository repo, CancellationToken ct,
@@ -1002,6 +973,31 @@ public static class ApiEndpoints
            .Produces<PagedResult<AuditEntry>>().ProducesValidationProblem();
 
         return app;
+    }
+
+    // Optimistic-concurrency wrapper for replace/patch endpoints. Reads the current row,
+    // and — when the caller sent an If-Match validator — compares it against the row's
+    // current weak ETag (the same content hash a GET carries). A mismatch means someone
+    // else changed the row since the caller read it → 412. With no If-Match header the
+    // write proceeds (the precondition is optional, per RFC 7232). The schema has no
+    // row-version column, so this content-hash check is the only schema-free option.
+    private static async Task<IResult> WithIfMatch<T>(
+        HttpContext ctx, IOptions<JsonOptions> json,
+        Func<Task<T?>> getCurrent, Func<Task<T?>> update) where T : class
+    {
+        var current = await getCurrent();
+        if (current is null) return Results.NotFound();
+
+        var ifMatch = ctx.Request.Headers.IfMatch.ToString();
+        if (!string.IsNullOrEmpty(ifMatch))
+        {
+            var tag = ETagMiddleware.ForEntity(current, json.Value.SerializerOptions);
+            var ok = ifMatch.Split(',').Any(t => { var v = t.Trim(); return v == tag || v == "*"; });
+            if (!ok) return Results.StatusCode(StatusCodes.Status412PreconditionFailed);
+        }
+
+        var updated = await update();
+        return updated is null ? Results.NotFound() : Results.Ok(updated);
     }
 
     // Lightweight per-field validators. Max lengths mirror the Oracle column widths in

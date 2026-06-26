@@ -327,8 +327,14 @@ can be traced across client, API, and the legacy `opc_action_log`.
 
 **Conditional GETs.** `/api` GET responses carry a weak `ETag`; a caller that sends
 a matching `If-None-Match` gets `304 Not Modified` with no body — cheap bandwidth
-savings for the polling shop-floor screens (and a foundation for `If-Match`
-optimistic concurrency once the real schema provides a row version).
+savings for the polling shop-floor screens.
+
+**Optimistic concurrency (`If-Match`).** Every PUT/PATCH honours `If-Match`: send
+the `ETag` you got from a GET, and the write is rejected with `412 Precondition
+Failed` if the row changed in the meantime (omit the header to skip the check).
+The legacy schema has no row-version column, so the check compares the row's
+current **content-hash** ETag — no schema change, and it coexists with the legacy
+client that writes the same rows.
 
 ## Configuration (production / Oracle)
 
