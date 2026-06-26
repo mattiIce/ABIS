@@ -54,7 +54,15 @@ COM port. The web screens (or the API) consume readings over HTTP on the LAN.
 - **No-hardware mode** — `MockScale` + `MockTagSource` let the whole service run
   and be tested on any machine (the defaults `Edge:Scale:Provider=Mock`,
   `Edge:Opc:Provider=Mock`).
+- **DAS screen** — `GET /` serves a live shop-floor readout (`wwwroot/index.html`):
+  the current scale weight (value/unit, stable-vs-motion, age) and the OPC tag grid
+  (value + colour-coded Good/Bad/Uncertain quality + age), auto-refreshing and
+  showing a disconnect banner if the edge drops. It's the greenfield replacement for
+  the legacy `da`/**DAS** display; served by the edge itself (same origin as the data
+  endpoints, no auth on the local host). A working shell — refine the layout/fields
+  once the real `da` window source is exported.
 - **HTTP surface**
+  - `GET /` → the DAS live-readout screen (static)
   - `GET /health` → `{ status, scale, opc }`
   - `GET /reading` → the latest `WeightReading` (`503` until one arrives)
   - `GET /tags` → the latest value of each configured OPC tag

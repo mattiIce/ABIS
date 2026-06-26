@@ -53,6 +53,12 @@ builder.Services.AddHostedService<TagPump>();
 
 var app = builder.Build();
 
+// Serve the DAS readout (wwwroot/index.html) at the root — the shop-floor live
+// display of the scale + OPC tags, replacing the legacy `da`/DAS screen. Same
+// origin as /reading + /tags, so no CORS or auth on the local edge host.
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 // Liveness + which devices are wired up.
 app.MapGet("/health", (IScale scale, ITagSource tags) =>
     Results.Ok(new { status = "ok", scale = scale.Name, opc = tags.Name }));
