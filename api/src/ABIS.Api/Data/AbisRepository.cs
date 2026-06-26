@@ -501,13 +501,13 @@ public sealed class AbisRepository : IAbisRepository
                 surface, flatness, sheet_type, material_end_use, order_item_desc, pieces_skid,
                 theoretical_unit_wt, unit_price, item_created_dttm)
             VALUES (:id, :ord, :part, :alloy, :temper, :gauge, :gp, :gm, :surface, :flatness, :sheet, :enduse,
-                :desc, :pieces, :tuw, :price, :created)
+                :idesc, :pieces, :tuw, :price, :created)
             """,
             new
             {
                 id, ord = orderAbcNum, part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
                 gp = body.GaugeP, gm = body.GaugeM, surface = body.Surface, flatness = body.Flatness,
-                sheet = body.SheetType, enduse = body.MaterialEndUse, desc = body.OrderItemDesc,
+                sheet = body.SheetType, enduse = body.MaterialEndUse, idesc = body.OrderItemDesc,
                 pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice,
                 created = (DateTime?)DateTime.UtcNow
             },
@@ -524,7 +524,7 @@ public sealed class AbisRepository : IAbisRepository
             """
             UPDATE order_item SET enduser_part_num = :part, alloy2 = :alloy, temper = :temper,
                 gauge = :gauge, gauge_p = :gp, gauge_m = :gm, surface = :surface, flatness = :flatness,
-                sheet_type = :sheet, material_end_use = :enduse, order_item_desc = :desc, pieces_skid = :pieces,
+                sheet_type = :sheet, material_end_use = :enduse, order_item_desc = :idesc, pieces_skid = :pieces,
                 theoretical_unit_wt = :tuw, unit_price = :price
             WHERE order_abc_num = :ord AND order_item_num = :id
             """,
@@ -532,7 +532,7 @@ public sealed class AbisRepository : IAbisRepository
             {
                 part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
                 gp = body.GaugeP, gm = body.GaugeM, surface = body.Surface, flatness = body.Flatness,
-                sheet = body.SheetType, enduse = body.MaterialEndUse, desc = body.OrderItemDesc,
+                sheet = body.SheetType, enduse = body.MaterialEndUse, idesc = body.OrderItemDesc,
                 pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice,
                 ord = orderAbcNum, id = orderItemNum
             },
@@ -623,12 +623,12 @@ public sealed class AbisRepository : IAbisRepository
             """
             INSERT INTO sheet_skid (sheet_skid_num, ab_job_num, sheet_skid_display_num, sheet_net_wt,
                 sheet_tare_wt, skid_pieces, skid_date)
-            VALUES (:id, :job, :display, :net, :tare, :pieces, :date)
+            VALUES (:id, :job, :display, :net, :tare, :pieces, :dval)
             """,
             new
             {
                 id, job = body.AbJobNum, display = body.SheetSkidDisplayNum, net = body.SheetNetWt,
-                tare = body.SheetTareWt, pieces = body.SkidPieces, date = (DateTime?)DateTime.UtcNow
+                tare = body.SheetTareWt, pieces = body.SkidPieces, dval = (DateTime?)DateTime.UtcNow
             },
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
@@ -651,13 +651,13 @@ public sealed class AbisRepository : IAbisRepository
             """
             INSERT INTO scrap_skid (scrap_skid_num, scrap_ab_job_num, scrap_alloy2, scrap_temper, scrap_type,
                 scrap_net_wt, scrap_tare_wt, scrap_location, scrap_notes, skid_scrap_status, scrap_date)
-            VALUES (:id, :job, :alloy, :temper, :type, :net, :tare, :loc, :notes, :status, :date)
+            VALUES (:id, :job, :alloy, :temper, :type, :net, :tare, :loc, :notes, :status, :dval)
             """,
             new
             {
                 id, job = body.ScrapAbJobNum, alloy = body.ScrapAlloy2, temper = body.ScrapTemper, type = body.ScrapType,
                 net = body.ScrapNetWt, tare = body.ScrapTareWt, loc = body.ScrapLocation, notes = body.ScrapNotes,
-                status = body.SkidScrapStatus, date = (DateTime?)DateTime.UtcNow
+                status = body.SkidScrapStatus, dval = (DateTime?)DateTime.UtcNow
             },
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
@@ -705,13 +705,13 @@ public sealed class AbisRepository : IAbisRepository
                     gauge_p, gauge_m, surface, flatness, sheet_type, material_end_use, order_item_desc,
                     pieces_skid, theoretical_unit_wt, unit_price, item_created_dttm)
                 VALUES (:id, :ord, :part, :alloy, :temper, :gauge, :gp, :gm, :surface, :flatness, :sheet,
-                    :enduse, :desc, :pieces, :tuw, :price, :created)
+                    :enduse, :idesc, :pieces, :tuw, :price, :created)
                 """,
                 new
                 {
                     id = itemId, ord = orderId, part = item.EnduserPartNum, alloy = item.Alloy2, temper = item.Temper,
                     gauge = item.Gauge, gp = item.GaugeP, gm = item.GaugeM, surface = item.Surface, flatness = item.Flatness,
-                    sheet = item.SheetType, enduse = item.MaterialEndUse, desc = item.OrderItemDesc,
+                    sheet = item.SheetType, enduse = item.MaterialEndUse, idesc = item.OrderItemDesc,
                     pieces = item.PiecesSkid, tuw = item.TheoreticalUnitWt, price = item.UnitPrice,
                     created = (DateTime?)DateTime.UtcNow
                 },
@@ -794,10 +794,10 @@ public sealed class AbisRepository : IAbisRepository
         await conn.ExecuteAsync(new CommandDefinition(
             """
             INSERT INTO die (die_id, die_name, status, tool_num, part_name, gross_weight, location, description)
-            VALUES (:id, :name, :status, :tool, :part, :weight, :loc, :desc)
+            VALUES (:id, :name, :status, :tool, :part, :weight, :loc, :idesc)
             """,
             new { id, name = body.DieName, status = body.Status, tool = body.ToolNum, part = body.PartName,
-                  weight = body.GrossWeight, loc = body.Location, desc = body.Description },
+                  weight = body.GrossWeight, loc = body.Location, idesc = body.Description },
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
         return (await GetDieAsync(id, ct))!;
@@ -809,11 +809,11 @@ public sealed class AbisRepository : IAbisRepository
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
             UPDATE die SET die_name = :name, status = :status, tool_num = :tool, part_name = :part,
-                   gross_weight = :weight, location = :loc, description = :desc
+                   gross_weight = :weight, location = :loc, description = :idesc
             WHERE die_id = :id
             """,
             new { name = body.DieName, status = body.Status, tool = body.ToolNum, part = body.PartName,
-                  weight = body.GrossWeight, loc = body.Location, desc = body.Description, id = dieId },
+                  weight = body.GrossWeight, loc = body.Location, idesc = body.Description, id = dieId },
             cancellationToken: ct));
         return n == 0 ? null : await GetDieAsync(dieId, ct);
     }
@@ -915,9 +915,9 @@ public sealed class AbisRepository : IAbisRepository
         await conn.ExecuteAsync(new CommandDefinition(
             """
             INSERT INTO receiving_bol (receiving_bol_id, bol, customer_id, created_by, created_date, received_date, status)
-            VALUES (:id, :bol, :cust, :by, :created, :received, :status)
+            VALUES (:id, :bol, :cust, :cby, :created, :received, :status)
             """,
-            new { id, bol = body.Bol, cust = body.CustomerId, by = body.CreatedBy,
+            new { id, bol = body.Bol, cust = body.CustomerId, cby = body.CreatedBy,
                   created = (DateTime?)DateTime.UtcNow, received = body.ReceivedDate, status = body.Status },
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
@@ -930,11 +930,11 @@ public sealed class AbisRepository : IAbisRepository
         // created_date is set once on insert and not changed here.
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
-            UPDATE receiving_bol SET bol = :bol, customer_id = :cust, created_by = :by,
+            UPDATE receiving_bol SET bol = :bol, customer_id = :cust, created_by = :cby,
                    received_date = :received, status = :status
             WHERE receiving_bol_id = :id
             """,
-            new { bol = body.Bol, cust = body.CustomerId, by = body.CreatedBy, received = body.ReceivedDate,
+            new { bol = body.Bol, cust = body.CustomerId, cby = body.CreatedBy, received = body.ReceivedDate,
                   status = body.Status, id = receivingBolId },
             cancellationToken: ct));
         return n == 0 ? null : await GetReceivingBolAsync(receivingBolId, ct);
@@ -1104,9 +1104,9 @@ public sealed class AbisRepository : IAbisRepository
         await conn.ExecuteAsync(new CommandDefinition(
             """
             INSERT INTO shift (shift_num, start_time, end_time, line_num, schedule_type, dt_total, operator_initial, shift_data_status, note)
-            VALUES (:id, :start, :end, :line, :sched, :dt, :op, :status, :note)
+            VALUES (:id, :stime, :etime, :line, :sched, :dt, :op, :status, :note)
             """,
-            new { id, start = body.StartTime, end = body.EndTime, line = body.LineNum, sched = body.ScheduleType,
+            new { id, stime = body.StartTime, etime = body.EndTime, line = body.LineNum, sched = body.ScheduleType,
                   dt = body.DtTotal, op = body.OperatorInitial, status = body.ShiftDataStatus, note = body.Note },
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
@@ -1118,11 +1118,11 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
-            UPDATE shift SET start_time = :start, end_time = :end, line_num = :line, schedule_type = :sched,
+            UPDATE shift SET start_time = :stime, end_time = :etime, line_num = :line, schedule_type = :sched,
                    dt_total = :dt, operator_initial = :op, shift_data_status = :status, note = :note
             WHERE shift_num = :id
             """,
-            new { start = body.StartTime, end = body.EndTime, line = body.LineNum, sched = body.ScheduleType,
+            new { stime = body.StartTime, etime = body.EndTime, line = body.LineNum, sched = body.ScheduleType,
                   dt = body.DtTotal, op = body.OperatorInitial, status = body.ShiftDataStatus, note = body.Note, id = shiftNum },
             cancellationToken: ct));
         return n == 0 ? null : await GetShiftAsync(shiftNum, ct);
@@ -1153,9 +1153,9 @@ public sealed class AbisRepository : IAbisRepository
         await conn.ExecuteAsync(new CommandDefinition(
             """
             INSERT INTO dt_instance (instance_num, ab_job_num, line_num, starting_time, ending_time, note, shift_num)
-            VALUES (:id, :job, :line, :start, :end, :note, :shift)
+            VALUES (:id, :job, :line, :stime, :etime, :note, :shift)
             """,
-            new { id, job = body.AbJobNum, line = body.LineNum, start = body.StartingTime, end = body.EndingTime,
+            new { id, job = body.AbJobNum, line = body.LineNum, stime = body.StartingTime, etime = body.EndingTime,
                   note = body.Note, shift = body.ShiftNum },
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
@@ -1167,11 +1167,11 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
-            UPDATE dt_instance SET ab_job_num = :job, line_num = :line, starting_time = :start,
-                   ending_time = :end, note = :note, shift_num = :shift
+            UPDATE dt_instance SET ab_job_num = :job, line_num = :line, starting_time = :stime,
+                   ending_time = :etime, note = :note, shift_num = :shift
             WHERE instance_num = :id
             """,
-            new { job = body.AbJobNum, line = body.LineNum, start = body.StartingTime, end = body.EndingTime,
+            new { job = body.AbJobNum, line = body.LineNum, stime = body.StartingTime, etime = body.EndingTime,
                   note = body.Note, shift = body.ShiftNum, id = instanceNum },
             cancellationToken: ct));
         return n == 0 ? null : await GetDowntimeInstanceAsync(instanceNum, ct);

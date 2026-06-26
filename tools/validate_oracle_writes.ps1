@@ -64,10 +64,11 @@ try {
 
     # --- Grab real ids the writes can reference -------------------------------
     Step "Fetching a real customerId and abJobNum to reference"
-    $custId = (Get- "/api/customers?pageSize=1").items[0].customerId
+    # customer_id 0 is the legacy "SELECT CUSTOMER" sentinel row; skip it and pick a real customer.
+    $custId = ((Get- "/api/customers?pageSize=5").items | Where-Object { $_.customerId -gt 0 } | Select-Object -First 1).customerId
     $jobNum = (Get- "/api/jobs?pageSize=1").items[0].abJobNum
     Write-Host "customerId=$custId  abJobNum=$jobNum"
-    if (-not $custId) { throw "No customers found - cannot test FK-bearing writes." }
+    if ($null -eq $custId) { throw "No customers found - cannot test FK-bearing writes." }
 
     # --- Writes (each tagged ZZ_WRITE_TEST) -----------------------------------
     Step "POST /api/dies"
@@ -75,7 +76,8 @@ try {
     $created["die (die_id)"] = $r.dieId; Write-Host "  die_id=$($r.dieId)"
 
     Step "POST /api/sketches"
-    $r = Post "/api/sketches" @{ sketchName = "ZZ_WRITE_TEST sketch"; sketchNotes = "probe"; sketchStatus = 0 }
+    # sketch_name is VARCHAR2(16); keep the tag within the column width.
+    $r = Post "/api/sketches" @{ sketchName = "ZZ_WRITE_TEST"; sketchNotes = "ZZ_WRITE_TEST probe"; sketchStatus = 0 }
     $created["sketch (sketch_id)"] = $r.sketchId; Write-Host "  sketch_id=$($r.sketchId)"
 
     Step "POST /api/customers/$custId/contacts"
@@ -95,7 +97,8 @@ try {
     $created["scan_log (scan_id)"] = $r.scanId; Write-Host "  scan_id=$($r.scanId)"
 
     Step "POST /api/maint-logs  (MAX+1 id - no sequence)"
-    $r = Post "/api/maint-logs" @{ maintLogStatus = "OPEN"; probDateTime = (Get-Date).ToString("s"); probDetails = "ZZ_WRITE_TEST fault"; author = "zztest" }
+    # maint_log_status is FK-constrained to MAINT_LOG_STATUS; "Completed" is a verified-valid value.
+    $r = Post "/api/maint-logs" @{ maintLogStatus = "Completed"; probDateTime = (Get-Date).ToString("s"); probDetails = "ZZ_WRITE_TEST fault"; author = "zztest" }
     $created["maint_log (maint_log_id)"] = $r.maintLogId; Write-Host "  maint_log_id=$($r.maintLogId)"
 
     Step "POST /api/shifts"
@@ -118,16 +121,19 @@ try {
     Write-Host "`nCreated test rows:" -ForegroundColor Green
     $created.GetEnumerator() | ForEach-Object { Write-Host ("  {0,-34} = {1}" -f $_.Key, $_.Value) }
 
+    # Tag-based cleanup: every write above stamps a ZZ_WRITE_TEST marker into a text column,
+    # so deleting by tag also sweeps up orphan rows left by any earlier *partial* (failed) run,
+    # which an id-only cleanup would miss.
     Write-Host "`n--- Cleanup SQL (run in SQL Developer, then COMMIT) ---" -ForegroundColor Yellow
-    Write-Host "DELETE FROM die             WHERE die_id           = $($created['die (die_id)']);"
-    Write-Host "DELETE FROM sketch          WHERE sketch_id        = $($created['sketch (sketch_id)']);"
-    Write-Host "DELETE FROM customer_contact WHERE contact_id      = $($created['customer_contact (contact_id)']);"
-    Write-Host "DELETE FROM shipment        WHERE packing_list     = $($created['shipment (packing_list)']);"
-    Write-Host "DELETE FROM receiving_bol   WHERE receiving_bol_id = $($created['receiving_bol (receiving_bol_id)']);"
-    Write-Host "DELETE FROM scan_log        WHERE scan_id          = $($created['scan_log (scan_id)']);"
-    Write-Host "DELETE FROM maint_log       WHERE maint_log_id     = $($created['maint_log (maint_log_id)']);"
-    Write-Host "DELETE FROM shift           WHERE shift_num        = $($created['shift (shift_num)']);"
-    Write-Host "DELETE FROM dt_instance     WHERE instance_num     = $($created['dt_instance (instance_num)']);"
+    Write-Host "DELETE FROM die             WHERE die_name       = 'ZZ_WRITE_TEST die';"
+    Write-Host "DELETE FROM sketch          WHERE sketch_name    = 'ZZ_WRITE_TEST';"
+    Write-Host "DELETE FROM customer_contact WHERE first_name    = 'ZZ' AND last_name = 'WRITE_TEST';"
+    Write-Host "DELETE FROM shipment        WHERE shipment_notes = 'ZZ_WRITE_TEST';"
+    Write-Host "DELETE FROM receiving_bol   WHERE bol            = 'ZZ_WRITE_TEST-BOL';"
+    Write-Host "DELETE FROM scan_log        WHERE note           = 'ZZ_WRITE_TEST scan';"
+    Write-Host "DELETE FROM maint_log       WHERE prob_details   = 'ZZ_WRITE_TEST fault';"
+    Write-Host "DELETE FROM shift           WHERE note           = 'ZZ_WRITE_TEST';"
+    Write-Host "DELETE FROM dt_instance     WHERE note           = 'ZZ_WRITE_TEST';"
     Write-Host "COMMIT;"
 }
 finally {

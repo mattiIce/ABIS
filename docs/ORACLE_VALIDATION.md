@@ -12,7 +12,9 @@ makes that validation turnkey once you can provide a connection.
 
 The seam was run against the live ABIS database (**Oracle 11g**, SID `abc11`).
 Summary: the **read path is fully validated**; the **write path surfaced two
-schema mismatches** and is deferred (the API is read-first).
+schema mismatches** and was initially deferred (the API is read-first). The full
+write surface has since been implemented (#14) and **validated live** — see
+[Write-path validation](#write-path-validation--run-against-oracle-11g-2026-06-25) below.
 
 **Passed**
 
@@ -94,6 +96,37 @@ A full DDL+PL/SQL export (`data-model/oracle_ddl.sql`: 412 tables, 82 sequences,
   vestigial against the real schema, so the graceful no-op is the right default.
 - The export also brings the **business logic (functions/procedures) into the repo
   as text**, supporting Phase-1 rule recovery.
+
+## Write-path validation — run against Oracle 11g (2026-06-25)
+
+The full write surface (#14) was exercised end-to-end against the live database
+with [`../tools/validate_oracle_writes.ps1`](../tools/validate_oracle_writes.ps1)
+(run from inside the network — the managed sandbox's egress proxy can't carry
+Oracle's TCP protocol). **All 9 write endpoints returned `201` and all 6 new
+lookup reads resolved** against the real schema: dies, sketches, customer
+contacts, shipments (dual sequence: `packing_list_num_seq` + `bill_of_lading_seq`),
+receiving BOLs, scan logs, maint logs (MAX+1 id), shifts, and downtime instances.
+
+**Bug found and fixed** (only a live run exposes it; CI runs SQLite)
+
+- `ORA-01745: invalid host/bind variable name` on every write whose Dapper bind
+  name collided with an Oracle **reserved word** — `:desc`, `:date`, `:by`,
+  `:start`, `:end`. SQLite accepts these as parameter names; Oracle rejects them.
+  Renamed the offending binds (and their anonymous-object properties) to safe
+  names (`:idesc`, `:dval`, `:cby`, `:stime`, `:etime`) in `AbisRepository.cs`.
+  Affected: order-items, orders, sheet/scrap skids, dies, receiving BOLs, shifts,
+  downtime instances.
+
+**Schema facts confirmed by the run** (fixtures in the validation script encode these)
+
+- `customer_id = 0` is the legacy **"SELECT CUSTOMER" sentinel** row — skip it
+  when picking a real FK target.
+- `sketch.sketch_name` is `VARCHAR2(16)` (a longer tag raises `ORA-12899`).
+- `maint_log.maint_log_status` is **FK-constrained** to `MAINT_LOG_STATUS`; free
+  text like `"OPEN"` raises `ORA-02291`. `"Completed"` is a verified-valid value.
+
+> The script leaves clearly-tagged `ZZ_WRITE_TEST` rows and prints tag-based
+> `DELETE` cleanup SQL (run it in SQL Developer, then `COMMIT`).
 
 ## 1. Connectivity smoke (no schema needed)
 
