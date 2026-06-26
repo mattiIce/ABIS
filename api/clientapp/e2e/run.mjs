@@ -116,6 +116,18 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
   assert.equal(updated.status, 1);
 });
 
+// The EDI monitor's flow: list transactions, log, customer-edi setup, and types (typed, read-only).
+test('edi flow: list transactions, log, customer-edi, types (typed)', async () => {
+  const tx = await client.listEdiTransactions(1, 5, undefined, undefined, undefined, undefined);
+  assert.ok(Array.isArray(tx.items));
+  const log = await client.listEdiLog(1, 5, undefined, undefined, undefined);
+  assert.ok(Array.isArray(log.items));
+  const types = await client.listEdiTypes();
+  assert.ok(Array.isArray(types));
+  const custEdi = await client.listCustomerEdi();
+  assert.ok(Array.isArray(custEdi));
+});
+
 // The skids SPA's flow: list each skid type + create a sheet and a scrap skid (typed).
 test('skids flow: list + create sheet & scrap skids (typed)', async () => {
   const sheet = await client.listSheetSkids(1, 5, undefined, undefined);
