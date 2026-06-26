@@ -219,6 +219,22 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Create_sketch_with_overlong_name_returns_400()
+    {
+        // sketch_name is VARCHAR2(16); a longer value must fail as 400, not a DB 500.
+        var resp = await _client.PostAsJsonAsync("/api/sketches", new { sketchName = new string('Z', 17) });
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_order_without_po_returns_400()
+    {
+        // orig_customer_po is NOT NULL; the newly-guarded endpoint must reject the omission.
+        var resp = await _client.PostAsJsonAsync("/api/orders", new { origCustomerId = 4001 });
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
     public async Task Patch_job_updates_status()
     {
         var resp = await _client.PatchAsJsonAsync("/api/jobs/1002", new { jobStatus = 7 });
@@ -304,8 +320,8 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
             order = new { origCustomerId = 4001, origCustomerPo = "PO-HTTP-COMBO" },
             items = new[]
             {
-                new { enduserPartNum = "PN-X", alloy2 = "3003" },
-                new { enduserPartNum = "PN-Y", alloy2 = "5052" }
+                new { enduserPartNum = "PN-X", alloy2 = "3003", sheetType = "FLAT" },
+                new { enduserPartNum = "PN-Y", alloy2 = "5052", sheetType = "FLAT" }
             }
         });
         Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
