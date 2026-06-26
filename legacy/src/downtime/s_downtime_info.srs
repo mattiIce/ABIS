@@ -1,0 +1,24 @@
+$PBExportHeader$s_downtime_info.srs
+$PBExportComments$pass downtime info to child window
+global type s_downtime_info from structure
+	long		ab_job
+	date		ab_start_job
+	date		ab_end_job
+	date		day
+	date		daily_from
+	date		daily_to
+	integer		monthly
+	integer		yearly
+	datetime		instance_from
+	datetime		instance_to
+	datetime		instance_starting
+	long		comjob_a
+	long		comjob_b
+	string		dt_source
+	integer		issm
+	string		shift_name
+	string		part_num
+	long		line_id
+	string		line_desc
+end type
+

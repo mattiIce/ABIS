@@ -117,6 +117,17 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
   assert.equal(updated.status, 1);
 });
 
+// The OPC log flow: sessions, their captured readings (host/device/item), and the item catalog (typed).
+test('opc-log flow: sessions, readings, item catalog (typed)', async () => {
+  const logs = await client.getOpcLogs();
+  assert.ok(Array.isArray(logs) && logs.length > 0);
+  const details = await client.getOpcLogDetails(1);
+  assert.ok(details.length > 0);
+  assert.ok(details.every((d) => typeof d.itemName === 'string' && typeof d.remoteHost === 'string'));
+  const items = await client.getOpcItems();
+  assert.ok(items.includes('Line110.Status'));
+});
+
 // The quality/recovery flow: defect catalog, product types, recovery customers, per-customer defects (typed).
 test('quality flow: recovery catalog + customer defects (typed)', async () => {
   const scrap = await client.getScrapTypes();

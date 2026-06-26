@@ -691,6 +691,38 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
+    public async Task<IReadOnlyList<OpcLog>> GetOpcLogsAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<OpcLog>(new CommandDefinition(
+            "SELECT opc_log_id AS OpcLogId, title AS Title, created_date AS CreatedDate FROM opc_log ORDER BY opc_log_id DESC",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<OpcLogDetail>> GetOpcLogDetailsAsync(long opcLogId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<OpcLogDetail>(new CommandDefinition(
+            """
+            SELECT opc_log_id AS OpcLogId, item_name AS ItemName, device_name AS DeviceName,
+                   remote_host AS RemoteHost, value AS Value, quality AS Quality,
+                   time_stamp AS TimeStamp, description AS Description
+            FROM opc_log_details WHERE opc_log_id = :id ORDER BY item_name
+            """, new { id = opcLogId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<string>> GetOpcItemsAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // The distinct OPC items seen — the real tag catalog (informs the edge Edge:Opc:Tags).
+        var rows = await conn.QueryAsync<string>(new CommandDefinition(
+            "SELECT DISTINCT item_name FROM opc_log_details WHERE item_name IS NOT NULL ORDER BY item_name",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
     public async Task<IReadOnlyList<ScrapType>> GetScrapTypesAsync(CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);

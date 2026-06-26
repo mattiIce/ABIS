@@ -28,6 +28,8 @@ File types: `.srw` windows · `.srd` DataWindows (embedded SQL) · `.srm` menus 
 | `coil_eval/` | Coil evaluation |
 | `stacker_110/` | Line #110 stacker |
 | `prod-folder/` | Production folder |
+| `opc_log/` | **OPC log** (`w_opc_log`) — `opc_log` + `opc_log_details` (host → device → item, value, quality) + `opc_action_log`. The `item_name`/`remote_host` structure is the real OPC tag layout for the edge. |
+| `downtime/`, `downtime2/` | Downtime reports + the shift coil-processing windows (`w_finish_coil`, `w_change_coil`, …) — the line-operator workflow |
 
 ## How to read the SQL
 

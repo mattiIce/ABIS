@@ -1,0 +1,6 @@
+$PBExportHeader$s_coil_status.srs
+global type s_coil_status from structure
+	integer		status
+	long		weight
+end type
+

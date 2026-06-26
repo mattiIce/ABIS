@@ -1,0 +1,45 @@
+$PBExportHeader$d_job_schedule_same_coil.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=86 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=86 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=line_priority_priority_num dbname="line_priority.priority_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=line_priority_ab_job_num dbname="line_priority.ab_job_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=line_priority_status dbname="line_priority.status" values="Ended	0/Running	1/Waiting	null/Waiting	2/" )
+ column=(type=char(255) updatewhereclause=yes name=order_item_order_item_desc dbname="order_item.order_item_desc" )
+ column=(type=decimal(0) updatewhereclause=yes name=process_coil_coil_abc_num dbname="process_coil.coil_abc_num" )
+ retrieve="  SELECT ~"LINE_PRIORITY~".~"PRIORITY_NUM~",   
+         ~"LINE_PRIORITY~".~"AB_JOB_NUM~",   
+         ~"LINE_PRIORITY~".~"STATUS~",   
+         ~"ORDER_ITEM~".~"ORDER_ITEM_DESC~",   
+         ~"PROCESS_COIL~".~"COIL_ABC_NUM~"  
+    FROM ~"AB_JOB~",   
+         ~"LINE_PRIORITY~",   
+         ~"ORDER_ITEM~",   
+         ~"PROCESS_COIL~"  
+   WHERE ( ~"LINE_PRIORITY~".~"AB_JOB_NUM~" = ~"AB_JOB~".~"AB_JOB_NUM~" ) and  
+         ( ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~" = ~"AB_JOB~".~"ORDER_ITEM_NUM~" ) and  
+         ( ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" = ~"AB_JOB~".~"ORDER_ABC_NUM~" ) and  
+         ( ~"LINE_PRIORITY~".~"AB_JOB_NUM~" = ~"PROCESS_COIL~".~"AB_JOB_NUM~" ) and  
+         ( ~"LINE_PRIORITY~".~"LINE_NUM~" = :gi_line_id  ) AND  
+         ( ~"PROCESS_COIL~".~"COIL_ABC_NUM~" = :al_coil_id )   
+ORDER BY ~"LINE_PRIORITY~".~"PRIORITY_NUM~" ASC   
+" arguments=(("gi_line_id", number),("al_coil_id", number)) )
+text(band=header alignment="2" text="Priority" border="6" color="33554432" x="7" y="3" height="77" width="289" html.valueishtml="0"  name=line_priority_priority_num_t visible="1"  hidesnaked=1  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Job Num" border="6" color="33554432" x="304" y="3" height="77" width="329" html.valueishtml="0"  name=line_priority_ab_job_num_t visible="1"  hidesnaked=1  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Status" border="6" color="33554432" x="640" y="3" height="77" width="278" html.valueishtml="0"  name=line_priority_status_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Parts" border="6" color="33554432" x="925" y="3" height="77" width="1317" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Process Coil Coil Abc Num" border="0" color="33554432" x="2249" y="3" height="77" width="2055" html.valueishtml="0"  name=process_coil_coil_abc_num_t visible="0"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="33554432" x="7" y="7" height="80" width="289" format="[General]" html.valueishtml="0"  name=line_priority_priority_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0 criteria.override_edit=yes  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=32766 border="0" color="33554432" x="304" y="7" height="80" width="329" format="[General]" html.valueishtml="0"  name=line_priority_ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0 criteria.override_edit=yes  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=32766 border="0" color="33554432" x="640" y="7" height="80" width="278" format="[General]" html.valueishtml="0"  name=line_priority_status visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0 criteria.override_edit=yes  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="925" y="7" height="80" width="1317" format="[general]" html.valueishtml="0"  name=order_item_order_item_desc visible="1" edit.limit=255 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0 criteria.override_edit=yes  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="33554432" x="2249" y="7" height="80" width="2055" format="[general]" html.valueishtml="0"  name=process_coil_coil_abc_num visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

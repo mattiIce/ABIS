@@ -209,6 +209,16 @@ public static class SqliteFixture
                 customer_id INTEGER, scrap_type_id INTEGER,
                 abc_or_mill TEXT, autoparts TEXT, non_autoparts TEXT,
                 PRIMARY KEY (customer_id, scrap_type_id));
+
+            -- OPC log (legacy w_opc_log): a log session (opc_log) + its captured tag
+            -- readings (opc_log_details: host → device → item, value, quality). Column
+            -- names from the legacy DataWindows. (opc_action_log already exists above —
+            -- reused by the audit middleware — so it is not recreated here.)
+            CREATE TABLE opc_log (
+                opc_log_id INTEGER PRIMARY KEY, title TEXT, created_date TEXT);
+            CREATE TABLE opc_log_details (
+                opc_log_id INTEGER, item_name TEXT, device_name TEXT, remote_host TEXT,
+                value TEXT, quality TEXT, time_stamp TEXT, description TEXT);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -605,6 +615,23 @@ public static class SqliteFixture
                 new { CustomerId = 4001L, ScrapTypeId = 1L, AbcOrMill = "ABC", Autoparts = "Y", NonAutoparts = "N" },
                 new { CustomerId = 4001L, ScrapTypeId = 2L, AbcOrMill = "ABC", Autoparts = "Y", NonAutoparts = "N" },
                 new { CustomerId = 4002L, ScrapTypeId = 3L, AbcOrMill = "MILL", Autoparts = "N", NonAutoparts = "Y" }
+            });
+
+        // ---- OPC log (reflects the real host → device → item structure) ----
+        conn.Execute(
+            "INSERT INTO opc_log (opc_log_id, title, created_date) VALUES (:OpcLogId, :Title, :CreatedDate)",
+            new[]
+            {
+                new { OpcLogId = 1L, Title = "Line 110 shift capture", CreatedDate = d.ToString("yyyy-MM-dd HH:mm:ss") },
+                new { OpcLogId = 2L, Title = "Oven monitor", CreatedDate = d.AddHours(8).ToString("yyyy-MM-dd HH:mm:ss") }
+            });
+        conn.Execute(
+            "INSERT INTO opc_log_details (opc_log_id, item_name, device_name, remote_host, value, quality, time_stamp, description) VALUES (:OpcLogId, :ItemName, :DeviceName, :RemoteHost, :Value, :Quality, :TimeStamp, :Description)",
+            new[]
+            {
+                new { OpcLogId = 1L, ItemName = "Line110.Status", DeviceName = "OPCSERVER", RemoteHost = "192.168.10.170", Value = "RUNNING", Quality = "Good", TimeStamp = d.AddMinutes(5).ToString("yyyy-MM-dd HH:mm:ss"), Description = "Line 110 run state" },
+                new { OpcLogId = 1L, ItemName = "Line110.PartCount", DeviceName = "OPCSERVER", RemoteHost = "192.168.10.170", Value = "1042", Quality = "Good", TimeStamp = d.AddMinutes(5).ToString("yyyy-MM-dd HH:mm:ss"), Description = "Pieces this shift" },
+                new { OpcLogId = 2L, ItemName = "Oven3.Temp", DeviceName = "OPCSERVER-2", RemoteHost = "192.168.9.175", Value = "412.5", Quality = "Good", TimeStamp = d.AddHours(8).AddMinutes(2).ToString("yyyy-MM-dd HH:mm:ss"), Description = "Oven 3 temperature (F)" }
             });
     }
 }

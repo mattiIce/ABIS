@@ -62,6 +62,9 @@ public interface IAbisRepository
     Task<SheetSkid> CreateSheetSkidAsync(SheetSkidWrite body, CancellationToken ct);
     Task<SheetSkid?> UpdateSheetSkidWarehouseAsync(long sheetSkidNum, SheetSkidWarehousePatch patch, CancellationToken ct);
     Task<IReadOnlyList<InvoiceCoil>> GetInvoiceCoilsAsync(long abJobNum, CancellationToken ct);
+    Task<IReadOnlyList<OpcLog>> GetOpcLogsAsync(CancellationToken ct);
+    Task<IReadOnlyList<OpcLogDetail>> GetOpcLogDetailsAsync(long opcLogId, CancellationToken ct);
+    Task<IReadOnlyList<string>> GetOpcItemsAsync(CancellationToken ct);
     Task<IReadOnlyList<ScrapType>> GetScrapTypesAsync(CancellationToken ct);
     Task<IReadOnlyList<ProductType>> GetProductTypesAsync(CancellationToken ct);
     Task<IReadOnlyList<RecoveryCustomer>> GetRecoveryCustomersAsync(CancellationToken ct);

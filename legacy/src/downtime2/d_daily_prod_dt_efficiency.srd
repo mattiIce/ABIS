@@ -1,0 +1,19 @@
+$PBExportHeader$d_daily_prod_dt_efficiency.srd
+$PBExportComments$downtime report -efficiency info
+release 9;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=96 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=90 color="536870912" )
+table(column=(type=number updatewhereclause=yes name=compute_0001 dbname="compute_0001" )
+ retrieve="SELECT (avg(SHIFT.END_TIME - SHIFT.START_TIME) - sum(DT_INSTANCE.ENDING_TIME - DT_INSTANCE.STARTING_TIME)) / (avg(SHIFT.END_TIME - SHIFT.START_TIME))
+FROM DT_INSTANCE, SHIFT
+WHERE DT_INSTANCE.SHIFT_NUM = SHIFT.SHIFT_NUM AND SHIFT.SHIFT_NUM=  :al_shift
+GROUP BY DT_INSTANCE.SHIFT_NUM" arguments=(("al_shift", number)) )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="4" y="0" height="77" width="179" format="0.00%" html.valueishtml="0"  name=compute_0001 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0  template=(comment="" encoding="gb2312" name="efficiency" xml="<?xml version=~"1.0~" encoding=~"gb2312~" standalone=~"no~"?><d_daily_prod_dt_efficiency><d_daily_prod_dt_efficiency_row __pbband=~"detail~"><shift_start_time/><shift_end_time/><dt_summary_duration/></d_daily_prod_dt_efficiency_row></d_daily_prod_dt_efficiency>"))
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

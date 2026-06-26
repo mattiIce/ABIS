@@ -926,6 +926,22 @@ public static class ApiEndpoints
            .WithName("GetCustomerDefects").WithTags("Quality")
            .WithSummary("The scrap/defect types a customer tracks.").Produces<IReadOnlyList<CustomerDefect>>();
 
+        // ---- OPC log (legacy w_opc_log) ---------------------------------
+        api.MapGet("/opc-log/logs", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetOpcLogsAsync(ct)))
+           .WithName("GetOpcLogs").WithTags("OpcLog")
+           .WithSummary("OPC log sessions.").Produces<IReadOnlyList<OpcLog>>();
+
+        api.MapGet("/opc-log/{opcLogId:long}/details", async (long opcLogId, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetOpcLogDetailsAsync(opcLogId, ct)))
+           .WithName("GetOpcLogDetails").WithTags("OpcLog")
+           .WithSummary("Captured OPC readings (host/device/item/value/quality) for a log.").Produces<IReadOnlyList<OpcLogDetail>>();
+
+        api.MapGet("/opc-log/items", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetOpcItemsAsync(ct)))
+           .WithName("GetOpcItems").WithTags("OpcLog")
+           .WithSummary("The distinct OPC item names seen — the real tag catalog (informs Edge:Opc:Tags).").Produces<IReadOnlyList<string>>();
+
         api.MapGet("/scrap-skids", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? sort = null, string? dir = null) =>
             {

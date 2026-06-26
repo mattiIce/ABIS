@@ -1,0 +1,15 @@
+$PBExportHeader$s_dim_check.srs
+global type s_dim_check from structure
+	long		sheet_skid_num
+	double		gauge
+	double		width
+	double		length_oper
+	double		length_drive
+	double		square
+	double		head_dimension
+	integer		all_cut_edge
+	integer		in_spec
+	string		checked_by
+	string		note
+end type
+

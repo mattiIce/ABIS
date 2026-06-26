@@ -1,0 +1,29 @@
+$PBExportHeader$d_da_daily_prod_dt_efficiency.srd
+$PBExportComments$downtime report -efficiency info
+release 9;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=86 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=0 color="536870912" )
+table(column=(type=datetime updatewhereclause=yes name=shift_start_time dbname="shift.start_time" )
+ column=(type=datetime updatewhereclause=yes name=shift_end_time dbname="shift.end_time" )
+ column=(type=decimal(0) updatewhereclause=yes name=dt_summary_duration dbname="dt_summary.duration" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_dt_total dbname="shift.dt_total" )
+ retrieve="SELECT  ~"SHIFT~".~"START_TIME~" ,
+           ~"SHIFT~".~"END_TIME~" ,
+           ~"DT_SUMMARY~".~"DURATION~" ,
+           ~"SHIFT~".~"DT_TOTAL~"     
+        FROM ~"SHIFT~" ,
+           ~"DT_SUMMARY~"     
+        WHERE ( ~"SHIFT~".~"SHIFT_NUM~" = ~"DT_SUMMARY~".~"SHIFT_NUM~" ) and ( ~"SHIFT~".~"SHIFT_NUM~" = :al_shift )  " arguments=(("al_shift", number)) )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="0" x="0" y="3" height="48" width="263" format="[shortdate] [time]" html.valueishtml="0"  name=shift_start_time visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="0" x="278" y="3" height="48" width="205" format="[shortdate] [time]" html.valueishtml="0"  name=shift_end_time visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="0" x="629" y="6" height="51" width="271" format="[General]" html.valueishtml="0"  name=shift_dt_total visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=summary alignment="2" expression="if( shift_dt_total > 0, ((secondsafter( time( shift_start_time ), time( shift_end_time ) ) -  shift_dt_total ) / (secondsafter( time( shift_start_time ), time( shift_end_time ) ))),((secondsafter( time( shift_start_time ), time( shift_end_time ) ) - sum(  dt_summary_duration  for all )) / (secondsafter( time( shift_start_time ), time( shift_end_time ) ))) )* 100"border="0" color="0" x="0" y="3" height="80" width="183" format="###.##" html.valueishtml="0"  name=efficiency visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="0" x="508" y="0" height="54" width="110" format="[general]" html.valueishtml="0"  name=dt_summary_duration visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 
