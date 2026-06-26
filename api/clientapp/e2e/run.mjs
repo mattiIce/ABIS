@@ -25,6 +25,7 @@ import {
   ScanLogWrite,
   SketchWrite,
   ShiftWrite,
+  JobPatch,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -111,6 +112,20 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
     bol: 'E2E-BOL', customerId: 4001, createdBy: 'e2e', status: 1,
   }));
   assert.equal(updated.status, 1);
+});
+
+// The production-jobs SPA's flow: list, open a job + its contents, patch it (typed).
+test('jobs flow: list, get, children, patch (typed)', async () => {
+  const page = await client.listJobs(1, 5, undefined, undefined, undefined);
+  assert.ok(page.items.length > 0);
+  const job = await client.getJob(1001);
+  assert.equal(job.abJobNum, 1001);
+  const coils = await client.getJobCoils(1001);
+  assert.ok(Array.isArray(coils) && coils.length > 0);
+  const skids = await client.getJobSkids(1001);
+  assert.ok(Array.isArray(skids));
+  const patched = await client.patchJob(1001, new JobPatch({ jobStatus: 2, numberOfMenUsed: 4 }));
+  assert.equal(patched.jobStatus, 2);
 });
 
 // The shifts SPA's flow: create a shift, then load + replace it (typed).
