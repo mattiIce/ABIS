@@ -167,3 +167,4 @@ The codebase is deliberately uniform. To add a resource:
 | [`INTEGRATIONS.md`](INTEGRATIONS.md) | External integration catalog (EDI, serial/WSC32, OPC) |
 | [`DATA_MODEL.md`](DATA_MODEL.md) | Full recovered schema (live Oracle, 412 tables) |
 | [`../api/README.md`](../api/README.md) | Run/test/auth, demo UIs, OpenAPI |
+| [`DEPLOY.md`](DEPLOY.md) | Run the API + greenfield UIs on a server (Docker Compose) |
