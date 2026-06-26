@@ -383,3 +383,57 @@ public sealed class MaintLog
     public decimal? LaborHours { get; set; }
     public decimal? ProbCost { get; set; }
 }
+
+// ---- Lookups (reference/master data for data-entry dropdowns & joins) ----
+
+/// <summary>A production line (table <c>line</c>). Referenced by jobs, coils, and
+/// downtime via <c>line_num</c>.</summary>
+public sealed class ProductionLine
+{
+    public long LineNum { get; set; }
+    public string? LineDesc { get; set; }
+    public string? LineLocation { get; set; }
+}
+
+/// <summary>A maintenance group/department (table <c>groupdepartment</c>).
+/// Referenced by maintenance log entries.</summary>
+public sealed class GroupDepartment
+{
+    public long GroupDepartmentId { get; set; }
+    public string? GroupDepartmentName { get; set; }
+    public string? DeptType { get; set; }
+}
+
+/// <summary>A downtime cause/reason (table <c>dt_cause</c>) — master data for the
+/// downtime feature.</summary>
+public sealed class DowntimeCause
+{
+    public long Id { get; set; }
+    public string? CauseName { get; set; }
+    public string? Note { get; set; }
+}
+
+/// <summary>A transportation method code (table <c>transportation_method</c>).
+/// Referenced by shipments.</summary>
+public sealed class TransportationMethod
+{
+    public string? TransMethodCode { get; set; }
+    public string? TransDesc { get; set; }
+}
+
+/// <summary>A shipping equipment type code (table <c>equipment_type</c>).
+/// Referenced by shipments.</summary>
+public sealed class EquipmentType
+{
+    public string? EquipmentTypeCode { get; set; }
+    public string? EquipmentTypeDesc { get; set; }
+    public string? EquipmentTypeNote { get; set; }
+}
+
+/// <summary>A customer classification (table <c>customer_type</c>). Referenced by
+/// customers.</summary>
+public sealed class CustomerType
+{
+    public string? CustomerTypeCode { get; set; }
+    public string? CustomerTypeDescription { get; set; }
+}

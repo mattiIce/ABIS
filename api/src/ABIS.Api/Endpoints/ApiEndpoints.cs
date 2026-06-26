@@ -393,6 +393,31 @@ public static class ApiEndpoints
            .WithSummary("Get one shipment by packing-list number.")
            .Produces<Shipment>().Produces(StatusCodes.Status404NotFound);
 
+        api.MapPost("/shipments", async (ShipmentWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                var created = await repo.CreateShipmentAsync(body, ct);
+                return Results.Created($"/api/shipments/{created.PackingList}", created);
+            })
+           .WithName("CreateShipment").WithTags("Shipments")
+           .WithSummary("Create a shipment header (packing-list and bill-of-lading numbers server-assigned).")
+           .Produces<Shipment>(StatusCodes.Status201Created);
+
+        api.MapPut("/shipments/{packingList:long}", async (long packingList, ShipmentWrite body, IAbisRepository repo, CancellationToken ct) =>
+                await repo.UpdateShipmentAsync(packingList, body, ct) is { } shipment
+                    ? Results.Ok(shipment)
+                    : Results.NotFound())
+           .WithName("UpdateShipment").WithTags("Shipments")
+           .WithSummary("Replace a shipment header (packing-list and bill-of-lading numbers preserved).")
+           .Produces<Shipment>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapPatch("/shipments/{packingList:long}", async (long packingList, ShipmentStatusPatch body, IAbisRepository repo, CancellationToken ct) =>
+                await repo.PatchShipmentAsync(packingList, body, ct) is { } shipment
+                    ? Results.Ok(shipment)
+                    : Results.NotFound())
+           .WithName("PatchShipment").WithTags("Shipments")
+           .WithSummary("Update a shipment's dispatch status (status, vehicle status, sent/actual times, notes).")
+           .Produces<Shipment>().Produces(StatusCodes.Status404NotFound);
+
         // ---- Receiving BOLs --------------------------------------------
         api.MapGet("/receiving-bols", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, long? customerId = null, int? status = null, string? sort = null, string? dir = null) =>
@@ -413,6 +438,29 @@ public static class ApiEndpoints
            .WithSummary("Get one receiving BOL by id.")
            .Produces<ReceivingBol>().Produces(StatusCodes.Status404NotFound);
 
+        api.MapPost("/receiving-bols", async (ReceivingBolWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateReceivingBolAsync(body, ct);
+                return Results.Created($"/api/receiving-bols/{created.ReceivingBolId}", created);
+            })
+           .WithName("CreateReceivingBol").WithTags("Receiving")
+           .WithSummary("Create an inbound receiving BOL (requires bol and customerId).")
+           .Produces<ReceivingBol>(StatusCodes.Status201Created).ProducesValidationProblem();
+
+        api.MapPut("/receiving-bols/{receivingBolId:long}", async (long receivingBolId, ReceivingBolWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateReceivingBolAsync(receivingBolId, body, ct) is { } bol
+                    ? Results.Ok(bol)
+                    : Results.NotFound();
+            })
+           .WithName("UpdateReceivingBol").WithTags("Receiving")
+           .WithSummary("Replace a receiving BOL.")
+           .Produces<ReceivingBol>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+
         // ---- Scan log (shop-floor tracking) ----------------------------
         api.MapGet("/scan-logs", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, long? abJobNum = null, string? sort = null, string? dir = null) =>
@@ -432,6 +480,17 @@ public static class ApiEndpoints
            .WithName("GetScanLog").WithTags("ScanLog")
            .WithSummary("Get one scan event by id.")
            .Produces<ScanLog>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapPost("/scan-logs", async (ScanLogWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateScanLogAsync(body, ct);
+                return Results.Created($"/api/scan-logs/{created.ScanId}", created);
+            })
+           .WithName("CreateScanLog").WithTags("ScanLog")
+           .WithSummary("Record a shop-floor scan event (append-only; requires abJobNum, scanStation, note).")
+           .Produces<ScanLog>(StatusCodes.Status201Created).ProducesValidationProblem();
 
         api.MapGet("/jobs/{abJobNum:long}/scans", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
                 Results.Ok(await repo.GetJobScansAsync(abJobNum, ct)))
@@ -458,6 +517,29 @@ public static class ApiEndpoints
            .WithName("GetMaintLog").WithTags("Maintenance")
            .WithSummary("Get one maintenance log entry by id.")
            .Produces<MaintLog>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapPost("/maint-logs", async (MaintLogWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateMaintLogAsync(body, ct);
+                return Results.Created($"/api/maint-logs/{created.MaintLogId}", created);
+            })
+           .WithName("CreateMaintLog").WithTags("Maintenance")
+           .WithSummary("Create a maintenance log entry (requires probDateTime, probDetails, author).")
+           .Produces<MaintLog>(StatusCodes.Status201Created).ProducesValidationProblem();
+
+        api.MapPut("/maint-logs/{maintLogId:long}", async (long maintLogId, MaintLogWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateMaintLogAsync(maintLogId, body, ct) is { } entry
+                    ? Results.Ok(entry)
+                    : Results.NotFound();
+            })
+           .WithName("UpdateMaintLog").WithTags("Maintenance")
+           .WithSummary("Replace a maintenance log entry.")
+           .Produces<MaintLog>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
         // ---- Carriers --------------------------------------------------
         api.MapGet("/carriers", async (IAbisRepository repo, CancellationToken ct,
@@ -522,6 +604,23 @@ public static class ApiEndpoints
            .WithSummary("Get one shift by id.")
            .Produces<Shift>().Produces(StatusCodes.Status404NotFound);
 
+        api.MapPost("/shifts", async (ShiftWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                var created = await repo.CreateShiftAsync(body, ct);
+                return Results.Created($"/api/shifts/{created.ShiftNum}", created);
+            })
+           .WithName("CreateShift").WithTags("Shifts")
+           .WithSummary("Create a production shift.")
+           .Produces<Shift>(StatusCodes.Status201Created);
+
+        api.MapPut("/shifts/{shiftNum:long}", async (long shiftNum, ShiftWrite body, IAbisRepository repo, CancellationToken ct) =>
+                await repo.UpdateShiftAsync(shiftNum, body, ct) is { } shift
+                    ? Results.Ok(shift)
+                    : Results.NotFound())
+           .WithName("UpdateShift").WithTags("Shifts")
+           .WithSummary("Replace a production shift.")
+           .Produces<Shift>().Produces(StatusCodes.Status404NotFound);
+
         // ---- Downtime instances ----------------------------------------
         api.MapGet("/downtime", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, long? abJobNum = null, long? shiftNum = null, string? sort = null, string? dir = null) =>
@@ -540,6 +639,23 @@ public static class ApiEndpoints
                     : Results.NotFound())
            .WithName("GetDowntimeInstance").WithTags("Downtime")
            .WithSummary("Get one downtime instance by id.")
+           .Produces<DowntimeInstance>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapPost("/downtime", async (DowntimeInstanceWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                var created = await repo.CreateDowntimeInstanceAsync(body, ct);
+                return Results.Created($"/api/downtime/{created.InstanceNum}", created);
+            })
+           .WithName("CreateDowntimeInstance").WithTags("Downtime")
+           .WithSummary("Log a downtime instance.")
+           .Produces<DowntimeInstance>(StatusCodes.Status201Created);
+
+        api.MapPut("/downtime/{instanceNum:long}", async (long instanceNum, DowntimeInstanceWrite body, IAbisRepository repo, CancellationToken ct) =>
+                await repo.UpdateDowntimeInstanceAsync(instanceNum, body, ct) is { } dt
+                    ? Results.Ok(dt)
+                    : Results.NotFound())
+           .WithName("UpdateDowntimeInstance").WithTags("Downtime")
+           .WithSummary("Replace a downtime instance.")
            .Produces<DowntimeInstance>().Produces(StatusCodes.Status404NotFound);
 
         // ---- Sketches --------------------------------------------------
@@ -770,6 +886,42 @@ public static class ApiEndpoints
            .WithSummary("List distinct alloys (reference data for dropdowns).")
            .Produces<IEnumerable<string>>();
 
+        api.MapGet("/lookups/lines", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetLinesAsync(ct)))
+           .WithName("ListLines").WithTags("Lookups")
+           .WithSummary("List production lines (referenced by jobs, coils, downtime).")
+           .Produces<IEnumerable<ProductionLine>>();
+
+        api.MapGet("/lookups/groupdepartments", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetGroupDepartmentsAsync(ct)))
+           .WithName("ListGroupDepartments").WithTags("Lookups")
+           .WithSummary("List maintenance groups/departments (referenced by maintenance logs).")
+           .Produces<IEnumerable<GroupDepartment>>();
+
+        api.MapGet("/lookups/downtime-causes", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetDowntimeCausesAsync(ct)))
+           .WithName("ListDowntimeCauses").WithTags("Lookups")
+           .WithSummary("List downtime causes/reasons (master data for the downtime feature).")
+           .Produces<IEnumerable<DowntimeCause>>();
+
+        api.MapGet("/lookups/transportation-methods", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetTransportationMethodsAsync(ct)))
+           .WithName("ListTransportationMethods").WithTags("Lookups")
+           .WithSummary("List transportation method codes (referenced by shipments).")
+           .Produces<IEnumerable<TransportationMethod>>();
+
+        api.MapGet("/lookups/equipment-types", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetEquipmentTypesAsync(ct)))
+           .WithName("ListEquipmentTypes").WithTags("Lookups")
+           .WithSummary("List shipping equipment type codes (referenced by shipments).")
+           .Produces<IEnumerable<EquipmentType>>();
+
+        api.MapGet("/lookups/customer-types", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetCustomerTypesAsync(ct)))
+           .WithName("ListCustomerTypes").WithTags("Lookups")
+           .WithSummary("List customer classifications (referenced by customers).")
+           .Produces<IEnumerable<CustomerType>>();
+
         // ---- Audit / action log ----------------------------------------
         api.MapGet("/audit-log", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? source = null, string? sort = null, string? dir = null) =>
@@ -839,6 +991,40 @@ public static class ApiEndpoints
         var errors = new Dictionary<string, string[]>();
         if (string.IsNullOrWhiteSpace(body.LastName))
             errors["lastName"] = ["lastName is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(ReceivingBolWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (string.IsNullOrWhiteSpace(body.Bol))
+            errors["bol"] = ["bol is required."];
+        if (body.CustomerId is null)
+            errors["customerId"] = ["customerId is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(ScanLogWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (body.AbJobNum is null)
+            errors["abJobNum"] = ["abJobNum is required."];
+        if (string.IsNullOrWhiteSpace(body.ScanStation))
+            errors["scanStation"] = ["scanStation is required."];
+        if (string.IsNullOrWhiteSpace(body.Note))
+            errors["note"] = ["note is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(MaintLogWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (body.ProbDateTime is null)
+            errors["probDateTime"] = ["probDateTime is required."];
+        if (string.IsNullOrWhiteSpace(body.ProbDetails))
+            errors["probDetails"] = ["probDetails is required."];
+        if (string.IsNullOrWhiteSpace(body.Author))
+            errors["author"] = ["author is required."];
         return errors.Count == 0 ? null : errors;
     }
 

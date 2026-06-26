@@ -84,21 +84,33 @@ public interface IAbisRepository
     // ---- Shipping / receiving / tracking (read) ------------------------
     Task<PagedResult<Shipment>> GetShipmentsAsync(int page, int pageSize, long? customerId, string? orderBy, CancellationToken ct);
     Task<Shipment?> GetShipmentAsync(long packingList, CancellationToken ct);
+    Task<Shipment> CreateShipmentAsync(ShipmentWrite body, CancellationToken ct);
+    Task<Shipment?> UpdateShipmentAsync(long packingList, ShipmentWrite body, CancellationToken ct);
+    Task<Shipment?> PatchShipmentAsync(long packingList, ShipmentStatusPatch patch, CancellationToken ct);
     Task<PagedResult<ReceivingBol>> GetReceivingBolsAsync(int page, int pageSize, long? customerId, int? status, string? orderBy, CancellationToken ct);
     Task<ReceivingBol?> GetReceivingBolAsync(long receivingBolId, CancellationToken ct);
+    Task<ReceivingBol> CreateReceivingBolAsync(ReceivingBolWrite body, CancellationToken ct);
+    Task<ReceivingBol?> UpdateReceivingBolAsync(long receivingBolId, ReceivingBolWrite body, CancellationToken ct);
     Task<PagedResult<ScanLog>> GetScanLogsAsync(int page, int pageSize, long? abJobNum, string? orderBy, CancellationToken ct);
     Task<ScanLog?> GetScanLogAsync(long scanId, CancellationToken ct);
+    Task<ScanLog> CreateScanLogAsync(ScanLogWrite body, CancellationToken ct);
     Task<IReadOnlyList<ScanLog>> GetJobScansAsync(long abJobNum, CancellationToken ct);
     Task<PagedResult<MaintLog>> GetMaintLogsAsync(int page, int pageSize, string? status, long? groupDepartmentId, string? orderBy, CancellationToken ct);
     Task<MaintLog?> GetMaintLogAsync(long maintLogId, CancellationToken ct);
+    Task<MaintLog> CreateMaintLogAsync(MaintLogWrite body, CancellationToken ct);
+    Task<MaintLog?> UpdateMaintLogAsync(long maintLogId, MaintLogWrite body, CancellationToken ct);
 
     // ---- Operations: carriers / shifts / downtime (read) ---------------
     Task<PagedResult<Carrier>> GetCarriersAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct);
     Task<Carrier?> GetCarrierAsync(long carrierId, CancellationToken ct);
     Task<PagedResult<Shift>> GetShiftsAsync(int page, int pageSize, long? lineNum, string? orderBy, CancellationToken ct);
     Task<Shift?> GetShiftAsync(long shiftNum, CancellationToken ct);
+    Task<Shift> CreateShiftAsync(ShiftWrite body, CancellationToken ct);
+    Task<Shift?> UpdateShiftAsync(long shiftNum, ShiftWrite body, CancellationToken ct);
     Task<PagedResult<DowntimeInstance>> GetDowntimeInstancesAsync(int page, int pageSize, long? abJobNum, long? shiftNum, string? orderBy, CancellationToken ct);
     Task<DowntimeInstance?> GetDowntimeInstanceAsync(long instanceNum, CancellationToken ct);
+    Task<DowntimeInstance> CreateDowntimeInstanceAsync(DowntimeInstanceWrite body, CancellationToken ct);
+    Task<DowntimeInstance?> UpdateDowntimeInstanceAsync(long instanceNum, DowntimeInstanceWrite body, CancellationToken ct);
     Task<PagedResult<Sketch>> GetSketchesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct);
     Task<Sketch?> GetSketchAsync(long sketchId, CancellationToken ct);
     Task<Sketch> CreateSketchAsync(SketchWrite body, CancellationToken ct);
@@ -106,6 +118,12 @@ public interface IAbisRepository
 
     // ---- Lookups (reference data for data-entry screens) ---------------
     Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct);
+    Task<IReadOnlyList<ProductionLine>> GetLinesAsync(CancellationToken ct);
+    Task<IReadOnlyList<GroupDepartment>> GetGroupDepartmentsAsync(CancellationToken ct);
+    Task<IReadOnlyList<DowntimeCause>> GetDowntimeCausesAsync(CancellationToken ct);
+    Task<IReadOnlyList<TransportationMethod>> GetTransportationMethodsAsync(CancellationToken ct);
+    Task<IReadOnlyList<EquipmentType>> GetEquipmentTypesAsync(CancellationToken ct);
+    Task<IReadOnlyList<CustomerType>> GetCustomerTypesAsync(CancellationToken ct);
 
     // ---- Audit / action log --------------------------------------------
     Task WriteAuditAsync(string source, bool success, string? notes, CancellationToken ct);

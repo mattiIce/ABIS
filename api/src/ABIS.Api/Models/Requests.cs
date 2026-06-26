@@ -187,6 +187,103 @@ public sealed class SheetSkidWrite
     public int? SkidPieces { get; set; }
 }
 
+/// <summary>Create or fully replace a shipment header (table <c>shipment</c>).
+/// <c>packing_list</c> (PK) and the NOT NULL <c>bill_of_lading</c> are both
+/// server-assigned from their own sequences on create.</summary>
+public sealed class ShipmentWrite
+{
+    public long? CarrierId { get; set; }
+    public long? CustomerId { get; set; }
+    public long? DesShCustId { get; set; }
+    public string? VehicleId { get; set; }
+    public int? VehicleStatus { get; set; }
+    public int? ShipmentStatus { get; set; }
+    public DateTime? ShipmentScheduledDateTime { get; set; }
+    public string? ShipmentNotes { get; set; }
+}
+
+/// <summary>Partial update of a shipment as it ships out (status/dispatch fields).
+/// Null fields are left unchanged (COALESCE).</summary>
+public sealed class ShipmentStatusPatch
+{
+    public int? ShipmentStatus { get; set; }
+    public int? VehicleStatus { get; set; }
+    public DateTime? DateSent { get; set; }
+    public DateTime? ShipmentActualedDateTime { get; set; }
+    public string? ShipmentNotes { get; set; }
+}
+
+/// <summary>Create or fully replace an inbound receiving BOL (table
+/// <c>receiving_bol</c>). <see cref="Bol"/> and <see cref="CustomerId"/> are
+/// required (both NOT NULL); <c>created_date</c> is set server-side on create.</summary>
+public sealed class ReceivingBolWrite
+{
+    public string? Bol { get; set; }
+    public long? CustomerId { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTime? ReceivedDate { get; set; }
+    public int? Status { get; set; }
+}
+
+/// <summary>Record a shop-floor scan event (table <c>scan_log</c>, append-only).
+/// <see cref="AbJobNum"/>, <see cref="ScanStation"/> and <see cref="Note"/> are
+/// required (all NOT NULL); <c>scan_datetime</c> is stamped server-side.</summary>
+public sealed class ScanLogWrite
+{
+    public long? AbJobNum { get; set; }
+    public string? ScanStation { get; set; }
+    public string? Note { get; set; }
+}
+
+/// <summary>Create or fully replace a maintenance log entry (table <c>maint_log</c>).
+/// <see cref="ProbDateTime"/>, <see cref="ProbDetails"/> and <see cref="Author"/>
+/// are required (NOT NULL); <c>entereddatetime</c> (NOT NULL) is set server-side on
+/// create. The id is assigned by MAX+1 (this table has no Oracle sequence).</summary>
+public sealed class MaintLogWrite
+{
+    public string? MaintLogStatus { get; set; }
+    public long? GroupDepartmentId { get; set; }
+    public string? SystemEquipment { get; set; }
+    public string? SubsystemEquipment { get; set; }
+    public string? ItemDevice { get; set; }
+    public DateTime? ProbDateTime { get; set; }
+    public string? ProbDetails { get; set; }
+    public string? Actions { get; set; }
+    public string? Author { get; set; }
+    public string? ReportedBy { get; set; }
+    public string? AssignedTo { get; set; }
+    public DateTime? CompletedDateTime { get; set; }
+    public string? CompletedBy { get; set; }
+    public decimal? LaborHours { get; set; }
+    public decimal? ProbCost { get; set; }
+}
+
+/// <summary>Create or fully replace a production shift (table <c>shift</c>).
+/// Only <c>shift_num</c> (PK, server-assigned) is NOT NULL.</summary>
+public sealed class ShiftWrite
+{
+    public DateTime? StartTime { get; set; }
+    public DateTime? EndTime { get; set; }
+    public long? LineNum { get; set; }
+    public int? ScheduleType { get; set; }
+    public decimal? DtTotal { get; set; }
+    public string? OperatorInitial { get; set; }
+    public int? ShiftDataStatus { get; set; }
+    public string? Note { get; set; }
+}
+
+/// <summary>Create or fully replace a downtime instance (table <c>dt_instance</c>).
+/// Only <c>instance_num</c> (PK, server-assigned) is NOT NULL.</summary>
+public sealed class DowntimeInstanceWrite
+{
+    public long? AbJobNum { get; set; }
+    public long? LineNum { get; set; }
+    public DateTime? StartingTime { get; set; }
+    public DateTime? EndingTime { get; set; }
+    public string? Note { get; set; }
+    public long? ShiftNum { get; set; }
+}
+
 /// <summary>Create a scrap skid (table <c>scrap_skid</c>).
 /// <see cref="ScrapAbJobNum"/> is required; <c>scrap_date</c> is set server-side.</summary>
 public sealed class ScrapSkidWrite

@@ -37,6 +37,12 @@ public sealed class DatabaseOptions
     /// <c>Database:Sequences</c> config section).</summary>
     public Dictionary<string, string> Sequences { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>Tables that have <em>no</em> Oracle sequence for their id column, so
+    /// the id is assigned by <c>MAX(id)+1</c> on Oracle too (the legacy behaviour for
+    /// such tables, e.g. <c>maint_log</c>). Low-volume tables only — MAX+1 is not
+    /// concurrency-safe. Set via the <c>Database:MaxIdTables</c> config section.</summary>
+    public HashSet<string> MaxIdTables { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
     public SqlDialect Dialect => Provider.Trim().ToLowerInvariant() switch
     {
         "oracle" => SqlDialect.Oracle,
@@ -60,8 +66,12 @@ public interface IDbConnectionFactory
     /// <summary>Dialect-specific SQL that yields the next id for an insert:
     /// <c>MAX+1</c> on SQLite (fine for the single-writer dev fixture), a sequence
     /// <c>NEXTVAL</c> on Oracle (concurrency-safe for production). <paramref name="table"/>
-    /// and <paramref name="idColumn"/> are internal constants, never user input.</summary>
-    string NextIdQuery(string table, string idColumn);
+    /// and <paramref name="idColumn"/> are internal constants, never user input.
+    /// <paramref name="sequence"/> forces a specific Oracle sequence (used for a
+    /// second generated column on one table, e.g. shipment's bill_of_lading), bypassing
+    /// the table-keyed override; it is validated like any other sequence name. Tables in
+    /// <see cref="DatabaseOptions.MaxIdTables"/> use MAX+1 on Oracle as well (no sequence).</summary>
+    string NextIdQuery(string table, string idColumn, string? sequence = null);
 
     /// <summary>Dialect-specific trivial connectivity probe. Oracle requires a FROM
     /// clause (a bare <c>SELECT 1</c> raises ORA-00923), so it uses <c>FROM dual</c>.</summary>
@@ -106,14 +116,24 @@ public sealed class DbConnectionFactory : IDbConnectionFactory
         _ => throw new InvalidOperationException($"Unsupported dialect {Dialect}.")
     };
 
-    public string NextIdQuery(string table, string idColumn) => Dialect switch
+    public string NextIdQuery(string table, string idColumn, string? sequence = null)
     {
-        // Single-writer dev fixture: MAX+1 is adequate and keeps the seed ids tidy.
-        SqlDialect.Sqlite => $"SELECT COALESCE(MAX({idColumn}), 0) + 1 FROM {table}",
-        // Production: a real sequence avoids the MAX+1 race under concurrent writers.
-        SqlDialect.Oracle => $"SELECT {ResolveSequence(table, idColumn)}.NEXTVAL FROM dual",
-        _ => throw new InvalidOperationException($"Unsupported dialect {Dialect}.")
-    };
+        // Tables with no Oracle sequence (Database:MaxIdTables) use MAX+1 on both
+        // engines — the legacy behaviour for such tables (e.g. maint_log).
+        var maxId = $"SELECT COALESCE(MAX({idColumn}), 0) + 1 FROM {table}";
+        if (Dialect == SqlDialect.Oracle && _options.MaxIdTables.Contains(table))
+            return maxId;
+
+        return Dialect switch
+        {
+            // Single-writer dev fixture: MAX+1 is adequate and keeps the seed ids tidy.
+            SqlDialect.Sqlite => maxId,
+            // Production: a real sequence avoids the MAX+1 race under concurrent writers.
+            // An explicit sequence (validated) overrides the table-keyed resolution.
+            SqlDialect.Oracle => $"SELECT {(sequence is null ? ResolveSequence(table, idColumn) : ValidateSequence(sequence, table))}.NEXTVAL FROM dual",
+            _ => throw new InvalidOperationException($"Unsupported dialect {Dialect}.")
+        };
+    }
 
     /// <summary>Resolves the Oracle sequence for a table: an explicit per-table
     /// override (<c>Database:Sequences</c>) if present, else the
@@ -126,7 +146,13 @@ public sealed class DbConnectionFactory : IDbConnectionFactory
         var name = _options.Sequences.TryGetValue(table, out var mapped) && !string.IsNullOrWhiteSpace(mapped)
             ? mapped
             : string.Format(_options.SequenceNameFormat, idColumn);
+        return ValidateSequence(name, table);
+    }
 
+    /// <summary>Ensures a sequence name is a plain (optionally schema-qualified)
+    /// identifier before it is interpolated into SQL.</summary>
+    private static string ValidateSequence(string name, string table)
+    {
         if (!Regex.IsMatch(name, @"^[A-Za-z][A-Za-z0-9_$]*(\.[A-Za-z][A-Za-z0-9_$]*)?$"))
             throw new InvalidOperationException(
                 $"Invalid Oracle sequence name '{name}' for table '{table}'. " +

@@ -6,11 +6,14 @@ PowerBuilder client that talks straight to the database with no service tier
 missing integration point every later modernization step builds on
 ([`../docs/MODERNIZATION_ROADMAP.md`](../docs/MODERNIZATION_ROADMAP.md), Phase 2).
 
-> **Scope:** read (GET) endpoints across the core entities, plus a growing
-> **write** surface — master data create/replace (customers, parts, carriers,
-> dies, sketches, customer contacts; POST/PUT), order entry (orders, items,
-> skids), and operational partial updates (PATCH) to jobs and coils. The write
-> path (sequence-backed ids) is validated against the live Oracle database.
+> **Scope:** read (GET) endpoints across the core entities and reference
+> lookups, plus a broad **write** surface — master data create/replace
+> (customers, parts, carriers, dies, sketches, customer contacts; POST/PUT),
+> order entry (orders, items, skids), shipping/receiving (shipments,
+> receiving BOLs), shop-floor and operations records (scan events, maintenance
+> logs, shifts, downtime), and operational partial updates (PATCH) to jobs,
+> coils, and shipment dispatch. The write path (sequence-backed ids) is
+> validated against the live Oracle database.
 
 ## Stack
 
@@ -90,7 +93,7 @@ running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ```sh
 cd api
-dotnet test                                # 130 tests: repository + HTTP smoke
+dotnet test                                # 152 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -194,21 +197,33 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `PUT /api/dies/{dieId}` | Replace a die/tooling record |
 | `GET /api/shipments?page&pageSize&customerId&sort&dir` | List shipments / packing lists (paged, filterable, sortable) |
 | `GET /api/shipments/{packingList}` | One shipment |
+| `POST /api/shipments` | Create a shipment (packing-list & bill-of-lading numbers server-assigned) → 201 |
+| `PUT /api/shipments/{packingList}` | Replace a shipment header |
+| `PATCH /api/shipments/{packingList}` | Update dispatch status (status, sent/actual times, notes) |
 | `GET /api/receiving-bols?page&pageSize&customerId&status&sort&dir` | List inbound receiving BOLs (paged, filterable, sortable) |
 | `GET /api/receiving-bols/{receivingBolId}` | One receiving BOL |
+| `POST /api/receiving-bols` | Create a receiving BOL (requires `bol`, `customerId`) → 201 |
+| `PUT /api/receiving-bols/{receivingBolId}` | Replace a receiving BOL |
 | `GET /api/scan-logs?page&pageSize&abJobNum&sort&dir` | List shop-floor scan events, newest first (paged, filterable, sortable) |
 | `GET /api/scan-logs/{scanId}` | One scan event |
+| `POST /api/scan-logs` | Record a scan event, append-only (requires `abJobNum`, `scanStation`, `note`) → 201 |
 | `GET /api/jobs/{abJobNum}/scans` | Scan events for a job |
 | `GET /api/maint-logs?page&pageSize&status&groupDepartmentId&sort&dir` | List maintenance log entries, newest first (paged, filterable, sortable) |
 | `GET /api/maint-logs/{maintLogId}` | One maintenance log entry |
+| `POST /api/maint-logs` | Create a maintenance log entry (requires `probDateTime`, `probDetails`, `author`) → 201 |
+| `PUT /api/maint-logs/{maintLogId}` | Replace a maintenance log entry |
 | `GET /api/carriers?page&pageSize&status&sort&dir` | List carriers / trucking partners (paged, filterable, sortable) |
 | `GET /api/carriers/{carrierId}` | One carrier |
 | `POST /api/carriers` | Create a carrier (requires `carrierFullName`) → 201 |
 | `PUT /api/carriers/{carrierId}` | Replace a carrier |
 | `GET /api/shifts?page&pageSize&lineNum&sort&dir` | List production shifts, newest first (paged, filterable, sortable) |
 | `GET /api/shifts/{shiftNum}` | One shift |
+| `POST /api/shifts` | Create a production shift → 201 |
+| `PUT /api/shifts/{shiftNum}` | Replace a production shift |
 | `GET /api/downtime?page&pageSize&abJobNum&shiftNum&sort&dir` | List downtime instances, newest first (paged, filterable, sortable) |
 | `GET /api/downtime/{instanceNum}` | One downtime instance |
+| `POST /api/downtime` | Log a downtime instance → 201 |
+| `PUT /api/downtime/{instanceNum}` | Replace a downtime instance |
 | `GET /api/customers/{customerId}/contacts` | Contacts for a customer |
 | `POST /api/customers/{customerId}/contacts` | Add a contact to a customer (requires `lastName`) → 201 |
 | `GET /api/customer-contacts/{contactId}` | One customer contact |
@@ -220,6 +235,12 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/test-results?page&pageSize&testType&position&from&to&sort&dir` | List posted mechanical test results (paged, filterable, sortable) |
 | `GET /api/temp-test-results?page&pageSize&testType&position&from&to&sort&dir` | List in-progress (working-set) test results (paged, filterable, sortable) |
 | `GET /api/lookups/alloys` | Distinct alloys (dropdown reference data) |
+| `GET /api/lookups/lines` | Production lines (referenced by jobs, coils, downtime) |
+| `GET /api/lookups/groupdepartments` | Maintenance groups/departments (referenced by maintenance logs) |
+| `GET /api/lookups/downtime-causes` | Downtime causes/reasons |
+| `GET /api/lookups/transportation-methods` | Transportation method codes (referenced by shipments) |
+| `GET /api/lookups/equipment-types` | Shipping equipment type codes (referenced by shipments) |
+| `GET /api/lookups/customer-types` | Customer classifications (referenced by customers) |
 | `GET /api/audit-log?page&pageSize&source&sort&dir` | List the action/audit log, newest first (sortable) |
 
 Collections return a paged envelope: `{ items, page, pageSize, totalCount, totalPages }`.
@@ -327,11 +348,25 @@ export Database__Sequences__ab_job="ABIS.AB_JOB_S"     # per-table override (sch
 export Database__Sequences__coil="COIL_SEQ"
 ```
 
-One override ships in `appsettings.json`: `customer_contact` → `customer_contact_id_seq`
-(its id column is `contact_id`, so the convention would otherwise yield the wrong
-`contact_id_seq`). Resolved names are validated as plain/schema-qualified
-identifiers before use. **Confirm the real sequence names against the database**
-(Phase 1) — these are conventions, not recovered facts.
+Several overrides ship in `appsettings.json` for sequences that don't fit the
+convention: `customer_contact` → `customer_contact_id_seq` (id column is
+`contact_id`), `dt_instance` → `dt_instance_seq`, `scan_log` → `scan_log_seq`,
+and `shipment` → `packing_list_num_seq`. The `shipment` insert also needs a
+second generated number (`bill_of_lading`, NOT NULL) drawn from its own
+`bill_of_lading_seq`, passed explicitly so the table-keyed override isn't applied
+to it. Resolved names are validated as plain/schema-qualified identifiers before use.
+
+**Tables without a sequence.** Some legacy tables (e.g. `maint_log`) have no
+Oracle sequence — the application assigns the id. List them under
+`Database:MaxIdTables` and the next-id falls back to `MAX(id)+1` on Oracle too
+(the legacy behaviour; low-volume tables only, as MAX+1 is not concurrency-safe):
+
+```sh
+export Database__MaxIdTables__0="maint_log"
+```
+
+**Confirm the real sequence names against the database** (Phase 1) — these are
+conventions, not recovered facts.
 
 The repository SQL is engine-portable (`:name` parameters; columns aliased to
 model property names; dialect-specific paging and next-id supplied by the

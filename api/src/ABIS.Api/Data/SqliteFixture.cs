@@ -41,6 +41,12 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS dt_instance;
             DROP TABLE IF EXISTS customer_contact;
             DROP TABLE IF EXISTS sketch;
+            DROP TABLE IF EXISTS line;
+            DROP TABLE IF EXISTS groupdepartment;
+            DROP TABLE IF EXISTS dt_cause;
+            DROP TABLE IF EXISTS transportation_method;
+            DROP TABLE IF EXISTS equipment_type;
+            DROP TABLE IF EXISTS customer_type;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
@@ -147,6 +153,24 @@ public static class SqliteFixture
             CREATE TABLE sketch (
                 sketch_id INTEGER PRIMARY KEY, sketch_name TEXT, sketch_notes TEXT,
                 sketch_sys_note TEXT, sketch_status INTEGER);
+
+            CREATE TABLE line (
+                line_num INTEGER PRIMARY KEY, line_desc TEXT, line_location TEXT);
+
+            CREATE TABLE groupdepartment (
+                groupdepartment_id INTEGER PRIMARY KEY, groupdepartment TEXT, depttype TEXT);
+
+            CREATE TABLE dt_cause (
+                id INTEGER PRIMARY KEY, cause_name TEXT, note TEXT);
+
+            CREATE TABLE transportation_method (
+                trans_method_code TEXT PRIMARY KEY, trans_desc TEXT);
+
+            CREATE TABLE equipment_type (
+                equipment_type_code TEXT PRIMARY KEY, equipment_type_desc TEXT, equipment_type_note TEXT);
+
+            CREATE TABLE customer_type (
+                customer_type TEXT PRIMARY KEY, customer_type_description TEXT);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -413,6 +437,60 @@ public static class SqliteFixture
             {
                 new { OpcLogId = 1L, TimeStamp = (DateTime?)d, Source = "SEED", Success = (int?)1, Notes = "fixture seed" },
                 new { OpcLogId = 2L, TimeStamp = (DateTime?)d.AddMinutes(5), Source = "SEED", Success = (int?)1, Notes = "fixture seed 2" }
+            });
+
+        conn.Execute("""
+            INSERT INTO line (line_num, line_desc, line_location) VALUES (:LineNum, :LineDesc, :LineLocation)
+            """,
+            new[]
+            {
+                new { LineNum = 110L, LineDesc = "Cut-to-length 1", LineLocation = "Bay A" },
+                new { LineNum = 120L, LineDesc = "Cut-to-length 2", LineLocation = "Bay B" }
+            });
+
+        conn.Execute("""
+            INSERT INTO groupdepartment (groupdepartment_id, groupdepartment, depttype) VALUES (:GroupDepartmentId, :GroupDepartment, :DeptType)
+            """,
+            new[]
+            {
+                new { GroupDepartmentId = 10L, GroupDepartment = "Maintenance", DeptType = "MECH" },
+                new { GroupDepartmentId = 20L, GroupDepartment = "Electrical", DeptType = "ELEC" }
+            });
+
+        conn.Execute("""
+            INSERT INTO dt_cause (id, cause_name, note) VALUES (:Id, :CauseName, :Note)
+            """,
+            new[]
+            {
+                new { Id = 1L, CauseName = "Coil change", Note = "Planned" },
+                new { Id = 2L, CauseName = "Jam", Note = "Unplanned" }
+            });
+
+        conn.Execute("""
+            INSERT INTO transportation_method (trans_method_code, trans_desc) VALUES (:TransMethodCode, :TransDesc)
+            """,
+            new[]
+            {
+                new { TransMethodCode = "TL", TransDesc = "Truckload" },
+                new { TransMethodCode = "LTL", TransDesc = "Less than truckload" }
+            });
+
+        conn.Execute("""
+            INSERT INTO equipment_type (equipment_type_code, equipment_type_desc, equipment_type_note) VALUES (:EquipmentTypeCode, :EquipmentTypeDesc, :EquipmentTypeNote)
+            """,
+            new[]
+            {
+                new { EquipmentTypeCode = "VAN", EquipmentTypeDesc = "Dry van", EquipmentTypeNote = "Standard" },
+                new { EquipmentTypeCode = "FLAT", EquipmentTypeDesc = "Flatbed", EquipmentTypeNote = "Tarped" }
+            });
+
+        conn.Execute("""
+            INSERT INTO customer_type (customer_type, customer_type_description) VALUES (:CustomerType, :CustomerTypeDescription)
+            """,
+            new[]
+            {
+                new { CustomerType = "OEM", CustomerTypeDescription = "Original equipment manufacturer" },
+                new { CustomerType = "DIST", CustomerTypeDescription = "Distributor" }
             });
     }
 }

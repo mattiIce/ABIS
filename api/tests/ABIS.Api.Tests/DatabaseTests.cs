@@ -60,6 +60,44 @@ public sealed class DatabaseTests
     }
 
     [Fact]
+    public void Oracle_next_id_uses_maxplus1_for_tables_without_a_sequence()
+    {
+        // maint_log has no Oracle sequence (Database:MaxIdTables) — id is MAX+1 on Oracle too.
+        var factory = Factory("Oracle", o => o.MaxIdTables.Add("maint_log"));
+        Assert.Equal("SELECT COALESCE(MAX(maint_log_id), 0) + 1 FROM maint_log",
+            factory.NextIdQuery("maint_log", "maint_log_id"));
+        // Other tables on the same factory still use a sequence.
+        Assert.Equal("SELECT coil_abc_num_seq.NEXTVAL FROM dual", factory.NextIdQuery("coil", "coil_abc_num"));
+    }
+
+    [Fact]
+    public void Oracle_next_id_honors_an_explicit_per_call_sequence()
+    {
+        // shipment's bill_of_lading draws from its OWN sequence, passed explicitly so the
+        // table-keyed override (packing_list_num_seq) is not applied to it.
+        var factory = Factory("Oracle", o => o.Sequences["shipment"] = "packing_list_num_seq");
+        Assert.Equal("SELECT packing_list_num_seq.NEXTVAL FROM dual", factory.NextIdQuery("shipment", "packing_list"));
+        Assert.Equal("SELECT bill_of_lading_seq.NEXTVAL FROM dual",
+            factory.NextIdQuery("shipment", "bill_of_lading", "bill_of_lading_seq"));
+    }
+
+    [Fact]
+    public void Oracle_explicit_sequence_is_validated()
+    {
+        var factory = Factory("Oracle");
+        Assert.Throws<InvalidOperationException>(() => factory.NextIdQuery("shipment", "bill_of_lading", "evil; DROP TABLE shipment"));
+    }
+
+    [Fact]
+    public void Sqlite_next_id_ignores_sequence_and_maxid_settings()
+    {
+        // On SQLite both an explicit sequence and MaxIdTables are no-ops: always MAX+1.
+        var factory = Factory("Sqlite", o => o.MaxIdTables.Add("maint_log"));
+        Assert.Equal("SELECT COALESCE(MAX(bill_of_lading), 0) + 1 FROM shipment",
+            factory.NextIdQuery("shipment", "bill_of_lading", "bill_of_lading_seq"));
+    }
+
+    [Fact]
     public void Oracle_next_id_rejects_an_unsafe_sequence_name()
     {
         var factory = Factory("Oracle", o => o.Sequences["coil"] = "evil; DROP TABLE coil");
