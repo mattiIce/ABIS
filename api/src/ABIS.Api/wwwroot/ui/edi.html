@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ABIS EDI</title>
+<style>
+  :root { --bd:#d0d7de; --bg:#f6f8fa; --ac:#0969da; }
+  * { box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 0; color: #1f2328; }
+  body.busy { cursor: progress; }
+  header { background:#24292f; color:#fff; padding:10px 16px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; font-weight:600; }
+  header nav { display:flex; gap:12px; flex-wrap:wrap; }
+  header nav a { color:#9ecbff; text-decoration:none; }
+  header .key { margin-left:auto; display:flex; gap:6px; align-items:center; }
+  main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; }
+  section { border:1px solid var(--bd); border-radius:8px; padding:14px; }
+  h2 { font-size:14px; margin:0 0 10px; text-transform:uppercase; letter-spacing:.04em; color:#57606a; }
+  label { font-size:12px; color:#57606a; }
+  input, button { font:inherit; padding:6px 8px; border:1px solid var(--bd); border-radius:6px; }
+  button { background:var(--ac); color:#fff; border-color:var(--ac); cursor:pointer; }
+  table { width:100%; border-collapse:collapse; margin-top:8px; }
+  th, td { text-align:left; padding:5px 6px; border-bottom:1px solid var(--bd); font-size:13px; }
+  th { color:#57606a; font-weight:600; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:end; }
+  .muted { color:#8b949e; }
+  .pill { background:var(--bg); border:1px solid var(--bd); border-radius:12px; padding:1px 8px; font-size:12px; }
+  .err { color:#cf222e; min-height:18px; }
+  tbody tr.click { cursor:pointer; }
+  tbody tr.click:hover { background:var(--bg); }
+  .tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .tabs button { background:#fff; color:#1f2328; border-color:var(--bd); }
+  .tabs button.active { background:var(--ac); color:#fff; border-color:var(--ac); }
+  .detail { display:grid; grid-template-columns:repeat(3,1fr); gap:4px 14px; margin-top:10px; padding-top:10px; border-top:1px solid var(--bd); font-size:13px; }
+  .detail .k { color:#57606a; display:block; font-size:11px; text-transform:uppercase; }
+  .detail span:last-child { word-break:break-all; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ABIS EDI <span class="pill">greenfield · typed client</span></h1>
+  <nav>
+    <a href="/ui/order-entry.html">Order entry</a>
+    <a href="/ui/jobs.html">Jobs</a>
+    <a href="/ui/skids.html">Skids</a>
+    <a href="/ui/coil-inventory.html">Coil inventory</a>
+    <a href="/ui/qa-results.html">QA results</a>
+    <a href="/ui/shipping.html">Shipping</a>
+    <a href="/ui/edi.html">EDI</a>
+    <a href="/ui/receiving.html">Receiving</a>
+    <a href="/ui/customers.html">Customers</a>
+    <a href="/ui/parts.html">Parts</a>
+    <a href="/ui/carriers.html">Carriers</a>
+    <a href="/ui/scan.html">Scan</a>
+    <a href="/ui/sketches.html">Sketches</a>
+    <a href="/ui/shifts.html">Shifts</a>
+    <a href="/ui/maintenance.html">Maintenance</a>
+    <a href="/ui/dies.html">Dies</a>
+    <a href="/ui/downtime.html">Downtime</a>
+  </nav>
+  <div class="key">
+    <label for="apiKey" style="color:#fff">X-Api-Key</label>
+    <input id="apiKey" placeholder="dev-local-key" style="width:160px" />
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="tabs">
+      <button id="tab-tx" type="button">Transactions</button>
+      <button id="tab-log" type="button">Processing log</button>
+      <button id="tab-cust" type="button">Customer EDI</button>
+      <button id="tab-types" type="button">Types</button>
+    </div>
+
+    <div id="pane-tx">
+      <h2>EDI transactions <span id="cTx" class="muted" style="text-transform:none;letter-spacing:0"></span></h2>
+      <form id="txForm" class="row">
+        <div><label>Customer id</label><br /><input id="fCust" type="number" placeholder="id" style="width:110px" /></div>
+        <button type="submit">Filter</button>
+      </form>
+      <table><thead><tr><th>File id</th><th>Time</th><th>DUNS from → to</th><th>Customer</th><th>File</th><th>FA status</th></tr></thead><tbody id="tTx"></tbody></table>
+      <div class="detail" id="txDetail"></div>
+    </div>
+
+    <div id="pane-log">
+      <h2>Processing log <span id="cLog" class="muted" style="text-transform:none;letter-spacing:0"></span></h2>
+      <form id="logForm" class="row">
+        <div><label>Customer id</label><br /><input id="fCustLog" type="number" placeholder="id" style="width:110px" /></div>
+        <button type="submit">Filter</button>
+      </form>
+      <table><thead><tr><th>When</th><th>Customer</th><th>EDI name</th><th>Flag</th><th>File id</th><th>Contents</th></tr></thead><tbody id="tLog"></tbody></table>
+    </div>
+
+    <div id="pane-cust">
+      <h2>Customer EDI setup</h2>
+      <table><thead><tr><th>Customer</th><th>EDI name</th><th>Type id</th><th>Version</th><th>Description</th></tr></thead><tbody id="tCust"></tbody></table>
+    </div>
+
+    <div id="pane-types">
+      <h2>EDI transaction types</h2>
+      <table><thead><tr><th>Type id</th><th>Version</th><th>Description</th></tr></thead><tbody id="tTypes"></tbody></table>
+    </div>
+  </section>
+
+  <section><div id="err" class="err"></div></section>
+</main>
+
+<script type="module" src="/ui/app/edi.js"></script>
+</body>
+</html>
