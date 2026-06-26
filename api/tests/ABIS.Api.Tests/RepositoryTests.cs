@@ -704,6 +704,72 @@ public sealed class RepositoryTests : IDisposable
         Assert.Null(await _repo.UpdateCarrierAsync(999999, new CarrierWrite { CarrierFullName = "X" }, CancellationToken.None));
     }
 
+    // ---- writes: dies, sketches, customer contacts ---------------------
+
+    [Fact]
+    public async Task CreateDie_assigns_id_and_persists()
+    {
+        var created = await _repo.CreateDieAsync(
+            new DieWrite { DieName = "DIE-GAMMA", Status = 1, ToolNum = "T-300", PartName = "PLATE-C", GrossWeight = 990.0m, Location = "RACK-3" },
+            CancellationToken.None);
+        Assert.Equal(2003, created.DieId);    // MAX(2002) + 1
+        Assert.Equal("DIE-GAMMA", created.DieName);
+        Assert.Equal("PLATE-C", (await _repo.GetDieAsync(2003, CancellationToken.None))!.PartName);
+    }
+
+    [Fact]
+    public async Task UpdateDie_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateDieAsync(2001,
+            new DieWrite { DieName = "DIE-ALPHA", Status = 0, Location = "RACK-9" }, CancellationToken.None);
+        Assert.Equal(0, updated!.Status);
+        Assert.Equal("RACK-9", updated.Location);
+        Assert.Null(await _repo.UpdateDieAsync(999999, new DieWrite { DieName = "X" }, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CreateSketch_assigns_id_and_persists()
+    {
+        var created = await _repo.CreateSketchAsync(
+            new SketchWrite { SketchName = "GEAR-D rev1", SketchNotes = "Gear blank", SketchStatus = 1 }, CancellationToken.None);
+        Assert.Equal(4, created.SketchId);    // MAX(3) + 1
+        Assert.Equal("GEAR-D rev1", created.SketchName);
+        Assert.Equal("Gear blank", (await _repo.GetSketchAsync(4, CancellationToken.None))!.SketchNotes);
+    }
+
+    [Fact]
+    public async Task UpdateSketch_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateSketchAsync(1,
+            new SketchWrite { SketchName = "BRKT-A rev2", SketchStatus = 0 }, CancellationToken.None);
+        Assert.Equal("BRKT-A rev2", updated!.SketchName);
+        Assert.Equal(0, updated.SketchStatus);
+        Assert.Null(await _repo.UpdateSketchAsync(999999, new SketchWrite { SketchName = "X" }, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CreateCustomerContact_assigns_id_sets_owner_and_persists()
+    {
+        var created = await _repo.CreateCustomerContactAsync(4002,
+            new CustomerContactWrite { FirstName = "Pat", LastName = "Nguyen", Department = "Logistics", City = "Toledo", State = "OH" },
+            CancellationToken.None);
+        Assert.Equal(5604, created.ContactId);    // MAX(5603) + 1
+        Assert.Equal(4002, created.CustomerId);   // owner comes from the route
+        Assert.Equal("Nguyen", created.LastName);
+        // The new contact appears under its owning customer.
+        Assert.Contains(await _repo.GetCustomerContactsAsync(4002, CancellationToken.None), c => c.ContactId == 5604);
+    }
+
+    [Fact]
+    public async Task UpdateCustomerContact_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateCustomerContactAsync(5601,
+            new CustomerContactWrite { FirstName = "Dana", LastName = "Reed-Smith", Department = "Sourcing" }, CancellationToken.None);
+        Assert.Equal("Reed-Smith", updated!.LastName);
+        Assert.Equal("Sourcing", updated.Department);
+        Assert.Null(await _repo.UpdateCustomerContactAsync(999999, new CustomerContactWrite { LastName = "X" }, CancellationToken.None));
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }

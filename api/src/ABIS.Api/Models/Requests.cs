@@ -41,6 +41,41 @@ public sealed class CarrierWrite
     public int? Status { get; set; }
 }
 
+/// <summary>Create or fully replace a die. <see cref="DieName"/> is required.</summary>
+public sealed class DieWrite
+{
+    public string? DieName { get; set; }
+    public int? Status { get; set; }
+    public string? ToolNum { get; set; }
+    public string? PartName { get; set; }
+    public decimal? GrossWeight { get; set; }
+    public string? Location { get; set; }
+    public string? Description { get; set; }
+}
+
+/// <summary>Create or fully replace a sketch header. <see cref="SketchName"/> is
+/// required. The binary <c>sketch_view</c> image is not written via this API.</summary>
+public sealed class SketchWrite
+{
+    public string? SketchName { get; set; }
+    public string? SketchNotes { get; set; }
+    public string? SketchSysNote { get; set; }
+    public int? SketchStatus { get; set; }
+}
+
+/// <summary>Create or fully replace a customer contact. The owning customer comes
+/// from the route on create; <see cref="LastName"/> is required.</summary>
+public sealed class CustomerContactWrite
+{
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? Department { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? Phone1 { get; set; }
+    public string? Email1 { get; set; }
+}
+
 /// <summary>Partial update of a production job. Null fields are left unchanged
 /// (PATCH semantics via COALESCE) — a field cannot be cleared to null this way.</summary>
 public sealed class JobPatch

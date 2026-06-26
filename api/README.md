@@ -7,8 +7,9 @@ missing integration point every later modernization step builds on
 ([`../docs/MODERNIZATION_ROADMAP.md`](../docs/MODERNIZATION_ROADMAP.md), Phase 2).
 
 > **Scope:** read (GET) endpoints across the core entities, plus a growing
-> **write** surface — master data create/replace (customers, parts, carriers;
-> POST/PUT) and operational partial updates (PATCH) to jobs and coils. The write
+> **write** surface — master data create/replace (customers, parts, carriers,
+> dies, sketches, customer contacts; POST/PUT), order entry (orders, items,
+> skids), and operational partial updates (PATCH) to jobs and coils. The write
 > path (sequence-backed ids) is validated against the live Oracle database.
 
 ## Stack
@@ -89,7 +90,7 @@ running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ```sh
 cd api
-dotnet test                                # 123 tests: repository + HTTP smoke
+dotnet test                                # 130 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -189,6 +190,8 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `PUT /api/parts/{partNumId}` | Replace a part-number record |
 | `GET /api/dies?page&pageSize&status&sort&dir` | List dies/tooling (paged, filterable, sortable) |
 | `GET /api/dies/{dieId}` | One die |
+| `POST /api/dies` | Create a die/tooling record (requires `dieName`) → 201 |
+| `PUT /api/dies/{dieId}` | Replace a die/tooling record |
 | `GET /api/shipments?page&pageSize&customerId&sort&dir` | List shipments / packing lists (paged, filterable, sortable) |
 | `GET /api/shipments/{packingList}` | One shipment |
 | `GET /api/receiving-bols?page&pageSize&customerId&status&sort&dir` | List inbound receiving BOLs (paged, filterable, sortable) |
@@ -207,9 +210,13 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/downtime?page&pageSize&abJobNum&shiftNum&sort&dir` | List downtime instances, newest first (paged, filterable, sortable) |
 | `GET /api/downtime/{instanceNum}` | One downtime instance |
 | `GET /api/customers/{customerId}/contacts` | Contacts for a customer |
+| `POST /api/customers/{customerId}/contacts` | Add a contact to a customer (requires `lastName`) → 201 |
 | `GET /api/customer-contacts/{contactId}` | One customer contact |
+| `PUT /api/customer-contacts/{contactId}` | Replace a customer contact |
 | `GET /api/sketches?page&pageSize&status&sort&dir` | List part sketches/drawings, no image (paged, filterable, sortable) |
 | `GET /api/sketches/{sketchId}` | One sketch header (no image) |
+| `POST /api/sketches` | Create a sketch header (requires `sketchName`; image not written) → 201 |
+| `PUT /api/sketches/{sketchId}` | Replace a sketch header (image left untouched) |
 | `GET /api/test-results?page&pageSize&testType&position&from&to&sort&dir` | List posted mechanical test results (paged, filterable, sortable) |
 | `GET /api/temp-test-results?page&pageSize&testType&position&from&to&sort&dir` | List in-progress (working-set) test results (paged, filterable, sortable) |
 | `GET /api/lookups/alloys` | Distinct alloys (dropdown reference data) |
@@ -309,18 +316,22 @@ dotnet run --project src/ABIS.Api
 ```
 
 **Sequences (Oracle).** Inserts draw ids from a sequence per table. By default the
-name follows `{table}_seq` (`Database__SequenceNameFormat`, default `{0}_seq`);
-override individual tables for names that differ:
+name follows the live ABIS `{id_column}_seq` convention
+(`Database__SequenceNameFormat`, default `{0}_seq`, applied to the table's id
+column — e.g. `coil_abc_num` → `coil_abc_num_seq`); override individual tables for
+names that don't fit:
 
 ```sh
-export Database__SequenceNameFormat="{0}_seq"          # ab_job -> ab_job_seq
+export Database__SequenceNameFormat="{0}_seq"          # coil_abc_num -> coil_abc_num_seq
 export Database__Sequences__ab_job="ABIS.AB_JOB_S"     # per-table override (schema-qualified ok)
 export Database__Sequences__coil="COIL_SEQ"
 ```
 
-Resolved names are validated as plain/scheme-qualified identifiers before use.
-**Confirm the real sequence names against the database** (Phase 1) — these are
-conventions, not recovered facts.
+One override ships in `appsettings.json`: `customer_contact` → `customer_contact_id_seq`
+(its id column is `contact_id`, so the convention would otherwise yield the wrong
+`contact_id_seq`). Resolved names are validated as plain/schema-qualified
+identifiers before use. **Confirm the real sequence names against the database**
+(Phase 1) — these are conventions, not recovered facts.
 
 The repository SQL is engine-portable (`:name` parameters; columns aliased to
 model property names; dialect-specific paging and next-id supplied by the

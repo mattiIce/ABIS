@@ -350,6 +350,29 @@ public static class ApiEndpoints
            .WithSummary("Get one die by id.")
            .Produces<Die>().Produces(StatusCodes.Status404NotFound);
 
+        api.MapPost("/dies", async (DieWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateDieAsync(body, ct);
+                return Results.Created($"/api/dies/{created.DieId}", created);
+            })
+           .WithName("CreateDie").WithTags("Dies")
+           .WithSummary("Create a die/tooling record (server-assigned id; requires dieName).")
+           .Produces<Die>(StatusCodes.Status201Created).ProducesValidationProblem();
+
+        api.MapPut("/dies/{dieId:long}", async (long dieId, DieWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateDieAsync(dieId, body, ct) is { } die
+                    ? Results.Ok(die)
+                    : Results.NotFound();
+            })
+           .WithName("UpdateDie").WithTags("Dies")
+           .WithSummary("Replace a die/tooling record.")
+           .Produces<Die>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+
         // ---- Shipments -------------------------------------------------
         api.MapGet("/shipments", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, long? customerId = null, string? sort = null, string? dir = null) =>
@@ -539,6 +562,29 @@ public static class ApiEndpoints
            .WithSummary("Get one sketch header by id (no image).")
            .Produces<Sketch>().Produces(StatusCodes.Status404NotFound);
 
+        api.MapPost("/sketches", async (SketchWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateSketchAsync(body, ct);
+                return Results.Created($"/api/sketches/{created.SketchId}", created);
+            })
+           .WithName("CreateSketch").WithTags("Sketches")
+           .WithSummary("Create a sketch header (server-assigned id; requires sketchName; image not written via API).")
+           .Produces<Sketch>(StatusCodes.Status201Created).ProducesValidationProblem();
+
+        api.MapPut("/sketches/{sketchId:long}", async (long sketchId, SketchWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateSketchAsync(sketchId, body, ct) is { } sketch
+                    ? Results.Ok(sketch)
+                    : Results.NotFound();
+            })
+           .WithName("UpdateSketch").WithTags("Sketches")
+           .WithSummary("Replace a sketch header (image left untouched).")
+           .Produces<Sketch>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+
         // ---- Test results (QA) -----------------------------------------
         api.MapGet("/test-results", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, int? testType = null, string? position = null,
@@ -598,6 +644,29 @@ public static class ApiEndpoints
            .WithName("GetCustomerContact").WithTags("Customers")
            .WithSummary("Get one customer contact by id.")
            .Produces<CustomerContact>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapPost("/customers/{customerId:long}/contacts", async (long customerId, CustomerContactWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateCustomerContactAsync(customerId, body, ct);
+                return Results.Created($"/api/customer-contacts/{created.ContactId}", created);
+            })
+           .WithName("CreateCustomerContact").WithTags("Customers")
+           .WithSummary("Add a contact to a customer (server-assigned id; requires lastName).")
+           .Produces<CustomerContact>(StatusCodes.Status201Created).ProducesValidationProblem();
+
+        api.MapPut("/customer-contacts/{contactId:long}", async (long contactId, CustomerContactWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateCustomerContactAsync(contactId, body, ct) is { } contact
+                    ? Results.Ok(contact)
+                    : Results.NotFound();
+            })
+           .WithName("UpdateCustomerContact").WithTags("Customers")
+           .WithSummary("Replace a customer contact (owning customer unchanged).")
+           .Produces<CustomerContact>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
         api.MapPost("/customers", async (CustomerWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
@@ -746,6 +815,30 @@ public static class ApiEndpoints
         var errors = new Dictionary<string, string[]>();
         if (string.IsNullOrWhiteSpace(body.CarrierFullName))
             errors["carrierFullName"] = ["carrierFullName is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(DieWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (string.IsNullOrWhiteSpace(body.DieName))
+            errors["dieName"] = ["dieName is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(SketchWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (string.IsNullOrWhiteSpace(body.SketchName))
+            errors["sketchName"] = ["sketchName is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(CustomerContactWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (string.IsNullOrWhiteSpace(body.LastName))
+            errors["lastName"] = ["lastName is required."];
         return errors.Count == 0 ? null : errors;
     }
 

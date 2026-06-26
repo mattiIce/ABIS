@@ -46,6 +46,20 @@ public sealed class DatabaseTests
     }
 
     [Fact]
+    public void Oracle_customer_contact_needs_an_override_for_its_sequence()
+    {
+        // customer_contact breaks the {idColumn}_seq convention: its id column is
+        // contact_id (→ contact_id_seq by convention) but the real sequence is
+        // CUSTOMER_CONTACT_ID_SEQ. The shipped appsettings configures this override.
+        var convention = Factory("Oracle").NextIdQuery("customer_contact", "contact_id");
+        Assert.Equal("SELECT contact_id_seq.NEXTVAL FROM dual", convention);
+
+        var overridden = Factory("Oracle", o => o.Sequences["customer_contact"] = "customer_contact_id_seq")
+            .NextIdQuery("customer_contact", "contact_id");
+        Assert.Equal("SELECT customer_contact_id_seq.NEXTVAL FROM dual", overridden);
+    }
+
+    [Fact]
     public void Oracle_next_id_rejects_an_unsafe_sequence_name()
     {
         var factory = Factory("Oracle", o => o.Sequences["coil"] = "evil; DROP TABLE coil");

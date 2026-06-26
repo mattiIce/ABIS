@@ -51,6 +51,8 @@ public interface IAbisRepository
     Task<Customer?> GetCustomerAsync(long customerId, CancellationToken ct);
     Task<IReadOnlyList<CustomerContact>> GetCustomerContactsAsync(long customerId, CancellationToken ct);
     Task<CustomerContact?> GetCustomerContactAsync(long contactId, CancellationToken ct);
+    Task<CustomerContact> CreateCustomerContactAsync(long customerId, CustomerContactWrite body, CancellationToken ct);
+    Task<CustomerContact?> UpdateCustomerContactAsync(long contactId, CustomerContactWrite body, CancellationToken ct);
     Task<Customer> CreateCustomerAsync(CustomerWrite body, CancellationToken ct);
     Task<Customer?> UpdateCustomerAsync(long customerId, CustomerWrite body, CancellationToken ct);
 
@@ -74,6 +76,8 @@ public interface IAbisRepository
     Task<Part?> UpdatePartAsync(long partNumId, PartWrite body, CancellationToken ct);
     Task<PagedResult<Die>> GetDiesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct);
     Task<Die?> GetDieAsync(long dieId, CancellationToken ct);
+    Task<Die> CreateDieAsync(DieWrite body, CancellationToken ct);
+    Task<Die?> UpdateDieAsync(long dieId, DieWrite body, CancellationToken ct);
     Task<Carrier> CreateCarrierAsync(CarrierWrite body, CancellationToken ct);
     Task<Carrier?> UpdateCarrierAsync(long carrierId, CarrierWrite body, CancellationToken ct);
 
@@ -97,6 +101,8 @@ public interface IAbisRepository
     Task<DowntimeInstance?> GetDowntimeInstanceAsync(long instanceNum, CancellationToken ct);
     Task<PagedResult<Sketch>> GetSketchesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct);
     Task<Sketch?> GetSketchAsync(long sketchId, CancellationToken ct);
+    Task<Sketch> CreateSketchAsync(SketchWrite body, CancellationToken ct);
+    Task<Sketch?> UpdateSketchAsync(long sketchId, SketchWrite body, CancellationToken ct);
 
     // ---- Lookups (reference data for data-entry screens) ---------------
     Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct);

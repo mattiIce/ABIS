@@ -786,6 +786,38 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {DieCols} FROM die WHERE die_id = :id", new { id = dieId }, cancellationToken: ct));
     }
 
+    public async Task<Die> CreateDieAsync(DieWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "die", "die_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO die (die_id, die_name, status, tool_num, part_name, gross_weight, location, description)
+            VALUES (:id, :name, :status, :tool, :part, :weight, :loc, :desc)
+            """,
+            new { id, name = body.DieName, status = body.Status, tool = body.ToolNum, part = body.PartName,
+                  weight = body.GrossWeight, loc = body.Location, desc = body.Description },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetDieAsync(id, ct))!;
+    }
+
+    public async Task<Die?> UpdateDieAsync(long dieId, DieWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE die SET die_name = :name, status = :status, tool_num = :tool, part_name = :part,
+                   gross_weight = :weight, location = :loc, description = :desc
+            WHERE die_id = :id
+            """,
+            new { name = body.DieName, status = body.Status, tool = body.ToolNum, part = body.PartName,
+                  weight = body.GrossWeight, loc = body.Location, desc = body.Description, id = dieId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetDieAsync(dieId, ct);
+    }
+
     public Task<PagedResult<Shipment>> GetShipmentsAsync(int page, int pageSize, long? customerId, string? orderBy, CancellationToken ct) =>
         PageAsync<Shipment>(ShipmentCols, "shipment", orderBy ?? "packing_list",
             customerId is null ? null : "customer_id = :customerId",
@@ -941,6 +973,42 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {ContactCols} FROM customer_contact WHERE contact_id = :id", new { id = contactId }, cancellationToken: ct));
     }
 
+    public async Task<CustomerContact> CreateCustomerContactAsync(long customerId, CustomerContactWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        // customer_contact's sequence is CUSTOMER_CONTACT_ID_SEQ — it does NOT follow
+        // the {idColumn}_seq convention (id column is contact_id), so a per-table
+        // override is configured (Database:Sequences). The owning customer comes from the route.
+        var id = await NextIdAsync(conn, tx, "customer_contact", "contact_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO customer_contact (contact_id, customer_id, first_name, last_name, department, city, state, phone1, email1)
+            VALUES (:id, :cust, :first, :last, :dept, :city, :state, :phone, :email)
+            """,
+            new { id, cust = customerId, first = body.FirstName, last = body.LastName, dept = body.Department,
+                  city = body.City, state = body.State, phone = body.Phone1, email = body.Email1 },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetCustomerContactAsync(id, ct))!;
+    }
+
+    public async Task<CustomerContact?> UpdateCustomerContactAsync(long contactId, CustomerContactWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // customer_id is the owning FK (set on create from the route), so it's not changed here.
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE customer_contact SET first_name = :first, last_name = :last, department = :dept,
+                   city = :city, state = :state, phone1 = :phone, email1 = :email
+            WHERE contact_id = :id
+            """,
+            new { first = body.FirstName, last = body.LastName, dept = body.Department, city = body.City,
+                  state = body.State, phone = body.Phone1, email = body.Email1, id = contactId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetCustomerContactAsync(contactId, ct);
+    }
+
     public Task<PagedResult<Sketch>> GetSketchesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct) =>
         PageAsync<Sketch>(SketchCols, "sketch", orderBy ?? "sketch_id",
             status is null ? null : "sketch_status = :status",
@@ -951,6 +1019,37 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         return await conn.QuerySingleOrDefaultAsync<Sketch>(new CommandDefinition(
             $"SELECT {SketchCols} FROM sketch WHERE sketch_id = :id", new { id = sketchId }, cancellationToken: ct));
+    }
+
+    public async Task<Sketch> CreateSketchAsync(SketchWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "sketch", "sketch_id", ct);
+        // The binary sketch_view (LONG RAW image) is never written through this API.
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO sketch (sketch_id, sketch_name, sketch_notes, sketch_sys_note, sketch_status)
+            VALUES (:id, :name, :notes, :sysNote, :status)
+            """,
+            new { id, name = body.SketchName, notes = body.SketchNotes, sysNote = body.SketchSysNote, status = body.SketchStatus },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetSketchAsync(id, ct))!;
+    }
+
+    public async Task<Sketch?> UpdateSketchAsync(long sketchId, SketchWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE sketch SET sketch_name = :name, sketch_notes = :notes,
+                   sketch_sys_note = :sysNote, sketch_status = :status
+            WHERE sketch_id = :id
+            """,
+            new { name = body.SketchName, notes = body.SketchNotes, sysNote = body.SketchSysNote, status = body.SketchStatus, id = sketchId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetSketchAsync(sketchId, ct);
     }
 
     public async Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct)
