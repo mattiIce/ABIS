@@ -215,12 +215,14 @@ public static class ApiEndpoints
 
         api.MapPost("/orders", async (CustomerOrderWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
                 var created = await repo.CreateOrderAsync(body, ct);
                 return Results.Created($"/api/orders/{created.OrderAbcNum}", created);
             })
            .WithName("CreateOrder").WithTags("Orders")
            .WithSummary("Create an order header.")
-           .Produces<CustomerOrder>(StatusCodes.Status201Created);
+           .Produces<CustomerOrder>(StatusCodes.Status201Created).ProducesValidationProblem();
 
         // Order-entry "save": create the header and its line items in one transaction.
         api.MapPost("/orders/with-items", async (OrderCreateWithItems body, IAbisRepository repo, CancellationToken ct) =>
@@ -235,12 +237,16 @@ public static class ApiEndpoints
            .Produces<OrderDetail>(StatusCodes.Status201Created).ProducesValidationProblem();
 
         api.MapPut("/orders/{orderAbcNum:long}", async (long orderAbcNum, CustomerOrderWrite body, IAbisRepository repo, CancellationToken ct) =>
-                await repo.UpdateOrderAsync(orderAbcNum, body, ct) is { } order
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateOrderAsync(orderAbcNum, body, ct) is { } order
                     ? Results.Ok(order)
-                    : Results.NotFound())
+                    : Results.NotFound();
+            })
            .WithName("UpdateOrder").WithTags("Orders")
            .WithSummary("Replace an order header.")
-           .Produces<CustomerOrder>().Produces(StatusCodes.Status404NotFound);
+           .Produces<CustomerOrder>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
         // ---- Order items ------------------------------------------------
         api.MapGet("/order-items", async (IAbisRepository repo, CancellationToken ct,
@@ -395,20 +401,26 @@ public static class ApiEndpoints
 
         api.MapPost("/shipments", async (ShipmentWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
                 var created = await repo.CreateShipmentAsync(body, ct);
                 return Results.Created($"/api/shipments/{created.PackingList}", created);
             })
            .WithName("CreateShipment").WithTags("Shipments")
            .WithSummary("Create a shipment header (packing-list and bill-of-lading numbers server-assigned).")
-           .Produces<Shipment>(StatusCodes.Status201Created);
+           .Produces<Shipment>(StatusCodes.Status201Created).ProducesValidationProblem();
 
         api.MapPut("/shipments/{packingList:long}", async (long packingList, ShipmentWrite body, IAbisRepository repo, CancellationToken ct) =>
-                await repo.UpdateShipmentAsync(packingList, body, ct) is { } shipment
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateShipmentAsync(packingList, body, ct) is { } shipment
                     ? Results.Ok(shipment)
-                    : Results.NotFound())
+                    : Results.NotFound();
+            })
            .WithName("UpdateShipment").WithTags("Shipments")
            .WithSummary("Replace a shipment header (packing-list and bill-of-lading numbers preserved).")
-           .Produces<Shipment>().Produces(StatusCodes.Status404NotFound);
+           .Produces<Shipment>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
         api.MapPatch("/shipments/{packingList:long}", async (long packingList, ShipmentStatusPatch body, IAbisRepository repo, CancellationToken ct) =>
                 await repo.PatchShipmentAsync(packingList, body, ct) is { } shipment
@@ -606,20 +618,26 @@ public static class ApiEndpoints
 
         api.MapPost("/shifts", async (ShiftWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
                 var created = await repo.CreateShiftAsync(body, ct);
                 return Results.Created($"/api/shifts/{created.ShiftNum}", created);
             })
            .WithName("CreateShift").WithTags("Shifts")
            .WithSummary("Create a production shift.")
-           .Produces<Shift>(StatusCodes.Status201Created);
+           .Produces<Shift>(StatusCodes.Status201Created).ProducesValidationProblem();
 
         api.MapPut("/shifts/{shiftNum:long}", async (long shiftNum, ShiftWrite body, IAbisRepository repo, CancellationToken ct) =>
-                await repo.UpdateShiftAsync(shiftNum, body, ct) is { } shift
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateShiftAsync(shiftNum, body, ct) is { } shift
                     ? Results.Ok(shift)
-                    : Results.NotFound())
+                    : Results.NotFound();
+            })
            .WithName("UpdateShift").WithTags("Shifts")
            .WithSummary("Replace a production shift.")
-           .Produces<Shift>().Produces(StatusCodes.Status404NotFound);
+           .Produces<Shift>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
         // ---- Downtime instances ----------------------------------------
         api.MapGet("/downtime", async (IAbisRepository repo, CancellationToken ct,
@@ -643,20 +661,26 @@ public static class ApiEndpoints
 
         api.MapPost("/downtime", async (DowntimeInstanceWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
                 var created = await repo.CreateDowntimeInstanceAsync(body, ct);
                 return Results.Created($"/api/downtime/{created.InstanceNum}", created);
             })
            .WithName("CreateDowntimeInstance").WithTags("Downtime")
            .WithSummary("Log a downtime instance.")
-           .Produces<DowntimeInstance>(StatusCodes.Status201Created);
+           .Produces<DowntimeInstance>(StatusCodes.Status201Created).ProducesValidationProblem();
 
         api.MapPut("/downtime/{instanceNum:long}", async (long instanceNum, DowntimeInstanceWrite body, IAbisRepository repo, CancellationToken ct) =>
-                await repo.UpdateDowntimeInstanceAsync(instanceNum, body, ct) is { } dt
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateDowntimeInstanceAsync(instanceNum, body, ct) is { } dt
                     ? Results.Ok(dt)
-                    : Results.NotFound())
+                    : Results.NotFound();
+            })
            .WithName("UpdateDowntimeInstance").WithTags("Downtime")
            .WithSummary("Replace a downtime instance.")
-           .Produces<DowntimeInstance>().Produces(StatusCodes.Status404NotFound);
+           .Produces<DowntimeInstance>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
         // ---- Sketches --------------------------------------------------
         api.MapGet("/sketches", async (IAbisRepository repo, CancellationToken ct,
@@ -937,127 +961,234 @@ public static class ApiEndpoints
         return app;
     }
 
+    // Lightweight per-field validators. Max lengths mirror the Oracle column widths in
+    // docs/data-model/oracle_ddl.sql so over-long or missing-required input fails fast as
+    // a 400 ProblemDetails instead of an opaque DB 500 (ORA-12899 / ORA-01400).
+    private static void Req(Dictionary<string, string[]> e, string field, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) e[field] = [$"{field} is required."];
+    }
+
+    private static void Req(Dictionary<string, string[]> e, string field, long? value)
+    {
+        if (value is null) e[field] = [$"{field} is required."];
+    }
+
+    private static void Req(Dictionary<string, string[]> e, string field, DateTime? value)
+    {
+        if (value is null) e[field] = [$"{field} is required."];
+    }
+
+    private static void Max(Dictionary<string, string[]> e, string field, string? value, int max)
+    {
+        if (value is not null && value.Length > max) e[field] = [$"{field} must be {max} characters or fewer."];
+    }
+
     /// <summary>Returns a ProblemDetails error dictionary, or null when valid.</summary>
     private static Dictionary<string, string[]>? Validate(CustomerWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(body.CustomerName))
-            errors["customerName"] = ["customerName is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        Req(e, "customerName", body.CustomerName);
+        Max(e, "customerName", body.CustomerName, 60);
+        Max(e, "customerShortName", body.CustomerShortName, 18);
+        Max(e, "customerCity", body.CustomerCity, 18);
+        Max(e, "customerState", body.CustomerState, 30);
+        Max(e, "customerZip", body.CustomerZip, 18);
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(OrderItemWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(body.EnduserPartNum))
-            errors["enduserPartNum"] = ["enduserPartNum is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        Req(e, "enduserPartNum", body.EnduserPartNum);
+        Max(e, "enduserPartNum", body.EnduserPartNum, 22);
+        Req(e, "sheetType", body.SheetType);              // sheet_type is CHAR(18) NOT NULL
+        Max(e, "sheetType", body.SheetType, 18);
+        Max(e, "alloy2", body.Alloy2, 8);
+        Max(e, "temper", body.Temper, 8);
+        Max(e, "surface", body.Surface, 255);
+        Max(e, "flatness", body.Flatness, 255);
+        Max(e, "materialEndUse", body.MaterialEndUse, 255);
+        Max(e, "orderItemDesc", body.OrderItemDesc, 255);
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(PartWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (body.CustomerId is null)
-            errors["customerId"] = ["customerId is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        Req(e, "customerId", body.CustomerId);
+        Max(e, "enduserPartNum", body.EnduserPartNum, 22);
+        Max(e, "sheetType", body.SheetType, 18);
+        Max(e, "alloy", body.Alloy, 8);
+        Max(e, "temper", body.Temper, 8);
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(CarrierWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(body.CarrierFullName))
-            errors["carrierFullName"] = ["carrierFullName is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        Req(e, "carrierFullName", body.CarrierFullName);
+        Max(e, "carrierFullName", body.CarrierFullName, 60);
+        Max(e, "scac", body.Scac, 8);
+        Max(e, "carrierTypeCode", body.CarrierTypeCode, 36);
+        Max(e, "carrierCity", body.CarrierCity, 18);
+        Max(e, "carrierState", body.CarrierState, 30);
+        Max(e, "carrierPhoneNumber", body.CarrierPhoneNumber, 18);
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(DieWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(body.DieName))
-            errors["dieName"] = ["dieName is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        Req(e, "dieName", body.DieName);
+        Max(e, "dieName", body.DieName, 32);
+        Max(e, "toolNum", body.ToolNum, 32);
+        Max(e, "partName", body.PartName, 64);
+        Max(e, "location", body.Location, 32);
+        Max(e, "description", body.Description, 64);
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(SketchWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(body.SketchName))
-            errors["sketchName"] = ["sketchName is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        Req(e, "sketchName", body.SketchName);
+        Max(e, "sketchName", body.SketchName, 16);
+        Max(e, "sketchNotes", body.SketchNotes, 1024);
+        Max(e, "sketchSysNote", body.SketchSysNote, 255);
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(CustomerContactWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(body.LastName))
-            errors["lastName"] = ["lastName is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        Req(e, "lastName", body.LastName);
+        Max(e, "lastName", body.LastName, 18);
+        Max(e, "firstName", body.FirstName, 18);
+        Max(e, "department", body.Department, 18);
+        Max(e, "city", body.City, 18);
+        Max(e, "state", body.State, 30);
+        Max(e, "phone1", body.Phone1, 18);
+        Max(e, "email1", body.Email1, 50);
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(ReceivingBolWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(body.Bol))
-            errors["bol"] = ["bol is required."];
-        if (body.CustomerId is null)
-            errors["customerId"] = ["customerId is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        Req(e, "bol", body.Bol);
+        Max(e, "bol", body.Bol, 32);
+        Req(e, "customerId", body.CustomerId);
+        Max(e, "createdBy", body.CreatedBy, 32);
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(ScanLogWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (body.AbJobNum is null)
-            errors["abJobNum"] = ["abJobNum is required."];
-        if (string.IsNullOrWhiteSpace(body.ScanStation))
-            errors["scanStation"] = ["scanStation is required."];
-        if (string.IsNullOrWhiteSpace(body.Note))
-            errors["note"] = ["note is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        Req(e, "abJobNum", body.AbJobNum);
+        Req(e, "scanStation", body.ScanStation);
+        Max(e, "scanStation", body.ScanStation, 16);
+        Req(e, "note", body.Note);
+        Max(e, "note", body.Note, 128);
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(MaintLogWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (body.ProbDateTime is null)
-            errors["probDateTime"] = ["probDateTime is required."];
-        if (string.IsNullOrWhiteSpace(body.ProbDetails))
-            errors["probDetails"] = ["probDetails is required."];
-        if (string.IsNullOrWhiteSpace(body.Author))
-            errors["author"] = ["author is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        Req(e, "probDateTime", body.ProbDateTime);
+        Req(e, "probDetails", body.ProbDetails);
+        Max(e, "probDetails", body.ProbDetails, 1024);
+        Req(e, "author", body.Author);
+        Max(e, "author", body.Author, 64);
+        Max(e, "maintLogStatus", body.MaintLogStatus, 128);
+        Max(e, "systemEquipment", body.SystemEquipment, 128);
+        Max(e, "subsystemEquipment", body.SubsystemEquipment, 128);
+        Max(e, "itemDevice", body.ItemDevice, 128);
+        Max(e, "actions", body.Actions, 1024);
+        Max(e, "reportedBy", body.ReportedBy, 64);
+        Max(e, "assignedTo", body.AssignedTo, 128);
+        Max(e, "completedBy", body.CompletedBy, 128);
+        return e.Count == 0 ? null : e;
+    }
+
+    private static Dictionary<string, string[]>? Validate(CustomerOrderWrite body)
+    {
+        var e = new Dictionary<string, string[]>();
+        Req(e, "origCustomerPo", body.OrigCustomerPo);
+        Max(e, "origCustomerPo", body.OrigCustomerPo, 36);
+        Max(e, "enduserPo", body.EnduserPo, 36);
+        Max(e, "scrapHandingType", body.ScrapHandingType, 18);
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(OrderCreateWithItems body)
     {
-        var errors = new Dictionary<string, string[]>();
+        var e = new Dictionary<string, string[]>();
+        if (Validate(body.Order) is { } oe)
+            foreach (var kv in oe) e[$"order.{kv.Key}"] = kv.Value;
         for (var i = 0; i < body.Items.Count; i++)
-            if (string.IsNullOrWhiteSpace(body.Items[i].EnduserPartNum))
-                errors[$"items[{i}].enduserPartNum"] = ["enduserPartNum is required."];
-        return errors.Count == 0 ? null : errors;
+            if (Validate(body.Items[i]) is { } ie)
+                foreach (var kv in ie) e[$"items[{i}].{kv.Key}"] = kv.Value;
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(CoilWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(body.CoilAlloy2))
-            errors["coilAlloy2"] = ["coilAlloy2 is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        Req(e, "coilAlloy2", body.CoilAlloy2);
+        Max(e, "coilAlloy2", body.CoilAlloy2, 8);
+        Max(e, "coilTemper", body.CoilTemper, 8);
+        Max(e, "coilLocation", body.CoilLocation, 18);
+        Max(e, "coilMidNum", body.CoilMidNum, 18);
+        Max(e, "coilOrgNum", body.CoilOrgNum, 32);
+        Max(e, "coilNotes", body.CoilNotes, 255);
+        Max(e, "icra", body.Icra, 18);
+        Max(e, "lotNum", body.LotNum, 18);
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(SheetSkidWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (body.AbJobNum <= 0)
-            errors["abJobNum"] = ["abJobNum is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        if (body.AbJobNum <= 0) e["abJobNum"] = ["abJobNum is required."];
+        Max(e, "sheetSkidDisplayNum", body.SheetSkidDisplayNum, 16);
+        return e.Count == 0 ? null : e;
     }
 
     private static Dictionary<string, string[]>? Validate(ScrapSkidWrite body)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(body.ScrapAbJobNum))
-            errors["scrapAbJobNum"] = ["scrapAbJobNum is required."];
-        return errors.Count == 0 ? null : errors;
+        var e = new Dictionary<string, string[]>();
+        Req(e, "scrapAbJobNum", body.ScrapAbJobNum);
+        Max(e, "scrapAbJobNum", body.ScrapAbJobNum, 18);
+        Max(e, "scrapAlloy2", body.ScrapAlloy2, 8);
+        Max(e, "scrapTemper", body.ScrapTemper, 8);
+        Max(e, "scrapLocation", body.ScrapLocation, 18);
+        Max(e, "scrapNotes", body.ScrapNotes, 255);
+        return e.Count == 0 ? null : e;
+    }
+
+    private static Dictionary<string, string[]>? Validate(ShipmentWrite body)
+    {
+        var e = new Dictionary<string, string[]>();
+        Max(e, "vehicleId", body.VehicleId, 32);
+        Max(e, "shipmentNotes", body.ShipmentNotes, 255);
+        return e.Count == 0 ? null : e;
+    }
+
+    private static Dictionary<string, string[]>? Validate(ShiftWrite body)
+    {
+        var e = new Dictionary<string, string[]>();
+        Max(e, "operatorInitial", body.OperatorInitial, 10);
+        Max(e, "note", body.Note, 1024);
+        return e.Count == 0 ? null : e;
+    }
+
+    private static Dictionary<string, string[]>? Validate(DowntimeInstanceWrite body)
+    {
+        var e = new Dictionary<string, string[]>();
+        Max(e, "note", body.Note, 255);
+        return e.Count == 0 ? null : e;
     }
 }

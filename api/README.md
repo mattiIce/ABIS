@@ -13,7 +13,9 @@ missing integration point every later modernization step builds on
 > receiving BOLs), shop-floor and operations records (scan events, maintenance
 > logs, shifts, downtime), and operational partial updates (PATCH) to jobs,
 > coils, and shipment dispatch. The write path (sequence-backed ids) is
-> validated against the live Oracle database.
+> validated against the live Oracle database. Write requests are checked for
+> required fields and column-width limits and rejected with `400 ProblemDetails`
+> before reaching the database (the limits mirror the Oracle schema).
 
 ## Stack
 
