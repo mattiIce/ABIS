@@ -54,7 +54,7 @@ public static class Sort
             DefaultOrderBy: "order_item_num", TieBreaker: "order_item_num"),
 
         ["customers"] = new(Cols(
-            ("customerId", "customer_id"), ("name", "customer_name"), ("shortName", "customer_short_name")),
+            ("customerId", "customer_id"), ("name", "customer_full_name"), ("shortName", "customer_short_name")),
             DefaultOrderBy: "customer_id", TieBreaker: "customer_id"),
 
         ["parts"] = new(Cols(

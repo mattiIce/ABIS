@@ -3991,11 +3991,15 @@
             "type": "string",
             "nullable": true
           },
-          "enduserName": {
+          "customerCity": {
             "type": "string",
             "nullable": true
           },
-          "shiptoCustomerZip": {
+          "customerState": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerZip": {
             "type": "string",
             "nullable": true
           }
@@ -4178,11 +4182,15 @@
             "type": "string",
             "nullable": true
           },
-          "enduserName": {
+          "customerCity": {
             "type": "string",
             "nullable": true
           },
-          "shiptoCustomerZip": {
+          "customerState": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerZip": {
             "type": "string",
             "nullable": true
           }

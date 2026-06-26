@@ -6,10 +6,12 @@ namespace Abis.Api.Models;
 /// <summary>Create or fully replace a customer. <see cref="CustomerName"/> is required.</summary>
 public sealed class CustomerWrite
 {
+    /// <summary>Maps to <c>customer_full_name</c> (required, NOT NULL).</summary>
     public string? CustomerName { get; set; }
     public string? CustomerShortName { get; set; }
-    public string? EnduserName { get; set; }
-    public string? ShiptoCustomerZip { get; set; }
+    public string? CustomerCity { get; set; }
+    public string? CustomerState { get; set; }
+    public string? CustomerZip { get; set; }
 }
 
 /// <summary>Partial update of a production job. Null fields are left unchanged

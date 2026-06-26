@@ -170,14 +170,16 @@ public sealed class CoilInventoryGroup
     public decimal? TotalBalance { get; set; }
 }
 
-/// <summary>A customer / trading partner (table <c>customer</c>).</summary>
+/// <summary>A customer / trading partner (table <c>customer</c>). <c>CustomerName</c>
+/// maps to the real column <c>customer_full_name</c>.</summary>
 public sealed class Customer
 {
     public long CustomerId { get; set; }
     public string? CustomerName { get; set; }
     public string? CustomerShortName { get; set; }
-    public string? EnduserName { get; set; }
-    public string? ShiptoCustomerZip { get; set; }
+    public string? CustomerCity { get; set; }
+    public string? CustomerState { get; set; }
+    public string? CustomerZip { get; set; }
 }
 
 /// <summary>A finished output skid produced by a job (table <c>sheet_skid</c>).</summary>

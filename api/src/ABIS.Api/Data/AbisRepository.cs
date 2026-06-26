@@ -68,8 +68,8 @@ public sealed class AbisRepository : IAbisRepository
         """;
 
     private const string CustomerCols = """
-        customer_id AS CustomerId, customer_name AS CustomerName, customer_short_name AS CustomerShortName,
-        enduser_name AS EnduserName, shipto_customer_zip AS ShiptoCustomerZip
+        customer_id AS CustomerId, customer_full_name AS CustomerName, customer_short_name AS CustomerShortName,
+        customer_city AS CustomerCity, customer_state AS CustomerState, customer_zip AS CustomerZip
         """;
 
     private const string SheetSkidCols = """
@@ -382,7 +382,7 @@ public sealed class AbisRepository : IAbisRepository
 
     public Task<PagedResult<Customer>> GetCustomersAsync(int page, int pageSize, string? name, string? orderBy, CancellationToken ct) =>
         PageAsync<Customer>(CustomerCols, "customer", orderBy ?? "customer_id",
-            name is null ? null : "customer_name LIKE :name",
+            name is null ? null : "customer_full_name LIKE :name",
             new { name = name is null ? null : $"%{name}%" }, page, pageSize, ct);
 
     public async Task<Customer?> GetCustomerAsync(long customerId, CancellationToken ct)
@@ -401,10 +401,10 @@ public sealed class AbisRepository : IAbisRepository
 
         await conn.ExecuteAsync(new CommandDefinition(
             """
-            INSERT INTO customer (customer_id, customer_name, customer_short_name, enduser_name, shipto_customer_zip)
-            VALUES (:id, :name, :shortName, :enduser, :zip)
+            INSERT INTO customer (customer_id, customer_full_name, customer_short_name, customer_city, customer_state, customer_zip)
+            VALUES (:id, :name, :shortName, :city, :state, :zip)
             """,
-            new { id, name = body.CustomerName, shortName = body.CustomerShortName, enduser = body.EnduserName, zip = body.ShiptoCustomerZip },
+            new { id, name = body.CustomerName, shortName = body.CustomerShortName, city = body.CustomerCity, state = body.CustomerState, zip = body.CustomerZip },
             transaction: tx, cancellationToken: ct));
 
         await tx.CommitAsync(ct);
@@ -416,11 +416,11 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
-            UPDATE customer SET customer_name = :name, customer_short_name = :shortName,
-                   enduser_name = :enduser, shipto_customer_zip = :zip
+            UPDATE customer SET customer_full_name = :name, customer_short_name = :shortName,
+                   customer_city = :city, customer_state = :state, customer_zip = :zip
             WHERE customer_id = :id
             """,
-            new { name = body.CustomerName, shortName = body.CustomerShortName, enduser = body.EnduserName, zip = body.ShiptoCustomerZip, id = customerId },
+            new { name = body.CustomerName, shortName = body.CustomerShortName, city = body.CustomerCity, state = body.CustomerState, zip = body.CustomerZip, id = customerId },
             cancellationToken: ct));
         return n == 0 ? null : await GetCustomerAsync(customerId, ct);
     }

@@ -77,8 +77,8 @@ public static class SqliteFixture
                 thickness REAL, width REAL);
 
             CREATE TABLE customer (
-                customer_id INTEGER PRIMARY KEY, customer_name TEXT, customer_short_name TEXT,
-                enduser_name TEXT, shipto_customer_zip TEXT);
+                customer_id INTEGER PRIMARY KEY, customer_full_name TEXT, customer_short_name TEXT,
+                customer_city TEXT, customer_state TEXT, customer_zip TEXT);
 
             CREATE TABLE sheet_skid (
                 sheet_skid_num INTEGER PRIMARY KEY, ab_job_num INTEGER, sheet_skid_display_num TEXT,
@@ -351,13 +351,13 @@ public static class SqliteFixture
             });
 
         conn.Execute("""
-            INSERT INTO customer (customer_id, customer_name, customer_short_name, enduser_name, shipto_customer_zip)
-            VALUES (:CustomerId, :CustomerName, :CustomerShortName, :EnduserName, :ShiptoCustomerZip)
+            INSERT INTO customer (customer_id, customer_full_name, customer_short_name, customer_city, customer_state, customer_zip)
+            VALUES (:CustomerId, :CustomerFullName, :CustomerShortName, :CustomerCity, :CustomerState, :CustomerZip)
             """,
             new[]
             {
-                new { CustomerId = 4001L, CustomerName = "ACME METALS", CustomerShortName = "ACME", EnduserName = "ACME END USE", ShiptoCustomerZip = "48201" },
-                new { CustomerId = 4002L, CustomerName = "BETA FAB", CustomerShortName = "BETA", EnduserName = "BETA END USE", ShiptoCustomerZip = "44101" }
+                new { CustomerId = 4001L, CustomerFullName = "ACME METALS", CustomerShortName = "ACME", CustomerCity = "Detroit", CustomerState = "MI", CustomerZip = "48201" },
+                new { CustomerId = 4002L, CustomerFullName = "BETA FAB", CustomerShortName = "BETA", CustomerCity = "Cleveland", CustomerState = "OH", CustomerZip = "44101" }
             });
 
         conn.Execute("""
