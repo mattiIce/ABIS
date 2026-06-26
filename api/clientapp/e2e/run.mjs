@@ -16,6 +16,7 @@ import {
   ShipmentStatusPatch,
   MaintLogWrite,
   DieWrite,
+  DowntimeInstanceWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -64,6 +65,20 @@ test('createOrderWithItems writes via typed DTOs and returns a typed OrderDetail
   assert.ok(detail.order.orderAbcNum > 0);
   assert.equal(detail.items.length, 1);
   assert.equal(detail.items[0].enduserPartNum, 'PN-E2E');
+});
+
+// The downtime SPA's flow: create an instance, then load + replace it (typed).
+test('downtime flow: create, get, update instance (typed)', async () => {
+  const created = await client.createDowntimeInstance(new DowntimeInstanceWrite({
+    abJobNum: 25000, lineNum: 1, startingTime: new Date(), note: 'E2E downtime',
+  }));
+  assert.ok(created.instanceNum > 0);
+  const got = await client.getDowntimeInstance(created.instanceNum);
+  assert.equal(got.instanceNum, created.instanceNum);
+  const updated = await client.updateDowntimeInstance(created.instanceNum, new DowntimeInstanceWrite({
+    abJobNum: 25000, lineNum: 1, startingTime: new Date(), note: 'E2E downtime edited',
+  }));
+  assert.equal(updated.note, 'E2E downtime edited');
 });
 
 // The dies SPA's flow: create a die, then load + replace it (typed).
