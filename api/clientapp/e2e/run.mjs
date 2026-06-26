@@ -17,6 +17,7 @@ import {
   MaintLogWrite,
   DieWrite,
   DowntimeInstanceWrite,
+  ReceivingBolWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -89,6 +90,20 @@ test('dies flow: create, get, update die (typed)', async () => {
   assert.equal(got.dieId, created.dieId);
   const updated = await client.updateDie(created.dieId, new DieWrite({ dieName: 'E2E-DIE', status: 1, location: 'BAY-9' }));
   assert.equal(updated.location, 'BAY-9');
+});
+
+// The receiving SPA's flow: create a BOL, then load + replace it (typed).
+test('receiving flow: create, get, update receiving BOL (typed)', async () => {
+  const created = await client.createReceivingBol(new ReceivingBolWrite({
+    bol: 'E2E-BOL', customerId: 4001, createdBy: 'e2e', status: 0,
+  }));
+  assert.ok(created.receivingBolId > 0);
+  const got = await client.getReceivingBol(created.receivingBolId);
+  assert.equal(got.bol, 'E2E-BOL');
+  const updated = await client.updateReceivingBol(created.receivingBolId, new ReceivingBolWrite({
+    bol: 'E2E-BOL', customerId: 4001, createdBy: 'e2e', status: 1,
+  }));
+  assert.equal(updated.status, 1);
 });
 
 // The maintenance SPA's flow: create a log, then load + replace it (typed).
