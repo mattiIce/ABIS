@@ -162,6 +162,7 @@ The codebase is deliberately uniform. To add a resource:
 |---|---|
 | [`MODERNIZATION_ROADMAP.md`](MODERNIZATION_ROADMAP.md) | Strategy + phased checklist |
 | [`PHASE3_PILOT_PLAN.md`](PHASE3_PILOT_PLAN.md) | The PowerServer-vs-greenfield bake-off |
+| [`PHASE3_PILOT_LOG.md`](PHASE3_PILOT_LOG.md) | Live pilot results + scoring (Path C executed; Path B blocked) |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | As-is system, integration surface, build-readiness |
 | [`INTEGRATIONS.md`](INTEGRATIONS.md) | External integration catalog (EDI, serial/WSC32, OPC) |
 | [`DATA_MODEL.md`](DATA_MODEL.md) | Full recovered schema (live Oracle, 412 tables) |
