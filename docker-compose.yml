@@ -27,5 +27,9 @@ services:
       ApiKeys__Keys__0: "${ABIS_API_KEY}"
       # opc_action_log is absent in the live DBO schema; auditing self-disables.
       Audit__Enabled: "false"
+      # Container timezone — a region Oracle 11g recognizes (avoids ORA-01882 on
+      # connect, and gives correct local-time semantics). Defaults to the plant's
+      # US Eastern; override per site.
+      TZ: "${ABIS_TZ:-America/New_York}"
     restart: unless-stopped
     # The image declares a HEALTHCHECK against /health/ready (Oracle connectivity).
