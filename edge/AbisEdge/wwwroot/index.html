@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>DAS — Data Acquisition</title>
+<style>
+  :root {
+    --bg: #0b0f14; --panel: #131a23; --panel2: #0f151d; --line: #233040;
+    --ink: #e8eef5; --muted: #8aa0b6; --good: #27c46b; --bad: #ff4d4f;
+    --uncertain: #f0a020; --accent: #3da9fc; --stale: #6b7a8c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink); font: 16px/1.4 system-ui, Segoe UI, Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased; padding: 14px; min-height: 100%;
+  }
+  header {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding-bottom: 12px; border-bottom: 1px solid var(--line); margin-bottom: 16px;
+  }
+  h1 { font-size: 22px; margin: 0; letter-spacing: 1px; }
+  h1 small { color: var(--muted); font-weight: 400; letter-spacing: 0; }
+  .spacer { flex: 1; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px;
+    border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--muted); font-size: 13px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--stale); }
+  .dot.live { background: var(--good); box-shadow: 0 0 0 0 rgba(39,196,107,.5); animation: pulse 1.8s infinite; }
+  .dot.down { background: var(--bad); }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(39,196,107,.45);} 70%{ box-shadow: 0 0 0 7px rgba(39,196,107,0);} 100%{ box-shadow:0 0 0 0 rgba(39,196,107,0);} }
+  #clock { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+
+  .banner { display: none; background: #3a1416; border: 1px solid var(--bad); color: #ffd7d7;
+    padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; font-weight: 600; }
+  body.disconnected .banner { display: block; }
+
+  .grid { display: grid; gap: 16px; grid-template-columns: minmax(280px, 380px) 1fr; align-items: start; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .panel h2 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
+
+  /* Scale */
+  .scale .value { font-variant-numeric: tabular-nums; font-weight: 700; line-height: 1;
+    font-size: clamp(54px, 11vw, 104px); letter-spacing: -1px; }
+  .scale .unit { font-size: clamp(20px, 3vw, 30px); color: var(--muted); margin-left: 10px; font-weight: 600; }
+  .scale .meta { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px;
+    font-size: 13px; font-weight: 700; border: 1px solid var(--line); }
+  .badge.stable { background: rgba(39,196,107,.12); color: var(--good); border-color: rgba(39,196,107,.4); }
+  .badge.motion { background: rgba(240,160,32,.12); color: var(--uncertain); border-color: rgba(240,160,32,.4); }
+  .age { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .stale .value, .stale .unit { color: var(--stale); }
+
+  /* Tags */
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; }
+  td.tagval { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 22px; }
+  td.tagname { color: var(--ink); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; word-break: break-all; }
+  .q { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .q.Good { background: rgba(39,196,107,.14); color: var(--good); }
+  .q.Bad { background: rgba(255,77,79,.14); color: var(--bad); }
+  .q.Uncertain { background: rgba(240,160,32,.14); color: var(--uncertain); }
+  tr.row-stale td.tagval { color: var(--stale); }
+  .empty { color: var(--muted); padding: 18px 4px; font-style: italic; }
+  footer { margin-top: 18px; color: var(--muted); font-size: 12px; }
+  footer code { color: var(--accent); }
+</style>
+</head>
+<body>
+  <header>
+    <h1>DAS <small>· Data Acquisition</small></h1>
+    <span class="pill"><span id="connDot" class="dot"></span><span id="connText">connecting…</span></span>
+    <span class="pill">scale: <strong id="scaleName">—</strong></span>
+    <span class="pill">opc: <strong id="opcName">—</strong></span>
+    <span class="spacer"></span>
+    <span id="clock"></span>
+  </header>
+
+  <div class="banner">⚠ Lost connection to the edge service — values below are the last seen.</div>
+
+  <div class="grid">
+    <section class="panel scale" id="scalePanel">
+      <h2>Scale / Gauge</h2>
+      <div><span class="value" id="wValue">—</span><span class="unit" id="wUnit"></span></div>
+      <div class="meta">
+        <span class="badge motion" id="wStable" style="display:none">MOTION</span>
+        <span class="badge" id="wMode" style="display:none"></span>
+        <span class="age" id="wAge"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>OPC / PLC Tags</h2>
+      <table>
+        <thead><tr><th style="width:42%">Tag</th><th>Value</th><th>Quality</th><th>Updated</th></tr></thead>
+        <tbody id="tagBody"><tr><td colspan="4" class="empty" id="tagEmpty">Waiting for tag values…</td></tr></tbody>
+      </table>
+    </section>
+  </div>
+
+  <footer>
+    Live readout from the shop-floor edge service (<code>/reading</code>, <code>/tags</code>). This is the modern
+    replacement for the legacy <code>DAS</code> screen — values refresh automatically.
+  </footer>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const STALE_MS = 8000; // a reading older than this is shown dimmed
+
+  const fmtNum = (v) => {
+    if (v === null || v === undefined || v === "") return "—";
+    const n = Number(v);
+    return Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: 3 }) : String(v);
+  };
+  const ageMs = (at) => { const t = Date.parse(at); return Number.isFinite(t) ? Date.now() - t : NaN; };
+  const fmtAge = (at) => {
+    const ms = ageMs(at);
+    if (!Number.isFinite(ms)) return "";
+    const s = Math.max(0, Math.round(ms / 1000));
+    if (s < 60) return s + "s ago";
+    const m = Math.floor(s / 60); return m + "m " + (s % 60) + "s ago";
+  };
+  const esc = (s) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+  let connected = false, lastOkAt = 0;
+  function setConnected(ok) {
+    connected = ok;
+    if (ok) lastOkAt = Date.now();
+    document.body.classList.toggle("disconnected", !ok);
+    $("connDot").className = "dot " + (ok ? "live" : "down");
+    $("connText").textContent = ok ? "live" : "disconnected";
+  }
+
+  async function getJson(url) {
+    const r = await fetch(url, { cache: "no-store" });
+    if (r.status === 503) return { _status: 503 };
+    if (!r.ok) throw new Error(url + " → " + r.status);
+    return r.json();
+  }
+
+  async function pollHealth() {
+    try {
+      const h = await getJson("/health");
+      $("scaleName").textContent = h.scale ?? "—";
+      $("opcName").textContent = h.opc ?? "—";
+      setConnected(true);
+    } catch { setConnected(false); }
+  }
+
+  async function pollReading() {
+    try {
+      const r = await getJson("/reading");
+      setConnected(true);
+      const panel = $("scalePanel");
+      if (r._status === 503) {
+        $("wValue").textContent = "—"; $("wUnit").textContent = "";
+        $("wAge").textContent = "no reading yet"; $("wStable").style.display = "none"; $("wMode").style.display = "none";
+        panel.classList.remove("stale");
+        return;
+      }
+      $("wValue").textContent = fmtNum(r.value);
+      $("wUnit").textContent = r.unit ?? "";
+      const stable = $("wStable");
+      stable.style.display = "inline-flex";
+      stable.className = "badge " + (r.stable ? "stable" : "motion");
+      stable.textContent = r.stable ? "STABLE" : "MOTION";
+      const mode = $("wMode");
+      if (r.mode) { mode.style.display = "inline-flex"; mode.textContent = r.mode; } else { mode.style.display = "none"; }
+      $("wAge").textContent = fmtAge(r.at);
+      panel.classList.toggle("stale", ageMs(r.at) > STALE_MS);
+    } catch { setConnected(false); }
+  }
+
+  async function pollTags() {
+    try {
+      const tags = await getJson("/tags");
+      setConnected(true);
+      const body = $("tagBody");
+      if (!Array.isArray(tags) || tags.length === 0) {
+        body.innerHTML = '<tr><td colspan="4" class="empty">No tags configured (set Edge:Opc:Tags), or none polled yet.</td></tr>';
+        return;
+      }
+      tags.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+      body.innerHTML = tags.map((t) => {
+        const stale = ageMs(t.at) > STALE_MS;
+        const q = ["Good", "Bad", "Uncertain"].includes(t.quality) ? t.quality : "Bad";
+        return `<tr class="${stale ? "row-stale" : ""}">
+          <td class="tagname">${esc(t.name)}</td>
+          <td class="tagval">${esc(fmtNum(t.value))}</td>
+          <td><span class="q ${q}">${esc(t.quality ?? "Bad")}</span></td>
+          <td class="age">${esc(fmtAge(t.at))}</td></tr>`;
+      }).join("");
+    } catch { setConnected(false); }
+  }
+
+  function tickClock() {
+    $("clock").textContent = new Date().toLocaleTimeString();
+    // If nothing has succeeded recently, force the disconnected state.
+    if (connected && Date.now() - lastOkAt > 6000) setConnected(false);
+  }
+
+  // Initial + intervals (scale fastest, tags/health a bit slower).
+  pollHealth(); pollReading(); pollTags(); tickClock();
+  setInterval(pollReading, 750);
+  setInterval(pollTags, 1500);
+  setInterval(pollHealth, 5000);
+  setInterval(tickClock, 1000);
+})();
+</script>
+</body>
+</html>
