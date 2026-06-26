@@ -1,0 +1,264 @@
+$PBExportHeader$f_edi_reynolds_warehouse_856.srf
+$PBExportComments$Reynolds' warehouse(IDS) EDI 856
+global type f_edi_reynolds_warehouse_856 from function_object
+end type
+
+forward prototypes
+global function integer f_edi_reynolds_warehouse_856 (integer ai_customer_id, long al_packing_list)
+end prototypes
+
+global function integer f_edi_reynolds_warehouse_856 (integer ai_customer_id, long al_packing_list);//////////////////////////////////////////////////////////////////////////////
+//
+//	Function:  f_edi_reynolds_warehouse_856
+//
+//	Access:    Public
+//
+//	Arguments:
+//   ai_customer_id  
+//   al_packing_list
+//	Returns:   Integer
+//               1 = if it succeeds
+//              -1 = if a system error occurs
+//             100 = no process data
+//             101 = 870 Hasn't been sent 
+//             102 = reynolds coil number is missing 
+//	Description:  Generate Reynolds Warehouse EDI 856.
+//			        identical to f_edi_reynolds_856
+//
+//////////////////////////////////////////////////////////////////////////////
+//
+//	Revision History
+//
+//	Version
+//	
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//exclusively for RMC(customer id: 40) and Reynolds ListerHill Alloy Plant(44)
+if ai_customer_id<> 40 and ai_customer_id<>44 then return -1
+
+
+//Define Local Variables
+string ls_sender_vanid 
+string ls_resceiver_vanid 
+Ulong ll_gs_log, ll_st_log, ll_bsn_log
+string ls_mp, ls_today, ls_now, ls_edi_file_id
+Date ld_today
+Time ld_now
+DateTime ldt_now
+long ll_newrow,ll_sheet_skid_num
+//string ls_coilnum, ls_last_coilnum
+int li_rowcount, li_rownum,li_rownum1, li_HL01, li_HL02
+//Uint li_process_nt
+
+n_ds ids_856info, ids_dimension_rec, ids_datastore 
+
+//Retrieve Reynolds 856 related info.
+ids_856info = CREATE n_ds
+ids_856info.DataObject = "d_edi_reynolds_856"
+ids_856info.of_SetBase(TRUE)
+ids_856info.of_SetTransObject(SQLCA)
+IF ids_856info.Retrieve(al_packing_list) =-1 THEN
+	//MessageBox("DataStore ids_856info", "Retrieval error")
+   return -1  
+END IF	
+
+//Check if there is any new data to process
+IF  ids_856info.RowCount() = 0 then
+	destroy ids_856info
+	return 100       //nothing to do
+END IF
+
+//Check if 870 has been sent
+for li_rownum =1 to li_rowcount
+	If IsNull(ids_datastore.inv_base.of_GetItem(li_rownum,"prod_item_edi870_date")) then
+		Return 101     //870 Hasn't been sent
+	end if
+next	
+
+//Make sure Reynolds Coil Number is No-Null
+for li_rownum =1 to li_rowcount
+	If IsNull(ids_datastore.inv_base.of_GetItem(li_rownum,"coil_org_num")) then
+		Return 102     //Reynolds Coil Number is Missing
+	end if
+next
+
+//Get Rectangle dimensions
+ids_dimension_rec = CREATE n_ds
+ids_dimension_rec.DataObject = "d_edi_dimension_rec"
+ids_dimension_rec.of_SetBase(TRUE)
+ids_dimension_rec.of_SetTransObject(SQLCA)
+IF ids_dimension_rec.Retrieve(ai_customer_id) =-1 THEN
+	//MessageBox("DataStore ids_dimension_rec", "Retrieval error")
+   return -1  
+END IF	
+
+//prepare a temporary EDI storage 
+ids_datastore = CREATE n_ds
+ids_datastore.DataObject = "d_edi_datastore"
+ids_datastore.Reset()
+ids_datastore.of_SetBase(TRUE)
+
+//Get Shipment Info.
+long ll_bill_of_lading
+string ls_vehicle_id, ls_scac, ls_tran_method_code, ls_carrier_desc_code, ls_carrier_initial
+datetime ldt_shipment
+date ld_shipdate
+time ltm_shiptime
+SELECT shipment.bill_of_lading,
+       NVL(shipment.vehicle_id,9999),
+		 NVL(carrier.scac, 'AAAA'),
+		 NVL(shipment.transportation_method_code,'Motor'),
+		 NVL(shipment.carrier_descriptition_code, 'PT'),  //Protected Trailer 
+		 NVL(shipment.carrier_initial, 'NA'),
+       NVL(shipment.shipment_actualed_date,SYSDATE)
+INTO 	:ll_bill_of_lading, :ls_vehicle_id, :ls_scac, :ls_tran_method_code,
+      :ls_carrier_desc_code, :ls_carrier_initial, :ldt_shipment
+FROM  shipment, carrier
+WHERE shipment.carrier_id = carrier.carrier_id and
+       shipment.packing_list = :al_packing_list
+USING SQLCA;
+if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+
+		 
+               /*Fill in EDI storage*/
+//initialize variable
+ls_sender_vanid = "3010007080"     
+ls_resceiver_vanid = "301010031"
+li_rowcount = ids_856info.RowCount()
+li_rownum = 1
+li_rownum1 = 1
+//ls_last_coilnum = "nothing"
+li_HL01 = 2    //?
+li_HL02 = 0
+//li_process_nt = 0
+ll_gs_log = f_get_next_value("edi_gs_log_seq")
+ll_st_log = f_get_next_value("edi_st_log_seq")
+ll_bsn_log = f_get_next_value("edi_bsn_log_seq")
+
+ld_today = Today()
+ld_now = Now()
+ls_today = string(ld_today,"yymmdd")
+ls_now = string(ld_now,"hhmm")
+  if ai_customer_id =40 then
+	ls_mp = "001344202003"     //RMC-McCooks
+  else
+	ls_mp = "001344202005"     //ListerHill Alloy Plant
+  end if	
+	
+
+//Generate Header Info.
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+              "GS*SH*"+ls_sender_vanid+'*'+ls_resceiver_vanid+'*'&
+               +ls_today+'*'+ls_now &
+					+'*'+string(ll_gs_log)+"*X*"+"002040") 
+
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "ST*856*"+string(ll_st_log)) 
+
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "BSN*00*"+string(ll_bsn_log)+'*'+ls_today+'*'+ls_now) 
+
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "DTM*011*"+String(ldt_shipment,"yymmdd") ) 
+
+
+//*****HL******
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "HL*01**S")
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "TD1*SKD01*"+String("???") )	    //??
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "TD5**2*"+ls_scac+"*M" )
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "TD3*"+ls_carrier_desc_code+'*'+ls_carrier_initial+'*'+&
+				  ls_vehicle_id)
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "REF*BM*"+string(ll_bill_of_lading))
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "N1*MP**9*"+ls_mp)
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "N1*ST**9*999999999999")
+
+
+//*****HL Detail******
+for li_rownum =1 to li_rowcount
+   ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "HL*"+string(li_HL01,"00;**")+"*01*I")
+   ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "LIN*" + string(li_HL01 - 1)&
+				 +"*CA*"+ids_856info.inv_base.of_GetItem(li_rownum,"coil_org_num")&
+				 +"*CU*"+ids_856info.inv_base.of_GetItem(li_rownum,"coil_line_num")& 
+				 +"*ON*"+ids_856info.inv_base.of_GetItem(li_rownum,"orig_customer_po")&
+				 +"*IN*"+ids_856info.inv_base.of_GetItem(li_rownum,"order_item_num")&
+				 +"*VU*"+string(ids_856info.inv_base.of_GetItem(li_rownum,"sheet_skid_num"),"000000")+'*')
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "PID*S*67*AA*1")
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "MEA**N*"+ids_856info.inv_base.of_GetItem(li_rownum,"prod_item_net_wt"))				 
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "MEA**G*"+string(ids_856info.GetItemNumber(li_rownum,&
+             "sheet_net_wt")+ids_856info.GetItemNumber(li_rownum,&
+             "sheet_tare_wt"))+"*LB")
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "MEA**WT*0*LB")	   //Th. WT not been used, set to 0
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "MEA**LN*"+String(ids_856info.GetItemDecimal(li_rownum,&
+				 "length"),"0.0000")+"*ED")
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA**TH*"+String(ids_856info.GetItemNumber(li_rownum,&
+				 "gauge"), "0.0000")+"*ED")
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA**WD*"+String(ids_856info.GetItemNumber(li_rownum,&
+				 "width"), "0.0000")+"*ED")
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA***"+String(ids_856info.GetItemNumber(li_rownum,&
+             "prod_item_pieces"))+"*PC")				 
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "REF*HC*"+ids_856info.inv_base.of_GetItem(li_rownum,"lot_num"))
+				 
+	li_HL01 ++
+Next
+ 
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "CTT*"+String(li_HL01 - 1))
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "SE*"+String(ids_datastore.rowcount()-1)+'*'+string(ll_st_log))
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "GE*1*"+string(ll_gs_log))
+
+
+ls_edi_file_id = string(f_get_next_value("edi_file_id_seq"))
+
+//Archive EDI File
+if ids_datastore.SaveAs(&
+     ProfileString(gs_ini_file, "EDI","reynolds_856_out","d:\temp")+'\'&
+	              +'r'+ls_today+ls_now+ ls_edi_file_id+".856", Text!, false) =-1 then
+  	MessageBox("DataStore SaveAs Archive", "Error")
+	return -1  
+end if
+//Save EDI file to VAN_OUT DIR. 
+if ids_datastore.SaveAs(&
+     ProfileString(gs_ini_file, "EDI","van_out","d:\temp")+'\'&
+	              + ls_edi_file_id+".856",Text!, false) =-1 then
+   MessageBox("DataStore SaveAs", "Error")
+	return -1
+end if
+
+
+ldt_now = DateTime(ld_today, ld_now)
+//Update shipment EDI 856 Status
+UPDATE shipment
+SET shipment_edi856_date = :ldt_now
+WHERE shipment.packing = :al_packing_list
+USING SQLCA;
+if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+
+
+destroy ids_856info 
+destroy ids_dimension_rec
+destroy ids_datastore
+//destroy ids_status_update
+return 1
+end function
+

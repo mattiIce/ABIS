@@ -1,0 +1,433 @@
+$PBExportHeader$f_edi_kaiser_870.srf
+$PBExportComments$Kaiser EDI 870
+global type f_edi_kaiser_870 from function_object
+end type
+
+forward prototypes
+global function integer f_edi_kaiser_870 (integer ai_customer_id)
+end prototypes
+
+global function integer f_edi_kaiser_870 (integer ai_customer_id);//////////////////////////////////////////////////////////////////////////////
+//
+//	Function:  f_edi_kaiser_870
+//
+//	Access:    Public
+//
+//	Arguments:
+//   ai_customer_id  
+//
+//	Returns:   Integer
+//               1 = if it succeeds
+//              -1 = if an error occurs
+//	Description:  Generate EDI 870.
+//			        EDI output file location defined in lion.ini
+//
+//////////////////////////////////////////////////////////////////////////////
+//
+//	Revision History
+//
+//	Version
+//	
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//exclusively for Kaiser(customer id: 45)
+if ai_customer_id<> 45 then return -1
+
+n_ds ids_870info, ids_dimension_rec, ids_datastore //ids_status_update
+
+//Get Kaiser 870 related info.
+ids_870info = CREATE n_ds
+ids_870info.DataObject = "d_edi_kaiser_870"
+ids_870info.of_SetBase(TRUE)
+ids_870info.of_SetTransObject(SQLCA)
+IF ids_870info.Retrieve(ai_customer_id) =-1 THEN
+	//MessageBox("DataStore ids_870info", "Retrieval error")
+   return -1  
+END IF	
+
+//MessageBox("DataStore ids_870info", "affected "+ string(SQLCA.SQLNROWS) +" rows")
+//MessageBox("DataStore ids_870info", "Retrieval "+ string(ids_870info.RowCount()) +" rows")
+
+IF  ids_870info.RowCount() = 0 then
+	destroy ids_870info
+	return 100       //nothing to do
+END IF
+
+
+
+//Get Rectangle dimensions
+ids_dimension_rec = CREATE n_ds
+ids_dimension_rec.DataObject = "d_edi_dimension_rec"
+ids_dimension_rec.of_SetBase(TRUE)
+ids_dimension_rec.of_SetTransObject(SQLCA)
+IF ids_dimension_rec.Retrieve(ai_customer_id) =-1 THEN
+	//MessageBox("DataStore ids_dimension_rec", "Retrieval error")
+   return -1  
+END IF	
+
+//prepare a temporary EDI storage 
+ids_datastore = CREATE n_ds
+ids_datastore.DataObject = "d_edi_datastore"
+ids_datastore.Reset()
+ids_datastore.of_SetBase(TRUE)
+
+
+               /*Fill in EDI storage*/
+//Define Local Variables
+string ls_sender_vanid 
+string ls_resceiver_vanid 
+Ulong ll_gs_log, ll_st_log, ll_bsr_log
+string ls_today, ls_now, ls_edi_file_id
+Date ld_today
+Time ld_now
+DateTime ldt_now
+//date ld_shipdate
+//time ltm_shiptime
+long ll_newrow,ll_prod_item_num
+string ls_coilnum, ls_last_coilnum
+string ls_skidnum, ls_last_skidnum
+int li_rowcount, li_rownum,li_rownum1, li_HL01, li_HL02
+Uint li_process_nt
+
+//initialize variable
+ls_sender_vanid = "3010007080"     
+ls_resceiver_vanid = "301015942"  //Kaiser Harbinger ID
+li_rowcount = ids_870info.RowCount()
+li_rownum = 1
+li_rownum1 = 1
+ls_last_coilnum = "nothing"
+ls_last_skidnum = "nothing"
+li_HL01 = 1
+li_HL02 = 0
+li_process_nt = 0
+ll_gs_log = f_get_next_value("edi_gs_log_seq")
+ll_st_log = f_get_next_value("edi_st_log_seq")
+ll_bsr_log = f_get_next_value("edi_bsr_log_seq")
+
+ld_today = Today()
+ld_now = Now()
+ls_today = string(ld_today,"yymmdd")
+ls_now = string(ld_now,"hhmm")
+  
+	
+
+//Generate Head Info.
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+              "GS*SH*"+ls_sender_vanid+'*'+ls_resceiver_vanid+'*'&
+               +ls_today+'*'+ls_now &
+					+'*'+string(ll_gs_log)+"*X*"+"003030") 
+
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "ST*870*"+string(ll_st_log)) 
+
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "BSR*2*PP*"+string(ll_bsr_log)+'*'+ls_today) 
+
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "N1*MP*"+ls_sender_vanid)   //manufacturing plant is ALB 
+
+
+//*****HL******
+for li_rownum =1 to li_rowcount
+ 	 ls_skidnum = ids_datastore.inv_base.of_GetItem(li_rownum,"sheet_skid_num")
+    if ls_skidnum <> ls_last_skidnum then
+		 SetNull(li_HL02)
+		 ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+		      "HL*"+string(li_HL01, "0000")+'*'+string(li_HL02, "0000")+"*I*1")  
+       li_HL02 =li_HL01
+		 li_HL01 =li_HL01 + 1
+   
+
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+          "PO1**"+ids_datastore.inv_base.of_GetItem(li_rownum,"sheet_net_wt")&
+			        +"*01***"&
+          +"CA*"+ ls_skidnum&
+			 +"*PO*"+ids_datastore.inv_base.of_GetItem(li_rownum,"orig_customer_po"))
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+          "PID*S*66*AA*19")   //default 19(blank) 12(cut to length)
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+          "PID*S*67*AA*1")    //default 1(Prime)
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+          "PID*S*70*AA*1")   //default 1(Ready to ship) 
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+          "MEA**GW*"+string(ids_870info.GetItemNumber(li_rownum,"sheet_net_wt")&
+			              +ids_870info.GetItemNumber(li_rownum,"sheet_tare_wt"))+"*01*")
+
+
+//Reset some local varibales 
+ls_last_skidnum = ls_skidnum
+li_rownum = li_rownum - 1 //back to last loop
+
+else      // <> li_last_coilnum
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+        "HL*"+string(li_HL01,"0000;****")+'*'+string(li_HL02,"0000;****")+"*F*0")
+
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+        "PO1***"+ids_870info.inv_base.of_GetItem(li_rownum,"prod_item_net_wt")+"*01***"&
+        +"VU*"+ids_870info.inv_base.of_GetItem(li_rownum,"sheet_skid_num")+'*'&
+        +"LT*"+ids_870info.inv_base.of_GetItem(li_rownum,"lot_num")+'*'&
+        +"CA*"+ids_870info.inv_base.of_GetItem(li_rownum,"coil_org_num"))
+
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+        "MEA**N*"+ids_870info.inv_base.of_GetItem(li_rownum,"sheet_net_wt")+"*01")
+				 
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+        "MEA**LN*"+String(ids_870info.GetItemDecimal(li_rownum,&
+			            	 "length"),"0.0000")+"*ED")
+
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA**GG*"+String(ids_870info.GetItemNumber(li_rownum,&
+				 "gauge"), "0.0000")+"*ED")
+
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA**WD*"+String(ids_870info.GetItemNumber(li_rownum,&
+				 "width"), "0.0000")+"*ED")
+				 
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA**NU*"+String(ids_870info.GetItemNumber(li_rownum,&
+             "prod_item_pieces"))+"*PC")
+    
+	 li_HL01 = li_HL01 + 1
+   end if
+ next	
+	
+
+//Handle Rejected Coil 
+int li_edi_reject_coil_count =0
+int li_rownum2 =1
+SELECT count(*) 
+INTO :li_edi_reject_coil_count
+FROM reject_coil, coil
+WHERE reject_coil.reject_coil_edi_date is NULL and
+      reject_coil.coil_abc_num = coil.coil_abc_num and
+		coil.customer_id = :ai_customer_id
+USING SQLCA;		
+ 
+if li_edi_reject_coil_count > 0 then    //see if any reject coil need report.
+   //report rejected coil
+	n_ds ids_reject_coil_info
+	ids_reject_coil_info = CREATE n_ds
+   ids_reject_coil_info.DataObject = "d_edi_reject_coil"
+   ids_reject_coil_info.of_SetBase(TRUE)
+   ids_reject_coil_info.of_SetTransObject(SQLCA)
+   IF ids_reject_coil_info.Retrieve(ai_customer_id) =-1 THEN
+	   //MessageBox("DataStore ids_reject_coil_info", "Retrieval error")
+   return -1  
+   END IF	
+   //HL Item 
+	
+	for li_rownum2=1 to li_edi_reject_coil_count
+		 SetNull(li_HL02)
+		 ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+		    "HL*"+string(li_HL01, "0000")+'*'+string(li_HL02, "0000")+"*I*1")  
+       li_HL02 =li_HL01
+		 li_HL01 =li_HL01 + 1
+	   //using coil_abc_num as package number		
+	   ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+           "PO1**"&
+			   +ids_reject_coil_info.inv_base.of_GetItem(li_rownum2,"reject_coil_quantity")+"*01***"&
+            +"CA*"+ids_reject_coil_info.inv_base.of_GetItem(li_rownum2,"coil_abc_num")&
+			   +"PO*"+ids_reject_coil_info.inv_base.of_GetItem(li_rownum2,"orig_customer_po"))
+		
+		ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "PID*S*66*AA*19")       //default 19(blank) 12(cut to length)
+      ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+              "PID*S*67*AA*2")       //default 1(Prime) 2(reject)
+      ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+              "PID*S*70*AA*1")       //default 1(Ready to ship)
+			
+		ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+           "MEA**GW*"+ids_reject_coil_info.inv_base.of_GetItem(li_rownum2,"reject_coil_quantity")&
+           +"*01*")
+			 //Second level HL for reject coil
+		 ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+            "HL*"+string(li_HL01,"0000;****")+'*'+string(li_HL02,"0000;****")+"*F*0")
+       ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+            "PO1**"&
+            +ids_reject_coil_info.inv_base.of_GetItem(li_rownum2,"reject_coil_quantity")+"*01***"&
+            +"VU*"+ids_reject_coil_info.inv_base.of_GetItem(li_rownum2,"coil_abc_num")&
+            +"LT*"+ids_reject_coil_info.inv_base.of_GetItem(li_rownum2,"lot_num")+'*'&
+            +"CA*"+ids_reject_coil_info.inv_base.of_GetItem(li_rownum2,"coil_org_num"))
+       
+       ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "MEA**N*"+ids_reject_coil_info.inv_base.of_GetItem(li_rownum2,"reject_coil_quantity")+"*01")
+		 ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "MEA**LN*0.0000*ED")
+       ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA**GG*0.0000*ED")
+       ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA**WD*0.0000*ED")
+       ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA**NU*"+ids_reject_coil_info.inv_base.of_GetItem(li_rownum2,"pieces_per_case")+"*PC")
+       li_HL01 = li_HL01 + 1
+	next	
+ 
+end if
+
+//Handle Scrap after Coil Done
+int li_edi_done_coil_count =0
+int li_rownum3 =1
+SELECT count(*) 
+INTO :li_edi_done_coil_count
+FROM  coil
+WHERE coil.coil_edi870_status is NULL and
+      coil.coil_status = 0 and
+		coil.customer_id = :ai_customer_id
+USING SQLCA;		
+ 
+if li_edi_done_coil_count > 0 then
+  	n_ds ids_done_coil_info
+	ids_done_coil_info = CREATE n_ds
+   ids_done_coil_info.DataObject = "d_edi_done_coil"
+   ids_done_coil_info.of_SetBase(TRUE)
+   ids_done_coil_info.of_SetTransObject(SQLCA)
+   IF ids_done_coil_info.Retrieve(ai_customer_id) =-1 THEN
+	   //MessageBox("DataStore ids_done_coil_info", "Retrieval error")
+   return -1  
+   END IF	
+
+   for li_rownum3=1 to li_edi_done_coil_count
+		 //get the coil's scrap 
+		 long ll_coil_abc_num
+		 long ll_coil_scrap_wt
+		 long ll_coil_sheet_wt
+		 long ll_coil_reject_wt
+		 ll_coil_abc_num =ids_done_coil_info.GetItemNumber(li_rownum3,"coil_abc_num") 
+		 SELECT SUM(prod_item_net_wt)
+		 INTO :ll_coil_sheet_wt
+		 FROM production_sheet_item
+		 WHERE production_sheet_item.coil_abc_num = :ll_coil_abc_num
+		 USING SQLCA;
+		 if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+		 SELECT reject_coil_quantity
+		 INTO :ll_coil_reject_wt
+		 FROM reject_coil
+		 WHERE reject_coil.coil_abc_num = :ll_coil_abc_num
+		 USING SQLCA;
+		 if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+		 ll_coil_scrap_wt =ids_done_coil_info.GetItemNumber(li_rownum3,"net_wt")&
+		                   - ll_coil_reject_wt - ll_coil_sheet_wt
+			 
+		 		 
+		 SetNull(li_HL02)
+		 ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+		    "HL*"+string(li_HL01, "0000")+'*'+string(li_HL02, "0000")+"*I*1")  
+       li_HL02 =li_HL01
+		 li_HL01 =li_HL01 + 1
+	      
+		
+			ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+            "PO1**"&
+			   +string(ll_coil_scrap_wt)+"*01***"&
+            +"CA*000000" + "PO*000000")    //no package num and PO for scrap
+		
+		 ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "PID*S*66*AA*19")       //default 19(blank) 12(cut to length)
+       ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+              "PID*S*67*AA*5")       //default 1(Prime) 2(reject) 5(Scrap)
+       ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+              "PID*S*70*AA*1")       //default 1(Ready to ship)	 
+		
+		 ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+           "MEA*GW*"+string(ll_coil_scrap_wt)+"*01")	 
+			
+			//Second level HL for Done coil
+		 ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+            "HL*"+string(li_HL01,"0000;****")+'*'+string(li_HL02,"0000;****")+"*F*0")
+       ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+            "PO1**"&
+            +string(ll_coil_scrap_wt)+"*01***"&
+            +"VU*000000*"&
+        +"LT*"+ids_done_coil_info.inv_base.of_GetItem(li_rownum,"lot_num")+'*'&
+        +"CA*"+ids_done_coil_info.inv_base.of_GetItem(li_rownum,"coil_org_num"))
+       
+       ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "MEA**G*"+string(ll_coil_scrap_wt)+"*LB")
+/*		 ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "MEA**LN*0.0000*ED")
+       ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA**TH*0.0000*ED")
+       ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA**WD*0.0000*ED")
+       ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA***1*PC")
+*/       
+		 li_HL01 = li_HL01 + 1
+	next	
+ end if
+
+
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "CTT*"+String(li_HL01 - 1))
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "SE*"+String(ids_datastore.rowcount()-1)+'*'+string(ll_st_log))
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "GE*1*"+string(ll_gs_log))
+
+
+ls_edi_file_id = string(f_get_next_value("edi_file_id_seq"))
+
+//Archive EDI File
+if ids_datastore.SaveAs(&
+     ProfileString(gs_ini_file, "EDI","kaiser_870_out","d:\temp")+'\'&
+	              +'r'+ls_today+ls_now+ ls_edi_file_id+".870", Text!, false) =-1 then
+  	MessageBox("DataStore SaveAs Archive", "Error")
+	return -1  
+end if
+//Save EDI file to VAN_OUT DIR. 
+if ids_datastore.SaveAs(&
+     ProfileString(gs_ini_file, "EDI","van_out","d:\temp")+'\'&
+	              + ls_edi_file_id+".870",Text!, false) =-1 then
+   MessageBox("DataStore SaveAs", "Error")
+	return -1
+end if
+
+//Update production sheet item EDI 870 Status
+ldt_now = DateTime(ld_today, ld_now)
+for li_rownum =1 to li_rowcount
+	ll_prod_item_num=ids_870info.GetItemNumber(li_rownum,"prod_item_num")
+	UPDATE production_sheet_item
+	SET prod_item_edi870_date = :ldt_now
+	WHERE production_sheet_item.prod_item_num = :ll_prod_item_num
+	USING SQLCA;
+   if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+Next
+
+//Update Reject Coil EDI 870 Status
+if li_edi_reject_coil_count > 0 then
+long ll_reject_coil_abc_num 
+ for li_rownum2 =1 to li_edi_reject_coil_count
+	ll_reject_coil_abc_num=ids_reject_coil_info.GetItemNumber(li_rownum2,"coil_abc_num")
+	UPDATE reject_coil 
+	SET reject_coil_edi_date = :ldt_now
+	WHERE reject_coil.coil_abc_num = :ll_reject_coil_abc_num
+	USING SQLCA;
+   if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+ Next
+ destroy ids_reject_coil_info
+end if
+
+
+//Update Done Coil EDI 870 Status
+if li_edi_done_coil_count > 0 then
+long ll_done_coil_abc_num 
+ for li_rownum3 =1 to li_edi_done_coil_count
+	ll_done_coil_abc_num=ids_done_coil_info.GetItemNumber(li_rownum3,"coil_abc_num")
+	UPDATE coil 
+	SET coil_edi870_status = 0
+	WHERE coil.coil_abc_num = :ll_done_coil_abc_num
+	USING SQLCA;
+   if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+ Next
+destroy ids_done_coil_info
+end if
+
+
+
+destroy ids_870info 
+destroy ids_dimension_rec
+destroy ids_datastore
+return 1
+end function
+

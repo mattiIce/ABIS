@@ -1,0 +1,45 @@
+$PBExportHeader$f_getstring.srf
+global type f_getstring from function_object
+end type
+
+forward prototypes
+global function string f_getstring (string as_instring, integer as_position)
+end prototypes
+
+global function string f_getstring (string as_instring, integer as_position);
+//////////////////////////////////////////////////////////////////////////////
+//
+//	Function:  f_getstring
+//
+//	Access:    Public
+//
+//	Arguments:	String : as_instring
+//             Integer: as_position
+//
+//	Returns:    The substring of characters from (as_position-1)th "," to (as_position)th ",".
+////////////////////////////////////////////////////////////////////////////// 
+
+String ls_string, ls_return
+Integer li_position1, li_position2, li_i
+
+if as_position > 75 then
+	MessageBox("error", "Position number excess 75 !")
+end if
+
+ls_return = ""
+ls_string = as_instring
+
+if as_position > 1 then
+	for li_i = 2 to as_position
+		li_position1 = Pos (ls_string, ",")
+		ls_string = Mid (ls_string,li_position1 + 1)
+	next
+end if
+
+li_position2 = Pos (ls_string, ",")
+ls_return = Mid (ls_string,1, li_position2 - 1)
+
+return ls_return
+		
+end function
+

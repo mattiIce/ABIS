@@ -1,0 +1,37 @@
+$PBExportHeader$d_edi_prod_item_870_date.srd
+release 5;
+datawindow(units=0 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.prompt=no grid.lines=0 )
+header(height=116 color="536870912" )
+summary(height=1 color="536870912" )
+footer(height=1 color="536870912" )
+detail(height=77 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=prod_item_num dbname="production_sheet_item.prod_item_num" )
+ column=(type=datetime updatewhereclause=yes name=prod_item_edi870_date dbname="production_sheet_item.prod_item_edi870_date" )
+ retrieve="  SELECT ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NUM~",
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_EDI870_DATE~"
+    FROM ~"COIL~",   
+         ~"CUSTOMER_ORDER~",   
+         ~"ORDER_ITEM~",   
+         ~"PRODUCTION_SHEET_ITEM~",   
+         ~"SHEET_SKID~",   
+         ~"SHEET_SKID_DETAIL~",
+         ~"AB_JOB~"  
+   WHERE ( ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" = ~"CUSTOMER_ORDER~".~"ORDER_ABC_NUM~" ) and  
+         ( ~"SHEET_SKID_DETAIL~".~"SHEET_SKID_NUM~" = ~"SHEET_SKID~".~"SHEET_SKID_NUM~" ) and  
+         ( ~"SHEET_SKID_DETAIL~".~"PROD_ITEM_NUM~" = ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NUM~" ) and  
+         ( ~"COIL~".~"COIL_ABC_NUM~" = ~"PRODUCTION_SHEET_ITEM~".~"COIL_ABC_NUM~" ) and  
+         ( ~"PRODUCTION_SHEET_ITEM~".~"AB_JOB_NUM~" = ~"SHEET_SKID~".~"AB_JOB_NUM~" ) and  
+         (~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_EDI870_DATE~" is NULL) and
+         (~"PRODUCTION_SHEET_ITEM~".~"AB_JOB_NUM~" =~"AB_JOB~".~"AB_JOB_NUM~") and 
+         (~"AB_JOB~".~"ORDER_ABC_NUM~" = ~"ORDER_ITEM~".~"ORDER_ABC_NUM~") and
+         (~"AB_JOB~".~"ORDER_ITEM_NUM~" = ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~") and
+         ( ~"CUSTOMER_ORDER~".~"ORIG_CUSTOMER_ID~" = :ai_customer_id ) 
+         
+ORDER BY ~"COIL~".~"COIL_ORG_NUM~" ASC,   
+         ~"SHEET_SKID~".~"SHEET_SKID_NUM~" ASC   
+" arguments=(("ai_customer_id", number)) )
+text(band=header alignment="2" text="Production Sheet Item
+Prod Item Edi870 Date"border="0" color="0" x="8" y="6" height="103" width="505"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="0" x="8" y="9" height="61" width="505" format="[shortdate] [time]"  name=prod_item_edi870_date edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=0 border="0" color="0" x="523" y="9" height="52" width="939"  name=prod_item_num  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Production Sheet Item Prod Item Num"border="0" color="0" x="520" y="19" height="77" width="943"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )

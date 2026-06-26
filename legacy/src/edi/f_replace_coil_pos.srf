@@ -1,0 +1,44 @@
+$PBExportHeader$f_replace_coil_pos.srf
+global type f_replace_coil_pos from function_object
+end type
+
+forward prototypes
+global function string f_replace_coil_pos (string as_data_line, string as_coil, string as_pos, string as_old_coil_pos)
+end prototypes
+
+global function string f_replace_coil_pos (string as_data_line, string as_coil, string as_pos, string as_old_coil_pos);//////////////////////////////////////////////////////////////////////////////
+//
+//	Function:  f_replace_coil_pos(as_data_line, as_coil, as_pos, as_old_coil_pos)
+//
+//	Access:    Public
+//
+//	Arguments:	String : as_data_line
+//             String : as_coil
+//					String : as_pos
+//					String : as_old_coil_pos
+//	Returns:    String : the replaced data_line
+//					
+////////////////////////////////////////////////////////////////////////////// 
+String  ls_data_line
+String  ls_coil
+String  ls_pos
+String  ls_old_coil_pos, ls_new_coil_pos
+Long    start_pos
+Integer li_return
+
+ls_data_line = as_data_line
+ls_coil=as_coil
+ls_pos=as_pos
+ls_old_coil_pos=as_old_coil_pos
+ls_new_coil_pos = ls_coil + "-" + ls_pos
+start_pos = Pos(ls_data_line,ls_old_coil_pos,1)
+
+IF start_pos>0 THEN
+	ls_data_line = Replace (ls_data_line, start_pos, &
+	Len(ls_old_coil_pos),ls_new_coil_pos)
+END IF
+
+return ls_data_line
+
+end function
+

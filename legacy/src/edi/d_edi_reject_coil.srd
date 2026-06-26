@@ -1,0 +1,62 @@
+$PBExportHeader$d_edi_reject_coil.srd
+release 5;
+datawindow(units=0 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.prompt=no grid.lines=0 )
+header(height=116 color="536870912" )
+summary(height=1 color="536870912" )
+footer(height=1 color="536870912" )
+detail(height=77 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=coil_abc_num dbname="reject_coil.coil_abc_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=ab_job_num dbname="reject_coil.ab_job_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=reject_coil_quantity dbname="reject_coil.reject_coil_quantity" )
+ column=(type=char(32) updatewhereclause=yes name=coil_org_num dbname="coil.coil_org_num" )
+ column=(type=char(18) updatewhereclause=yes name=coil_mid_num dbname="coil.coil_mid_num" )
+ column=(type=char(18) updatewhereclause=yes name=lot_num dbname="coil.lot_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=pieces_per_case dbname="coil.pieces_per_case" )
+ column=(type=decimal(0) updatewhereclause=yes name=coil_line_num dbname="coil.coil_line_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_num dbname="ab_job.order_item_num" )
+ column=(type=char(36) updatewhereclause=yes name=orig_customer_po dbname="customer_order.orig_customer_po" )
+ retrieve=" SELECT ~"REJECT_COIL~".~"COIL_ABC_NUM~",   
+         ~"REJECT_COIL~".~"AB_JOB_NUM~",   
+         ~"REJECT_COIL~".~"REJECT_COIL_QUANTITY~",   
+         ~"COIL~".~"COIL_ORG_NUM~",   
+         ~"COIL~".~"COIL_MID_NUM~",   
+         ~"COIL~".~"LOT_NUM~",  
+         ~"COIL~".~"PIECES_PER_CASE~",
+         ~"COIL~".~"COIL_LINE_NUM~",    
+         ~"AB_JOB~".~"ORDER_ITEM_NUM~",
+         ~"CUSTOMER_ORDER~".~"ORIG_CUSTOMER_PO~"
+FROM ~"COIL~",   
+     ~"REJECT_COIL~",
+     ~"AB_JOB~",
+     ~"CUSTOMER_ORDER~"  
+WHERE ( ~"REJECT_COIL~".~"REJECT_COIL_EDI_DATE~" is NULL ) and
+      ( ~"COIL~".~"COIL_ABC_NUM~" = ~"REJECT_COIL~".~"COIL_ABC_NUM~" ) and  
+      ( ~"COIL~".~"CUSTOMER_ID~" = :ai_customer_id ) and   
+      ( ~"REJECT_COIL~".~"AB_JOB_NUM~" = ~"AB_JOB~".~"AB_JOB_NUM~") and
+      ( ~"AB_JOB~".~"ORDER_ABC_NUM~" = ~"CUSTOMER_ORDER~".~"ORDER_ABC_NUM~")" arguments=(("ai_customer_id", number)) )
+text(band=header alignment="2" text="Reject Coil
+Coil Abc Num"border="0" color="0" x="8" y="6" height="103" width="306"  name=reject_coil_coil_abc_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Reject Coil
+Ab Job Num"border="0" color="0" x="321" y="6" height="103" width="271"  name=reject_coil_ab_job_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Reject Coil
+Reject Coil Quantity"border="0" color="0" x="598" y="6" height="103" width="445"  name=reject_coil_reject_coil_quantity_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Coil
+Coil Org Num"border="0" color="0" x="1049" y="6" height="103" width="701"  name=coil_coil_org_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Coil
+Coil Mid Num"border="0" color="0" x="1757" y="6" height="103" width="402"  name=coil_coil_mid_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Coil
+Lot Num"border="0" color="0" x="2166" y="6" height="103" width="402"  name=coil_lot_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Coil Pieces Per Case"border="0" color="0" x="2575" y="3" height="61" width="559"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="0" text="Coil Coil Line Num"border="0" color="0" x="3140" y="3" height="61" width="481"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="0" x="8" y="9" height="61" width="306" format="[general]"  name=coil_abc_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=32766 border="0" color="0" x="321" y="9" height="61" width="271" format="[general]"  name=ab_job_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=32766 border="0" color="0" x="598" y="9" height="61" width="445" format="[general]"  name=reject_coil_quantity edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="0" x="1049" y="9" height="61" width="701" format="[general]"  name=coil_org_num edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="0" x="1757" y="9" height="61" width="402" format="[general]"  name=coil_mid_num edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="0" x="2166" y="9" height="61" width="402" format="[general]"  name=lot_num edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="0" color="0" x="2575" y="0" height="52" width="559" format="[general]"  name=pieces_per_case edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=8 alignment="0" tabsequence=32766 border="0" color="0" x="3140" y="0" height="52" width="481" format="[general]"  name=coil_line_num edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=9 alignment="0" tabsequence=0 border="0" color="0" x="3631" y="0" height="52" width="651"  name=order_item_num  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Ab Job Order Item Num"border="0" color="0" x="3627" y="3" height="65" width="655"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=10 alignment="0" tabsequence=0 border="0" color="0" x="4292" y="0" height="52" width="481"  name=orig_customer_po  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Customer Order Orig Customer Po"border="0" color="0" x="4289" y="3" height="65" width="484"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )

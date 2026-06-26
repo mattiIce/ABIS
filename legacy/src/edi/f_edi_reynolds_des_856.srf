@@ -1,0 +1,401 @@
+$PBExportHeader$f_edi_reynolds_des_856.srf
+$PBExportComments$Reynolds'  cumsters (FORD, etc)  EDI 856
+global type f_edi_reynolds_des_856 from function_object
+end type
+
+forward prototypes
+global function integer f_edi_reynolds_des_856 (integer ai_customer_id, long al_packing_list)
+end prototypes
+
+global function integer f_edi_reynolds_des_856 (integer ai_customer_id, long al_packing_list);//////////////////////////////////////////////////////////////////////////////
+//
+//	Function:  f_edi_reynolds_des_856
+//
+//	Access:    Public
+//
+//	Arguments:
+//   ai_customer_id  
+//   al_packing_list
+//	Returns:   Integer
+//               1 = if it succeeds
+//              -1 = if a system error occurs
+//             100 = no process data
+//             101 = 870 has not been sent
+//	Description:  Generate alcan_ford EDI 856.
+//			       EDI output&archive file location defined in lion.ini
+//
+//////////////////////////////////////////////////////////////////////////////
+//
+//	Revision History
+//
+//	Version
+//	
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//exclusively for Reynolds
+//Handled by f_edi_856
+//if ai_customer_id<> 40 and ai_customer_id<>44 then return -1
+
+//Define Local Variables
+string ls_sender_vanid 
+string ls_resceiver_vanid 
+Ulong ll_gs_log, ll_st_log, ll_bsn_log
+string ls_mp, ls_today, ls_now, ls_edi_file_id
+Date ld_today
+Time ld_now
+DateTime ldt_now
+long ll_newrow,ll_sheet_skid_num
+int li_rowcount, li_rownum,li_rownum1, li_HL01, li_HL02
+Uint li_shipment_nt, li_shipment_gt 
+int li_enduser_id
+
+n_ds ids_856info, ids_datastore, ids_856_prod_item 
+
+/*
+//exclusively for Ford Chicago and Walton Hills Stamping
+//Handled by f_edi_856
+SELECT des_sh_cust_id
+INTO 	:li_enduser_id      
+FROM  shipment
+WHERE shipment.packing_list = :al_packing_list)
+USING SQLCA;
+if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+if li_enduser_id <>  ????????
+*/
+
+//Retrieve Reynolds 856 related info.
+ids_856info = CREATE n_ds
+ids_856info.DataObject = "d_edi_reynolds_des_856"
+ids_856info.of_SetBase(TRUE)
+ids_856info.of_SetTransObject(SQLCA)
+IF ids_856info.Retrieve(al_packing_list) =-1 THEN
+	//MessageBox("DataStore ids_856info", "Retrieval error")
+   return -1  
+END IF	
+
+//Check if there is any new data to process
+IF  ids_856info.RowCount() = 0 then
+	destroy ids_856info
+	return 100       //nothing to do
+END IF
+
+//Check if 870 has been sent    
+ids_856_prod_item = CREATE n_ds
+ids_856_prod_item.DataObject = "d_edi_reynolds_856"
+ids_856_prod_item.of_SetBase(TRUE)
+ids_856_prod_item.of_SetTransObject(SQLCA)
+IF ids_856_prod_item.Retrieve(al_packing_list) =-1 THEN   return -1  
+for li_rownum =1 to ids_856_prod_item.Rowcount()
+	If IsNull(ids_856_prod_item.inv_base.of_GetItem(li_rownum,"prod_item_edi870_date")) then
+		Return 101     //870 Hasn't been sent
+	end if
+next
+destroy ids_856_prod_item
+
+//Fill in Lot Num to ids_856info
+int li_rc=0
+string ls_lot_num
+for li_rownum =1 to li_rowcount
+   ll_sheet_skid_num=ids_856info.GetItemNumber(li_rownum,"sheet_skid_num")
+   SELECT count(*) 
+	INTO :li_rc
+	FROM sheet_skid_detail
+	WHERE sheet_skid_detail.sheet_skid_num = :ll_sheet_skid_num
+	USING SQLCA;
+	if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+	if li_rc = 1 then
+	   SELECT lot_num
+		INTO :ls_lot_num
+		FROM coil
+		WHERE coil.coil_abc_num =
+		      (SELECT coil_abc_num
+				 FROM production_sheet_item
+				 WHERE production_sheet_item.prod_item_num = 
+				     (SELECT prod_item_num 
+	               FROM sheet_skid_detail
+	               WHERE sheet_skid_detail.sheet_skid_num = :ll_sheet_skid_num
+					  )
+				)	  
+	   USING SQLCA;
+		if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+    ids_856info.inv_base.of_SetItem(li_rownum,"LOT_NUM",ls_lot_num)   
+   end if	
+next	
+
+//prepare a temporary EDI storage 
+ids_datastore = CREATE n_ds
+ids_datastore.DataObject = "d_edi_datastore"
+ids_datastore.Reset()
+ids_datastore.of_SetBase(TRUE)
+
+//Get Shipment Info.
+long ll_bill_of_lading
+string ls_vehicle_id, ls_scac, ls_tran_method_code, ls_carrier_desc_code, ls_caarrier_initial
+datetime ldt_shipment
+date ld_shipdate
+time ltm_shiptime
+SELECT shipment.bill_of_lading,
+       NVL(shipment.vehicle_id,9999),
+		 NVL(shipment.transportation_method_code,'Motor'),
+		 NVL(shipment.carrier_description_code, 'PT'),  //Protected Trailer 
+		 NVL(shipment.carrier_initial, 'NA'),
+       NVL(shipment.shipment_actualed_date_time,SYSDATE)
+INTO 	:ll_bill_of_lading, :ls_vehicle_id, :ls_tran_method_code,
+      :ls_carrier_desc_code, :ls_caarrier_initial
+FROM  shipment
+WHERE shipment.packing_list = :al_packing_list
+USING SQLCA;
+if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+//Get SCAC(Standard Carrier Alpha Code)
+SELECT NVL(carrier.scac, 'AAAA')
+INTO :ls_scac
+FROM carrier
+WHERE carrier_id =
+               (SELECT carrier_id 
+					 FROM shipment
+					 WHERE shipment.packing_list = :al_packing_list)
+USING SQLCA;
+if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+					 
+		 
+               /*Fill in EDI storage*/
+//initialize variable
+SELECT NVL(customer_system.van_account_num, 'nothing')
+INTO 	:ls_resceiver_vanid      //ls_resceiver_vanid 
+FROM  customer_system
+WHERE customer_system.customer_id = 
+      (select shipment.des_sh_cust_id 
+		 from shipment
+		 where shipment.packing_list = :al_packing_list)
+USING SQLCA;
+if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+
+ls_sender_vanid = "3010007080"     //Aluminum Blanking Co.
+li_rowcount = ids_856info.RowCount()
+li_rownum = 1
+li_rownum1 = 1
+//ls_last_coilnum = "nothing"
+li_HL01 = 2    
+li_HL02 = 0
+//li_process_nt = 0
+ll_gs_log = f_get_next_value("edi_gs_log_seq")
+ll_st_log = f_get_next_value("edi_st_log_seq")
+ll_bsn_log = f_get_next_value("edi_bsn_log_seq")
+
+ld_today = Today()
+ld_now = Now()
+ls_today = string(ld_today,"yymmdd")
+ls_now = string(ld_now,"hhmm")
+  if ai_customer_id =40 then
+	ls_mp = "001344202003"     //RMC-McCooks
+  else
+	ls_mp = "001344202005"     //ListerHill Alloy Plant
+  end if
+  
+//Get Net and Cross Shipment Weight and Total Package Num.
+SELECT SUM(sheet_skid.sheet_net_wt), 
+       SUM(sheet_skid.sheet_net_wt)+SUM(sheet_skid.sheet_tare_wt)
+INTO :li_shipment_nt,:li_shipment_gt 
+FROM sheet_skid, sheet_packing_item, shipment
+WHERE SHIPMENT.PACKING_LIST =SHEET_PACKING_ITEM.PACKING_LIST and
+      SHEET_PACKING_ITEM.SHEET_SKID_NUM = SHEET_SKID.SHEET_SKID_NUM and
+      SHIPMENT.PACKING_LIST = :al_packing_list
+USING SQLCA;		
+if f_check_sqlcode(SQLCA, True, True) <0 then return -1		
+	
+
+
+//Generate Header Info.
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+              "GS*SH*"+ls_sender_vanid+'*'+ls_resceiver_vanid+'*'&
+              +ls_today+'*'+ls_now +'*'+string(ll_gs_log)+"*X*"+"002002") 
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "ST*856*"+string(ll_st_log)) 
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "BSN*00*"+string(ll_bill_of_lading)+'*'+ls_today+'*'+ls_now) 
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "DTM*011*"+String(ldt_shipment,"yymmdd")+'*'+&
+				  String(ldt_shipment,"hhmm") ) 
+
+
+                        //*****HL******//
+//First Level HL
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "HL*01**S")
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "MEA*PD*G*"+string(li_shipment_gt)+"*LB")
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "MEA*PD*G*"+string(li_shipment_nt)+"*LB")
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "TD1*PLT90*"+String(li_rowcount) )	    
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "TD5*B*02*"+ls_scac+"*M" )
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "TD3*"+ls_carrier_desc_code+"**"+ls_vehicle_id)
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "REF*BM*"+string(ll_bill_of_lading))
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "REF*PK*"+string(al_packing_list))
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "N1*ST**92*MS02A")
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "N1*SF**92*R358W")
+ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "N1*IC**92*R0P7A")				 
+
+
+//Method II 
+//Second Level HL based on End User PO
+string ls_enduser_part, ls_enduser_po
+for li_rownum =1 to li_rowcount
+ if IsNull(ids_856info.inv_base.of_GetItem(li_rownum,"done")) then
+    ls_enduser_part = ids_856info.inv_base.of_GetItem(li_rownum,"enduser_part_num")
+    ls_enduser_po = ids_856info.inv_base.of_GetItem(li_rownum,"enduser_po")
+    
+    ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+                                  "HL*"+string(li_HL01,"00;**")+"*01*O")
+    li_HL02 = li_HL01
+    li_HL01 ++
+    ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+                                        "LIN**BP*"+ls_enduser_part)		 
+    //Get Total Shipped Quantity Until Today of above Part Number
+    //default = 0
+    Ulong ll_total_lb
+    SELECT NVL(SUM(sheet_skid.sheet_net_wt),0)
+    INTO :ll_total_lb
+    FROM sheet_skid,ab_job,order_item,sheet_packing_item,shipment
+    WHERE sheet_skid.sheet_skid_num = sheet_packing_item.sheet_skid_num and
+          sheet_packing_item.packing_list = shipment.packing_list and
+	       shipment.packing_list = :al_packing_list and
+		    shipment.shipment_des_edi856_date <> NULL and
+		    sheet_skid.ab_job_num = ab_job.ab_job_num and
+		    ab_job.order_abc_num = order_item.order_abc_num and
+		    ab_job.order_item_num = order_item.order_item_num and
+          order_item.enduser_part_num = :ls_enduser_part
+    USING SQLCA;
+    ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+            "SN1**"+string(li_shipment_nt)+"*LB*"+string(ll_total_lb))
+    ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+            "PRF*"+ls_enduser_po)
+	 	
+	 //Third Level HL Under a P.O.
+	 for li_rownum1 =1 to li_rowcount
+	  if ls_enduser_po=ids_856info.inv_base.of_GetItem(li_rownum1,"enduser_po") then
+		  
+		  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+            "HL*"+string(li_HL01,"00;**")+'*'+string(li_HL02,"00;**")+"*I")
+        ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+           "SN1**1*PF")
+        ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA*PD*N*"+ids_856info.inv_base.of_GetItem(li_rownum1,&
+             "SHEET_NET_WT")+"*01")
+        ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA*PD*WT*"+ids_856info.inv_base.of_GetItem(li_rownum1,&
+             "SKID_PIECES")+"*PC")
+	     ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "REF*HC*"+ids_856info.inv_base.of_GetItem(li_rownum1,"lot_num"))
+	     ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "REF*LS*"+ids_856info.inv_base.of_GetItem(li_rownum1,"sheet_skid_num"))			 
+	     //Set "DONE" to 0
+		   ids_856info.inv_base.of_SetItem(li_rownum1, "done","0")
+		  li_HL01 ++
+	  end if  
+    Next
+    
+ end if
+Next
+
+
+/* Method I 
+//Second and Third Level HL (for Each Skid) !!!  
+for li_rownum =1 to li_rowcount
+   //Second Level HL 
+ ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+             "HL*"+string(li_HL01,"00;**")+"*01*O")
+ li_HL02 = li_HL01
+ li_HL01 ++
+ ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+         "HL**BP*"+ids_856info.inv_base.of_GetItem(li_rownum,"enduser_part_num"))		 
+  //Get Total Shipped Quantity Until Today of above Part Number
+ //default = 0
+ Ulong ll_total_lb
+ string ls_enduser_part 
+ ls_enduser_part = ids_856info.inv_base.of_GetItem(li_rownum,"enduser_part_num")
+ SELECT NVL(SUM(sheet_skid.sheet_net_wt),0)
+ INTO :ll_total_lb
+ FROM sheet_skid,ab_job,order_item,sheet_packing_item,shipment
+ WHERE sheet_skid.sheet_skid_num = sheet_packing_item.sheet_skid_num and
+       sheet_packing_item.packing_list = shipment.packing_list and
+		 shipment.packing_list = :al_packing_list and
+		 shipment.shipment_des_edi856_date <> NULL and
+		 sheet_skid.ab_job_num = ab_job.ab_job_num and
+		 ab_job.order_abc_num = order_item.order_abc_num and
+		 ab_job.order_item_num = order_item.order_item_num and
+       order_item.enduser_part_num = :ls_enduser_part
+ USING SQLCA;
+ ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+         "SN1**"+string(li_shipment_nt)+"LB"+string(ll_total_lb))
+ ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+         "PRF*"+ids_856info.inv_base.of_GetItem(li_rownum,"enduser_po"))
+	//Third Level HL
+	ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+           "HL*"+string(li_HL01,"00;**")+'*'+string(li_HL01,"00;**")+"*I")
+   ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&
+           "SN1**1*PF")
+   ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA*PD*N*"+ids_856info.inv_base.of_GetItem(li_rownum,&
+             "SHEET_NET_WT")+"*01")
+   ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "MEA*PD*WT*"+ids_856info.inv_base.of_GetItem(li_rownum,&
+             "SKID_PIECES")+"*PC")
+	ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "REF*HC*"+ids_856info.inv_base.of_GetItem(li_rownum,"lot_num"))
+	ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "REF*LS*"+ids_856info.inv_base.of_GetItem(li_rownum,"sheet_skid_num"))			 
+	li_HL01 ++
+Next
+*/ 
+  
+  
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "CTT*"+String(li_HL01 - 1)+'*'+string(li_rowcount+li_shipment_nt))
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "SE*"+String(ids_datastore.rowcount()-1)+'*'+string(ll_st_log))
+  ids_datastore.inv_base.of_SetItem(ids_datastore.InsertRow(0), "edi_line",&				 
+             "GE*1*"+string(ll_gs_log))
+
+
+ls_edi_file_id = string(f_get_next_value("edi_file_id_seq"))
+
+//Archive EDI File
+if ids_datastore.SaveAs(&
+     ProfileString(gs_ini_file, "EDI","reynolds_856_out","d:\temp")+'\'&
+	              +'r_e_'+ls_today+ls_now+ ls_edi_file_id+".856", Text!, false) =-1 then
+  	MessageBox("DataStore SaveAs Archive", "Error")
+	return -1  
+end if
+//Save EDI file to VAN_OUT DIR. 
+if ids_datastore.SaveAs(&
+     ProfileString(gs_ini_file, "EDI","van_out","d:\temp")+'\'&
+	              + ls_edi_file_id+".856",Text!, false) =-1 then
+   MessageBox("DataStore SaveAs", "Error")
+	return -1
+end if
+
+
+ldt_now = DateTime(ld_today, ld_now)
+//Update shipment EDI 856 Status
+UPDATE shipment
+SET shipment_des_edi856_date = :ldt_now
+WHERE shipment.packing_list = :al_packing_list
+USING SQLCA;
+if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+
+
+destroy ids_856info 
+destroy ids_datastore
+
+return 1
+end function
+
