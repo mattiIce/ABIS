@@ -24,6 +24,23 @@ public sealed class JwtAuthOptions
     public bool Enabled => !string.IsNullOrWhiteSpace(Authority) || !string.IsNullOrWhiteSpace(SigningKey);
 }
 
+/// <summary>Browser-side OIDC client settings, bound from <c>Auth:Oidc</c>, served
+/// anonymously at <c>GET /auth/config</c> so the SPA knows whether to run an
+/// Authorization-Code + PKCE login flow (and against which provider). Distinct from
+/// <see cref="JwtAuthOptions"/>, which is the server's <i>token validation</i> config:
+/// here <see cref="ClientId"/> is the public SPA client registered in the provider.
+/// When unset, the SPA falls back to the API-key field.</summary>
+public sealed class OidcClientOptions
+{
+    public const string SectionName = "Auth:Oidc";
+
+    public string? Authority { get; set; }              // OIDC issuer (the SPA reads its discovery doc)
+    public string? ClientId { get; set; }               // public SPA client id registered in the provider
+    public string? Scope { get; set; }                  // e.g. "openid profile api://abis/.default"
+
+    public bool Enabled => !string.IsNullOrWhiteSpace(Authority) && !string.IsNullOrWhiteSpace(ClientId);
+}
+
 /// <summary>Wires the <c>/api</c> auth: the API key (for machine clients such as
 /// the edge service) plus optional JWT bearer (for interactive users via your
 /// OIDC provider), with a default policy that accepts <b>either</b> scheme.</summary>

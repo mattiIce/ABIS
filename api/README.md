@@ -308,14 +308,37 @@ export Auth__Jwt__SigningKey="<a-long-random-secret>"
 export Auth__Jwt__Issuer="https://issuer.example"
 ```
 
-Configure via the `ApiKeys` section (keys belong in a secret store / environment,
-never in source):
+Configure the **API key** via the `ApiKeys` section (keys belong in a secret store
+/ environment, never in source):
 
 ```sh
 export ApiKeys__Enabled="true"
 export ApiKeys__Keys__0="<a-strong-key>"
 export ApiKeys__Keys__1="<another-key>"     # multiple keys supported
 ```
+
+### Web-UI sign-in (browser OIDC)
+
+The greenfield screens run a standard **Authorization Code + PKCE** login (no client
+secret, no bundler — just `fetch` + Web Crypto in `clientapp/src/auth.ts`). On load
+each page calls anonymous `GET /auth/config`:
+
+- **OIDC configured** → the page shows **Sign in**; users authenticate at your
+  provider and every API call carries `Authorization: Bearer …`.
+- **Not configured** → the page falls back to the **X-Api-Key** field (the dev flow).
+
+Enable it with the `Auth:Oidc` section — the *browser* client (public `ClientId`),
+separate from the API's `Auth:Jwt` token-validation config above:
+
+```sh
+export Auth__Oidc__Authority="https://login.example.com/realms/abis"  # same issuer as Auth:Jwt
+export Auth__Oidc__ClientId="abis-spa"                                # a PUBLIC SPA client
+export Auth__Oidc__Scope="openid profile api://abis/.default"         # must yield a token whose aud = Auth:Jwt:Audience
+```
+
+In the provider, register the SPA client with each screen's URL as a redirect URI
+(e.g. `https://<host>/ui/order-entry.html`, … — or a wildcard `https://<host>/ui/*`).
+The access token's audience must match `Auth:Jwt:Audience` so the API accepts it.
 
 The dev profile ships a throwaway key (`dev-local-key`). Set `ApiKeys__Enabled=false`
 only on a trusted internal network. In Swagger UI, use **Authorize** to supply the key.

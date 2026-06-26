@@ -6,21 +6,14 @@
 // Compiled by `tsc` to wwwroot/ui/app/qa-results.js; served at /ui/qa-results.html.
 import { AbisClient } from './generated/abis-client.js';
 
+import { initAuth, authFetch } from './auth.js';
+
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T =>
   document.querySelector(sel) as T;
 
-const keyInput = $<HTMLInputElement>('#apiKey');
-keyInput.value = localStorage.getItem('abis_api_key') ?? 'dev-local-key';
-keyInput.addEventListener('change', () => localStorage.setItem('abis_api_key', keyInput.value));
-
+// Auth — a Bearer token (OIDC) or the X-Api-Key field — is attached by ./auth.
 function client(): AbisClient {
-  return new AbisClient('', {
-    fetch: (url: RequestInfo, init?: RequestInit) => {
-      const headers = new Headers(init?.headers);
-      headers.set('X-Api-Key', keyInput.value);
-      return fetch(url, { ...init, headers });
-    },
-  });
+  return new AbisClient('', { fetch: authFetch });
 }
 
 const esc = (s: unknown): string =>
@@ -87,4 +80,4 @@ function init(): void {
   void load();
 }
 
-init();
+void initAuth().then(init);

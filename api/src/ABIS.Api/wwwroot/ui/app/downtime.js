@@ -5,18 +5,11 @@
 //
 // Compiled by `tsc` to wwwroot/ui/app/downtime.js; served at /ui/downtime.html.
 import { AbisClient, DowntimeInstanceWrite } from './generated/abis-client.js';
+import { initAuth, authFetch } from './auth.js';
 const $ = (sel) => document.querySelector(sel);
-const keyInput = $('#apiKey');
-keyInput.value = localStorage.getItem('abis_api_key') ?? 'dev-local-key';
-keyInput.addEventListener('change', () => localStorage.setItem('abis_api_key', keyInput.value));
+// Auth — a Bearer token (OIDC) or the X-Api-Key field — is attached by ./auth.
 function client() {
-    return new AbisClient('', {
-        fetch: (url, init) => {
-            const headers = new Headers(init?.headers);
-            headers.set('X-Api-Key', keyInput.value);
-            return fetch(url, { ...init, headers });
-        },
-    });
+    return new AbisClient('', { fetch: authFetch });
 }
 const esc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const setErr = (m) => { $('#err').textContent = m; };
@@ -120,4 +113,4 @@ function init() {
     newInstance();
     void search();
 }
-init();
+void initAuth().then(init);
