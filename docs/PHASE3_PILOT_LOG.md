@@ -15,6 +15,7 @@ advances.
 | **C — greenfield** | `qa` (test results) | **Built** (typed SPA: posted + in-progress results; type/position/date filters) ✅ | — |
 | **C — greenfield** | `shipping` | **Built** (typed SPA: shipment search, detail, dispatch PATCH) ✅ | — |
 | **C — greenfield** | `maintenance` | **Built** (typed SPA: log search + full create/edit form) ✅ | — |
+| **C — greenfield** | `die_tool` (dies) | **Built** (typed SPA: die search + create/edit form) ✅ | — |
 | **Deploy** | API + UIs on a server | **Built** — Docker Compose + [`DEPLOY.md`](DEPLOY.md) ✅ | — |
 | **B — PowerServer** | `quotation` | **Not started** | Needs the Windows PB IDE + a PowerServer license (user-side) |
 
