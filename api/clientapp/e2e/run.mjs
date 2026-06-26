@@ -12,6 +12,7 @@ import {
   OrderCreateWithItems,
   CustomerOrderWrite,
   OrderItemWrite,
+  CoilPatch,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -60,6 +61,16 @@ test('createOrderWithItems writes via typed DTOs and returns a typed OrderDetail
   assert.ok(detail.order.orderAbcNum > 0);
   assert.equal(detail.items.length, 1);
   assert.equal(detail.items[0].enduserPartNum, 'PN-E2E');
+});
+
+// The coil-inventory SPA's flow: weight rollup, processing history, inline patch.
+test('coil-inventory flow: summary, processing, and patch (typed)', async () => {
+  const groups = await client.coilInventorySummary('alloy');
+  assert.ok(Array.isArray(groups));
+  const proc = await client.getCoilProcessing(5001);
+  assert.ok(Array.isArray(proc));
+  const updated = await client.patchCoil(5001, new CoilPatch({ coilLocation: 'E2E-BAY' }));
+  assert.equal(updated.coilLocation, 'E2E-BAY');
 });
 
 // The order-entry SPA's read flow: search → open an order's full detail.
