@@ -13,6 +13,7 @@ advances.
 | **C — greenfield** | `order_entry` | **Built** (typed SPA) + run against live Oracle ✅ | — |
 | **C — greenfield** | `inv_coil` | **Built** (typed SPA: filter, weight rollup, detail + processing, inline patch) ✅ | — |
 | **C — greenfield** | `qa` (test results) | **Built** (typed SPA: posted + in-progress results; type/position/date filters) ✅ | — |
+| **C — greenfield** | `shipping` | **Built** (typed SPA: shipment search, detail, dispatch PATCH) ✅ | — |
 | **Deploy** | API + UIs on a server | **Built** — Docker Compose + [`DEPLOY.md`](DEPLOY.md) ✅ | — |
 | **B — PowerServer** | `quotation` | **Not started** | Needs the Windows PB IDE + a PowerServer license (user-side) |
 

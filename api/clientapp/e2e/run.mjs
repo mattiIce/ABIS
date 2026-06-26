@@ -13,6 +13,7 @@ import {
   CustomerOrderWrite,
   OrderItemWrite,
   CoilPatch,
+  ShipmentStatusPatch,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -61,6 +62,19 @@ test('createOrderWithItems writes via typed DTOs and returns a typed OrderDetail
   assert.ok(detail.order.orderAbcNum > 0);
   assert.equal(detail.items.length, 1);
   assert.equal(detail.items[0].enduserPartNum, 'PN-E2E');
+});
+
+// The shipping SPA's flow: list shipments, open one, record dispatch (patch).
+test('shipping flow: listShipments, getShipment, patch dispatch (typed)', async () => {
+  const page = await client.listShipments(1, 10, undefined, undefined, undefined);
+  assert.ok(Array.isArray(page.items));
+  if (page.items.length > 0) {
+    const id = page.items[0].packingList;
+    const s = await client.getShipment(id);
+    assert.equal(s.packingList, id);
+    const updated = await client.patchShipment(id, new ShipmentStatusPatch({ shipmentNotes: 'E2E dispatch' }));
+    assert.equal(updated.shipmentNotes, 'E2E dispatch');
+  }
 });
 
 // The QA-results SPA's flow: posted + in-progress mechanical test results.
