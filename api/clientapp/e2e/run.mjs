@@ -54,7 +54,7 @@ test('listJobs filters + sorts via the typed client', async () => {
 test('createOrderWithItems writes via typed DTOs and returns a typed OrderDetail', async () => {
   const body = new OrderCreateWithItems({
     order: new CustomerOrderWrite({ origCustomerId: 4001, origCustomerPo: 'PO-E2E' }),
-    items: [new OrderItemWrite({ enduserPartNum: 'PN-E2E', alloy2: '3003' })],
+    items: [new OrderItemWrite({ enduserPartNum: 'PN-E2E', alloy2: '3003', sheetType: 'FLAT' })],
   });
   const detail = await client.createOrderWithItems(body);
   assert.ok(detail.order.orderAbcNum > 0);
