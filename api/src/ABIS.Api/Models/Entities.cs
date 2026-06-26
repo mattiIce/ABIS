@@ -170,14 +170,16 @@ public sealed class CoilInventoryGroup
     public decimal? TotalBalance { get; set; }
 }
 
-/// <summary>A customer / trading partner (table <c>customer</c>).</summary>
+/// <summary>A customer / trading partner (table <c>customer</c>). <c>CustomerName</c>
+/// maps to the real column <c>customer_full_name</c>.</summary>
 public sealed class Customer
 {
     public long CustomerId { get; set; }
     public string? CustomerName { get; set; }
     public string? CustomerShortName { get; set; }
-    public string? EnduserName { get; set; }
-    public string? ShiptoCustomerZip { get; set; }
+    public string? CustomerCity { get; set; }
+    public string? CustomerState { get; set; }
+    public string? CustomerZip { get; set; }
 }
 
 /// <summary>A finished output skid produced by a job (table <c>sheet_skid</c>).</summary>
@@ -241,6 +243,7 @@ public sealed class Part
     public string? Alloy { get; set; }
     public string? Temper { get; set; }
     public decimal? Gauge { get; set; }
+    public int? ItemStatus { get; set; }
 }
 
 /// <summary>A die / tooling record (table <c>die</c>).</summary>
@@ -293,6 +296,31 @@ public sealed class ScanLog
     public long? AbJobNum { get; set; }
     public string? ScanStation { get; set; }
     public string? Note { get; set; }
+}
+
+/// <summary>A customer contact (table <c>customer_contact</c>).</summary>
+public sealed class CustomerContact
+{
+    public long ContactId { get; set; }
+    public long? CustomerId { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? Department { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? Phone1 { get; set; }
+    public string? Email1 { get; set; }
+}
+
+/// <summary>A part sketch / drawing header (table <c>sketch</c>). The binary
+/// <c>sketch_view</c> (LONG RAW) image is intentionally not exposed here.</summary>
+public sealed class Sketch
+{
+    public long SketchId { get; set; }
+    public string? SketchName { get; set; }
+    public string? SketchNotes { get; set; }
+    public string? SketchSysNote { get; set; }
+    public int? SketchStatus { get; set; }
 }
 
 /// <summary>A carrier / trucking partner (table <c>carrier</c>).</summary>

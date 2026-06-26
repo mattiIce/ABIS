@@ -68,8 +68,8 @@ public sealed class AbisRepository : IAbisRepository
         """;
 
     private const string CustomerCols = """
-        customer_id AS CustomerId, customer_name AS CustomerName, customer_short_name AS CustomerShortName,
-        enduser_name AS EnduserName, shipto_customer_zip AS ShiptoCustomerZip
+        customer_id AS CustomerId, customer_full_name AS CustomerName, customer_short_name AS CustomerShortName,
+        customer_city AS CustomerCity, customer_state AS CustomerState, customer_zip AS CustomerZip
         """;
 
     private const string SheetSkidCols = """
@@ -90,7 +90,7 @@ public sealed class AbisRepository : IAbisRepository
     private const string PartCols = """
         part_num_id AS PartNumId, customer_id AS CustomerId, enduser_id AS EnduserId,
         enduser_part_num AS EnduserPartNum, sheet_type AS SheetType, alloy AS Alloy,
-        temper AS Temper, gauge AS Gauge
+        temper AS Temper, gauge AS Gauge, item_status AS ItemStatus
         """;
 
     private const string DieCols = """
@@ -114,6 +114,16 @@ public sealed class AbisRepository : IAbisRepository
     private const string ScanLogCols = """
         scan_id AS ScanId, scan_datetime AS ScanDatetime, ab_job_num AS AbJobNum,
         scan_station AS ScanStation, note AS Note
+        """;
+
+    private const string ContactCols = """
+        contact_id AS ContactId, customer_id AS CustomerId, first_name AS FirstName, last_name AS LastName,
+        department AS Department, city AS City, state AS State, phone1 AS Phone1, email1 AS Email1
+        """;
+
+    private const string SketchCols = """
+        sketch_id AS SketchId, sketch_name AS SketchName, sketch_notes AS SketchNotes,
+        sketch_sys_note AS SketchSysNote, sketch_status AS SketchStatus
         """;
 
     private const string CarrierCols = """
@@ -372,7 +382,7 @@ public sealed class AbisRepository : IAbisRepository
 
     public Task<PagedResult<Customer>> GetCustomersAsync(int page, int pageSize, string? name, string? orderBy, CancellationToken ct) =>
         PageAsync<Customer>(CustomerCols, "customer", orderBy ?? "customer_id",
-            name is null ? null : "customer_name LIKE :name",
+            name is null ? null : "customer_full_name LIKE :name",
             new { name = name is null ? null : $"%{name}%" }, page, pageSize, ct);
 
     public async Task<Customer?> GetCustomerAsync(long customerId, CancellationToken ct)
@@ -391,10 +401,10 @@ public sealed class AbisRepository : IAbisRepository
 
         await conn.ExecuteAsync(new CommandDefinition(
             """
-            INSERT INTO customer (customer_id, customer_name, customer_short_name, enduser_name, shipto_customer_zip)
-            VALUES (:id, :name, :shortName, :enduser, :zip)
+            INSERT INTO customer (customer_id, customer_full_name, customer_short_name, customer_city, customer_state, customer_zip)
+            VALUES (:id, :name, :shortName, :city, :state, :zip)
             """,
-            new { id, name = body.CustomerName, shortName = body.CustomerShortName, enduser = body.EnduserName, zip = body.ShiptoCustomerZip },
+            new { id, name = body.CustomerName, shortName = body.CustomerShortName, city = body.CustomerCity, state = body.CustomerState, zip = body.CustomerZip },
             transaction: tx, cancellationToken: ct));
 
         await tx.CommitAsync(ct);
@@ -406,11 +416,11 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
-            UPDATE customer SET customer_name = :name, customer_short_name = :shortName,
-                   enduser_name = :enduser, shipto_customer_zip = :zip
+            UPDATE customer SET customer_full_name = :name, customer_short_name = :shortName,
+                   customer_city = :city, customer_state = :state, customer_zip = :zip
             WHERE customer_id = :id
             """,
-            new { name = body.CustomerName, shortName = body.CustomerShortName, enduser = body.EnduserName, zip = body.ShiptoCustomerZip, id = customerId },
+            new { name = body.CustomerName, shortName = body.CustomerShortName, city = body.CustomerCity, state = body.CustomerState, zip = body.CustomerZip, id = customerId },
             cancellationToken: ct));
         return n == 0 ? null : await GetCustomerAsync(customerId, ct);
     }
@@ -729,6 +739,41 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {PartCols} FROM part_num WHERE part_num_id = :id", new { id = partNumId }, cancellationToken: ct));
     }
 
+    public async Task<Part> CreatePartAsync(PartWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "part_num", "part_num_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO part_num (part_num_id, customer_id, enduser_id, enduser_part_num, sheet_type, alloy, temper, gauge, item_status)
+            VALUES (:id, :cust, :enduser, :part, :sheet, :alloy, :temper, :gauge, :status)
+            """,
+            // item_status is NOT NULL; default to 0 (inactive) when not supplied.
+            new { id, cust = body.CustomerId, enduser = body.EnduserId, part = body.EnduserPartNum, sheet = body.SheetType,
+                  alloy = body.Alloy, temper = body.Temper, gauge = body.Gauge, status = body.ItemStatus ?? 0 },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetPartAsync(id, ct))!;
+    }
+
+    public async Task<Part?> UpdatePartAsync(long partNumId, PartWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // item_status preserved when omitted (COALESCE) so a partial body can't null a NOT NULL column.
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE part_num SET customer_id = :cust, enduser_id = :enduser, enduser_part_num = :part,
+                   sheet_type = :sheet, alloy = :alloy, temper = :temper, gauge = :gauge,
+                   item_status = COALESCE(:status, item_status)
+            WHERE part_num_id = :id
+            """,
+            new { cust = body.CustomerId, enduser = body.EnduserId, part = body.EnduserPartNum, sheet = body.SheetType,
+                  alloy = body.Alloy, temper = body.Temper, gauge = body.Gauge, status = body.ItemStatus, id = partNumId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetPartAsync(partNumId, ct);
+    }
+
     public Task<PagedResult<Die>> GetDiesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct) =>
         PageAsync<Die>(DieCols, "die", orderBy ?? "die_id",
             status is null ? null : "status = :status",
@@ -819,6 +864,38 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {CarrierCols} FROM carrier WHERE carrier_id = :id", new { id = carrierId }, cancellationToken: ct));
     }
 
+    public async Task<Carrier> CreateCarrierAsync(CarrierWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "carrier", "carrier_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO carrier (carrier_id, scac, carrier_full_name, carrier_type_code, carrier_city, carrier_state, carrier_phone_number, status)
+            VALUES (:id, :scac, :name, :type, :city, :state, :phone, :status)
+            """,
+            new { id, scac = body.Scac, name = body.CarrierFullName, type = body.CarrierTypeCode, city = body.CarrierCity,
+                  state = body.CarrierState, phone = body.CarrierPhoneNumber, status = body.Status },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetCarrierAsync(id, ct))!;
+    }
+
+    public async Task<Carrier?> UpdateCarrierAsync(long carrierId, CarrierWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE carrier SET scac = :scac, carrier_full_name = :name, carrier_type_code = :type,
+                   carrier_city = :city, carrier_state = :state, carrier_phone_number = :phone, status = :status
+            WHERE carrier_id = :id
+            """,
+            new { scac = body.Scac, name = body.CarrierFullName, type = body.CarrierTypeCode, city = body.CarrierCity,
+                  state = body.CarrierState, phone = body.CarrierPhoneNumber, status = body.Status, id = carrierId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetCarrierAsync(carrierId, ct);
+    }
+
     public Task<PagedResult<Shift>> GetShiftsAsync(int page, int pageSize, long? lineNum, string? orderBy, CancellationToken ct) =>
         PageAsync<Shift>(ShiftCols, "shift", orderBy ?? "shift_num DESC",
             lineNum is null ? null : "line_num = :lineNum",
@@ -846,6 +923,34 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         return await conn.QuerySingleOrDefaultAsync<DowntimeInstance>(new CommandDefinition(
             $"SELECT {DowntimeCols} FROM dt_instance WHERE instance_num = :id", new { id = instanceNum }, cancellationToken: ct));
+    }
+
+    public async Task<IReadOnlyList<CustomerContact>> GetCustomerContactsAsync(long customerId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<CustomerContact>(new CommandDefinition(
+            $"SELECT {ContactCols} FROM customer_contact WHERE customer_id = :id ORDER BY contact_id",
+            new { id = customerId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<CustomerContact?> GetCustomerContactAsync(long contactId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<CustomerContact>(new CommandDefinition(
+            $"SELECT {ContactCols} FROM customer_contact WHERE contact_id = :id", new { id = contactId }, cancellationToken: ct));
+    }
+
+    public Task<PagedResult<Sketch>> GetSketchesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct) =>
+        PageAsync<Sketch>(SketchCols, "sketch", orderBy ?? "sketch_id",
+            status is null ? null : "sketch_status = :status",
+            new { status }, page, pageSize, ct);
+
+    public async Task<Sketch?> GetSketchAsync(long sketchId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<Sketch>(new CommandDefinition(
+            $"SELECT {SketchCols} FROM sketch WHERE sketch_id = :id", new { id = sketchId }, cancellationToken: ct));
     }
 
     public async Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct)

@@ -6,10 +6,10 @@ PowerBuilder client that talks straight to the database with no service tier
 missing integration point every later modernization step builds on
 ([`../docs/MODERNIZATION_ROADMAP.md`](../docs/MODERNIZATION_ROADMAP.md), Phase 2).
 
-> **Scope:** read (GET) endpoints across the core entities, plus a small,
-> proven **write** surface — customer master data (POST/PUT) and operational
-> partial updates (PATCH) to jobs and coils. Broader writes follow as the seam
-> is accepted.
+> **Scope:** read (GET) endpoints across the core entities, plus a growing
+> **write** surface — master data create/replace (customers, parts, carriers;
+> POST/PUT) and operational partial updates (PATCH) to jobs and coils. The write
+> path (sequence-backed ids) is validated against the live Oracle database.
 
 ## Stack
 
@@ -89,7 +89,7 @@ running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ```sh
 cd api
-dotnet test                                # 117 tests: repository + HTTP smoke
+dotnet test                                # 123 tests: repository + HTTP smoke
 ```
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
@@ -185,6 +185,8 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/partial-skids?page&pageSize&sort&dir` | List in-process partial skids (paged, sortable) |
 | `GET /api/parts?page&pageSize&customerId&alloy&sort&dir` | List part-number master records (paged, filterable, sortable) |
 | `GET /api/parts/{partNumId}` | One part-number record |
+| `POST /api/parts` | Create a part-number record (requires `customerId`) → 201 |
+| `PUT /api/parts/{partNumId}` | Replace a part-number record |
 | `GET /api/dies?page&pageSize&status&sort&dir` | List dies/tooling (paged, filterable, sortable) |
 | `GET /api/dies/{dieId}` | One die |
 | `GET /api/shipments?page&pageSize&customerId&sort&dir` | List shipments / packing lists (paged, filterable, sortable) |
@@ -198,10 +200,16 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/maint-logs/{maintLogId}` | One maintenance log entry |
 | `GET /api/carriers?page&pageSize&status&sort&dir` | List carriers / trucking partners (paged, filterable, sortable) |
 | `GET /api/carriers/{carrierId}` | One carrier |
+| `POST /api/carriers` | Create a carrier (requires `carrierFullName`) → 201 |
+| `PUT /api/carriers/{carrierId}` | Replace a carrier |
 | `GET /api/shifts?page&pageSize&lineNum&sort&dir` | List production shifts, newest first (paged, filterable, sortable) |
 | `GET /api/shifts/{shiftNum}` | One shift |
 | `GET /api/downtime?page&pageSize&abJobNum&shiftNum&sort&dir` | List downtime instances, newest first (paged, filterable, sortable) |
 | `GET /api/downtime/{instanceNum}` | One downtime instance |
+| `GET /api/customers/{customerId}/contacts` | Contacts for a customer |
+| `GET /api/customer-contacts/{contactId}` | One customer contact |
+| `GET /api/sketches?page&pageSize&status&sort&dir` | List part sketches/drawings, no image (paged, filterable, sortable) |
+| `GET /api/sketches/{sketchId}` | One sketch header (no image) |
 | `GET /api/test-results?page&pageSize&testType&position&from&to&sort&dir` | List posted mechanical test results (paged, filterable, sortable) |
 | `GET /api/temp-test-results?page&pageSize&testType&position&from&to&sort&dir` | List in-progress (working-set) test results (paged, filterable, sortable) |
 | `GET /api/lookups/alloys` | Distinct alloys (dropdown reference data) |

@@ -39,6 +39,8 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS carrier;
             DROP TABLE IF EXISTS shift;
             DROP TABLE IF EXISTS dt_instance;
+            DROP TABLE IF EXISTS customer_contact;
+            DROP TABLE IF EXISTS sketch;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
@@ -75,8 +77,8 @@ public static class SqliteFixture
                 thickness REAL, width REAL);
 
             CREATE TABLE customer (
-                customer_id INTEGER PRIMARY KEY, customer_name TEXT, customer_short_name TEXT,
-                enduser_name TEXT, shipto_customer_zip TEXT);
+                customer_id INTEGER PRIMARY KEY, customer_full_name TEXT, customer_short_name TEXT,
+                customer_city TEXT, customer_state TEXT, customer_zip TEXT);
 
             CREATE TABLE sheet_skid (
                 sheet_skid_num INTEGER PRIMARY KEY, ab_job_num INTEGER, sheet_skid_display_num TEXT,
@@ -100,7 +102,7 @@ public static class SqliteFixture
 
             CREATE TABLE part_num (
                 part_num_id INTEGER PRIMARY KEY, customer_id INTEGER, enduser_id INTEGER,
-                enduser_part_num TEXT, sheet_type TEXT, alloy TEXT, temper TEXT, gauge REAL);
+                enduser_part_num TEXT, sheet_type TEXT, alloy TEXT, temper TEXT, gauge REAL, item_status INTEGER);
 
             CREATE TABLE die (
                 die_id INTEGER PRIMARY KEY, die_name TEXT, status INTEGER, tool_num TEXT,
@@ -137,6 +139,14 @@ public static class SqliteFixture
             CREATE TABLE dt_instance (
                 instance_num INTEGER PRIMARY KEY, ab_job_num INTEGER, line_num INTEGER,
                 starting_time TEXT, ending_time TEXT, note TEXT, shift_num INTEGER);
+
+            CREATE TABLE customer_contact (
+                contact_id INTEGER PRIMARY KEY, customer_id INTEGER, first_name TEXT, last_name TEXT,
+                department TEXT, city TEXT, state TEXT, phone1 TEXT, email1 TEXT);
+
+            CREATE TABLE sketch (
+                sketch_id INTEGER PRIMARY KEY, sketch_name TEXT, sketch_notes TEXT,
+                sketch_sys_note TEXT, sketch_status INTEGER);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -167,14 +177,14 @@ public static class SqliteFixture
             });
 
         conn.Execute("""
-            INSERT INTO part_num (part_num_id, customer_id, enduser_id, enduser_part_num, sheet_type, alloy, temper, gauge)
-            VALUES (:PartNumId, :CustomerId, :EnduserId, :EnduserPartNum, :SheetType, :Alloy, :Temper, :Gauge)
+            INSERT INTO part_num (part_num_id, customer_id, enduser_id, enduser_part_num, sheet_type, alloy, temper, gauge, item_status)
+            VALUES (:PartNumId, :CustomerId, :EnduserId, :EnduserPartNum, :SheetType, :Alloy, :Temper, :Gauge, :ItemStatus)
             """,
             new[]
             {
-                new { PartNumId = 6001L, CustomerId = (long?)4001L, EnduserId = (long?)null, EnduserPartNum = "PN-3003-A", SheetType = "SHEET", Alloy = "3003", Temper = "H14", Gauge = (decimal?)0.125m },
-                new { PartNumId = 6002L, CustomerId = (long?)4001L, EnduserId = (long?)null, EnduserPartNum = "PN-5052-B", SheetType = "SHEET", Alloy = "5052", Temper = "H32", Gauge = (decimal?)0.0625m },
-                new { PartNumId = 6003L, CustomerId = (long?)4002L, EnduserId = (long?)null, EnduserPartNum = "PN-3003-C", SheetType = "PLATE", Alloy = "3003", Temper = "H14", Gauge = (decimal?)0.25m }
+                new { PartNumId = 6001L, CustomerId = (long?)4001L, EnduserId = (long?)null, EnduserPartNum = "PN-3003-A", SheetType = "SHEET", Alloy = "3003", Temper = "H14", Gauge = (decimal?)0.125m, ItemStatus = (int?)1 },
+                new { PartNumId = 6002L, CustomerId = (long?)4001L, EnduserId = (long?)null, EnduserPartNum = "PN-5052-B", SheetType = "SHEET", Alloy = "5052", Temper = "H32", Gauge = (decimal?)0.0625m, ItemStatus = (int?)1 },
+                new { PartNumId = 6003L, CustomerId = (long?)4002L, EnduserId = (long?)null, EnduserPartNum = "PN-3003-C", SheetType = "PLATE", Alloy = "3003", Temper = "H14", Gauge = (decimal?)0.25m, ItemStatus = (int?)0 }
             });
 
         conn.Execute("""
@@ -266,6 +276,28 @@ public static class SqliteFixture
             });
 
         conn.Execute("""
+            INSERT INTO customer_contact (contact_id, customer_id, first_name, last_name, department, city, state, phone1, email1)
+            VALUES (:ContactId, :CustomerId, :FirstName, :LastName, :Department, :City, :State, :Phone1, :Email1)
+            """,
+            new[]
+            {
+                new { ContactId = 5601L, CustomerId = (long?)4001L, FirstName = "Dana", LastName = "Reed", Department = "Purchasing", City = "Detroit", State = "MI", Phone1 = "313-555-1000", Email1 = "dana.reed@acme.example" },
+                new { ContactId = 5602L, CustomerId = (long?)4001L, FirstName = "Lee", LastName = "Park", Department = "Quality", City = "Detroit", State = "MI", Phone1 = "313-555-1001", Email1 = "lee.park@acme.example" },
+                new { ContactId = 5603L, CustomerId = (long?)4002L, FirstName = "Sam", LastName = "Cruz", Department = "Receiving", City = "Toledo", State = "OH", Phone1 = "419-555-2000", Email1 = "sam.cruz@beta.example" }
+            });
+
+        conn.Execute("""
+            INSERT INTO sketch (sketch_id, sketch_name, sketch_notes, sketch_sys_note, sketch_status)
+            VALUES (:SketchId, :SketchName, :SketchNotes, :SketchSysNote, :SketchStatus)
+            """,
+            new[]
+            {
+                new { SketchId = 1L, SketchName = "BRKT-A rev1", SketchNotes = "Bracket profile", SketchSysNote = "", SketchStatus = (int?)1 },
+                new { SketchId = 2L, SketchName = "PANEL-B rev2", SketchNotes = "Panel blank", SketchSysNote = "", SketchStatus = (int?)1 },
+                new { SketchId = 3L, SketchName = "BRKT-C rev1", SketchNotes = "Old revision", SketchSysNote = "", SketchStatus = (int?)0 }
+            });
+
+        conn.Execute("""
             INSERT INTO ab_job (ab_job_num, order_abc_num, order_item_num, line_num, job_status, material_yield,
                 number_of_men_used, sketch_id, create_date, due_date, time_date_started, time_date_finished,
                 job_notes, sketch_job_note)
@@ -319,13 +351,13 @@ public static class SqliteFixture
             });
 
         conn.Execute("""
-            INSERT INTO customer (customer_id, customer_name, customer_short_name, enduser_name, shipto_customer_zip)
-            VALUES (:CustomerId, :CustomerName, :CustomerShortName, :EnduserName, :ShiptoCustomerZip)
+            INSERT INTO customer (customer_id, customer_full_name, customer_short_name, customer_city, customer_state, customer_zip)
+            VALUES (:CustomerId, :CustomerFullName, :CustomerShortName, :CustomerCity, :CustomerState, :CustomerZip)
             """,
             new[]
             {
-                new { CustomerId = 4001L, CustomerName = "ACME METALS", CustomerShortName = "ACME", EnduserName = "ACME END USE", ShiptoCustomerZip = "48201" },
-                new { CustomerId = 4002L, CustomerName = "BETA FAB", CustomerShortName = "BETA", EnduserName = "BETA END USE", ShiptoCustomerZip = "44101" }
+                new { CustomerId = 4001L, CustomerFullName = "ACME METALS", CustomerShortName = "ACME", CustomerCity = "Detroit", CustomerState = "MI", CustomerZip = "48201" },
+                new { CustomerId = 4002L, CustomerFullName = "BETA FAB", CustomerShortName = "BETA", CustomerCity = "Cleveland", CustomerState = "OH", CustomerZip = "44101" }
             });
 
         conn.Execute("""

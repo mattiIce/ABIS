@@ -637,6 +637,73 @@ public sealed class RepositoryTests : IDisposable
         Assert.Null(await _repo.GetDowntimeInstanceAsync(999999, CancellationToken.None));
     }
 
+    // ---- customer contacts & sketches ----------------------------------
+
+    [Fact]
+    public async Task GetCustomerContacts_returns_contacts_for_customer()
+    {
+        var c4001 = await _repo.GetCustomerContactsAsync(4001, CancellationToken.None);
+        Assert.Equal(2, c4001.Count);
+        Assert.All(c4001, c => Assert.Equal(4001, c.CustomerId));
+
+        Assert.Equal("Cruz", (await _repo.GetCustomerContactAsync(5603, CancellationToken.None))!.LastName);
+        Assert.Null(await _repo.GetCustomerContactAsync(999999, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetSketches_lists_and_filters_by_status()
+    {
+        var all = await _repo.GetSketchesAsync(1, 25, status: null, orderBy: null, CancellationToken.None);
+        Assert.Equal(3, all.TotalCount);
+
+        var active = await _repo.GetSketchesAsync(1, 25, status: 1, orderBy: null, CancellationToken.None);
+        Assert.Equal(2, active.TotalCount);
+
+        Assert.Equal("BRKT-A rev1", (await _repo.GetSketchAsync(1, CancellationToken.None))!.SketchName);
+        Assert.Null(await _repo.GetSketchAsync(999999, CancellationToken.None));
+    }
+
+    // ---- writes: parts & carriers --------------------------------------
+
+    [Fact]
+    public async Task CreatePart_assigns_id_defaults_status_and_persists()
+    {
+        var created = await _repo.CreatePartAsync(
+            new PartWrite { CustomerId = 4001, EnduserPartNum = "PN-NEW-W", Alloy = "6061" }, CancellationToken.None);
+        Assert.Equal(6004, created.PartNumId);    // MAX(6003) + 1
+        Assert.Equal(4001, created.CustomerId);
+        Assert.Equal(0, created.ItemStatus);      // NOT NULL -> defaulted
+        Assert.Equal("PN-NEW-W", (await _repo.GetPartAsync(6004, CancellationToken.None))!.EnduserPartNum);
+    }
+
+    [Fact]
+    public async Task UpdatePart_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdatePartAsync(6001,
+            new PartWrite { CustomerId = 4001, Alloy = "3004", ItemStatus = 2 }, CancellationToken.None);
+        Assert.Equal("3004", updated!.Alloy);
+        Assert.Equal(2, updated.ItemStatus);
+        Assert.Null(await _repo.UpdatePartAsync(999999, new PartWrite { CustomerId = 4001 }, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CreateCarrier_assigns_id_and_persists()
+    {
+        var created = await _repo.CreateCarrierAsync(
+            new CarrierWrite { CarrierFullName = "Gamma Transport", Scac = "GMMA", Status = 1 }, CancellationToken.None);
+        Assert.Equal(1203, created.CarrierId);    // MAX(1202) + 1
+        Assert.Equal("Gamma Transport", created.CarrierFullName);
+    }
+
+    [Fact]
+    public async Task UpdateCarrier_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateCarrierAsync(1201,
+            new CarrierWrite { CarrierFullName = "Alpha Freight Inc", Status = 0 }, CancellationToken.None);
+        Assert.Equal("Alpha Freight Inc", updated!.CarrierFullName);
+        Assert.Null(await _repo.UpdateCarrierAsync(999999, new CarrierWrite { CarrierFullName = "X" }, CancellationToken.None));
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }

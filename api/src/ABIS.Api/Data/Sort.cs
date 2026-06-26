@@ -54,7 +54,7 @@ public static class Sort
             DefaultOrderBy: "order_item_num", TieBreaker: "order_item_num"),
 
         ["customers"] = new(Cols(
-            ("customerId", "customer_id"), ("name", "customer_name"), ("shortName", "customer_short_name")),
+            ("customerId", "customer_id"), ("name", "customer_full_name"), ("shortName", "customer_short_name")),
             DefaultOrderBy: "customer_id", TieBreaker: "customer_id"),
 
         ["parts"] = new(Cols(
@@ -101,6 +101,10 @@ public static class Sort
             ("instanceNum", "instance_num"), ("abJobNum", "ab_job_num"), ("shiftNum", "shift_num"),
             ("lineNum", "line_num"), ("startingTime", "starting_time")),
             DefaultOrderBy: "instance_num DESC", TieBreaker: "instance_num"),
+
+        ["sketches"] = new(Cols(
+            ("sketchId", "sketch_id"), ("name", "sketch_name"), ("status", "sketch_status")),
+            DefaultOrderBy: "sketch_id", TieBreaker: "sketch_id"),
 
         ["sheetSkids"] = new(Cols(
             ("sheetSkidNum", "sheet_skid_num"), ("abJobNum", "ab_job_num"), ("netWt", "sheet_net_wt"),
