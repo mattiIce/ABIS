@@ -8224,6 +8224,11 @@
             "type": "string",
             "nullable": true
           },
+          "itemStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
           "sheetType": {
             "type": "string",
             "nullable": true
@@ -8241,9 +8246,207 @@
             "format": "double",
             "nullable": true
           },
-          "itemStatus": {
+          "gaugeP": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gaugeM": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "surface": {
+            "type": "string",
+            "nullable": true
+          },
+          "flatness": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialEndUse": {
+            "type": "string",
+            "nullable": true
+          },
+          "theoreticalUnitWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "incomingCoilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "trimmedCoilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "trimTypeCode": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          },
+          "trimmingRequired": {
+            "type": "string",
+            "nullable": true
+          },
+          "trimmedWidthOverridden": {
+            "type": "string",
+            "nullable": true
+          },
+          "trimmedWidthOverrideUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "shTolerancePlus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "shToleranceMinus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "dieId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "die1": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "die2": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sector": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "dimplingCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "lineNum": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "spm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "efficiencyPercent": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "specialPart": {
+            "type": "string",
+            "nullable": true
+          },
+          "autoparts": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "piecesSkid": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "piecesSkidPlus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "piecesSkidMinus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "stacksSkid": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxSkidWt": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "packagingBands": {
+            "type": "string",
+            "nullable": true
+          },
+          "oilStencilInterleave": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec1": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec2": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec3": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec4": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec5": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec6": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec7": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingOtherSpec": {
+            "type": "string",
+            "nullable": true
+          },
+          "processingOtherSpec": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierCode": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "itemDesc": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemAttachments": {
+            "type": "string",
+            "nullable": true
+          },
+          "govtContractNum": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -8302,6 +8505,11 @@
             "type": "string",
             "nullable": true
           },
+          "itemStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
           "sheetType": {
             "type": "string",
             "nullable": true
@@ -8319,9 +8527,207 @@
             "format": "double",
             "nullable": true
           },
-          "itemStatus": {
+          "gaugeP": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gaugeM": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "surface": {
+            "type": "string",
+            "nullable": true
+          },
+          "flatness": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialEndUse": {
+            "type": "string",
+            "nullable": true
+          },
+          "theoreticalUnitWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "incomingCoilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "trimmedCoilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "trimTypeCode": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          },
+          "trimmingRequired": {
+            "type": "string",
+            "nullable": true
+          },
+          "trimmedWidthOverridden": {
+            "type": "string",
+            "nullable": true
+          },
+          "trimmedWidthOverrideUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "shTolerancePlus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "shToleranceMinus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "dieId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "die1": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "die2": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sector": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "dimplingCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "lineNum": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "spm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "efficiencyPercent": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "specialPart": {
+            "type": "string",
+            "nullable": true
+          },
+          "autoparts": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "piecesSkid": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "piecesSkidPlus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "piecesSkidMinus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "stacksSkid": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxSkidWt": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "packagingBands": {
+            "type": "string",
+            "nullable": true
+          },
+          "oilStencilInterleave": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec1": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec2": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec3": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec4": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec5": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec6": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec7": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingOtherSpec": {
+            "type": "string",
+            "nullable": true
+          },
+          "processingOtherSpec": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierCode": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "itemDesc": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemAttachments": {
+            "type": "string",
+            "nullable": true
+          },
+          "govtContractNum": {
+            "type": "string",
             "nullable": true
           }
         },

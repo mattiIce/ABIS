@@ -94,8 +94,21 @@ public sealed class AbisRepository : IAbisRepository
 
     private const string PartCols = """
         part_num_id AS PartNumId, customer_id AS CustomerId, enduser_id AS EnduserId,
-        enduser_part_num AS EnduserPartNum, sheet_type AS SheetType, alloy AS Alloy,
-        temper AS Temper, gauge AS Gauge, item_status AS ItemStatus
+        enduser_part_num AS EnduserPartNum, item_status AS ItemStatus,
+        sheet_type AS SheetType, alloy AS Alloy, temper AS Temper, gauge AS Gauge, gauge_p AS GaugeP, gauge_m AS GaugeM,
+        surface AS Surface, flatness AS Flatness, material_end_use AS MaterialEndUse, theoretical_unit_wt AS TheoreticalUnitWt,
+        incoming_coil_width AS IncomingCoilWidth, trimmed_coil_width AS TrimmedCoilWidth, trim_type_code AS TrimTypeCode,
+        trimming_required AS TrimmingRequired, trimmed_width_overridden AS TrimmedWidthOverridden,
+        trimmed_width_override_user AS TrimmedWidthOverrideUser, sh_tolerance_plus AS ShTolerancePlus, sh_tolerance_minus AS ShToleranceMinus,
+        die_id AS DieId, die_1 AS Die1, die_2 AS Die2, sector AS Sector, dimpling_code AS DimplingCode, line_num AS LineNum,
+        spm AS Spm, efficiency_percent AS EfficiencyPercent, special_part AS SpecialPart, autoparts AS Autoparts,
+        pieces_skid AS PiecesSkid, pieces_skid_plus AS PiecesSkidPlus, pieces_skid_minus AS PiecesSkidMinus,
+        stacks_skid AS StacksSkid, max_skid_wt AS MaxSkidWt, packaging_bands AS PackagingBands, oil_stencil_interleave AS OilStencilInterleave,
+        packaging_spec1 AS PackagingSpec1, packaging_spec2 AS PackagingSpec2, packaging_spec3 AS PackagingSpec3,
+        packaging_spec4 AS PackagingSpec4, packaging_spec5 AS PackagingSpec5, packaging_spec6 AS PackagingSpec6,
+        packaging_spec7 AS PackagingSpec7, packaging_other_spec AS PackagingOtherSpec, processing_other_spec AS ProcessingOtherSpec,
+        supplier_code AS SupplierCode, item_desc AS ItemDesc, item_note AS ItemNote,
+        item_attachments AS ItemAttachments, govt_contract_num AS GovtContractNum
         """;
 
     private const string DieCols = """
@@ -1184,38 +1197,87 @@ public sealed class AbisRepository : IAbisRepository
         var id = await NextIdAsync(conn, tx, "part_num", "part_num_id", ct);
         await conn.ExecuteAsync(new CommandDefinition(
             """
-            INSERT INTO part_num (part_num_id, customer_id, enduser_id, enduser_part_num, sheet_type, alloy, temper, gauge, item_status)
-            VALUES (:id, :cust, :enduser, :part, :sheet, :alloy, :temper, :gauge, :status)
+            INSERT INTO part_num (
+                part_num_id, customer_id, enduser_id, enduser_part_num, item_status,
+                sheet_type, alloy, temper, gauge, gauge_p, gauge_m, surface, flatness, material_end_use, theoretical_unit_wt,
+                incoming_coil_width, trimmed_coil_width, trim_type_code, trimming_required, trimmed_width_overridden,
+                trimmed_width_override_user, sh_tolerance_plus, sh_tolerance_minus,
+                die_id, die_1, die_2, sector, dimpling_code, line_num, spm, efficiency_percent, special_part, autoparts,
+                pieces_skid, pieces_skid_plus, pieces_skid_minus, stacks_skid, max_skid_wt, packaging_bands, oil_stencil_interleave,
+                packaging_spec1, packaging_spec2, packaging_spec3, packaging_spec4, packaging_spec5, packaging_spec6, packaging_spec7,
+                packaging_other_spec, processing_other_spec, supplier_code, item_desc, item_note, item_attachments, govt_contract_num)
+            VALUES (
+                :id, :customer_id, :enduser_id, :enduser_part_num, :item_status,
+                :sheet_type, :alloy, :temper, :gauge, :gauge_p, :gauge_m, :surface, :flatness, :material_end_use, :theoretical_unit_wt,
+                :incoming_coil_width, :trimmed_coil_width, :trim_type_code, :trimming_required, :trimmed_width_overridden,
+                :trimmed_width_override_user, :sh_tolerance_plus, :sh_tolerance_minus,
+                :die_id, :die_1, :die_2, :sector, :dimpling_code, :line_num, :spm, :efficiency_percent, :special_part, :autoparts,
+                :pieces_skid, :pieces_skid_plus, :pieces_skid_minus, :stacks_skid, :max_skid_wt, :packaging_bands, :oil_stencil_interleave,
+                :packaging_spec1, :packaging_spec2, :packaging_spec3, :packaging_spec4, :packaging_spec5, :packaging_spec6, :packaging_spec7,
+                :packaging_other_spec, :processing_other_spec, :supplier_code, :item_desc, :item_note, :item_attachments, :govt_contract_num)
             """,
             // item_status is NOT NULL; default to 0 (inactive) when not supplied.
-            new { id, cust = body.CustomerId, enduser = body.EnduserId, part = body.EnduserPartNum, sheet = body.SheetType,
-                  alloy = body.Alloy, temper = body.Temper, gauge = body.Gauge, status = body.ItemStatus ?? 0 },
+            PartParams(body, id, body.ItemStatus ?? 0),
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
         return (await GetPartAsync(id, ct))!;
     }
 
+    // The full part_num column bind set (names match the :placeholders). Property types are
+    // preserved so nullable NUMBER binds correctly even when null (no ORA-00932/CHAR ambiguity).
+    private static DynamicParameters PartParams(PartWrite b, long id, int itemStatus)
+    {
+        var p = new DynamicParameters(PartColumnBinds(b));
+        p.Add("id", id);
+        p.Add("item_status", itemStatus, DbType.Int32);
+        return p;
+    }
+
+    private static object PartColumnBinds(PartWrite b) => new
+    {
+        customer_id = b.CustomerId, enduser_id = b.EnduserId, enduser_part_num = b.EnduserPartNum,
+        sheet_type = b.SheetType, alloy = b.Alloy, temper = b.Temper, gauge = b.Gauge, gauge_p = b.GaugeP, gauge_m = b.GaugeM,
+        surface = b.Surface, flatness = b.Flatness, material_end_use = b.MaterialEndUse, theoretical_unit_wt = b.TheoreticalUnitWt,
+        incoming_coil_width = b.IncomingCoilWidth, trimmed_coil_width = b.TrimmedCoilWidth, trim_type_code = b.TrimTypeCode,
+        trimming_required = b.TrimmingRequired, trimmed_width_overridden = b.TrimmedWidthOverridden,
+        trimmed_width_override_user = b.TrimmedWidthOverrideUser, sh_tolerance_plus = b.ShTolerancePlus, sh_tolerance_minus = b.ShToleranceMinus,
+        die_id = b.DieId, die_1 = b.Die1, die_2 = b.Die2, sector = b.Sector, dimpling_code = b.DimplingCode, line_num = b.LineNum,
+        spm = b.Spm, efficiency_percent = b.EfficiencyPercent, special_part = b.SpecialPart, autoparts = b.Autoparts,
+        pieces_skid = b.PiecesSkid, pieces_skid_plus = b.PiecesSkidPlus, pieces_skid_minus = b.PiecesSkidMinus,
+        stacks_skid = b.StacksSkid, max_skid_wt = b.MaxSkidWt, packaging_bands = b.PackagingBands, oil_stencil_interleave = b.OilStencilInterleave,
+        packaging_spec1 = b.PackagingSpec1, packaging_spec2 = b.PackagingSpec2, packaging_spec3 = b.PackagingSpec3,
+        packaging_spec4 = b.PackagingSpec4, packaging_spec5 = b.PackagingSpec5, packaging_spec6 = b.PackagingSpec6, packaging_spec7 = b.PackagingSpec7,
+        packaging_other_spec = b.PackagingOtherSpec, processing_other_spec = b.ProcessingOtherSpec, supplier_code = b.SupplierCode,
+        item_desc = b.ItemDesc, item_note = b.ItemNote, item_attachments = b.ItemAttachments, govt_contract_num = b.GovtContractNum
+    };
+
     public async Task<Part?> UpdatePartAsync(long partNumId, PartWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
-        // item_status preserved when omitted (COALESCE) so a partial body can't null a NOT NULL column.
-        // :status is nullable NUMBER — type it explicitly so a null binds as NUMBER,
-        // not CHAR, avoiding ORA-00932 in the COALESCE (see PatchJobAsync).
-        var p = new DynamicParameters();
-        p.Add("cust", body.CustomerId);
-        p.Add("enduser", body.EnduserId);
-        p.Add("part", body.EnduserPartNum);
-        p.Add("sheet", body.SheetType);
-        p.Add("alloy", body.Alloy);
-        p.Add("temper", body.Temper);
-        p.Add("gauge", body.Gauge);
-        p.Add("status", body.ItemStatus, DbType.Int32);
+        // Full replace of all columns. item_status is preserved when omitted (COALESCE) so a
+        // body can't null a NOT NULL column; :item_status is typed explicitly so a null binds
+        // as NUMBER, not CHAR, avoiding ORA-00932 in the COALESCE (see PatchJobAsync).
+        var p = new DynamicParameters(PartColumnBinds(body));
+        p.Add("item_status", body.ItemStatus, DbType.Int32);
         p.Add("id", partNumId);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
-            UPDATE part_num SET customer_id = :cust, enduser_id = :enduser, enduser_part_num = :part,
-                   sheet_type = :sheet, alloy = :alloy, temper = :temper, gauge = :gauge,
-                   item_status = COALESCE(:status, item_status)
+            UPDATE part_num SET
+                customer_id = :customer_id, enduser_id = :enduser_id, enduser_part_num = :enduser_part_num,
+                item_status = COALESCE(:item_status, item_status),
+                sheet_type = :sheet_type, alloy = :alloy, temper = :temper, gauge = :gauge, gauge_p = :gauge_p, gauge_m = :gauge_m,
+                surface = :surface, flatness = :flatness, material_end_use = :material_end_use, theoretical_unit_wt = :theoretical_unit_wt,
+                incoming_coil_width = :incoming_coil_width, trimmed_coil_width = :trimmed_coil_width, trim_type_code = :trim_type_code,
+                trimming_required = :trimming_required, trimmed_width_overridden = :trimmed_width_overridden,
+                trimmed_width_override_user = :trimmed_width_override_user, sh_tolerance_plus = :sh_tolerance_plus, sh_tolerance_minus = :sh_tolerance_minus,
+                die_id = :die_id, die_1 = :die_1, die_2 = :die_2, sector = :sector, dimpling_code = :dimpling_code, line_num = :line_num,
+                spm = :spm, efficiency_percent = :efficiency_percent, special_part = :special_part, autoparts = :autoparts,
+                pieces_skid = :pieces_skid, pieces_skid_plus = :pieces_skid_plus, pieces_skid_minus = :pieces_skid_minus,
+                stacks_skid = :stacks_skid, max_skid_wt = :max_skid_wt, packaging_bands = :packaging_bands, oil_stencil_interleave = :oil_stencil_interleave,
+                packaging_spec1 = :packaging_spec1, packaging_spec2 = :packaging_spec2, packaging_spec3 = :packaging_spec3,
+                packaging_spec4 = :packaging_spec4, packaging_spec5 = :packaging_spec5, packaging_spec6 = :packaging_spec6, packaging_spec7 = :packaging_spec7,
+                packaging_other_spec = :packaging_other_spec, processing_other_spec = :processing_other_spec, supplier_code = :supplier_code,
+                item_desc = :item_desc, item_note = :item_note, item_attachments = :item_attachments, govt_contract_num = :govt_contract_num
             WHERE part_num_id = :id
             """,
             p,

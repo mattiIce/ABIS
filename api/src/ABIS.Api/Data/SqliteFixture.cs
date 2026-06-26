@@ -130,7 +130,18 @@ public static class SqliteFixture
 
             CREATE TABLE part_num (
                 part_num_id INTEGER PRIMARY KEY, customer_id INTEGER, enduser_id INTEGER,
-                enduser_part_num TEXT, sheet_type TEXT, alloy TEXT, temper TEXT, gauge REAL, item_status INTEGER);
+                enduser_part_num TEXT, item_status INTEGER,
+                sheet_type TEXT, alloy TEXT, temper TEXT, gauge REAL, gauge_p REAL, gauge_m REAL,
+                surface TEXT, flatness TEXT, material_end_use TEXT, theoretical_unit_wt REAL,
+                incoming_coil_width REAL, trimmed_coil_width REAL, trim_type_code INTEGER, trimming_required TEXT,
+                trimmed_width_overridden TEXT, trimmed_width_override_user TEXT, sh_tolerance_plus INTEGER, sh_tolerance_minus INTEGER,
+                die_id INTEGER, die_1 INTEGER, die_2 INTEGER, sector INTEGER, dimpling_code INTEGER, line_num INTEGER,
+                spm INTEGER, efficiency_percent INTEGER, special_part TEXT, autoparts INTEGER,
+                pieces_skid INTEGER, pieces_skid_plus INTEGER, pieces_skid_minus INTEGER, stacks_skid INTEGER, max_skid_wt INTEGER,
+                packaging_bands TEXT, oil_stencil_interleave TEXT,
+                packaging_spec1 TEXT, packaging_spec2 TEXT, packaging_spec3 TEXT, packaging_spec4 TEXT,
+                packaging_spec5 TEXT, packaging_spec6 TEXT, packaging_spec7 TEXT, packaging_other_spec TEXT, processing_other_spec TEXT,
+                supplier_code INTEGER, item_desc TEXT, item_note TEXT, item_attachments TEXT, govt_contract_num TEXT);
 
             CREATE TABLE die (
                 die_id INTEGER PRIMARY KEY, die_name TEXT, owner TEXT, status INTEGER, tool_num TEXT,

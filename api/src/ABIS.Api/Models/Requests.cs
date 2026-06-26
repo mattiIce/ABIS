@@ -21,12 +21,62 @@ public sealed class PartWrite
     public long? CustomerId { get; set; }
     public long? EnduserId { get; set; }
     public string? EnduserPartNum { get; set; }
+    /// <summary>Maps to <c>item_status</c> (NOT NULL); defaults to 0 on create.</summary>
+    public int? ItemStatus { get; set; }
+    // Material / dimensions
     public string? SheetType { get; set; }
     public string? Alloy { get; set; }
     public string? Temper { get; set; }
     public decimal? Gauge { get; set; }
-    /// <summary>Maps to <c>item_status</c> (NOT NULL); defaults to 0 on create.</summary>
-    public int? ItemStatus { get; set; }
+    public decimal? GaugeP { get; set; }
+    public decimal? GaugeM { get; set; }
+    public string? Surface { get; set; }
+    public string? Flatness { get; set; }
+    public string? MaterialEndUse { get; set; }
+    public decimal? TheoreticalUnitWt { get; set; }
+    // Trim / width
+    public decimal? IncomingCoilWidth { get; set; }
+    public decimal? TrimmedCoilWidth { get; set; }
+    public int? TrimTypeCode { get; set; }
+    public string? TrimmingRequired { get; set; }
+    public string? TrimmedWidthOverridden { get; set; }
+    public string? TrimmedWidthOverrideUser { get; set; }
+    public int? ShTolerancePlus { get; set; }
+    public int? ShToleranceMinus { get; set; }
+    // Tooling / line
+    public int? DieId { get; set; }
+    public int? Die1 { get; set; }
+    public int? Die2 { get; set; }
+    public int? Sector { get; set; }
+    public int? DimplingCode { get; set; }
+    public int? LineNum { get; set; }
+    public int? Spm { get; set; }
+    public int? EfficiencyPercent { get; set; }
+    public string? SpecialPart { get; set; }
+    public int? Autoparts { get; set; }
+    // Skid / packaging
+    public int? PiecesSkid { get; set; }
+    public int? PiecesSkidPlus { get; set; }
+    public int? PiecesSkidMinus { get; set; }
+    public int? StacksSkid { get; set; }
+    public int? MaxSkidWt { get; set; }
+    public string? PackagingBands { get; set; }
+    public string? OilStencilInterleave { get; set; }
+    public string? PackagingSpec1 { get; set; }
+    public string? PackagingSpec2 { get; set; }
+    public string? PackagingSpec3 { get; set; }
+    public string? PackagingSpec4 { get; set; }
+    public string? PackagingSpec5 { get; set; }
+    public string? PackagingSpec6 { get; set; }
+    public string? PackagingSpec7 { get; set; }
+    public string? PackagingOtherSpec { get; set; }
+    public string? ProcessingOtherSpec { get; set; }
+    // Misc
+    public long? SupplierCode { get; set; }
+    public string? ItemDesc { get; set; }
+    public string? ItemNote { get; set; }
+    public string? ItemAttachments { get; set; }
+    public string? GovtContractNum { get; set; }
 }
 
 /// <summary>Create or fully replace a carrier. <see cref="CarrierFullName"/> is required.</summary>
