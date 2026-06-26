@@ -1,0 +1,55 @@
+$PBExportHeader$d_end_shift_shift_coil.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=134217750 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=74 color="536870912" )
+summary(height=70 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=67 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=shift_coil_coil_run_num dbname="shift_coil.coil_run_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_coil_ab_job_num dbname="shift_coil.ab_job_num" )
+ column=(type=char(32) updatewhereclause=yes name=coil_coil_org_num dbname="coil.coil_org_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_coil_coil_end_status dbname="shift_coil.coil_end_status" values="Unknow	/Done	0/InProcess	1/New	2/Reject	3/OnHold	4/InTransit	5/Return	6/Reband	7/Retry	8/Gone	10/" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_coil_process_wt dbname="shift_coil.process_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_coil_shift_num dbname="shift_coil.shift_num" )
+ column=(type=char(255) updatewhereclause=yes name=order_item_material_end_use dbname="order_item.material_end_use" )
+ retrieve="  SELECT ~"SHIFT_COIL~".~"COIL_RUN_NUM~",   
+         ~"SHIFT_COIL~".~"AB_JOB_NUM~",   
+         ~"COIL~".~"COIL_ORG_NUM~",   
+         ~"SHIFT_COIL~".~"COIL_END_STATUS~",   
+         ~"SHIFT_COIL~".~"PROCESS_WT~",   
+         ~"SHIFT_COIL~".~"SHIFT_NUM~",   
+         ~"ORDER_ITEM~".~"MATERIAL_END_USE~"  
+    FROM ~"SHIFT_COIL~",   
+         ~"COIL~",   
+         ~"AB_JOB~",   
+         ~"ORDER_ITEM~"  
+   WHERE ( ~"SHIFT_COIL~".~"COIL_ABC_NUM~" = ~"COIL~".~"COIL_ABC_NUM~" ) and  
+         ( ~"SHIFT_COIL~".~"AB_JOB_NUM~" = ~"AB_JOB~".~"AB_JOB_NUM~" ) and  
+         ( ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~" = ~"AB_JOB~".~"ORDER_ITEM_NUM~" ) and  
+         ( ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" = ~"AB_JOB~".~"ORDER_ABC_NUM~" ) and  
+         ( ( ~"SHIFT_COIL~".~"SHIFT_NUM~" = :shift_num ) )   
+ORDER BY ~"SHIFT_COIL~".~"COIL_RUN_NUM~" ASC   
+" arguments=(("shift_num", number)) )
+text(band=header alignment="2" text="Run #" border="2" color="33554432" x="7" y="6" height="61" width="187" html.valueishtml="0"  name=shift_coil_coil_run_num_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="Job" border="2" color="33554432" x="201" y="6" height="61" width="278" html.valueishtml="0"  name=shift_coil_ab_job_num_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Mtl End Use" border="2" color="0" x="486" y="6" height="61" width="775" html.valueishtml="0"  name=order_item_material_end_use_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Coil ID" border="2" color="33554432" x="1269" y="6" height="61" width="362" html.valueishtml="0"  name=coil_coil_org_num_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Status" border="2" color="33554432" x="1638" y="6" height="61" width="311" html.valueishtml="0"  name=shift_coil_coil_end_status_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Process Wt" border="2" color="33554432" x="1957" y="6" height="61" width="355" html.valueishtml="0"  name=shift_coil_process_wt_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Shift Coil Shift Num" border="2" color="134217730" x="2319" y="6" height="61" width="219" html.valueishtml="0"  name=shift_coil_shift_num_t visible="0"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=summary alignment="1" text="Total  Wt:" border="0" color="0" x="1638" y="6" height="64" width="311" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+compute(band=summary alignment="2" expression="sum(shift_coil_process_wt for all)"border="0" color="0" x="1957" y="3" height="64" width="355" format="[general]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="2" color="0" x="7" y="0" height="64" width="187" format="[General]" html.valueishtml="0"  name=shift_coil_coil_run_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="2" color="0" x="201" y="0" height="64" width="278" format="[General]" html.valueishtml="0"  name=shift_coil_ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0 edit.displayonly=yes  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="2" color="0" x="486" y="0" height="64" width="775" format="[general]" html.valueishtml="0"  name=order_item_material_end_use visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=3 alignment="2" tabsequence=32766 border="2" color="0" x="1269" y="0" height="64" width="362" format="[general]" html.valueishtml="0"  name=coil_coil_org_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0 edit.displayonly=yes  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="2" color="0" x="1638" y="0" height="64" width="311" format="[general]" html.valueishtml="0"  name=shift_coil_coil_end_status visible="1" ddlb.limit=0 ddlb.allowedit=yes ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=5 alignment="2" tabsequence=32766 border="2" color="0" x="1957" y="0" height="64" width="355" format="[general]" html.valueishtml="0"  name=shift_coil_process_wt visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0 edit.displayonly=yes  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="2" color="0" x="2319" y="0" height="64" width="219" format="[General]" html.valueishtml="0"  name=shift_coil_shift_num visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+
+sparse(names="shift_coil_ab_job_num	coil_coil_org_num")htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0  template=(comment="" encoding="gb2312" name="q" xml="<?xml version=~"1.0~" encoding=~"UTF-8~" standalone=~"no~"?><d_shift_coil><d_shift_coil_row><shift_coil_ab_job_num/><d_shift_coil_group1 __pbband=~"detail~"><shift_coil_coil_run_num/><coil_coil_org_num/><shift_coil_coil_begin_status/><shift_coil_coil_end_status/><shift_coil_coil_begin_wt/><shift_coil_coil_end_wt/><shift_coil_coil_begin_time/><shift_coil_coil_end_time/><shift_coil_process_wt/></d_shift_coil_group1></d_shift_coil_row></d_shift_coil>"))
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

@@ -1,0 +1,6 @@
+$PBExportHeader$s_position.srs
+global type s_position from structure
+	integer		x
+	integer		y
+end type
+

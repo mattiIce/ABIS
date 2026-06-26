@@ -2592,6 +2592,98 @@
         }
       }
     },
+    "/api/opc-log/logs": {
+      "get": {
+        "tags": [
+          "OpcLog"
+        ],
+        "summary": "OPC log sessions.",
+        "operationId": "GetOpcLogs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OpcLog"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/opc-log/{opcLogId}/details": {
+      "get": {
+        "tags": [
+          "OpcLog"
+        ],
+        "summary": "Captured OPC readings (host/device/item/value/quality) for a log.",
+        "operationId": "GetOpcLogDetails",
+        "parameters": [
+          {
+            "name": "opcLogId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OpcLogDetail"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/opc-log/items": {
+      "get": {
+        "tags": [
+          "OpcLog"
+        ],
+        "summary": "The distinct OPC item names seen — the real tag catalog (informs Edge:Opc:Tags).",
+        "operationId": "GetOpcItems",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/order-items": {
       "get": {
         "tags": [
@@ -7020,6 +7112,64 @@
           "probCost": {
             "type": "number",
             "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OpcLog": {
+        "type": "object",
+        "properties": {
+          "opcLogId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OpcLogDetail": {
+        "type": "object",
+        "properties": {
+          "opcLogId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "itemName": {
+            "type": "string",
+            "nullable": true
+          },
+          "deviceName": {
+            "type": "string",
+            "nullable": true
+          },
+          "remoteHost": {
+            "type": "string",
+            "nullable": true
+          },
+          "value": {
+            "type": "string",
+            "nullable": true
+          },
+          "quality": {
+            "type": "string",
+            "nullable": true
+          },
+          "timeStamp": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
             "nullable": true
           }
         },

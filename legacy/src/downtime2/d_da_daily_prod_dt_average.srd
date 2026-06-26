@@ -1,0 +1,21 @@
+$PBExportHeader$d_da_daily_prod_dt_average.srd
+$PBExportComments$downtime report - average lb per hour info
+release 9;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=80 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=0 color="536870912" )
+table(column=(type=datetime updatewhereclause=yes name=shift_start_time dbname="SHIFT.START_TIME" )
+ column=(type=datetime updatewhereclause=yes name=shift_end_time dbname="SHIFT.END_TIME" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_coil_process_wt dbname="SHIFT_COIL.PROCESS_WT" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"SHIFT~" )  TABLE(NAME=~"SHIFT_COIL~" ) COLUMN(NAME=~"SHIFT.START_TIME~") COLUMN(NAME=~"SHIFT.END_TIME~") COLUMN(NAME=~"SHIFT_COIL.PROCESS_WT~")    JOIN (LEFT=~"SHIFT_COIL.SHIFT_NUM~"    OP =~"=~"RIGHT=~"SHIFT.SHIFT_NUM~" )WHERE(    EXP1 =~"SHIFT.SHIFT_NUM~"   OP =~"=~"    EXP2 =~":al_shift~" ) ) ARG(NAME = ~"al_shift~" TYPE = number) " arguments=(("al_shift", number)) )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="0" x="0" y="0" height="48" width="263" format="[shortdate] [time]" html.valueishtml="0"  name=shift_start_time visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="0" x="0" y="48" height="48" width="263" format="[shortdate] [time]" html.valueishtml="0"  name=shift_end_time visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=32766 border="0" color="0" x="0" y="99" height="48" width="194" format="[General]" html.valueishtml="0"  name=shift_coil_process_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=summary alignment="2" expression="sum(  shift_coil_process_wt  for all ) /  ((24 * daysafter( date( shift_start_time ), date( shift_end_time ) )) + ( secondsafter( Time(shift_start_time) , Time(shift_end_time) ) / 3600))"border="0" color="0" x="0" y="3" height="80" width="205" format="#######" html.valueishtml="0"  name=average visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

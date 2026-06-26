@@ -1,0 +1,29 @@
+$PBExportHeader$d_report_ab_job_coil.srd
+$PBExportComments$list all coils based on an ab job used in production order report' s sub report
+release 6;
+datawindow(units=2 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 250 print.margin.right = 250 print.margin.top = 250 print.margin.bottom = 250 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no grid.lines=0 )
+summary(height=158 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=150 color="536870912" )
+table(column=(type=char(18) updatewhereclause=yes name=coil_lot_num dbname="coil.lot_num" )
+ column=(type=char(32) updatewhereclause=yes name=coil_coil_org_num dbname="coil.coil_org_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=coil_coil_abc_num dbname="coil.coil_abc_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=process_coil_process_quantity dbname="process_coil.process_quantity" )
+ retrieve="  SELECT ~"COIL~".~"LOT_NUM~",   
+         ~"COIL~".~"COIL_ORG_NUM~",   
+         ~"COIL~".~"COIL_ABC_NUM~",   
+         ~"PROCESS_COIL~".~"PROCESS_QUANTITY~"  
+    FROM ~"PROCESS_COIL~",   
+         ~"COIL~"  
+   WHERE ( ~"COIL~".~"COIL_ABC_NUM~" = ~"PROCESS_COIL~".~"COIL_ABC_NUM~" ) and  
+         ( ( ~"PROCESS_COIL~".~"AB_JOB_NUM~" = :al_prod_id ) )    
+" arguments=(("al_prod_id", number)) )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="0" color="0" x="16" y="8" height="133" width="808" format="[general]"  name=coil_lot_num edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="0" color="0" x="841" y="8" height="133" width="950" format="[general]"  name=coil_coil_org_num edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=3 alignment="2" tabsequence=32766 border="0" color="0" x="1808" y="8" height="133" width="533" format="[general]"  name=coil_coil_abc_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="2" tabsequence=32766 border="0" color="0" x="2358" y="8" height="133" width="625" format="[general]"  name=process_coil_process_quantity edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=summary alignment="0" text="Total WT:"border="0" color="0" x="1808" y="16" height="133" width="533"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=summary alignment="0" text="No. of coils:"border="0" color="0" x="16" y="16" height="133" width="808"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=summary alignment="2" expression="rowcount()"border="0" color="0" x="841" y="16" height="133" width="950" format="[general]"  name=coil_t  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=summary alignment="2" expression="sum(  process_coil_process_quantity  for all )"border="0" color="0" x="2358" y="16" height="133" width="625" format="[general]"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

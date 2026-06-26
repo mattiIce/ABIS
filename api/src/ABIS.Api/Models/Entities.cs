@@ -120,6 +120,31 @@ public sealed class CustomerDefect
     public string? NonAutoparts { get; set; }
 }
 
+// ---- OPC log (legacy w_opc_log) ----
+
+/// <summary>An OPC log session header (table <c>opc_log</c>).</summary>
+public sealed class OpcLog
+{
+    public long OpcLogId { get; set; }
+    public string? Title { get; set; }
+    public DateTime? CreatedDate { get; set; }
+}
+
+/// <summary>One captured OPC tag reading (table <c>opc_log_details</c>): the
+/// host → device → item address plus value/quality/timestamp. <c>RemoteHost</c> is the
+/// OPC server, <c>ItemName</c> the OPC item (the DA item → UA node via the wrapper).</summary>
+public sealed class OpcLogDetail
+{
+    public long OpcLogId { get; set; }
+    public string? ItemName { get; set; }
+    public string? DeviceName { get; set; }
+    public string? RemoteHost { get; set; }
+    public string? Value { get; set; }
+    public string? Quality { get; set; }
+    public DateTime? TimeStamp { get; set; }
+    public string? Description { get; set; }
+}
+
 /// <summary>A rejected/rebanded coil that affects a job's invoice (the legacy
 /// w_invoice / d_rej_reband_coil_list_for_invoice: <c>coil ⋈ process_coil</c> where
 /// <c>process_coil_status IN (3,7)</c> — 3 = rejected, 7 = rebanded).</summary>

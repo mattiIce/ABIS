@@ -1,0 +1,9 @@
+$PBExportHeader$s_partial_skid.srs
+global type s_partial_skid from structure
+	long		partial_skid_num
+	long		partial_skid_pieces
+	long		partial_skid_net_wt
+	long		partial_skid_tare_wt
+	integer		partial_skid_status
+end type
+

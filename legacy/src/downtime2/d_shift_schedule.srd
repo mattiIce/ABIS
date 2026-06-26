@@ -1,0 +1,33 @@
+$PBExportHeader$d_shift_schedule.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=64 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=74 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=schedule_type dbname="shift_schedule.schedule_type" )
+ column=(type=datetime updatewhereclause=yes name=shift_starting_time dbname="shift_schedule.shift_starting_time" )
+ column=(type=datetime updatewhereclause=yes name=shift_ending_time dbname="shift_schedule.shift_ending_time" )
+ column=(type=number updatewhereclause=yes name=compute_0004 dbname="compute_0004" )
+ retrieve="  SELECT ~"SHIFT_SCHEDULE~".~"SCHEDULE_TYPE~",   
+         ~"SHIFT_SCHEDULE~".~"SHIFT_STARTING_TIME~",   
+         ~"SHIFT_SCHEDULE~".~"SHIFT_ENDING_TIME~",   
+         NVL(~"SHIFT_SCHEDULE~".~"SHIFT_CANCELLED~", 0)  
+    FROM ~"SHIFT_SCHEDULE~"  
+   WHERE (~"SHIFT_SCHEDULE~".~"LINE_NUM~" = :ai_line) and
+			(TRUNC(~"SHIFT_SCHEDULE~".~"SHIFT_SCHEDULE_DATE~") =  :ad_date)
+" arguments=(("ai_line", number),("ad_date", date)) )
+text(band=header alignment="2" text="Schedule Type" border="0" color="33554432" x="7" y="6" height="51" width="315" html.valueishtml="0"  name=schedule_type_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Shift Starting Time" border="0" color="33554432" x="329" y="6" height="51" width="483" html.valueishtml="0"  name=shift_starting_time_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Shift Ending Time" border="0" color="33554432" x="819" y="6" height="51" width="483" html.valueishtml="0"  name=shift_ending_time_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Compute 0004" border="0" color="33554432" x="1309" y="3" height="61" width="486" html.valueishtml="0"  name=compute_0004_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="33554432" x="7" y="6" height="61" width="315" format="[general]" html.valueishtml="0"  name=schedule_type visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="329" y="6" height="61" width="483" format="[shortdate] [time]" html.valueishtml="0"  name=shift_starting_time visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="819" y="6" height="61" width="483" format="[shortdate] [time]" html.valueishtml="0"  name=shift_ending_time visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="1309" y="0" height="70" width="486" format="[general]" html.valueishtml="0"  name=compute_0004 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0  template=(comment="" encoding="UTF-8" name="ttt" xml="<?xml version=~"1.0~" encoding=~"UTF-8~" standalone=~"no~"?><d_shift_schedule><d_shift_schedule_row __pbband=~"detail~"><schedule_type>schedule_type</schedule_type><shift_starting_time>shift_starting_time</shift_starting_time><shift_ending_time>shift_ending_time</shift_ending_time><shift_cancelled/></d_shift_schedule_row></d_shift_schedule>"))
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

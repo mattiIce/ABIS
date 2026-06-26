@@ -1,0 +1,16 @@
+$PBExportHeader$secondsafterabs.srf
+global type SecondsAfterAbs from function_object
+end type
+
+forward prototypes
+global function long secondsafterabs (time at_t1, time at_t2)
+end prototypes
+
+global function long secondsafterabs (time at_t1, time at_t2);long ll_sec
+ll_sec = secondsafter(at_t1, at_t2)
+if ll_sec < 0 then
+	ll_sec = ll_sec + 86400
+end if
+return ll_sec
+end function
+

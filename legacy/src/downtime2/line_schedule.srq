@@ -1,0 +1,2 @@
+$PBExportHeader$line_schedule.srq
+PBSELECT( VERSION(400) TABLE(NAME="line_schedule" ) COLUMN(NAME="line_schedule.schedule_type") COLUMN(NAME="line_schedule.standard_starting_time") COLUMN(NAME="line_schedule.standard_ending_time")WHERE(    EXP1 ="~"LINE_SCHEDULE~".~"LINE_NUM~""   OP ="="    EXP2 =":al_line" ) ) ARG(NAME = "al_line" TYPE = number) 

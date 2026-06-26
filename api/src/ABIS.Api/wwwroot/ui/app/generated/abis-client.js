@@ -3340,6 +3340,162 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * OPC log sessions.
+     * @return OK
+     */
+    getOpcLogs() {
+        let url_ = this.baseUrl + "/api/opc-log/logs";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetOpcLogs(_response);
+        });
+    }
+    processGetOpcLogs(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(OpcLog.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Captured OPC readings (host/device/item/value/quality) for a log.
+     * @return OK
+     */
+    getOpcLogDetails(opcLogId) {
+        let url_ = this.baseUrl + "/api/opc-log/{opcLogId}/details";
+        if (opcLogId === undefined || opcLogId === null)
+            throw new globalThis.Error("The parameter 'opcLogId' must be defined.");
+        url_ = url_.replace("{opcLogId}", encodeURIComponent("" + opcLogId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetOpcLogDetails(_response);
+        });
+    }
+    processGetOpcLogDetails(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(OpcLogDetail.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * The distinct OPC item names seen — the real tag catalog (informs Edge:Opc:Tags).
+     * @return OK
+     */
+    getOpcItems() {
+        let url_ = this.baseUrl + "/api/opc-log/items";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetOpcItems(_response);
+        });
+    }
+    processGetOpcItems(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(item);
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * List order line items (paged, sortable).
      * @param page (optional)
      * @param pageSize (optional)
@@ -8302,6 +8458,76 @@ export class MaintLogWrite {
         data["completedBy"] = this.completedBy;
         data["laborHours"] = this.laborHours;
         data["probCost"] = this.probCost;
+        return data;
+    }
+}
+export class OpcLog {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.opcLogId = _data["opcLogId"];
+            this.title = _data["title"];
+            this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : undefined;
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new OpcLog();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["opcLogId"] = this.opcLogId;
+        data["title"] = this.title;
+        data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : undefined;
+        return data;
+    }
+}
+export class OpcLogDetail {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.opcLogId = _data["opcLogId"];
+            this.itemName = _data["itemName"];
+            this.deviceName = _data["deviceName"];
+            this.remoteHost = _data["remoteHost"];
+            this.value = _data["value"];
+            this.quality = _data["quality"];
+            this.timeStamp = _data["timeStamp"] ? new Date(_data["timeStamp"].toString()) : undefined;
+            this.description = _data["description"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new OpcLogDetail();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["opcLogId"] = this.opcLogId;
+        data["itemName"] = this.itemName;
+        data["deviceName"] = this.deviceName;
+        data["remoteHost"] = this.remoteHost;
+        data["value"] = this.value;
+        data["quality"] = this.quality;
+        data["timeStamp"] = this.timeStamp ? this.timeStamp.toISOString() : undefined;
+        data["description"] = this.description;
         return data;
     }
 }

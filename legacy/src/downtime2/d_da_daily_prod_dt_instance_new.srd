@@ -1,0 +1,44 @@
+$PBExportHeader$d_da_daily_prod_dt_instance_new.srd
+$PBExportComments$downtime report - DT instance info
+release 9;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=67 color="536870912" )
+summary(height=64 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=67 color="536870912" )
+table(column=(type=char(30) updatewhereclause=yes name=dt_cause_cause_name dbname="DT_CAUSE.CAUSE_NAME" )
+ column=(type=decimal(0) updatewhereclause=yes name=dt_summary_ab_job_num dbname="DT_SUMMARY.AB_JOB_NUM" )
+ column=(type=decimal(0) updatewhereclause=yes name=dt_summary_count dbname="DT_SUMMARY.COUNT" )
+ column=(type=decimal(0) updatewhereclause=yes name=dt_summary_duration dbname="DT_SUMMARY.DURATION" )
+ column=(type=char(1024) updatewhereclause=yes name=dt_summary_note dbname="DT_SUMMARY.NOTE" )
+ retrieve="SELECT  ~"DT_CAUSE~".~"CAUSE_NAME~" ,
+           ~"DT_SUMMARY~".~"AB_JOB_NUM~" ,
+           ~"DT_SUMMARY~".~"COUNT~" ,
+           ~"DT_SUMMARY~".~"DURATION~" ,
+           ~"DT_SUMMARY~".~"NOTE~"     
+        FROM ~"DT_SUMMARY~" ,
+           ~"DT_CAUSE~"     
+        WHERE ( ~"DT_CAUSE~".~"ID~" = ~"DT_SUMMARY~".~"ID~" ) and          ( ( DT_SUMMARY.SHIFT_NUM = :al_shift ) ) 
+        ORDER BY ~"DT_SUMMARY~".~"AB_JOB_NUM~"          ASC,
+           ~"DT_CAUSE~".~"CAUSE_NAME~"          ASC  " arguments=(("al_shift", number)) )
+text(band=header alignment="2" text="Downtime Cause" border="2" color="0" x="7" y="6" height="58" width="413" html.valueishtml="0"  name=dt_cause_cause_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+text(band=header alignment="2" text="Prod Order" border="2" color="0" x="428" y="6" height="58" width="260" html.valueishtml="0"  name=dt_summary_ab_job_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+text(band=header alignment="2" text="Count" border="2" color="0" x="695" y="6" height="58" width="157" html.valueishtml="0"  name=dt_summary_count_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+text(band=header alignment="2" text="Duration(Min)" border="2" color="0" x="859" y="6" height="58" width="333" html.valueishtml="0"  name=dt_summary_duration_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+text(band=header alignment="2" text="Note" border="2" color="0" x="1200" y="6" height="58" width="808" html.valueishtml="0"  name=dt_summary_note_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="2" color="0" x="7" y="3" height="61" width="413" format="[general]" html.valueishtml="0"  name=dt_cause_cause_name visible="1" edit.limit=30 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="2" color="0" x="428" y="3" height="61" width="260" format="[general]" html.valueishtml="0"  name=dt_summary_ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="2" tabsequence=32766 border="2" color="0" x="695" y="3" height="61" width="157" format="[general]" html.valueishtml="0"  name=dt_summary_count visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="2" color="0" x="1200" y="3" height="61" width="808" format="[general]" html.valueishtml="0"  name=dt_summary_note visible="1" edit.limit=1024 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="2" expression=" dt_summary_duration  /  60"border="2" color="0" x="859" y="3" height="61" width="333" format="####.#" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=summary alignment="2" text="Total:" border="2" color="0" x="417" y="4" height="58" width="274" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+compute(band=summary alignment="2" expression="sum(  dt_summary_count  for all )"border="2" color="0" x="695" y="4" height="58" width="157" format="[general]" html.valueishtml="0"  name=compute_2 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=summary alignment="2" expression=" ar_dt "border="2" color="0" x="1079" y="4" height="58" width="333" format="#,###.##" html.valueishtml="0"  name=compute_3 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=summary alignment="0" text="Instances" border="2" color="0" x="859" y="4" height="58" width="216" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+text(band=summary alignment="0" text="Hours" border="2" color="0" x="1415" y="4" height="58" width="201" html.valueishtml="0"  name=t_3 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="80269524" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 
