@@ -21,6 +21,7 @@ import {
   CustomerWrite,
   CustomerContactWrite,
   PartWrite,
+  CarrierWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -107,6 +108,20 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
     bol: 'E2E-BOL', customerId: 4001, createdBy: 'e2e', status: 1,
   }));
   assert.equal(updated.status, 1);
+});
+
+// The carriers SPA's flow: create a carrier, then load + replace it (typed).
+test('carriers flow: create, get, update carrier (typed)', async () => {
+  const created = await client.createCarrier(new CarrierWrite({
+    carrierFullName: 'E2E Freight Lines', scac: 'E2EF', carrierTypeCode: 'LTL', status: 1,
+  }));
+  assert.ok(created.carrierId > 0);
+  const got = await client.getCarrier(created.carrierId);
+  assert.equal(got.carrierFullName, 'E2E Freight Lines');
+  const updated = await client.updateCarrier(created.carrierId, new CarrierWrite({
+    carrierFullName: 'E2E Freight Lines', scac: 'E2EF', carrierCity: 'Toledo', status: 0,
+  }));
+  assert.equal(updated.carrierCity, 'Toledo');
 });
 
 // The parts SPA's flow: create a part, then load + replace it (typed).

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ABIS Shipping</title>
+<title>ABIS Carriers</title>
 <style>
   :root { --bd:#d0d7de; --bg:#f6f8fa; --ac:#0969da; }
   * { box-sizing: border-box; }
@@ -12,7 +12,7 @@
   body.busy button { opacity:.6; pointer-events:none; }
   header { background:#24292f; color:#fff; padding:10px 16px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
   header h1 { font-size:16px; margin:0; font-weight:600; }
-  header nav { display:flex; gap:12px; }
+  header nav { display:flex; gap:12px; flex-wrap:wrap; }
   header nav a { color:#9ecbff; text-decoration:none; }
   header .key { margin-left:auto; display:flex; gap:6px; align-items:center; }
   main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns:3fr 2fr; }
@@ -22,23 +22,26 @@
   label { font-size:12px; color:#57606a; }
   input, select, button { font:inherit; padding:6px 8px; border:1px solid var(--bd); border-radius:6px; }
   button { background:var(--ac); color:#fff; border-color:var(--ac); cursor:pointer; }
+  button.sec { background:#fff; color:#1f2328; border-color:var(--bd); }
   table { width:100%; border-collapse:collapse; margin-top:8px; }
   th, td { text-align:left; padding:5px 6px; border-bottom:1px solid var(--bd); font-size:13px; }
   th { color:#57606a; font-weight:600; }
   .row { display:flex; gap:8px; flex-wrap:wrap; align-items:end; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .grid .full { grid-column:1 / -1; }
+  .fld label { display:block; }
+  .fld input { width:100%; }
   .muted { color:#8b949e; }
   .pill { background:var(--bg); border:1px solid var(--bd); border-radius:12px; padding:1px 8px; font-size:12px; }
   .err { color:#cf222e; min-height:18px; }
-  .ok { color:#1a7f37; font-size:13px; margin-bottom:6px; }
-  .kv { display:flex; gap:16px; flex-wrap:wrap; }
-  .kv b { color:#57606a; font-weight:600; }
+  .ok { color:#1a7f37; min-height:18px; font-size:13px; }
   tbody tr.click { cursor:pointer; }
   tbody tr.click:hover { background:var(--bg); }
 </style>
 </head>
 <body>
 <header>
-  <h1>ABIS Shipping <span class="pill">greenfield · typed client</span></h1>
+  <h1>ABIS Carriers <span class="pill">greenfield · typed client</span></h1>
   <nav>
     <a href="/ui/order-entry.html">Order entry</a>
     <a href="/ui/coil-inventory.html">Coil inventory</a>
@@ -48,6 +51,9 @@
     <a href="/ui/customers.html">Customers</a>
     <a href="/ui/parts.html">Parts</a>
     <a href="/ui/carriers.html">Carriers</a>
+    <a href="/ui/maintenance.html">Maintenance</a>
+    <a href="/ui/dies.html">Dies</a>
+    <a href="/ui/downtime.html">Downtime</a>
   </nav>
   <div class="key">
     <label for="apiKey" style="color:#fff">X-Api-Key</label>
@@ -57,26 +63,39 @@
 
 <main>
   <section>
-    <h2>Shipments</h2>
+    <h2>Carrier master</h2>
     <form id="searchForm" class="row">
-      <div><label>Customer id</label><br /><input id="fCustomer" placeholder="id" style="width:100px" /></div>
+      <div><label>Status</label><br /><input id="fStatus" placeholder="code" type="number" style="width:90px" /></div>
       <button type="submit">Search</button>
       <span id="count" class="muted"></span>
     </form>
     <table>
-      <thead><tr><th>Packing list</th><th>BOL</th><th>Cust</th><th>Status</th><th>Vehicle</th></tr></thead>
-      <tbody id="shipments"></tbody>
+      <thead><tr><th>Id</th><th>SCAC</th><th>Name</th><th>Type</th><th>City / State</th><th>Phone</th><th>Status</th></tr></thead>
+      <tbody id="carriers"></tbody>
     </table>
   </section>
 
   <section>
-    <h2>Shipment / dispatch</h2>
-    <div id="detail" class="muted">Select a shipment to view it and record dispatch (status, vehicle, sent/actual, notes).</div>
+    <h2 id="formTitle">New carrier</h2>
+    <div class="grid">
+      <div class="fld full"><label>Full name *</label><input id="cName" maxlength="60" placeholder="required" /></div>
+      <div class="fld"><label>SCAC</label><input id="cScac" maxlength="8" /></div>
+      <div class="fld"><label>Type code</label><input id="cType" maxlength="36" /></div>
+      <div class="fld"><label>City</label><input id="cCity" maxlength="18" /></div>
+      <div class="fld"><label>State</label><input id="cState" maxlength="30" /></div>
+      <div class="fld"><label>Phone</label><input id="cPhone" maxlength="18" /></div>
+      <div class="fld"><label>Status</label><input id="cStatus" type="number" placeholder="code" /></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="btnSave" type="button">Save</button>
+      <button id="btnNew" type="button" class="sec">New</button>
+    </div>
+    <div id="ok" class="ok"></div>
   </section>
 
   <section class="wide"><div id="err" class="err"></div></section>
 </main>
 
-<script type="module" src="/ui/app/shipping.js"></script>
+<script type="module" src="/ui/app/carriers.js"></script>
 </body>
 </html>
