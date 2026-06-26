@@ -20,6 +20,7 @@ import {
   ReceivingBolWrite,
   CustomerWrite,
   CustomerContactWrite,
+  PartWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -106,6 +107,20 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
     bol: 'E2E-BOL', customerId: 4001, createdBy: 'e2e', status: 1,
   }));
   assert.equal(updated.status, 1);
+});
+
+// The parts SPA's flow: create a part, then load + replace it (typed).
+test('parts flow: create, get, update part (typed)', async () => {
+  const created = await client.createPart(new PartWrite({
+    customerId: 4001, enduserPartNum: 'E2E-PN', sheetType: 'SHEET', alloy: '3003', temper: 'H14', gauge: 0.05, itemStatus: 1,
+  }));
+  assert.ok(created.partNumId > 0);
+  const got = await client.getPart(created.partNumId);
+  assert.equal(got.enduserPartNum, 'E2E-PN');
+  const updated = await client.updatePart(created.partNumId, new PartWrite({
+    customerId: 4001, enduserPartNum: 'E2E-PN', alloy: '5052', itemStatus: 0,
+  }));
+  assert.equal(updated.alloy, '5052');
 });
 
 // The customers SPA's flow: create a customer, load + replace it, add a contact (typed).
