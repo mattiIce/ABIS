@@ -43,6 +43,7 @@ Paste the `ABIS_API_KEY` value into each screen's **X-Api-Key** field.
 | `ABIS_PORT` | Host port to publish (container always listens on 8080) |
 | `ABIS_DB_CONNECTION` | Oracle connection string (`Database__ConnectionString`) |
 | `ABIS_API_KEY` | A key clients send as `X-Api-Key` (`ApiKeys__Keys__0`) |
+| `ABIS_TZ` | Container timezone (default `America/New_York`); a region Oracle recognizes |
 
 All standard `Database__*` / `ApiKeys__*` settings can be overridden as env vars
 (double-underscore form) in `docker-compose.yml` if needed.
@@ -75,3 +76,9 @@ the TypeScript and runs the e2e on every change, so a green build is deployable.
   is trigger-based on the DB side (see [`ORACLE_VALIDATION.md`](ORACLE_VALIDATION.md)).
 - The image declares a Docker `HEALTHCHECK` against `/health/ready`, so
   orchestrators hold traffic until Oracle is actually reachable.
+- **Timezone (`ORA-01882`).** The image ships `tzdata` and sets `TZ`
+  (`America/New_York` by default) so the ODP.NET session adopts a timezone region
+  Oracle 11g recognizes. A bare container has no timezone DB, which surfaces as
+  `ORA-01882: timezone region not found` on connect — set `ABIS_TZ` to your
+  plant's zone. *(Verified live: the container connected to the production-shaped
+  Oracle and served the full UI once `TZ` was set.)*
