@@ -53,6 +53,17 @@ public static class ApiEndpoints
            .Produces(StatusCodes.Status200OK)
            .Produces(StatusCodes.Status503ServiceUnavailable);
 
+        // Anonymous: tells the browser SPA whether to run an OIDC login flow and,
+        // if so, which provider/client/scope to use (Authorization Code + PKCE).
+        // When OIDC isn't configured, returns { oidc: false } and the SPA uses the
+        // API-key field. Safe to expose: ClientId is a public value, no secrets.
+        app.MapGet("/auth/config", (OidcClientOptions oidc) => Results.Ok(oidc.Enabled
+                ? new { oidc = true, authority = oidc.Authority, clientId = oidc.ClientId,
+                        scope = oidc.Scope ?? "openid profile" }
+                : (object)new { oidc = false }))
+           .WithTags("Meta").WithName("AuthConfig")
+           .WithSummary("Browser OIDC client config (or { oidc:false } to use the API-key field).");
+
         // All /api endpoints require an authenticated caller (see ApiKey auth).
         // /health and Swagger remain anonymous. The 401 is declared once for the
         // whole group so it appears on every operation in the contract.

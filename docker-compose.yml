@@ -25,6 +25,15 @@ services:
       # API-key auth gates /api (clients send X-Api-Key). Supply at least one key.
       ApiKeys__Enabled: "true"
       ApiKeys__Keys__0: "${ABIS_API_KEY}"
+      # Optional user auth (OIDC). Leave the ABIS_OIDC_* vars empty → JWT/login stay
+      # off and only the API key gates /api. Set them to enable browser sign-in:
+      #   server validates tokens (Auth:Jwt) …
+      Auth__Jwt__Authority: "${ABIS_OIDC_AUTHORITY}"
+      Auth__Jwt__Audience: "${ABIS_OIDC_AUDIENCE}"
+      #   … and the SPA runs the PKCE login (Auth:Oidc, public client).
+      Auth__Oidc__Authority: "${ABIS_OIDC_AUTHORITY}"
+      Auth__Oidc__ClientId: "${ABIS_OIDC_CLIENT_ID}"
+      Auth__Oidc__Scope: "${ABIS_OIDC_SCOPE}"
       # opc_action_log is absent in the live DBO schema; auditing self-disables.
       Audit__Enabled: "false"
       # Container timezone — a region Oracle 11g recognizes (avoids ORA-01882 on

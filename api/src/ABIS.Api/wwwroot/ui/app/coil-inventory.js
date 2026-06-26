@@ -7,18 +7,11 @@
 // Compiled by `tsc` to wwwroot/ui/app/coil-inventory.js; served at
 // /ui/coil-inventory.html. See docs/PHASE3_PILOT_LOG.md.
 import { AbisClient, CoilPatch } from './generated/abis-client.js';
+import { initAuth, authFetch } from './auth.js';
 const $ = (sel) => document.querySelector(sel);
-const keyInput = $('#apiKey');
-keyInput.value = localStorage.getItem('abis_api_key') ?? 'dev-local-key';
-keyInput.addEventListener('change', () => localStorage.setItem('abis_api_key', keyInput.value));
+// Auth — a Bearer token (OIDC) or the X-Api-Key field — is attached by ./auth.
 function client() {
-    return new AbisClient('', {
-        fetch: (url, init) => {
-            const headers = new Headers(init?.headers);
-            headers.set('X-Api-Key', keyInput.value);
-            return fetch(url, { ...init, headers });
-        },
-    });
+    return new AbisClient('', { fetch: authFetch });
 }
 const esc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const numf = (v) => (v == null ? '' : v.toLocaleString());
@@ -141,4 +134,4 @@ async function init() {
     await search();
     await summary();
 }
-void init();
+void initAuth().then(init);

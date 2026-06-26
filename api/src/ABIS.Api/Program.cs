@@ -31,6 +31,12 @@ var apiKeyOptions = builder.Configuration.GetSection(ApiKeyOptions.SectionName).
 builder.Services.AddSingleton(apiKeyOptions);
 builder.AddAbisAuth();
 
+// Browser OIDC client settings (Auth:Oidc), surfaced anonymously at /auth/config
+// so the SPA can run a PKCE login flow. Empty/disabled → SPA uses the API-key field.
+var oidcClientOptions = builder.Configuration.GetSection(OidcClientOptions.SectionName).Get<OidcClientOptions>()
+                        ?? new OidcClientOptions();
+builder.Services.AddSingleton(oidcClientOptions);
+
 // Rate limiting: a fixed window partitioned per API key (fallback to remote IP),
 // applied to the /api group. Shields the legacy DB from runaway callers; tunable
 // via the RateLimiting section.

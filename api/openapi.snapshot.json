@@ -2540,6 +2540,20 @@
         }
       }
     },
+    "/auth/config": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "summary": "Browser OIDC client config (or { oidc:false } to use the API-key field).",
+        "operationId": "AuthConfig",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/order-items": {
       "get": {
         "tags": [

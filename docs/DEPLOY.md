@@ -56,7 +56,11 @@ All standard `Database__*` / `ApiKeys__*` settings can be overridden as env vars
   commit `.env`. Keep these for machine clients (the edge service, scripts).
 - **User auth (JWT/OIDC)** — for interactive users, enable JWT bearer by setting
   `Auth__Jwt__Authority` (your OIDC issuer) + `Auth__Jwt__Audience`; `/api` then
-  accepts a valid token *or* an API key. See `api/README.md` §Authentication.
+  accepts a valid token *or* an API key. For browser sign-in, also set
+  `Auth__Oidc__Authority` / `Auth__Oidc__ClientId` / `Auth__Oidc__Scope` (the public
+  SPA client) and register each `/ui/*.html` as a redirect URI in the provider — the
+  screens then show **Sign in** instead of the key field. See `api/README.md`
+  §Authentication.
 - **DB account** — least privilege (the API needs SELECT + INSERT/UPDATE on the
   modeled tables + sequence use; not DBA).
 - **Non-prod first** — point at a staging copy, verify, then production with
