@@ -63,6 +63,14 @@ test('createOrderWithItems writes via typed DTOs and returns a typed OrderDetail
   assert.equal(detail.items[0].enduserPartNum, 'PN-E2E');
 });
 
+// The QA-results SPA's flow: posted + in-progress mechanical test results.
+test('qa-results flow: listTestResults + listTempTestResults (typed)', async () => {
+  const posted = await client.listTestResults(1, 10, undefined, undefined, undefined, undefined, undefined, undefined);
+  assert.ok(Array.isArray(posted.items));
+  const temp = await client.listTempTestResults(1, 10, undefined, undefined, undefined, undefined, undefined, undefined);
+  assert.ok(Array.isArray(temp.items));
+});
+
 // The coil-inventory SPA's flow: weight rollup, processing history, inline patch.
 test('coil-inventory flow: summary, processing, and patch (typed)', async () => {
   const groups = await client.coilInventorySummary('alloy');
