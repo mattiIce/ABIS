@@ -30,6 +30,7 @@ File types: `.srw` windows · `.srd` DataWindows (embedded SQL) · `.srm` menus 
 | `prod-folder/` | Production folder |
 | `da_offline/` | **DAS offline** variant of `da/` (operate a job without a live DB connection) — superseded by the always-connected web DAS console |
 | `opc_log/` | **OPC log** (`w_opc_log`) — `opc_log` + `opc_log_details` (host → device → item, value, quality) + `opc_action_log`. The `item_name`/`remote_host` structure is the real OPC tag layout for the edge. |
+| `edi/` | **EDI** (`w_edi` monitor, `w_edi_863` cert EDI, `w_define_schedule`, `w_display_edi_file`, `w_distributed_test`) — the X12 send/receive ledger: `outbound_edi_transaction`, `edi_log`, `edi_type`, `customer_edi`. The 13 `.srf` functions are the X12 segment build/parse helpers. |
 | `downtime/`, `downtime2/` | Downtime reports + the shift coil-processing windows (`w_finish_coil`, `w_change_coil`, …) — the line-operator workflow |
 | `da/` | **DAS** data-acquisition console (`w_da_sheet` + tab user objects `u_da_{coil_job,skid,scrap,return_scrap_item,shift_coils,dt_log}_tabpg`) — the shop-floor operator screen: work a job, weigh skids, enter scrap, log downtime |
 

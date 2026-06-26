@@ -1,0 +1,30 @@
+$PBExportHeader$d_customer_edi_info.srd
+release 6;
+datawindow(units=0 timer_interval=0 color=12632256 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=250 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=customer_id dbname="customer.customer_id" )
+ column=(type=char(60) updatewhereclause=yes name=customer_full_name dbname="customer.customer_full_name" )
+ column=(type=decimal(0) updatewhereclause=yes name=customer_duns_number dbname="customer.customer_duns_number" )
+ column=(type=char(18) updatewhereclause=yes name=customer_system_van_account_num dbname="customer_system.van_account_num" )
+ column=(type=char(18) updatewhereclause=yes name=customer_system_gs03 dbname="customer_system.gs03" )
+ retrieve=" SELECT  ~"CUSTOMER~".~"CUSTOMER_ID~" ,    
+          ~"CUSTOMER~".~"CUSTOMER_FULL_NAME~" ,      
+          ~"CUSTOMER~".~"CUSTOMER_DUNS_NUMBER~" ,        
+          ~"CUSTOMER_SYSTEM~".~"VAN_ACCOUNT_NUM~",  
+          ~"CUSTOMER_SYSTEM~".~"GS03~"
+        FROM ~"CUSTOMER~" ,           ~"CUSTOMER_SYSTEM~"     
+        WHERE ( ~"CUSTOMER_SYSTEM~".~"CUSTOMER_ID~" = ~"CUSTOMER~".~"CUSTOMER_ID~" ) and 
+             ( ~"CUSTOMER~".~"CUSTOMER_ID~" = :customer_id )  " arguments=(("customer_id", number)) )
+text(band=detail alignment="1" text="Customer Id:"border="0" color="0" x="11" y="22" height="51" width="304"  name=customer_customer_id_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="DUNS:"border="0" color="0" x="658" y="16" height="51" width="187"  name=customer_customer_duns_number_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=32766 border="5" color="0" x="859" y="10" height="61" width="472" format="[general]"  name=customer_duns_number edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Customer :"border="0" color="0" x="40" y="102" height="51" width="267"  name=customer_customer_full_name_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="VAN Num:"border="0" color="0" x="51" y="182" height="51" width="249"  name=customer_system_van_account_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="GS03:"border="0" color="0" x="761" y="182" height="51" width="139"  name=customer_system_gs03_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="5" color="0" x="918" y="186" height="48" width="410" format="[general]"  name=customer_system_gs03 edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="5" color="0" x="336" y="13" height="61" width="263" format="[general]"  name=customer_id edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="5" color="0" x="336" y="96" height="61" width="991" format="[general]"  name=customer_full_name edit.limit=60 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="5" color="0" x="336" y="182" height="61" width="402" format="[general]"  name=customer_system_van_account_num edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

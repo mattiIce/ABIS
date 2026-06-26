@@ -1,0 +1,18 @@
+$PBExportHeader$d_schedule_list_name.srd
+$PBExportComments$list schedule name. P.S. d_schedule_list
+release 5;
+datawindow(units=0 timer_interval=0 color=12632256 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.prompt=no )
+header(height=4 color="536870912" )
+summary(height=1 color="536870912" )
+footer(height=1 color="536870912" )
+detail(height=68 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=schedule_id dbname="schedule.schedule_id" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=schedule_name dbname="schedule.schedule_name" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=schedule_description dbname="schedule.schedule_description" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=minute dbname="schedule.minute" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=hour dbname="schedule.hour" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=day_of_the_month dbname="schedule.day_of_the_month" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=month_of_the_year dbname="schedule.month_of_the_year" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=day_of_the_week dbname="schedule.day_of_the_week" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"schedule~" ) COLUMN(NAME=~"schedule.schedule_id~") COLUMN(NAME=~"schedule.schedule_name~") COLUMN(NAME=~"schedule.schedule_description~") COLUMN(NAME=~"schedule.minute~") COLUMN(NAME=~"schedule.hour~") COLUMN(NAME=~"schedule.day_of_the_month~") COLUMN(NAME=~"schedule.month_of_the_year~") COLUMN(NAME=~"schedule.day_of_the_week~")) " update="SCHEDULE" updatewhere=1 updatekeyinplace=no )
+column(band=detail id=2 alignment="0" tabsequence=20 border="5" color="0" x="8" y="6" height="61" width="584" format="[general]"  name=schedule_name edit.limit=18 edit.case=any edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )

@@ -1,0 +1,57 @@
+$PBExportHeader$f_edi_archive_log.srf
+global type f_edi_archive_log from function_object
+end type
+
+forward prototypes
+global function integer f_edi_archive_log (integer al_customer_id, string as_edi_name, integer al_edi_out_id, string as_edi_file_name, string as_edi_archive_path)
+end prototypes
+
+global function integer f_edi_archive_log (integer al_customer_id, string as_edi_name, integer al_edi_out_id, string as_edi_file_name, string as_edi_archive_path);//	Function:  f_edi_archive_log
+//
+//	Access:    Private
+//
+//	Arguments:
+//    al_customer_id 
+//    as_edi_name
+//    al_edi_out_id
+//    as_edi_file_name
+//    as_edi_archive_path
+//	Returns:   Integer
+//               1 = if it succeeds
+//              -1 = if a system error occurs
+//	Description: Log EDI archive file lacation 
+//
+//////////////////////////////////////////////////////////////////////////////
+//
+//	Revision History
+//
+//	Version
+//	
+//////////////////////////////////////////////////////////////////////////////
+
+Datetime ldt_now
+SELECT SYSDATE 
+INTO :ldt_now
+FROM dual
+USING SQLCA;
+
+INSERT into edi_out_file ( edi_out_id,
+                           customer_edi_name,
+							      customer_id,
+									edi_created_date,
+									edi_file_name,
+									edi_file_archive_path)
+VALUES(:al_edi_out_id,:as_edi_name,:al_customer_id, :ldt_now,:as_edi_file_name,:as_edi_archive_path)
+USING SQLCA;
+
+//if f_check_sqlcode(SQLCA, True, True) <0 then
+//	MessageBox("EDI LOG", "logging file location error")
+//	return -1
+//end if
+
+commit using SQLCA;
+
+Return 1
+	
+end function
+

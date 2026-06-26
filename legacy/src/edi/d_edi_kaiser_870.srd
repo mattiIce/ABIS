@@ -1,0 +1,120 @@
+$PBExportHeader$d_edi_kaiser_870.srd
+$PBExportComments$similar to  d_edi_reynolds_870 but sort  by "sheet_skid.sheet_skid_num"
+release 5;
+datawindow(units=0 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.prompt=no grid.lines=0 )
+header(height=116 color="536870912" )
+summary(height=1 color="536870912" )
+footer(height=1 color="536870912" )
+detail(height=77 color="536870912" )
+table(column=(type=char(32) updatewhereclause=yes name=coil_org_num dbname="coil.coil_org_num" )
+ column=(type=char(18) updatewhereclause=yes name=coil_mid_num dbname="coil.coil_mid_num" )
+ column=(type=char(18) updatewhereclause=yes name=lot_num dbname="coil.lot_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=line_num dbname="coil.coil_line_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=pieces_per_case dbname="coil.pieces_per_case" )
+ column=(type=char(36) updatewhereclause=yes name=orig_customer_po dbname="customer_order.orig_customer_po" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_abc_num dbname="customer_order.order_abc_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_num dbname="order_item.order_item_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=ab_job_num dbname="production_sheet_item.ab_job_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=prod_item_net_wt dbname="production_sheet_item.prod_item_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_skid_num dbname="sheet_skid.sheet_skid_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_net_wt dbname="sheet_skid.sheet_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_tare_wt dbname="sheet_skid.sheet_tare_wt" )
+ column=(type=number updatewhereclause=yes name=length dbname="coil.length" )
+ column=(type=number updatewhereclause=yes name=width dbname="coil.width" )
+ column=(type=decimal(5) updatewhereclause=yes name=gauge dbname="order_item.gauge" )
+ column=(type=decimal(0) updatewhereclause=yes name=prod_item_pieces dbname="production_sheet_item.prod_item_pieces" )
+ column=(type=decimal(0) updatewhereclause=yes name=skid_sheet_status dbname="sheet_skid.skid_sheet_status" )
+ column=(type=decimal(0) updatewhereclause=yes name=prod_item_num dbname="production_sheet_item.prod_item_num" )
+ retrieve="  SELECT ~"COIL~".~"COIL_ORG_NUM~",   
+         ~"COIL~".~"COIL_MID_NUM~",   
+         ~"COIL~".~"LOT_NUM~",   
+         ~"COIL~".~"COIL_LINE_NUM~",   
+         ~"COIL~".~"PIECES_PER_CASE~",   
+         ~"CUSTOMER_ORDER~".~"ORIG_CUSTOMER_PO~",   
+         ~"CUSTOMER_ORDER~".~"ORDER_ABC_NUM~",
+         ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"AB_JOB_NUM~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NET_WT~",
+         ~"SHEET_SKID~".~"SHEET_SKID_NUM~",   
+         ~"SHEET_SKID~".~"SHEET_NET_WT~",   
+         ~"SHEET_SKID~".~"SHEET_TARE_WT~",   
+          0000.00 ~"LENGTH~",
+          0000.00 ~"WIDTH~",
+         ~"ORDER_ITEM~".~"GAUGE~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_PIECES~",   
+         ~"SHEET_SKID~".~"SKID_SHEET_STATUS~",
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NUM~"
+    FROM ~"COIL~",   
+         ~"CUSTOMER_ORDER~",   
+         ~"ORDER_ITEM~",   
+         ~"PRODUCTION_SHEET_ITEM~",   
+         ~"SHEET_SKID~",   
+         ~"SHEET_SKID_DETAIL~",
+         ~"AB_JOB~"  
+   WHERE ( ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" = ~"CUSTOMER_ORDER~".~"ORDER_ABC_NUM~" ) and  
+         ( ~"SHEET_SKID_DETAIL~".~"SHEET_SKID_NUM~" = ~"SHEET_SKID~".~"SHEET_SKID_NUM~" ) and  
+         ( ~"SHEET_SKID_DETAIL~".~"PROD_ITEM_NUM~" = ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NUM~" ) and  
+         ( ~"COIL~".~"COIL_ABC_NUM~" = ~"PRODUCTION_SHEET_ITEM~".~"COIL_ABC_NUM~" ) and  
+         ( ~"PRODUCTION_SHEET_ITEM~".~"AB_JOB_NUM~" = ~"SHEET_SKID~".~"AB_JOB_NUM~" ) and  
+         (~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_EDI870_DATE~" is NULL) and
+         (~"PRODUCTION_SHEET_ITEM~".~"AB_JOB_NUM~" =~"AB_JOB~".~"AB_JOB_NUM~") and 
+         (~"AB_JOB~".~"ORDER_ABC_NUM~" = ~"ORDER_ITEM~".~"ORDER_ABC_NUM~") and
+         (~"AB_JOB~".~"ORDER_ITEM_NUM~" = ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~") and
+         ( ~"CUSTOMER_ORDER~".~"ORIG_CUSTOMER_ID~" = :ai_customer_id ) 
+         
+ORDER BY ~"SHEET_SKID~".~"SHEET_SKID_NUM~" ASC   
+" arguments=(("ai_customer_id", number)) )
+text(band=header alignment="2" text="Coil
+Coil Org Num"border="0" color="0" x="8" y="6" height="103" width="541"  name=coil_coil_org_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Coil
+Coil Mid Num"border="0" color="0" x="555" y="6" height="103" width="402"  name=coil_coil_mid_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Coil
+Lot Num"border="0" color="0" x="964" y="6" height="103" width="402"  name=coil_lot_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Coil
+Coil Line Num"border="0" color="0" x="1373" y="6" height="103" width="317"  name=coil_coil_line_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Coil
+Pieces Per Case"border="0" color="0" x="1697" y="6" height="103" width="363"  name=coil_pieces_per_case_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Customer Order
+Orig Customer Po"border="0" color="0" x="2066" y="6" height="103" width="399"  name=customer_order_orig_customer_po_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Customer Order
+Order Abc Num"border="0" color="0" x="2472" y="6" height="103" width="349"  name=customer_order_order_abc_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Order Item
+Order Item Num"border="0" color="0" x="2827" y="6" height="103" width="356"  name=order_item_order_item_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Production Sheet Item
+Ab Job Num"border="0" color="0" x="3190" y="6" height="103" width="502"  name=production_sheet_item_ab_job_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Production Sheet Item
+Prod Item Net Wt"border="0" color="0" x="3698" y="6" height="103" width="495"  name=production_sheet_item_prod_item_net_wt_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Sheet Skid
+Sheet Skid Num"border="0" color="0" x="4200" y="6" height="103" width="360"  name=sheet_skid_sheet_skid_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Sheet Skid
+Sheet Net Wt"border="0" color="0" x="4566" y="6" height="103" width="292"  name=sheet_skid_sheet_net_wt_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Sheet Skid
+Sheet Tare Wt"border="0" color="0" x="4865" y="6" height="103" width="321"  name=sheet_skid_sheet_tare_wt_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Length"border="0" color="0" x="5192" y="6" height="52" width="253"  name=clength_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Width"border="0" color="0" x="5451" y="6" height="52" width="253"  name=cwidth_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Order Item
+Gauge"border="0" color="0" x="5711" y="6" height="103" width="253"  name=order_item_gauge_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Production Sheet Item
+Prod Item Pieces"border="0" color="0" x="5970" y="6" height="103" width="502"  name=production_sheet_item_prod_item_pieces_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Sheet Skid
+Skid Sheet Status"border="0" color="0" x="6479" y="6" height="103" width="395"  name=sheet_skid_skid_sheet_status_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Production Sheet Item Prod Item Num"border="0" color="0" x="6881" y="3" height="77" width="523"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="0" x="8" y="9" height="61" width="541" format="[general]"  name=coil_org_num edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="0" x="555" y="9" height="61" width="402" format="[general]"  name=coil_mid_num edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="0" x="964" y="13" height="61" width="402" format="[general]"  name=lot_num edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="0" color="0" x="1373" y="9" height="61" width="317" format="[general]"  name=line_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="1" tabsequence=32766 border="0" color="0" x="1697" y="9" height="61" width="363" format="[general]"  name=pieces_per_case edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="0" x="2066" y="9" height="61" width="399" format="[general]"  name=orig_customer_po edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=7 alignment="1" tabsequence=32766 border="0" color="0" x="2472" y="9" height="61" width="349" format="[general]"  name=order_abc_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=8 alignment="1" tabsequence=32766 border="0" color="0" x="2827" y="9" height="61" width="356" format="[general]"  name=order_item_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=9 alignment="1" tabsequence=32766 border="0" color="0" x="3190" y="9" height="61" width="502" format="[general]"  name=ab_job_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=10 alignment="1" tabsequence=32766 border="0" color="0" x="3698" y="9" height="61" width="495" format="[general]"  name=prod_item_net_wt edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=11 alignment="1" tabsequence=32766 border="0" color="0" x="4200" y="9" height="61" width="360" format="[general]"  name=sheet_skid_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=12 alignment="1" tabsequence=32766 border="0" color="0" x="4566" y="9" height="61" width="292" format="[general]"  name=sheet_net_wt edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=13 alignment="1" tabsequence=32766 border="0" color="0" x="4865" y="9" height="61" width="321" format="[general]"  name=sheet_tare_wt edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=14 alignment="1" tabsequence=32766 border="0" color="0" x="5192" y="13" height="61" width="253" format="[general]"  name=length edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=15 alignment="1" tabsequence=32766 border="0" color="0" x="5451" y="9" height="61" width="253" format="[general]"  name=width edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=16 alignment="1" tabsequence=32766 border="0" color="0" x="5711" y="9" height="61" width="253" format="[general]"  name=gauge edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=17 alignment="1" tabsequence=32766 border="0" color="0" x="5970" y="9" height="61" width="502" format="[general]"  name=prod_item_pieces edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=18 alignment="1" tabsequence=32766 border="0" color="0" x="6479" y="9" height="61" width="395" format="[general]"  name=skid_sheet_status edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=19 alignment="0" tabsequence=32766 border="0" color="0" x="6881" y="0" height="52" width="523" format="[general]"  name=prod_item_num edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )

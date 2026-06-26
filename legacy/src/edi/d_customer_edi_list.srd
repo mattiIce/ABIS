@@ -1,0 +1,22 @@
+$PBExportHeader$d_customer_edi_list.srd
+$PBExportComments$list all kinds of EDIs againt a customer
+release 6;
+datawindow(units=0 timer_interval=0 color=12632256 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=3 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=323 color="536870912" )
+table(column=(type=char(18) update=yes updatewhereclause=yes key=yes name=customer_edi_name dbname="customer_edi.customer_edi_name" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=customer_id dbname="customer_edi.customer_id" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=edi_type_id dbname="customer_edi.edi_type_id" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=edi_version dbname="customer_edi.edi_version" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=customer_edi_desc dbname="customer_edi.customer_edi_desc" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"customer_edi~" ) COLUMN(NAME=~"customer_edi.customer_edi_name~") COLUMN(NAME=~"customer_edi.customer_id~") COLUMN(NAME=~"customer_edi.edi_type_id~") COLUMN(NAME=~"customer_edi.edi_version~") COLUMN(NAME=~"customer_edi.customer_edi_desc~")WHERE(    EXP1 =~"~~~"CUSTOMER_EDI~~~".~~~"CUSTOMER_ID~~~"~"   OP =~"=~"    EXP2 =~":customer_id~" ) ) ARG(NAME = ~"customer_id~" TYPE = number) " update="CUSTOMER_EDI" updatewhere=1 updatekeyinplace=no arguments=(("customer_id", number)) )
+text(band=detail alignment="1" text="EDI Version:"border="6" color="0" x="702" y="99" height="51" width="285"  name=edi_version_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=40 border="5" color="0" x="1017" y="96" height="61" width="406" format="[general]"  name=edi_version edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=50 border="5" color="0" x="333" y="179" height="131" width="1580" format="[general]"  name=customer_edi_desc edit.limit=255 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=30 border="5" color="0" x="333" y="96" height="61" width="256" format="[general]"  name=edi_type_id edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=10 border="5" color="0" x="333" y="10" height="61" width="1101" format="[general]"  name=customer_edi_name edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Edi Type:"border="6" color="0" x="33" y="93" height="51" width="263"  name=edi_type_id_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Description:"border="6" color="0" x="29" y="179" height="51" width="267"  name=customer_edi_desc_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text=" EDI  Name:"border="6" color="0" x="33" y="10" height="51" width="263"  name=customer_edi_name_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

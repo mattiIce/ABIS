@@ -1,0 +1,70 @@
+$PBExportHeader$d_edi_dimesion_rec.srd
+$PBExportComments$sheet dimesion(retangle: R L)
+release 5;
+datawindow(units=0 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.prompt=no grid.lines=0 )
+header(height=65 color="536870912" )
+summary(height=4 color="536870912" )
+footer(height=1 color="536870912" )
+detail(height=77 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_abc_num dbname="rectangle.order_abc_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_item_num dbname="rectangle.order_item_num" )
+ column=(type=decimal(2) update=yes updatewhereclause=yes name=rt_length dbname="rectangle.rt_length" )
+ column=(type=decimal(2) update=yes updatewhereclause=yes name=rt_width dbname="rectangle.rt_width" )
+ retrieve="  SELECT ~"RECTANGLE~".~"ORDER_ABC_NUM~",   
+         ~"RECTANGLE~".~"ORDER_ITEM_NUM~",   
+         ~"RECTANGLE~".~"RT_LENGTH~",   
+         ~"RECTANGLE~".~"RT_WIDTH~"  
+  FROM ~"RECTANGLE~"   
+  WHERE  ~"RECTANGLE~".~"ORDER_ABC_NUM~" in 
+            (SELECT   ~"ORDER_ITEM~".~"ORDER_ABC_NUM~"
+             FROM ~"COIL~",   
+                   ~"CUSTOMER_ORDER~",   
+  				       ~"ORDER_ITEM~",   
+ 				       ~"PRODUCTION_SHEET_ITEM~",   
+      		       ~"SHEET_SKID~",    
+  				       ~"SHEET_SKID_DETAIL~",
+   			       ~"AB_JOB~"  
+             WHERE ( ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" = ~"CUSTOMER_ORDER~".~"ORDER_ABC_NUM~" ) and  
+                   ( ~"SHEET_SKID_DETAIL~".~"SHEET_SKID_NUM~" = ~"SHEET_SKID~".~"SHEET_SKID_NUM~" ) and  
+                   ( ~"SHEET_SKID_DETAIL~".~"PROD_ITEM_NUM~" = ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NUM~" ) and  
+                   ( ~"COIL~".~"COIL_ABC_NUM~" = ~"PRODUCTION_SHEET_ITEM~".~"COIL_ABC_NUM~" ) and  
+                   ( ~"PRODUCTION_SHEET_ITEM~".~"AB_JOB_NUM~" = ~"SHEET_SKID~".~"AB_JOB_NUM~" ) and  
+                   (~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_EDI870_DATE~" is NULL) and
+                   (~"PRODUCTION_SHEET_ITEM~".~"AB_JOB_NUM~" =~"AB_JOB~".~"AB_JOB_NUM~") and 
+                   (~"AB_JOB~".~"ORDER_ABC_NUM~" = ~"ORDER_ITEM~".~"ORDER_ABC_NUM~") and
+                   (~"AB_JOB~".~"ORDER_ITEM_NUM~" = ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~") and
+                   ( ~"CUSTOMER_ORDER~".~"ORIG_CUSTOMER_ID~" = :ai_customer_id )
+             )  
+        
+          and
+
+         ~"RECTANGLE~".~"ORDER_ITEM_NUM~" in 
+            (SELECT   ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~"
+              FROM ~"COIL~",   
+                   ~"CUSTOMER_ORDER~",   
+  				       ~"ORDER_ITEM~",   
+ 				       ~"PRODUCTION_SHEET_ITEM~",   
+      		       ~"SHEET_SKID~",    
+  				       ~"SHEET_SKID_DETAIL~",
+   			       ~"AB_JOB~"  
+             WHERE ( ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" = ~"CUSTOMER_ORDER~".~"ORDER_ABC_NUM~" ) and  
+                   ( ~"SHEET_SKID_DETAIL~".~"SHEET_SKID_NUM~" = ~"SHEET_SKID~".~"SHEET_SKID_NUM~" ) and  
+                   ( ~"SHEET_SKID_DETAIL~".~"PROD_ITEM_NUM~" = ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NUM~" ) and  
+                   ( ~"COIL~".~"COIL_ABC_NUM~" = ~"PRODUCTION_SHEET_ITEM~".~"COIL_ABC_NUM~" ) and  
+                   ( ~"PRODUCTION_SHEET_ITEM~".~"AB_JOB_NUM~" = ~"SHEET_SKID~".~"AB_JOB_NUM~" ) and  
+                   (~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_EDI870_DATE~" is NULL) and
+                   (~"PRODUCTION_SHEET_ITEM~".~"AB_JOB_NUM~" =~"AB_JOB~".~"AB_JOB_NUM~") and 
+                   (~"AB_JOB~".~"ORDER_ABC_NUM~" = ~"ORDER_ITEM~".~"ORDER_ABC_NUM~") and
+                   (~"AB_JOB~".~"ORDER_ITEM_NUM~" = ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~") and
+                   ( ~"CUSTOMER_ORDER~".~"ORIG_CUSTOMER_ID~" = :ai_customer_id ) 
+            )
+          
+            " update="RECTANGLE" updatewhere=1 updatekeyinplace=no arguments=(("ai_customer_id", number)) )
+text(band=header alignment="2" text="Order Abc Num"border="0" color="0" x="8" y="6" height="52" width="345"  name=order_abc_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Order Item Num"border="0" color="0" x="360" y="6" height="52" width="360"  name=order_item_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Rt Length"border="0" color="0" x="726" y="6" height="52" width="257"  name=rt_length_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Rt Width"border="0" color="0" x="989" y="6" height="52" width="257"  name=rt_width_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=10 border="0" color="0" x="8" y="9" height="61" width="345" format="[general]"  name=order_abc_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=20 border="0" color="0" x="360" y="9" height="61" width="360" format="[general]"  name=order_item_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=30 border="0" color="0" x="726" y="9" height="61" width="257" format="[general]"  name=rt_length edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="1" tabsequence=40 border="0" color="0" x="989" y="9" height="61" width="257" format="[general]"  name=rt_width edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )

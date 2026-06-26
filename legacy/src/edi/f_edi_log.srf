@@ -1,0 +1,65 @@
+$PBExportHeader$f_edi_log.srf
+global type f_edi_log from function_object
+end type
+
+forward prototypes
+global function integer f_edi_log (integer al_customer_id, string as_edi_name, string as_content, integer al_edi_file_id)
+end prototypes
+
+global function integer f_edi_log (integer al_customer_id, string as_edi_name, string as_content, integer al_edi_file_id);//////////////////////////////////////////////////////////////////////////////
+//
+//	Function:  f_edi_log
+//
+//	Access:    Private
+//
+//	Arguments:
+//    al_customer_id 
+//    as_edi_name
+//    as_content
+//	Returns:   Integer
+//               1 = if it succeeds
+//              -1 = if a system error occurs
+//	Description: Log EDI process messages 
+//
+//////////////////////////////////////////////////////////////////////////////
+//
+//	Revision History
+//
+//	Version
+//	
+//////////////////////////////////////////////////////////////////////////////
+
+/*
+Date ld_today
+Time ltm_now
+Datetime ldt_now
+
+ld_today = Today()
+ltm_now = Now()
+ldt_now = DateTime(ld_today, ltm_now)
+*/
+Datetime ldt_now
+SELECT SYSDATE 
+INTO :ldt_now
+FROM dual
+USING SQLCA;
+
+INSERT into edi_log (edi_log_timestamp,
+                     customer_id,
+							customer_edi_name,
+							edi_log_contents,
+							edi_file_id)
+VALUES(:ldt_now, :al_customer_id, :as_edi_name, :as_content, :al_edi_file_id)
+USING SQLCA;
+//if f_check_sqlcode(SQLCA, True, True) <0 then
+//	MessageBox("EDI LOG", "logging error")
+//end if	
+commit using SQLCA;
+return 1
+
+
+
+
+	
+end function
+

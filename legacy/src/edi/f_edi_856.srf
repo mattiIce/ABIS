@@ -1,0 +1,113 @@
+$PBExportHeader$f_edi_856.srf
+$PBExportComments$Handle all EDI 856s
+global type f_edi_856 from function_object
+end type
+
+forward prototypes
+global function integer f_edi_856 (integer al_packing_list)
+end prototypes
+
+global function integer f_edi_856 (integer al_packing_list);//////////////////////////////////////////////////////////////////////////////
+//
+//	Function:  f_edi_856
+//
+//	Access:    Public
+//
+//	Arguments:
+//   al_packing_list  
+//
+//	Returns:   Integer
+//               1 = if it succeeds
+//              -1 = if an error occurs
+//              100 = if already sent
+//              200 =  if no EDI defined 
+//	Description:  Handle all EDI 856 by calling customer EDI 856 function.
+//			       
+//
+//////////////////////////////////////////////////////////////////////////////
+//
+//	Revision History
+//
+//	Version 1.0
+//	
+//
+//////////////////////////////////////////////////////////////////////////////
+int li_return, li_return1
+int li_customer_id,li_des_sh_cust_id,li_enduser_id
+	  SELECT customer_id,des_sh_cust_id, shipment_enduser_id
+     INTO 	:li_customer_id,:li_des_sh_cust_id,:li_enduser_id      
+     FROM  shipment
+     WHERE shipment.packing_list = :al_packing_list
+     USING SQLCA;
+     if f_check_sqlcode(SQLCA, True, True) <0 then return -1
+
+
+Choose Case li_customer_id 
+ /* 
+ Case  40,44    //Reynolds McCook or Lister Hill Alloy 
+	//Generate Reynolds EDI 856
+	li_return = f_edi_reynolds_856(li_customer_id,al_packing_list)  
+	if li_return = -1 then
+		f_edi_log(li_customer_id, "Reynolds_856", "Failed")
+		return -1
+	elseif li_return = 1 then
+		f_edi_log(li_customer_id, "Reynolds_856", "EDI generated successfully.")
+	end if	
+		 //EDI 856 for Ford Chicago and Walton Hills Stamping
+       Choose Case li_enduser_id  
+		   Case 80    //Ford Chicago Stamping Plant
+		     li_return1 = f_edi_reynolds_des_856(li_customer_id,al_packing_list)
+			  if li_return1 = -1 then
+				f_edi_log(li_customer_id, "Reynolds856Chicago", "Failed")
+			  elseif li_return1 = 1 then
+				f_edi_log(li_customer_id, "Reynolds856Chicago", "EDI generated successfully.")
+		     end if
+			  return li_return1
+			Case 81   //Ford Waton Hills Stamping Plant
+		     li_return1 = f_edi_reynolds_des_856(li_customer_id,al_packing_list)
+			  if li_return1 = -1 then
+				f_edi_log(li_customer_id, "Reynolds856Walton", "Failed")
+			  elseif li_return1 = 1 then
+				f_edi_log(li_customer_id, "Reynolds856Walton", "EDI generated successfully.")
+		     end if
+			  return li_return1 
+	     Case else
+		     return 200
+	    End Choose
+*/
+
+
+//Case 45 
+//	//Generate Kaiser EDI 856
+//	li_return = f_edi_kaiser_856(li_customer_id,al_packing_list)  
+//	if li_return = -1 then
+//		f_edi_log(li_customer_id, "Kaiser_856", "Failed")
+//	elseif li_return = 1 then
+//		f_edi_log(li_customer_id, "Kaiser_856", "EDI generated successfully.")
+//	end if	
+//	return li_return
+
+Case  34, 35, 10
+	//Alcan EDI 856
+	Choose Case li_des_sh_cust_id  
+	   Case  69,70,72    //GM Pontiac plant 14, Grand Rapids and dock 15
+	      li_return = f_edi_alcan_gm_856(li_customer_id,li_des_sh_cust_id, al_packing_list)
+	      return li_return   
+   	Case 	51,77,71,78,41,79  //Ford Chicago, Cleveland, Woodhaven and Maumee Stamping
+			                      //IDS and WSDC Warehouse
+			li_return = f_edi_alcan_ford_856(li_customer_id,li_des_sh_cust_id, al_packing_list)
+			return li_return
+	  	Case Else
+			return 200
+	End Choose
+	
+Case Else
+		return 200 //no customer EDI 856 defined
+		//null
+End Choose
+
+
+
+
+end function
+

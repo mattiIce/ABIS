@@ -1,0 +1,11 @@
+$PBExportHeader$d_863_check_output.srd
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=115 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes key=yes name=coil_abc_num dbname="coil.coil_abc_num" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"coil~" ) COLUMN(NAME=~"coil.coil_abc_num~")WHERE(    EXP1 =~"~~~"COIL~~~".~~~"COIL_ORG_NUM~~~"~"   OP =~"=~"    EXP2 =~":ls_cur_org_coil_num~"    LOGIC =~"and~" ) WHERE(    EXP1 =~"~~~"COIL~~~".~~~"CUSTOMER_ID~~~"~"   OP =~"=~"    EXP2 =~"1153~" ) ) ARG(NAME = ~"ls_cur_org_coil_num~" TYPE = string) " update="COIL" updatewhere=0 updatekeyinplace=no arguments=(("ls_cur_org_coil_num", string)) )
+text(band=detail alignment="1" text="Coil Org Num:"border="0" color="0" x="29" y="3" height="51" width="581"  name=coil_orginal_num_t  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="0" x="611" y="0" height="77" width="1419" format="[general]"  name=coil_abc_num edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")
