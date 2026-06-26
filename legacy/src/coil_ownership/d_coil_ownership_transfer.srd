@@ -1,0 +1,55 @@
+$PBExportHeader$d_coil_ownership_transfer.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=67108864 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=122 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=51 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=certificate_num dbname="coil_ownership_transfer.certificate_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=coil_abc_num_orig dbname="coil_ownership_transfer.coil_abc_num_orig" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=customer_id_orig dbname="coil_ownership_transfer.customer_id_orig" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=customer_id_new dbname="coil_ownership_transfer.customer_id_new" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=coil_org_num dbname="coil_ownership_transfer.coil_org_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=coil_abc_num_new dbname="coil_ownership_transfer.coil_abc_num_new" )
+ column=(type=datetime update=yes updatewhereclause=yes name=transfer_datetime dbname="coil_ownership_transfer.transfer_datetime" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=transfer_performed_by dbname="coil_ownership_transfer.transfer_performed_by" )
+ column=(type=char(100) update=yes updatewhereclause=yes name=authorization_note dbname="coil_ownership_transfer.authorization_note" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=notes dbname="coil_ownership_transfer.notes" )
+ retrieve="select	certificate_num,
+			coil_abc_num_orig,
+			customer_id_orig,
+			customer_id_new,
+			coil_org_num,
+			coil_abc_num_new,
+			transfer_datetime,
+			transfer_performed_by,
+			authorization_note,
+			notes
+from		dbo.coil_ownership_transfer" update="dbo.coil_ownership_transfer" updatewhere=0 updatekeyinplace=yes )
+text(band=header alignment="0" text="Certificate #" border="6" color="33554432" x="0" y="0" height="115" width="285" html.valueishtml="0"  name=certificate_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Coil Org Num" border="6" color="33554432" x="1573" y="0" height="115" width="362" html.valueishtml="0"  name=coil_org_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Original
+Coil ABC Num" border="6" color="33554432" x="1949" y="0" height="115" width="362" html.valueishtml="0"  name=coil_abc_num_orig_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="New
+Coil Abc Num" border="6" color="33554432" x="2326" y="0" height="115" width="362" html.valueishtml="0"  name=coil_abc_num_new_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Transfer Datetime" border="6" color="33554432" x="2703" y="0" height="115" width="479" html.valueishtml="0"  name=transfer_datetime_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Transfer
+Performed By" border="6" color="33554432" x="3196" y="0" height="115" width="545" html.valueishtml="0"  name=transfer_performed_by_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Original Customer" border="6" color="33554432" x="300" y="0" height="115" width="622" html.valueishtml="0"  name=customer_id_orig_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="New Customer" border="6" color="33554432" x="936" y="0" height="115" width="622" html.valueishtml="0"  name=customer_id_new_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="0" y="0" height="51" width="285" format="[general]" html.valueishtml="0"  name=certificate_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="0" color="33554432" x="1949" y="0" height="51" width="362" format="[general]" html.valueishtml="0"  name=coil_abc_num_orig visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="2" tabsequence=32766 border="0" color="33554432" x="2326" y="0" height="51" width="362" format="[general]" html.valueishtml="0"  name=coil_abc_num_new visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="0" color="33554432" x="2703" y="0" height="51" width="479" format="[shortdate] [time]" html.valueishtml="0"  name=transfer_datetime visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="33554432" x="1573" y="0" height="51" width="362" format="[general]" html.valueishtml="0"  name=coil_org_num visible="1" edit.limit=32 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=8 alignment="0" tabsequence=32766 border="0" color="33554432" x="3196" y="0" height="51" width="545" format="[general]" html.valueishtml="0"  name=transfer_performed_by visible="1" edit.limit=32 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="300" y="0" height="51" width="603" format="[general]" html.valueishtml="0"  name=customer_id_orig visible="1" dddw.name=d_dddw_id_short dddw.displaycolumn=customer_short_name dddw.datacolumn=customer_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="936" y="0" height="51" width="603" format="[general]" html.valueishtml="0"  name=customer_id_new visible="1" dddw.name=d_dddw_id_short dddw.displaycolumn=customer_short_name dddw.datacolumn=customer_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=9 alignment="0" tabsequence=32766 border="0" color="33554432" x="4414" y="0" height="35" width="475" format="[general]" html.valueishtml="0"  name=authorization_note visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=10 alignment="0" tabsequence=32766 border="0" color="33554432" x="3968" y="0" height="51" width="402" format="[general]" html.valueishtml="0"  name=notes visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

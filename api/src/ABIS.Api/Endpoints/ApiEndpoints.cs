@@ -995,6 +995,39 @@ public static class ApiEndpoints
            .WithSummary("Record a win-probability review on a quote.")
            .Produces<SalesProbability>(StatusCodes.Status201Created).ProducesValidationProblem();
 
+        // ---- Coil ownership transfer (legacy w_coil_ownership_transfer) ----
+        api.MapGet("/coil-ownership/transfers", async (IAbisRepository repo, CancellationToken ct, long? customerId = null) =>
+                Results.Ok(await repo.GetCoilOwnershipTransfersAsync(customerId, ct)))
+           .WithName("GetCoilOwnershipTransfers").WithTags("CoilOwnership")
+           .WithSummary("The coil-ownership transfer ledger (optionally scoped to a customer).")
+           .Produces<IReadOnlyList<CoilOwnershipTransfer>>();
+
+        api.MapGet("/coil-ownership/transfers/{certificateNum:long}/certificate", async (long certificateNum, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetCoilOwnershipTransferCertificateAsync(certificateNum, ct) is { } cert ? Results.Ok(cert) : Results.NotFound())
+           .WithName("GetCoilOwnershipTransferCertificate").WithTags("CoilOwnership")
+           .WithSummary("The printable transfer certificate (full customer addresses + coil details).")
+           .Produces<CoilOwnershipTransferCertificate>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapGet("/coil-ownership/transferable-coils", async (IAbisRepository repo, CancellationToken ct, long? customerId = null, string? search = null) =>
+                Results.Ok(await repo.GetTransferableCoilsAsync(customerId, search, ct)))
+           .WithName("GetTransferableCoils").WithTags("CoilOwnership")
+           .WithSummary("Coils eligible to transfer, with their current owner (the coil picker).")
+           .Produces<IReadOnlyList<TransferableCoil>>();
+
+        api.MapPost("/coil-ownership/transfers", async (CoilOwnershipTransferWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateCoilOwnershipTransferAsync(body, ct);
+                return created is null
+                    ? Results.NotFound(new { message = $"Coil {body.CoilAbcNumOrig} not found." })
+                    : Results.Created($"/api/coil-ownership/transfers/{created.CertificateNum}/certificate", created);
+            })
+           .WithName("CreateCoilOwnershipTransfer").WithTags("CoilOwnership")
+           .WithSummary("Record a coil-ownership transfer (issues a certificate; re-points coil ownership).")
+           .Produces<CoilOwnershipTransfer>(StatusCodes.Status201Created)
+           .Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+
         api.MapGet("/scrap-skids", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? sort = null, string? dir = null) =>
             {
@@ -1385,6 +1418,19 @@ public static class ApiEndpoints
         if (body.SalesProbabilityPercent is < 0 or > 100)
             e["salesProbabilityPercent"] = ["salesProbabilityPercent must be between 0 and 100."];
         Max(e, "probabilityNote", body.ProbabilityNote, 1024);
+        return e.Count == 0 ? null : e;
+    }
+
+    private static Dictionary<string, string[]>? Validate(CoilOwnershipTransferWrite body)
+    {
+        var e = new Dictionary<string, string[]>();
+        if (body.CoilAbcNumOrig is null or <= 0)
+            e["coilAbcNumOrig"] = ["coilAbcNumOrig is required (the coil to transfer)."];
+        if (body.CustomerIdNew is null or <= 0)
+            e["customerIdNew"] = ["customerIdNew is required (the new owner)."];
+        Max(e, "transferPerformedBy", body.TransferPerformedBy, 32);
+        Max(e, "authorizationNote", body.AuthorizationNote, 255);
+        Max(e, "notes", body.Notes, 255);
         return e.Count == 0 ? null : e;
     }
 }

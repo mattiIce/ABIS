@@ -1,0 +1,116 @@
+$PBExportHeader$d_coil_ownership_transfer_item.srd
+$PBExportComments$list all rejected coils based on an specified packing_list_numebr
+release 9;
+datawindow(units=0 timer_interval=0 color=79741120 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=61 color="536870912" )
+summary(height=3 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=64 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=coil_abc_num dbname="coil.coil_abc_num" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=coil_org_num dbname="coil.coil_org_num" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=lot_num dbname="coil.lot_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=net_wt dbname="coil.net_wt" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=net_wt_balance dbname="coil.net_wt_balance" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=customer_id dbname="coil.customer_id" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=icra dbname="coil.icra" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=material_type dbname="coil.material_type" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=coil_mid_num dbname="coil.coil_mid_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=coil_status dbname="coil.coil_status" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=coil_alloy dbname="coil.coil_alloy" )
+ column=(type=char(8) update=yes updatewhereclause=yes name=coil_temper dbname="coil.coil_temper" )
+ column=(type=decimal(4) update=yes updatewhereclause=yes name=coil_gauge dbname="coil.coil_gauge" )
+ column=(type=decimal(3) update=yes updatewhereclause=yes name=coil_width dbname="coil.coil_width" )
+ column=(type=datetime update=yes updatewhereclause=yes name=date_received dbname="coil.date_received" )
+ column=(type=datetime update=yes updatewhereclause=yes name=coil_entry_date dbname="coil.coil_entry_date" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=pieces_per_case dbname="coil.pieces_per_case" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=coil_location dbname="coil.coil_location" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=coil_notes dbname="coil.coil_notes" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=coil_line_num dbname="coil.coil_line_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=coil_edi856_status dbname="coil.coil_edi856_status" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=coil_from_cust_id dbname="coil.coil_from_cust_id" )
+ column=(type=char(8) update=yes updatewhereclause=yes name=coil_alloy2 dbname="coil.coil_alloy2" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=reband_wt dbname="coil.reband_wt" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=reject_wt dbname="coil.reject_wt" )
+ column=(type=decimal(2) update=yes updatewhereclause=yes name=recovery_rate dbname="coil.recovery_rate" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=net_wt_balance_from_line dbname="coil.net_wt_balance_from_line" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=coil_status_from_line dbname="coil.coil_status_from_line" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=part_num dbname="coil.part_num" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=supplier_sales_num dbname="coil.supplier_sales_num" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=purchase_order_num dbname="coil.purchase_order_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=abco_coil_net_wt dbname="coil.abco_coil_net_wt" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=consumed_coil_num dbname="coil.consumed_coil_num" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=material_num dbname="coil.material_num" )
+ column=(type=char(24) update=yes updatewhereclause=yes name=cash_date dbname="coil.cash_date" )
+ column=(type=datetime update=yes updatewhereclause=yes name=scrap_870_date dbname="coil.scrap_870_date" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=coil_abc_num_previous dbname="coil.coil_abc_num_previous" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=customer_id_previous dbname="coil.customer_id_previous" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=coil_abc_num_new dbname="coil.coil_abc_num_new" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=customer_id_new dbname="coil.customer_id_new" )
+ column=(type=char(18) updatewhereclause=yes name=customer_name dbname="customer_name" )
+ column=(type=char(18) updatewhereclause=yes name=customer_name_previous dbname="customer_name_previous" )
+ retrieve="select	coil_abc_num,
+			coil_org_num,
+			lot_num,
+			net_wt,
+			net_wt_balance,
+
+			customer_id,
+			icra,
+			material_type,
+			coil_mid_num,
+			coil_status,
+			coil_alloy,
+			coil_temper,
+			coil_gauge,
+			coil_width,
+			date_received,
+			coil_entry_date,
+			pieces_per_case,
+			coil_location,
+			coil_notes,
+			coil_line_num,
+			coil_edi856_status,
+			coil_from_cust_id,
+			coil_alloy2,
+			reband_wt,
+			reject_wt,
+			recovery_rate,
+			net_wt_balance_from_line,
+			coil_status_from_line,
+			part_num,
+			supplier_sales_num,
+			purchase_order_num,
+			abco_coil_net_wt,
+			consumed_coil_num,
+			material_num,
+			cash_date,
+			scrap_870_date,
+			coil_abc_num_previous,
+			customer_id_previous,
+			coil_abc_num_new,
+			customer_id_new,
+			(select customer_short_name from customer where customer_id = coil.customer_id) customer_name,
+      	(select customer_short_name from customer where customer_id = coil.customer_id_previous) customer_name_previous
+from		coil   
+" update="coil" updatewhere=0 updatekeyinplace=yes )
+column(band=header id=3 alignment="2" tabsequence=32766 border="2" color="0" x="4184" y="317" height="58" width="325" format="[general]" html.valueishtml="0"  name=lot_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+text(band=header alignment="0" text="Coil Org Number" border="6" color="0" x="1276" y="0" height="54" width="468" html.valueishtml="0"  name=coil_org_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="Coil ABC Number" border="6" color="0" x="783" y="0" height="54" width="468" html.valueishtml="0"  name=coil_abc_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="Coil Status" border="6" color="0" x="1770" y="0" height="54" width="728" html.valueishtml="0"  name=coil_status_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="Coil Net Weight" border="6" color="0" x="2516" y="0" height="54" width="417" html.valueishtml="0"  name=net_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="Coil Gauge" border="6" color="0" x="2951" y="0" height="54" width="296" html.valueishtml="0"  name=coil_gauge_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="Coil Alloy" border="6" color="0" x="3269" y="0" height="54" width="296" html.valueishtml="0"  name=coil_alloy2_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="Customer" border="6" color="0" x="117" y="0" height="54" width="651" html.valueishtml="0"  name=customer_id_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="0" x="1273" y="6" height="54" width="468" format="[general]" html.valueishtml="0"  name=coil_org_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="0" x="786" y="6" height="54" width="468" format="[general]" html.valueishtml="0"  name=coil_abc_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+column(band=detail id=10 alignment="0" tabsequence=32766 border="0" color="0" x="1766" y="9" height="54" width="728" format="[general]" html.valueishtml="0"  name=coil_status visible="1" dddw.name=d_dddw_coil_status dddw.displaycolumn=coil_status_desc dddw.datacolumn=coil_status_code dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="0" x="2516" y="6" height="54" width="417" format="[general]" html.valueishtml="0"  name=net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+column(band=detail id=13 alignment="0" tabsequence=32766 border="0" color="0" x="2951" y="6" height="54" width="296" format="[general]" html.valueishtml="0"  name=coil_gauge visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+column(band=detail id=23 alignment="0" tabsequence=32766 border="0" color="0" x="3269" y="6" height="54" width="296" format="[general]" html.valueishtml="0"  name=coil_alloy2 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="0" x="117" y="6" height="54" width="651" format="[general]" html.valueishtml="0"  name=customer_id visible="1" dddw.name=d_dddw_id_short dddw.displaycolumn=customer_short_name dddw.datacolumn=customer_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

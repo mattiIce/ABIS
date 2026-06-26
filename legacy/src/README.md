@@ -24,6 +24,7 @@ File types: `.srw` windows · `.srd` DataWindows (embedded SQL) · `.srm` menus 
 | `daily_prod/` | **Daily production reporting** (28 windows, 109 DataWindows) |
 | `rpabco/` | **Reporting** — 33 report-template DataWindows, no windows |
 | `sales/` | **Sales / quote lifecycle** (`w_new_quote`, `w_edit_quote`, `w_sales_main`, `w_sales_quote_review`) — `sales_quote` (composite `quote_id`+`quote_revision_id`), `sales_reminder` (follow-ups), `sales_probability` (win-probability reviews), `customer_contact` (address book) |
+| `coil_ownership/` | **Coil ownership transfer** (`w_coil_ownership_transfer`, `w_coil_ownership_transfer_certificate`, from silverdome4) — toll processing: `coil_ownership_transfer` (certificate ledger, `customer_id_orig` → `customer_id_new`) + the printable certificate (full customer addresses + coil details) |
 | `inv_skid/`, `skid_entry/` | Skid inventory / entry |
 | `coil_eval/` | Coil evaluation |
 | `stacker_110/` | Line #110 stacker |

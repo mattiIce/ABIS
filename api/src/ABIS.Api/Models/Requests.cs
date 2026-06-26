@@ -328,3 +328,19 @@ public sealed class SalesProbabilityWrite
     public int? SalesProbabilityPercent { get; set; }
     public string? ProbabilityNote { get; set; }
 }
+
+/// <summary>Record a coil-ownership transfer (table <c>coil_ownership_transfer</c>).
+/// <see cref="CoilAbcNumOrig"/> (the coil being transferred) and <see cref="CustomerIdNew"/>
+/// (the new owner) are required. <c>certificate_num</c> is server-assigned, the original
+/// customer is read from the coil's current owner, and <c>transfer_datetime</c> defaults to
+/// now. The transfer also re-points the coil's <c>customer_id</c> to the new owner (its prior
+/// owner is preserved in <c>coil_from_cust_id</c>).</summary>
+public sealed class CoilOwnershipTransferWrite
+{
+    public long? CoilAbcNumOrig { get; set; }
+    public long? CustomerIdNew { get; set; }
+    public long? CoilAbcNumNew { get; set; }
+    public string? TransferPerformedBy { get; set; }
+    public string? AuthorizationNote { get; set; }
+    public string? Notes { get; set; }
+}
