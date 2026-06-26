@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ABIS Dies / Tooling</title>
+<title>ABIS Customers</title>
 <style>
   :root { --bd:#d0d7de; --bg:#f6f8fa; --ac:#0969da; }
   * { box-sizing: border-box; }
@@ -12,7 +12,7 @@
   body.busy button { opacity:.6; pointer-events:none; }
   header { background:#24292f; color:#fff; padding:10px 16px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
   header h1 { font-size:16px; margin:0; font-weight:600; }
-  header nav { display:flex; gap:12px; }
+  header nav { display:flex; gap:12px; flex-wrap:wrap; }
   header nav a { color:#9ecbff; text-decoration:none; }
   header .key { margin-left:auto; display:flex; gap:6px; align-items:center; }
   main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns:3fr 2fr; }
@@ -37,11 +37,14 @@
   .ok { color:#1a7f37; min-height:18px; font-size:13px; }
   tbody tr.click { cursor:pointer; }
   tbody tr.click:hover { background:var(--bg); }
+  .disabled { opacity:.5; pointer-events:none; }
+  .twocol { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:760px){ main{grid-template-columns:1fr;} .twocol{grid-template-columns:1fr;} }
 </style>
 </head>
 <body>
 <header>
-  <h1>ABIS Dies / Tooling <span class="pill">greenfield · typed client</span></h1>
+  <h1>ABIS Customers <span class="pill">greenfield · typed client</span></h1>
   <nav>
     <a href="/ui/order-entry.html">Order entry</a>
     <a href="/ui/coil-inventory.html">Coil inventory</a>
@@ -51,6 +54,7 @@
     <a href="/ui/customers.html">Customers</a>
     <a href="/ui/maintenance.html">Maintenance</a>
     <a href="/ui/dies.html">Dies</a>
+    <a href="/ui/downtime.html">Downtime</a>
   </nav>
   <div class="key">
     <label for="apiKey" style="color:#fff">X-Api-Key</label>
@@ -60,28 +64,26 @@
 
 <main>
   <section>
-    <h2>Dies</h2>
+    <h2>Customers</h2>
     <form id="searchForm" class="row">
-      <div><label>Status</label><br /><input id="fStatus" placeholder="#" style="width:70px" /></div>
+      <div><label>Name contains</label><br /><input id="fName" placeholder="customer name…" style="width:200px" /></div>
       <button type="submit">Search</button>
       <span id="count" class="muted"></span>
     </form>
     <table>
-      <thead><tr><th>Die #</th><th>Name</th><th>Status</th><th>Tool #</th><th>Part</th><th>Location</th></tr></thead>
-      <tbody id="dies"></tbody>
+      <thead><tr><th>Id</th><th>Name</th><th>Short</th><th>City / State</th></tr></thead>
+      <tbody id="customers"></tbody>
     </table>
   </section>
 
   <section>
-    <h2 id="formTitle">New die</h2>
+    <h2 id="formTitle">New customer</h2>
     <div class="grid">
-      <div class="fld full"><label>Die name</label><input id="dName" /></div>
-      <div class="fld"><label>Status</label><input id="dStatus" type="number" /></div>
-      <div class="fld"><label>Tool #</label><input id="dTool" /></div>
-      <div class="fld"><label>Part name</label><input id="dPart" /></div>
-      <div class="fld"><label>Gross weight</label><input id="dWeight" type="number" step="0.1" /></div>
-      <div class="fld"><label>Location</label><input id="dLocation" /></div>
-      <div class="fld full"><label>Description</label><input id="dDesc" /></div>
+      <div class="fld full"><label>Name *</label><input id="cName" maxlength="60" placeholder="required" /></div>
+      <div class="fld"><label>Short name</label><input id="cShort" maxlength="18" /></div>
+      <div class="fld"><label>Zip</label><input id="cZip" maxlength="18" /></div>
+      <div class="fld"><label>City</label><input id="cCity" maxlength="18" /></div>
+      <div class="fld"><label>State</label><input id="cState" maxlength="30" /></div>
     </div>
     <div class="row" style="margin-top:10px">
       <button id="btnSave" type="button">Save</button>
@@ -90,9 +92,35 @@
     <div id="ok" class="ok"></div>
   </section>
 
+  <section class="wide">
+    <h2>Contacts <span id="contactHint" class="muted" style="text-transform:none;letter-spacing:0"></span></h2>
+    <div id="contactPanel" class="twocol disabled">
+      <table>
+        <thead><tr><th>Name</th><th>Dept</th><th>Phone</th><th>Email</th></tr></thead>
+        <tbody id="contacts"></tbody>
+      </table>
+      <div>
+        <h2 id="contactFormTitle">New contact</h2>
+        <div class="grid">
+          <div class="fld"><label>Last name *</label><input id="kLast" maxlength="18" /></div>
+          <div class="fld"><label>First name</label><input id="kFirst" maxlength="18" /></div>
+          <div class="fld"><label>Department</label><input id="kDept" maxlength="18" /></div>
+          <div class="fld"><label>Phone</label><input id="kPhone" maxlength="18" /></div>
+          <div class="fld full"><label>Email</label><input id="kEmail" maxlength="50" /></div>
+          <div class="fld"><label>City</label><input id="kCity" maxlength="18" /></div>
+          <div class="fld"><label>State</label><input id="kState" maxlength="30" /></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button id="btnContactSave" type="button">Save contact</button>
+          <button id="btnContactNew" type="button" class="sec">New</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="wide"><div id="err" class="err"></div></section>
 </main>
 
-<script type="module" src="/ui/app/dies.js"></script>
+<script type="module" src="/ui/app/customers.js"></script>
 </body>
 </html>
