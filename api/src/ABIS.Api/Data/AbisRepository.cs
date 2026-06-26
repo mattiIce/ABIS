@@ -39,17 +39,94 @@ public sealed class AbisRepository : IAbisRepository
         """;
 
     private const string OrderCols = """
-        order_abc_num AS OrderAbcNum, orig_customer_id AS OrigCustomerId,
-        orig_customer_po AS OrigCustomerPo, enduser_po AS EnduserPo, scrap_handing_type AS ScrapHandingType
+        order_abc_num AS OrderAbcNum, orig_customer_id AS OrigCustomerId, enduser_id AS EnduserId,
+        orig_customer_po AS OrigCustomerPo, enduser_po AS EnduserPo, order_type AS OrderType,
+        reference AS Reference, term AS Term, scrap_handing_type AS ScrapHandingType, created_date AS CreatedDate,
+        order_contact_id AS OrderContactId, cust_order_note AS CustOrderNote, cust_order_line_note AS CustOrderLineNote,
+        sheet_handling_type AS SheetHandlingType, sales_order AS SalesOrder, tier1_customer_id AS Tier1CustomerId,
+        cert_label_customer_code AS CertLabelCustomerCode, edi_code AS EdiCode
         """;
 
     private const string OrderItemCols = """
         order_item_num AS OrderItemNum, order_abc_num AS OrderAbcNum, enduser_part_num AS EnduserPartNum,
-        alloy2 AS Alloy2, temper AS Temper, gauge AS Gauge, gauge_p AS GaugeP, gauge_m AS GaugeM,
-        surface AS Surface, flatness AS Flatness, sheet_type AS SheetType, material_end_use AS MaterialEndUse,
-        order_item_desc AS OrderItemDesc, pieces_skid AS PiecesSkid,
-        theoretical_unit_wt AS TheoreticalUnitWt, unit_price AS UnitPrice, item_created_dttm AS ItemCreatedDttm
+        item_status AS ItemStatus, item_active AS ItemActive, item_due_date AS ItemDueDate, item_created_dttm AS ItemCreatedDttm,
+        quantity AS Quantity, quantity_plus AS QuantityPlus, quantity_minus AS QuantityMinus,
+        sheet_type AS SheetType, alloy AS AlloyCode, alloy2 AS Alloy2, temper AS Temper, gauge AS Gauge, gauge_p AS GaugeP, gauge_m AS GaugeM,
+        surface AS Surface, flatness AS Flatness, material_end_use AS MaterialEndUse, theoretical_unit_wt AS TheoreticalUnitWt,
+        spec AS Spec, designation AS Designation,
+        incoming_coil_width AS IncomingCoilWidth, trimmed_coil_width AS TrimmedCoilWidth, trim_type_code AS TrimTypeCode,
+        trimming_required AS TrimmingRequired, trimmed_width_overridden AS TrimmedWidthOverridden,
+        trimmed_width_override_user AS TrimmedWidthOverrideUser, sh_tolerance_plus AS ShTolerancePlus, sh_toleranc_minus AS ShTolerancMinus,
+        sector AS Sector, dimpling_code AS DimplingCode, spm AS Spm, efficiency_percent AS EfficiencyPercent,
+        lube_weight AS LubeWeight, albl_lube_responsible AS AlblLubeResponsible,
+        pieces_skid AS PiecesSkid, pieces_skid_plus AS PiecesSkidPlus, pieces_skid_minus AS PiecesSkidMinus,
+        stacks_skid AS StacksSkid, max_skid_wt AS MaxSkidWt, packaging_bands AS PackagingBands, oil_stencil_interleave AS OilStencilInterleave,
+        packaging_spec1 AS PackagingSpec1, packaging_spec2 AS PackagingSpec2, packaging_spec3 AS PackagingSpec3,
+        packaging_spec4 AS PackagingSpec4, packaging_spec5 AS PackagingSpec5, packaging_spec6 AS PackagingSpec6, packaging_spec7 AS PackagingSpec7,
+        packaging_other_spec AS PackagingOtherSpec, processing_other_spec AS ProcessingOtherSpec,
+        unit_price AS UnitPrice, item_charge AS ItemCharge, order_item_desc AS OrderItemDesc, item_note AS ItemNote, item_attachments AS ItemAttachments,
+        supplier_code AS SupplierCode, govt_contract_num AS GovtContractNum, part_num_id AS PartNumId, part_num AS PartNum, part_copied AS PartCopied,
+        starting_goods_material_num AS StartingGoodsMaterialNum, finished_goods_material_num AS FinishedGoodsMaterialNum,
+        cust_prod_line_id AS CustProdLineId, billto_albl AS BilltoAlbl
         """;
+
+    // Shared INSERT fragments + bind builders so the two order-write sites (standalone +
+    // create-with-items) stay in lockstep. Column names == :placeholder names.
+    private const string OrderInsertCols =
+        "orig_customer_id, enduser_id, orig_customer_po, enduser_po, order_type, reference, term, scrap_handing_type, " +
+        "order_contact_id, cust_order_note, cust_order_line_note, sheet_handling_type, sales_order, tier1_customer_id, cert_label_customer_code, edi_code";
+    private const string OrderInsertVals =
+        ":orig_customer_id, :enduser_id, :orig_customer_po, :enduser_po, :order_type, :reference, :term, :scrap_handing_type, " +
+        ":order_contact_id, :cust_order_note, :cust_order_line_note, :sheet_handling_type, :sales_order, :tier1_customer_id, :cert_label_customer_code, :edi_code";
+    private static object OrderBinds(CustomerOrderWrite b) => new
+    {
+        orig_customer_id = b.OrigCustomerId, enduser_id = b.EnduserId, orig_customer_po = b.OrigCustomerPo, enduser_po = b.EnduserPo,
+        order_type = b.OrderType, reference = b.Reference, term = b.Term, scrap_handing_type = b.ScrapHandingType,
+        order_contact_id = b.OrderContactId, cust_order_note = b.CustOrderNote, cust_order_line_note = b.CustOrderLineNote,
+        sheet_handling_type = b.SheetHandlingType, sales_order = b.SalesOrder, tier1_customer_id = b.Tier1CustomerId,
+        cert_label_customer_code = b.CertLabelCustomerCode, edi_code = b.EdiCode
+    };
+
+    private const string OrderItemInsertCols =
+        "enduser_part_num, item_status, item_active, item_due_date, quantity, quantity_plus, quantity_minus, " +
+        "sheet_type, alloy, alloy2, temper, gauge, gauge_p, gauge_m, surface, flatness, material_end_use, theoretical_unit_wt, spec, designation, " +
+        "incoming_coil_width, trimmed_coil_width, trim_type_code, trimming_required, trimmed_width_overridden, trimmed_width_override_user, " +
+        "sh_tolerance_plus, sh_toleranc_minus, sector, dimpling_code, spm, efficiency_percent, lube_weight, albl_lube_responsible, " +
+        "pieces_skid, pieces_skid_plus, pieces_skid_minus, stacks_skid, max_skid_wt, packaging_bands, oil_stencil_interleave, " +
+        "packaging_spec1, packaging_spec2, packaging_spec3, packaging_spec4, packaging_spec5, packaging_spec6, packaging_spec7, packaging_other_spec, processing_other_spec, " +
+        "unit_price, item_charge, order_item_desc, item_note, item_attachments, supplier_code, govt_contract_num, part_num_id, part_num, part_copied, " +
+        "starting_goods_material_num, finished_goods_material_num, cust_prod_line_id, billto_albl";
+    private const string OrderItemInsertVals =
+        ":enduser_part_num, :item_status, :item_active, :item_due_date, :quantity, :quantity_plus, :quantity_minus, " +
+        ":sheet_type, :alloy, :alloy2, :temper, :gauge, :gauge_p, :gauge_m, :surface, :flatness, :material_end_use, :theoretical_unit_wt, :spec, :designation, " +
+        ":incoming_coil_width, :trimmed_coil_width, :trim_type_code, :trimming_required, :trimmed_width_overridden, :trimmed_width_override_user, " +
+        ":sh_tolerance_plus, :sh_toleranc_minus, :sector, :dimpling_code, :spm, :efficiency_percent, :lube_weight, :albl_lube_responsible, " +
+        ":pieces_skid, :pieces_skid_plus, :pieces_skid_minus, :stacks_skid, :max_skid_wt, :packaging_bands, :oil_stencil_interleave, " +
+        ":packaging_spec1, :packaging_spec2, :packaging_spec3, :packaging_spec4, :packaging_spec5, :packaging_spec6, :packaging_spec7, :packaging_other_spec, :processing_other_spec, " +
+        ":unit_price, :item_charge, :order_item_desc, :item_note, :item_attachments, :supplier_code, :govt_contract_num, :part_num_id, :part_num, :part_copied, " +
+        ":starting_goods_material_num, :finished_goods_material_num, :cust_prod_line_id, :billto_albl";
+    private static object OrderItemBinds(OrderItemWrite b) => new
+    {
+        enduser_part_num = b.EnduserPartNum, item_status = b.ItemStatus, item_active = b.ItemActive, item_due_date = b.ItemDueDate,
+        quantity = b.Quantity, quantity_plus = b.QuantityPlus, quantity_minus = b.QuantityMinus,
+        sheet_type = b.SheetType, alloy = b.AlloyCode, alloy2 = b.Alloy2, temper = b.Temper, gauge = b.Gauge, gauge_p = b.GaugeP, gauge_m = b.GaugeM,
+        surface = b.Surface, flatness = b.Flatness, material_end_use = b.MaterialEndUse, theoretical_unit_wt = b.TheoreticalUnitWt,
+        spec = b.Spec, designation = b.Designation,
+        incoming_coil_width = b.IncomingCoilWidth, trimmed_coil_width = b.TrimmedCoilWidth, trim_type_code = b.TrimTypeCode,
+        trimming_required = b.TrimmingRequired, trimmed_width_overridden = b.TrimmedWidthOverridden, trimmed_width_override_user = b.TrimmedWidthOverrideUser,
+        sh_tolerance_plus = b.ShTolerancePlus, sh_toleranc_minus = b.ShTolerancMinus,
+        sector = b.Sector, dimpling_code = b.DimplingCode, spm = b.Spm, efficiency_percent = b.EfficiencyPercent,
+        lube_weight = b.LubeWeight, albl_lube_responsible = b.AlblLubeResponsible,
+        pieces_skid = b.PiecesSkid, pieces_skid_plus = b.PiecesSkidPlus, pieces_skid_minus = b.PiecesSkidMinus,
+        stacks_skid = b.StacksSkid, max_skid_wt = b.MaxSkidWt, packaging_bands = b.PackagingBands, oil_stencil_interleave = b.OilStencilInterleave,
+        packaging_spec1 = b.PackagingSpec1, packaging_spec2 = b.PackagingSpec2, packaging_spec3 = b.PackagingSpec3,
+        packaging_spec4 = b.PackagingSpec4, packaging_spec5 = b.PackagingSpec5, packaging_spec6 = b.PackagingSpec6, packaging_spec7 = b.PackagingSpec7,
+        packaging_other_spec = b.PackagingOtherSpec, processing_other_spec = b.ProcessingOtherSpec,
+        unit_price = b.UnitPrice, item_charge = b.ItemCharge, order_item_desc = b.OrderItemDesc, item_note = b.ItemNote, item_attachments = b.ItemAttachments,
+        supplier_code = b.SupplierCode, govt_contract_num = b.GovtContractNum, part_num_id = b.PartNumId, part_num = b.PartNum, part_copied = b.PartCopied,
+        starting_goods_material_num = b.StartingGoodsMaterialNum, finished_goods_material_num = b.FinishedGoodsMaterialNum,
+        cust_prod_line_id = b.CustProdLineId, billto_albl = b.BilltoAlbl
+    };
 
     private const string TestCols = """
         coil_abc_num AS CoilAbcNum, source_id AS SourceId,
@@ -513,13 +590,12 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
         var id = await NextIdAsync(conn, tx, "customer_order", "order_abc_num", ct);
+        var p = new DynamicParameters(OrderBinds(body));
+        p.Add("id", id);
+        p.Add("created_date", (DateTime?)DateTime.UtcNow);
         await conn.ExecuteAsync(new CommandDefinition(
-            """
-            INSERT INTO customer_order (order_abc_num, orig_customer_id, orig_customer_po, enduser_po, scrap_handing_type)
-            VALUES (:id, :cust, :po, :epo, :scrap)
-            """,
-            new { id, cust = body.OrigCustomerId, po = body.OrigCustomerPo, epo = body.EnduserPo, scrap = body.ScrapHandingType },
-            transaction: tx, cancellationToken: ct));
+            $"INSERT INTO customer_order (order_abc_num, created_date, {OrderInsertCols}) VALUES (:id, :created_date, {OrderInsertVals})",
+            p, transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
         return (await GetOrderAsync(id, ct))!;
     }
@@ -527,14 +603,19 @@ public sealed class AbisRepository : IAbisRepository
     public async Task<CustomerOrder?> UpdateOrderAsync(long orderAbcNum, CustomerOrderWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
+        var p = new DynamicParameters(OrderBinds(body));
+        p.Add("id", orderAbcNum);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
-            UPDATE customer_order SET orig_customer_id = :cust, orig_customer_po = :po,
-                   enduser_po = :epo, scrap_handing_type = :scrap
+            UPDATE customer_order SET orig_customer_id = :orig_customer_id, enduser_id = :enduser_id,
+                   orig_customer_po = :orig_customer_po, enduser_po = :enduser_po, order_type = :order_type,
+                   reference = :reference, term = :term, scrap_handing_type = :scrap_handing_type,
+                   order_contact_id = :order_contact_id, cust_order_note = :cust_order_note, cust_order_line_note = :cust_order_line_note,
+                   sheet_handling_type = :sheet_handling_type, sales_order = :sales_order, tier1_customer_id = :tier1_customer_id,
+                   cert_label_customer_code = :cert_label_customer_code, edi_code = :edi_code
             WHERE order_abc_num = :id
             """,
-            new { cust = body.OrigCustomerId, po = body.OrigCustomerPo, epo = body.EnduserPo, scrap = body.ScrapHandingType, id = orderAbcNum },
-            cancellationToken: ct));
+            p, cancellationToken: ct));
         return n == 0 ? null : await GetOrderAsync(orderAbcNum, ct);
     }
 
@@ -544,23 +625,14 @@ public sealed class AbisRepository : IAbisRepository
         await using var tx = await conn.BeginTransactionAsync(ct);
         // order_item_num is a per-order line number (no sequence): MAX within the order + 1.
         var id = await NextOrderItemNumAsync(conn, tx, orderAbcNum, ct);
+        var p = new DynamicParameters(OrderItemBinds(body));
+        p.Add("id", id);
+        p.Add("ord", orderAbcNum);
+        p.Add("created", (DateTime?)DateTime.UtcNow);
         await conn.ExecuteAsync(new CommandDefinition(
-            """
-            INSERT INTO order_item (order_item_num, order_abc_num, enduser_part_num, alloy2, temper, gauge, gauge_p, gauge_m,
-                surface, flatness, sheet_type, material_end_use, order_item_desc, pieces_skid,
-                theoretical_unit_wt, unit_price, item_created_dttm)
-            VALUES (:id, :ord, :part, :alloy, :temper, :gauge, :gp, :gm, :surface, :flatness, :sheet, :enduse,
-                :idesc, :pieces, :tuw, :price, :created)
-            """,
-            new
-            {
-                id, ord = orderAbcNum, part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
-                gp = body.GaugeP, gm = body.GaugeM, surface = body.Surface, flatness = body.Flatness,
-                sheet = body.SheetType, enduse = body.MaterialEndUse, idesc = body.OrderItemDesc,
-                pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice,
-                created = (DateTime?)DateTime.UtcNow
-            },
-            transaction: tx, cancellationToken: ct));
+            $"INSERT INTO order_item (order_item_num, order_abc_num, item_created_dttm, {OrderItemInsertCols}) " +
+            $"VALUES (:id, :ord, :created, {OrderItemInsertVals})",
+            p, transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
         return (await GetOrderItemAsync(orderAbcNum, id, ct))!;
     }
@@ -569,23 +641,35 @@ public sealed class AbisRepository : IAbisRepository
     {
         await using var conn = await OpenAsync(ct);
         // order_abc_num + order_item_num are the key, so they're matched in WHERE, never SET.
+        // item_created_dttm is set on create only and never updated.
+        var p = new DynamicParameters(OrderItemBinds(body));
+        p.Add("ord", orderAbcNum);
+        p.Add("id", orderItemNum);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
-            UPDATE order_item SET enduser_part_num = :part, alloy2 = :alloy, temper = :temper,
-                gauge = :gauge, gauge_p = :gp, gauge_m = :gm, surface = :surface, flatness = :flatness,
-                sheet_type = :sheet, material_end_use = :enduse, order_item_desc = :idesc, pieces_skid = :pieces,
-                theoretical_unit_wt = :tuw, unit_price = :price
+            UPDATE order_item SET
+                enduser_part_num = :enduser_part_num, item_status = :item_status, item_active = :item_active, item_due_date = :item_due_date,
+                quantity = :quantity, quantity_plus = :quantity_plus, quantity_minus = :quantity_minus,
+                sheet_type = :sheet_type, alloy = :alloy, alloy2 = :alloy2, temper = :temper, gauge = :gauge, gauge_p = :gauge_p, gauge_m = :gauge_m,
+                surface = :surface, flatness = :flatness, material_end_use = :material_end_use, theoretical_unit_wt = :theoretical_unit_wt,
+                spec = :spec, designation = :designation,
+                incoming_coil_width = :incoming_coil_width, trimmed_coil_width = :trimmed_coil_width, trim_type_code = :trim_type_code,
+                trimming_required = :trimming_required, trimmed_width_overridden = :trimmed_width_overridden, trimmed_width_override_user = :trimmed_width_override_user,
+                sh_tolerance_plus = :sh_tolerance_plus, sh_toleranc_minus = :sh_toleranc_minus,
+                sector = :sector, dimpling_code = :dimpling_code, spm = :spm, efficiency_percent = :efficiency_percent,
+                lube_weight = :lube_weight, albl_lube_responsible = :albl_lube_responsible,
+                pieces_skid = :pieces_skid, pieces_skid_plus = :pieces_skid_plus, pieces_skid_minus = :pieces_skid_minus,
+                stacks_skid = :stacks_skid, max_skid_wt = :max_skid_wt, packaging_bands = :packaging_bands, oil_stencil_interleave = :oil_stencil_interleave,
+                packaging_spec1 = :packaging_spec1, packaging_spec2 = :packaging_spec2, packaging_spec3 = :packaging_spec3,
+                packaging_spec4 = :packaging_spec4, packaging_spec5 = :packaging_spec5, packaging_spec6 = :packaging_spec6, packaging_spec7 = :packaging_spec7,
+                packaging_other_spec = :packaging_other_spec, processing_other_spec = :processing_other_spec,
+                unit_price = :unit_price, item_charge = :item_charge, order_item_desc = :order_item_desc, item_note = :item_note, item_attachments = :item_attachments,
+                supplier_code = :supplier_code, govt_contract_num = :govt_contract_num, part_num_id = :part_num_id, part_num = :part_num, part_copied = :part_copied,
+                starting_goods_material_num = :starting_goods_material_num, finished_goods_material_num = :finished_goods_material_num,
+                cust_prod_line_id = :cust_prod_line_id, billto_albl = :billto_albl
             WHERE order_abc_num = :ord AND order_item_num = :id
             """,
-            new
-            {
-                part = body.EnduserPartNum, alloy = body.Alloy2, temper = body.Temper, gauge = body.Gauge,
-                gp = body.GaugeP, gm = body.GaugeM, surface = body.Surface, flatness = body.Flatness,
-                sheet = body.SheetType, enduse = body.MaterialEndUse, idesc = body.OrderItemDesc,
-                pieces = body.PiecesSkid, tuw = body.TheoreticalUnitWt, price = body.UnitPrice,
-                ord = orderAbcNum, id = orderItemNum
-            },
-            cancellationToken: ct));
+            p, cancellationToken: ct));
         return n == 0 ? null : await GetOrderItemAsync(orderAbcNum, orderItemNum, ct);
     }
 
@@ -1139,34 +1223,24 @@ public sealed class AbisRepository : IAbisRepository
         await using var tx = await conn.BeginTransactionAsync(ct);
 
         var orderId = await NextIdAsync(conn, tx, "customer_order", "order_abc_num", ct);
+        var op = new DynamicParameters(OrderBinds(body.Order));
+        op.Add("id", orderId);
+        op.Add("created_date", (DateTime?)DateTime.UtcNow);
         await conn.ExecuteAsync(new CommandDefinition(
-            """
-            INSERT INTO customer_order (order_abc_num, orig_customer_id, orig_customer_po, enduser_po, scrap_handing_type)
-            VALUES (:id, :cust, :po, :epo, :scrap)
-            """,
-            new { id = orderId, cust = body.Order.OrigCustomerId, po = body.Order.OrigCustomerPo, epo = body.Order.EnduserPo, scrap = body.Order.ScrapHandingType },
-            transaction: tx, cancellationToken: ct));
+            $"INSERT INTO customer_order (order_abc_num, created_date, {OrderInsertCols}) VALUES (:id, :created_date, {OrderInsertVals})",
+            op, transaction: tx, cancellationToken: ct));
 
         foreach (var item in body.Items)
         {
             var itemId = await NextOrderItemNumAsync(conn, tx, orderId, ct);
+            var ip = new DynamicParameters(OrderItemBinds(item));
+            ip.Add("id", itemId);
+            ip.Add("ord", orderId);
+            ip.Add("created", (DateTime?)DateTime.UtcNow);
             await conn.ExecuteAsync(new CommandDefinition(
-                """
-                INSERT INTO order_item (order_item_num, order_abc_num, enduser_part_num, alloy2, temper, gauge,
-                    gauge_p, gauge_m, surface, flatness, sheet_type, material_end_use, order_item_desc,
-                    pieces_skid, theoretical_unit_wt, unit_price, item_created_dttm)
-                VALUES (:id, :ord, :part, :alloy, :temper, :gauge, :gp, :gm, :surface, :flatness, :sheet,
-                    :enduse, :idesc, :pieces, :tuw, :price, :created)
-                """,
-                new
-                {
-                    id = itemId, ord = orderId, part = item.EnduserPartNum, alloy = item.Alloy2, temper = item.Temper,
-                    gauge = item.Gauge, gp = item.GaugeP, gm = item.GaugeM, surface = item.Surface, flatness = item.Flatness,
-                    sheet = item.SheetType, enduse = item.MaterialEndUse, idesc = item.OrderItemDesc,
-                    pieces = item.PiecesSkid, tuw = item.TheoreticalUnitWt, price = item.UnitPrice,
-                    created = (DateTime?)DateTime.UtcNow
-                },
-                transaction: tx, cancellationToken: ct));
+                $"INSERT INTO order_item (order_item_num, order_abc_num, item_created_dttm, {OrderItemInsertCols}) " +
+                $"VALUES (:id, :ord, :created, {OrderItemInsertVals})",
+                ip, transaction: tx, cancellationToken: ct));
         }
 
         await tx.CommitAsync(ct);

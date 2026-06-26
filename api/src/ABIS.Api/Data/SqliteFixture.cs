@@ -81,14 +81,28 @@ public static class SqliteFixture
                 PRIMARY KEY (ab_job_num, coil_abc_num));
 
             CREATE TABLE customer_order (
-                order_abc_num INTEGER PRIMARY KEY, orig_customer_id INTEGER, orig_customer_po TEXT,
-                enduser_po TEXT, scrap_handing_type TEXT);
+                order_abc_num INTEGER PRIMARY KEY, orig_customer_id INTEGER, enduser_id INTEGER,
+                orig_customer_po TEXT, enduser_po TEXT, order_type INTEGER, reference TEXT, term TEXT,
+                scrap_handing_type TEXT, created_date TEXT, order_contact_id INTEGER, cust_order_note TEXT,
+                cust_order_line_note INTEGER, sheet_handling_type INTEGER, sales_order TEXT,
+                tier1_customer_id INTEGER, cert_label_customer_code INTEGER, edi_code TEXT);
 
             CREATE TABLE order_item (
-                order_item_num INTEGER, order_abc_num INTEGER, enduser_part_num TEXT, alloy2 TEXT,
-                temper TEXT, gauge REAL, gauge_p REAL, gauge_m REAL, surface TEXT, flatness TEXT,
-                sheet_type TEXT, material_end_use TEXT, order_item_desc TEXT, pieces_skid INTEGER,
-                theoretical_unit_wt REAL, unit_price REAL, item_created_dttm TEXT,
+                order_item_num INTEGER, order_abc_num INTEGER, enduser_part_num TEXT, item_status INTEGER,
+                item_active TEXT, item_due_date TEXT, item_created_dttm TEXT,
+                quantity INTEGER, quantity_plus INTEGER, quantity_minus INTEGER,
+                sheet_type TEXT, alloy INTEGER, alloy2 TEXT, temper TEXT, gauge REAL, gauge_p REAL, gauge_m REAL,
+                surface TEXT, flatness TEXT, material_end_use TEXT, theoretical_unit_wt REAL, spec TEXT, designation TEXT,
+                incoming_coil_width REAL, trimmed_coil_width REAL, trim_type_code INTEGER, trimming_required TEXT,
+                trimmed_width_overridden TEXT, trimmed_width_override_user TEXT, sh_tolerance_plus TEXT, sh_toleranc_minus TEXT,
+                sector INTEGER, dimpling_code INTEGER, spm INTEGER, efficiency_percent INTEGER, lube_weight REAL, albl_lube_responsible TEXT,
+                pieces_skid INTEGER, pieces_skid_plus INTEGER, pieces_skid_minus INTEGER, stacks_skid INTEGER, max_skid_wt INTEGER,
+                packaging_bands TEXT, oil_stencil_interleave TEXT,
+                packaging_spec1 TEXT, packaging_spec2 TEXT, packaging_spec3 TEXT, packaging_spec4 TEXT,
+                packaging_spec5 TEXT, packaging_spec6 TEXT, packaging_spec7 TEXT, packaging_other_spec TEXT, processing_other_spec TEXT,
+                unit_price REAL, item_charge TEXT, order_item_desc TEXT, item_note TEXT, item_attachments TEXT,
+                supplier_code TEXT, govt_contract_num TEXT, part_num_id INTEGER, part_num INTEGER, part_copied TEXT,
+                starting_goods_material_num TEXT, finished_goods_material_num TEXT, cust_prod_line_id TEXT, billto_albl TEXT,
                 PRIMARY KEY (order_abc_num, order_item_num));
 
             -- Posted mechanical test results. The real PK is the composite

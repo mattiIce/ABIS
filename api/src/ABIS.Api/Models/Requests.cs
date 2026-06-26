@@ -155,9 +155,21 @@ public sealed class CoilPatch
 public sealed class CustomerOrderWrite
 {
     public long? OrigCustomerId { get; set; }
+    public long? EnduserId { get; set; }
     public string? OrigCustomerPo { get; set; }
     public string? EnduserPo { get; set; }
+    public int? OrderType { get; set; }
+    public string? Reference { get; set; }
+    public string? Term { get; set; }
     public string? ScrapHandingType { get; set; }
+    public long? OrderContactId { get; set; }
+    public string? CustOrderNote { get; set; }
+    public int? CustOrderLineNote { get; set; }
+    public int? SheetHandlingType { get; set; }
+    public string? SalesOrder { get; set; }
+    public long? Tier1CustomerId { get; set; }
+    public int? CertLabelCustomerCode { get; set; }
+    public string? EdiCode { get; set; }
 }
 
 /// <summary>Create or replace an order line item (table <c>order_item</c>).
@@ -170,6 +182,16 @@ public sealed class OrderItemWrite
     /// an order with embedded items.</summary>
     public long? OrderAbcNum { get; set; }
     public string? EnduserPartNum { get; set; }
+    public int? ItemStatus { get; set; }
+    public string? ItemActive { get; set; }
+    public DateTime? ItemDueDate { get; set; }
+    // Quantity + tolerance
+    public int? Quantity { get; set; }
+    public int? QuantityPlus { get; set; }
+    public int? QuantityMinus { get; set; }
+    // Material / dimensions
+    public string? SheetType { get; set; }
+    public int? AlloyCode { get; set; }
     public string? Alloy2 { get; set; }
     public string? Temper { get; set; }
     public decimal? Gauge { get; set; }
@@ -177,12 +199,58 @@ public sealed class OrderItemWrite
     public decimal? GaugeM { get; set; }
     public string? Surface { get; set; }
     public string? Flatness { get; set; }
-    public string? SheetType { get; set; }
     public string? MaterialEndUse { get; set; }
-    public string? OrderItemDesc { get; set; }
-    public int? PiecesSkid { get; set; }
     public decimal? TheoreticalUnitWt { get; set; }
+    public string? Spec { get; set; }
+    public string? Designation { get; set; }
+    // Trim / width
+    public decimal? IncomingCoilWidth { get; set; }
+    public decimal? TrimmedCoilWidth { get; set; }
+    public int? TrimTypeCode { get; set; }
+    public string? TrimmingRequired { get; set; }
+    public string? TrimmedWidthOverridden { get; set; }
+    public string? TrimmedWidthOverrideUser { get; set; }
+    public string? ShTolerancePlus { get; set; }
+    public string? ShTolerancMinus { get; set; }
+    // Tooling / line
+    public int? Sector { get; set; }
+    public int? DimplingCode { get; set; }
+    public int? Spm { get; set; }
+    public int? EfficiencyPercent { get; set; }
+    public decimal? LubeWeight { get; set; }
+    public string? AlblLubeResponsible { get; set; }
+    // Skid / packaging
+    public int? PiecesSkid { get; set; }
+    public int? PiecesSkidPlus { get; set; }
+    public int? PiecesSkidMinus { get; set; }
+    public int? StacksSkid { get; set; }
+    public int? MaxSkidWt { get; set; }
+    public string? PackagingBands { get; set; }
+    public string? OilStencilInterleave { get; set; }
+    public string? PackagingSpec1 { get; set; }
+    public string? PackagingSpec2 { get; set; }
+    public string? PackagingSpec3 { get; set; }
+    public string? PackagingSpec4 { get; set; }
+    public string? PackagingSpec5 { get; set; }
+    public string? PackagingSpec6 { get; set; }
+    public string? PackagingSpec7 { get; set; }
+    public string? PackagingOtherSpec { get; set; }
+    public string? ProcessingOtherSpec { get; set; }
+    // Pricing / linkage / misc
     public decimal? UnitPrice { get; set; }
+    public string? ItemCharge { get; set; }
+    public string? OrderItemDesc { get; set; }
+    public string? ItemNote { get; set; }
+    public string? ItemAttachments { get; set; }
+    public string? SupplierCode { get; set; }
+    public string? GovtContractNum { get; set; }
+    public long? PartNumId { get; set; }
+    public long? PartNum { get; set; }
+    public string? PartCopied { get; set; }
+    public string? StartingGoodsMaterialNum { get; set; }
+    public string? FinishedGoodsMaterialNum { get; set; }
+    public string? CustProdLineId { get; set; }
+    public string? BilltoAlbl { get; set; }
 }
 
 /// <summary>Create an order header together with its line items in one

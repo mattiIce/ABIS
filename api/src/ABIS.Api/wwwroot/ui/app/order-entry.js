@@ -83,11 +83,14 @@ function lineRow() {
     const div = document.createElement('div');
     div.className = 'line';
     div.innerHTML = `
-    <input class="ePart" placeholder="part #" style="width:120px" />
+    <input class="ePart" placeholder="part #" style="width:110px" />
     <select class="eAlloy">${alloys.map((a) => `<option>${esc(a)}</option>`).join('')}</select>
-    <input class="eSheet" placeholder="sheet" value="FLAT" style="width:80px" />
-    <input class="eGauge" placeholder="gauge" type="number" step="0.001" style="width:80px" />
-    <input class="ePieces" placeholder="pieces" type="number" style="width:70px" />
+    <input class="eSheet" placeholder="sheet" value="FLAT" style="width:70px" />
+    <input class="eGauge" placeholder="gauge" type="number" step="0.001" style="width:70px" />
+    <input class="ePieces" placeholder="pieces" type="number" style="width:65px" />
+    <input class="eQty" placeholder="qty" type="number" style="width:65px" />
+    <input class="eDue" type="date" title="item due date" style="width:130px" />
+    <input class="ePrice" placeholder="unit $" type="number" step="0.00001" style="width:75px" />
     <button class="del" type="button" title="remove line">✕</button>`;
     div.querySelector('.del').addEventListener('click', () => div.remove());
     return div;
@@ -97,16 +100,23 @@ async function createOrder() {
     setBusy(true);
     const order = new CustomerOrderWrite({
         origCustomerId: Number($('#nCustomer').value.trim()) || undefined,
+        enduserId: Number($('#nEnduser').value.trim()) || undefined,
         origCustomerPo: $('#nPo').value.trim() || undefined,
         enduserPo: $('#nEnduserPo').value.trim() || undefined,
     });
-    const items = Array.from(document.querySelectorAll('#lines .line')).map((row) => new OrderItemWrite({
-        enduserPartNum: row.querySelector('.ePart').value.trim() || undefined,
-        alloy2: row.querySelector('.eAlloy').value || undefined,
-        sheetType: row.querySelector('.eSheet').value.trim() || undefined,
-        gauge: Number(row.querySelector('.eGauge').value) || undefined,
-        piecesSkid: Number(row.querySelector('.ePieces').value) || undefined,
-    }));
+    const items = Array.from(document.querySelectorAll('#lines .line')).map((row) => {
+        const due = row.querySelector('.eDue').value;
+        return new OrderItemWrite({
+            enduserPartNum: row.querySelector('.ePart').value.trim() || undefined,
+            alloy2: row.querySelector('.eAlloy').value || undefined,
+            sheetType: row.querySelector('.eSheet').value.trim() || undefined,
+            gauge: Number(row.querySelector('.eGauge').value) || undefined,
+            piecesSkid: Number(row.querySelector('.ePieces').value) || undefined,
+            quantity: Number(row.querySelector('.eQty').value) || undefined,
+            itemDueDate: due ? new Date(due) : undefined,
+            unitPrice: Number(row.querySelector('.ePrice').value) || undefined,
+        });
+    });
     if (items.length === 0) {
         setErr('Add at least one line item.');
         setBusy(false);

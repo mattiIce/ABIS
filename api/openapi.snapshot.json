@@ -6866,6 +6866,11 @@
             "format": "int64",
             "nullable": true
           },
+          "enduserId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
           "origCustomerPo": {
             "type": "string",
             "nullable": true
@@ -6874,7 +6879,62 @@
             "type": "string",
             "nullable": true
           },
+          "orderType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "reference": {
+            "type": "string",
+            "nullable": true
+          },
+          "term": {
+            "type": "string",
+            "nullable": true
+          },
           "scrapHandingType": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "orderContactId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "custOrderNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "custOrderLineNote": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sheetHandlingType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "salesOrder": {
+            "type": "string",
+            "nullable": true
+          },
+          "tier1CustomerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "certLabelCustomerCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ediCode": {
             "type": "string",
             "nullable": true
           }
@@ -6925,6 +6985,11 @@
             "format": "int64",
             "nullable": true
           },
+          "enduserId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
           "origCustomerPo": {
             "type": "string",
             "nullable": true
@@ -6933,7 +6998,57 @@
             "type": "string",
             "nullable": true
           },
+          "orderType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "reference": {
+            "type": "string",
+            "nullable": true
+          },
+          "term": {
+            "type": "string",
+            "nullable": true
+          },
           "scrapHandingType": {
+            "type": "string",
+            "nullable": true
+          },
+          "orderContactId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "custOrderNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "custOrderLineNote": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sheetHandlingType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "salesOrder": {
+            "type": "string",
+            "nullable": true
+          },
+          "tier1CustomerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "certLabelCustomerCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ediCode": {
             "type": "string",
             "nullable": true
           }
@@ -8028,6 +8143,49 @@
             "type": "string",
             "nullable": true
           },
+          "itemStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "itemActive": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemDueDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "itemCreatedDttm": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "quantityPlus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "quantityMinus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sheetType": {
+            "type": "string",
+            "nullable": true
+          },
+          "alloyCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
           "alloy2": {
             "type": "string",
             "nullable": true
@@ -8059,15 +8217,84 @@
             "type": "string",
             "nullable": true
           },
-          "sheetType": {
-            "type": "string",
-            "nullable": true
-          },
           "materialEndUse": {
             "type": "string",
             "nullable": true
           },
-          "orderItemDesc": {
+          "theoreticalUnitWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "spec": {
+            "type": "string",
+            "nullable": true
+          },
+          "designation": {
+            "type": "string",
+            "nullable": true
+          },
+          "incomingCoilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "trimmedCoilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "trimTypeCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "trimmingRequired": {
+            "type": "string",
+            "nullable": true
+          },
+          "trimmedWidthOverridden": {
+            "type": "string",
+            "nullable": true
+          },
+          "trimmedWidthOverrideUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "shTolerancePlus": {
+            "type": "string",
+            "nullable": true
+          },
+          "shTolerancMinus": {
+            "type": "string",
+            "nullable": true
+          },
+          "sector": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "dimplingCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "spm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "efficiencyPercent": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "lubeWeight": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "alblLubeResponsible": {
             "type": "string",
             "nullable": true
           },
@@ -8076,9 +8303,68 @@
             "format": "int32",
             "nullable": true
           },
-          "theoreticalUnitWt": {
-            "type": "number",
-            "format": "double",
+          "piecesSkidPlus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "piecesSkidMinus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "stacksSkid": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxSkidWt": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "packagingBands": {
+            "type": "string",
+            "nullable": true
+          },
+          "oilStencilInterleave": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec1": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec2": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec3": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec4": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec5": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec6": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec7": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingOtherSpec": {
+            "type": "string",
+            "nullable": true
+          },
+          "processingOtherSpec": {
+            "type": "string",
             "nullable": true
           },
           "unitPrice": {
@@ -8086,9 +8372,58 @@
             "format": "double",
             "nullable": true
           },
-          "itemCreatedDttm": {
+          "itemCharge": {
             "type": "string",
-            "format": "date-time",
+            "nullable": true
+          },
+          "orderItemDesc": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemAttachments": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "govtContractNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "partNumId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "partNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "partCopied": {
+            "type": "string",
+            "nullable": true
+          },
+          "startingGoodsMaterialNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "finishedGoodsMaterialNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "custProdLineId": {
+            "type": "string",
+            "nullable": true
+          },
+          "billtoAlbl": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -8142,6 +8477,44 @@
             "type": "string",
             "nullable": true
           },
+          "itemStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "itemActive": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemDueDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "quantityPlus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "quantityMinus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sheetType": {
+            "type": "string",
+            "nullable": true
+          },
+          "alloyCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
           "alloy2": {
             "type": "string",
             "nullable": true
@@ -8173,15 +8546,84 @@
             "type": "string",
             "nullable": true
           },
-          "sheetType": {
-            "type": "string",
-            "nullable": true
-          },
           "materialEndUse": {
             "type": "string",
             "nullable": true
           },
-          "orderItemDesc": {
+          "theoreticalUnitWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "spec": {
+            "type": "string",
+            "nullable": true
+          },
+          "designation": {
+            "type": "string",
+            "nullable": true
+          },
+          "incomingCoilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "trimmedCoilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "trimTypeCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "trimmingRequired": {
+            "type": "string",
+            "nullable": true
+          },
+          "trimmedWidthOverridden": {
+            "type": "string",
+            "nullable": true
+          },
+          "trimmedWidthOverrideUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "shTolerancePlus": {
+            "type": "string",
+            "nullable": true
+          },
+          "shTolerancMinus": {
+            "type": "string",
+            "nullable": true
+          },
+          "sector": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "dimplingCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "spm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "efficiencyPercent": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "lubeWeight": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "alblLubeResponsible": {
             "type": "string",
             "nullable": true
           },
@@ -8190,14 +8632,127 @@
             "format": "int32",
             "nullable": true
           },
-          "theoreticalUnitWt": {
-            "type": "number",
-            "format": "double",
+          "piecesSkidPlus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "piecesSkidMinus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "stacksSkid": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxSkidWt": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "packagingBands": {
+            "type": "string",
+            "nullable": true
+          },
+          "oilStencilInterleave": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec1": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec2": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec3": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec4": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec5": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec6": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingSpec7": {
+            "type": "string",
+            "nullable": true
+          },
+          "packagingOtherSpec": {
+            "type": "string",
+            "nullable": true
+          },
+          "processingOtherSpec": {
+            "type": "string",
             "nullable": true
           },
           "unitPrice": {
             "type": "number",
             "format": "double",
+            "nullable": true
+          },
+          "itemCharge": {
+            "type": "string",
+            "nullable": true
+          },
+          "orderItemDesc": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemAttachments": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "govtContractNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "partNumId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "partNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "partCopied": {
+            "type": "string",
+            "nullable": true
+          },
+          "startingGoodsMaterialNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "finishedGoodsMaterialNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "custProdLineId": {
+            "type": "string",
+            "nullable": true
+          },
+          "billtoAlbl": {
+            "type": "string",
             "nullable": true
           }
         },
