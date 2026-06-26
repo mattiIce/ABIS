@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ABIS Shifts</title>
+<title>ABIS Warehouse</title>
 <style>
   :root { --bd:#d0d7de; --bg:#f6f8fa; --ac:#0969da; }
   * { box-sizing: border-box; }
@@ -15,12 +15,12 @@
   header nav { display:flex; gap:12px; flex-wrap:wrap; }
   header nav a { color:#9ecbff; text-decoration:none; }
   header .key { margin-left:auto; display:flex; gap:6px; align-items:center; }
-  main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns:3fr 2fr; }
+  main { max-width:1150px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns:3fr 2fr; }
   section { border:1px solid var(--bd); border-radius:8px; padding:14px; }
   section.wide { grid-column:1 / -1; }
   h2 { font-size:14px; margin:0 0 10px; text-transform:uppercase; letter-spacing:.04em; color:#57606a; }
   label { font-size:12px; color:#57606a; }
-  input, select, button, textarea { font:inherit; padding:6px 8px; border:1px solid var(--bd); border-radius:6px; }
+  input, select, button { font:inherit; padding:6px 8px; border:1px solid var(--bd); border-radius:6px; }
   button { background:var(--ac); color:#fff; border-color:var(--ac); cursor:pointer; }
   button.sec { background:#fff; color:#1f2328; border-color:var(--bd); }
   table { width:100%; border-collapse:collapse; margin-top:8px; }
@@ -29,20 +29,19 @@
   .row { display:flex; gap:8px; flex-wrap:wrap; align-items:end; }
   .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .grid .full { grid-column:1 / -1; }
-  .fld label { display:block; }
-  .fld input, .fld textarea { width:100%; }
-  .fld textarea { min-height:60px; resize:vertical; }
+  .fld label { display:block; } .fld input { width:100%; }
   .muted { color:#8b949e; }
   .pill { background:var(--bg); border:1px solid var(--bd); border-radius:12px; padding:1px 8px; font-size:12px; }
   .err { color:#cf222e; min-height:18px; }
   .ok { color:#1a7f37; min-height:18px; font-size:13px; }
   tbody tr.click { cursor:pointer; }
   tbody tr.click:hover { background:var(--bg); }
+  .disabled { opacity:.55; pointer-events:none; }
 </style>
 </head>
 <body>
 <header>
-  <h1>ABIS Shifts <span class="pill">greenfield · typed client</span></h1>
+  <h1>ABIS Warehouse <span class="pill">greenfield · typed client</span></h1>
   <nav>
     <a href="/ui/order-entry.html">Order entry</a>
     <a href="/ui/jobs.html">Jobs</a>
@@ -71,40 +70,32 @@
 
 <main>
   <section>
-    <h2>Shift records</h2>
-    <form id="searchForm" class="row">
-      <div><label>Line #</label><br /><input id="fLine" type="number" placeholder="line_num" style="width:110px" /></div>
-      <button type="submit">Search</button>
+    <h2>Finished sheet skids in the warehouse</h2>
+    <div class="row">
+      <button id="btnRefresh" type="button" class="sec">Refresh</button>
       <span id="count" class="muted"></span>
-    </form>
+    </div>
     <table>
-      <thead><tr><th>Shift #</th><th>Start</th><th>Line</th><th>Operator</th><th>DT total</th><th>Status</th></tr></thead>
-      <tbody id="shifts"></tbody>
+      <thead><tr><th>Skid #</th><th>Job</th><th>Display</th><th>Location</th><th>Ticket</th><th>Status</th><th>Net wt</th><th>Pcs</th><th>Date</th></tr></thead>
+      <tbody id="skids"></tbody>
     </table>
   </section>
 
-  <section>
-    <h2 id="formTitle">New shift</h2>
+  <section id="detail" class="disabled">
+    <h2 id="formTitle">Warehouse update</h2>
+    <div class="muted" id="summary" style="margin-bottom:8px"></div>
     <div class="grid">
-      <div class="fld"><label>Start time</label><input id="hStart" type="datetime-local" /></div>
-      <div class="fld"><label>End time</label><input id="hEnd" type="datetime-local" /></div>
-      <div class="fld"><label>Line #</label><input id="hLine" type="number" /></div>
-      <div class="fld"><label>Schedule type</label><input id="hSchedule" type="number" /></div>
-      <div class="fld"><label>Downtime total</label><input id="hDt" type="number" step="0.01" /></div>
-      <div class="fld"><label>Operator initials</label><input id="hOper" maxlength="10" /></div>
-      <div class="fld"><label>Data status</label><input id="hStatus" type="number" /></div>
-      <div class="fld full"><label>Note</label><textarea id="hNote" maxlength="1024"></textarea></div>
+      <div class="fld full"><label>Location</label><input id="wLocation" maxlength="18" placeholder="e.g. WH-A-01" /></div>
+      <div class="fld"><label>Warehouse ticket</label><input id="wTicket" maxlength="32" /></div>
+      <div class="fld"><label>Status</label><input id="wStatus" type="number" placeholder="code" /></div>
     </div>
-    <div class="row" style="margin-top:10px">
-      <button id="btnSave" type="button">Save</button>
-      <button id="btnNew" type="button" class="sec">New</button>
-    </div>
+    <div class="row" style="margin-top:10px"><button id="btnSave" type="button">Save warehouse update</button></div>
     <div id="ok" class="ok"></div>
   </section>
 
   <section class="wide"><div id="err" class="err"></div></section>
 </main>
 
-<script type="module" src="/ui/app/shifts.js"></script>
+<script type="module" src="/ui/app/warehouse.js"></script>
 </body>
 </html>

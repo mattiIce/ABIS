@@ -75,7 +75,9 @@ public sealed class AbisRepository : IAbisRepository
 
     private const string SheetSkidCols = """
         sheet_skid_num AS SheetSkidNum, ab_job_num AS AbJobNum, sheet_skid_display_num AS SheetSkidDisplayNum,
-        sheet_net_wt AS SheetNetWt, sheet_tare_wt AS SheetTareWt, skid_pieces AS SkidPieces, skid_date AS SkidDate
+        sheet_net_wt AS SheetNetWt, sheet_tare_wt AS SheetTareWt, skid_pieces AS SkidPieces, skid_date AS SkidDate,
+        skid_location AS SkidLocation, skid_sheet_status AS SkidSheetStatus,
+        skid_ticket_if_whed AS SkidTicketIfWhed, skid_from_if_whed AS SkidFromIfWhed
         """;
 
     private const string ScrapSkidCols = """
@@ -663,6 +665,28 @@ public sealed class AbisRepository : IAbisRepository
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
         return (await GetSheetSkidAsync(id, ct))!;
+    }
+
+    public async Task<SheetSkid?> UpdateSheetSkidWarehouseAsync(long sheetSkidNum, SheetSkidWarehousePatch patch, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // Partial warehouse update (location / ticket / status). Explicit DbType on
+        // the int null avoids the ORA-00932 COALESCE(charNull, numeric) trap.
+        var p = new DynamicParameters();
+        p.Add("loc", patch.SkidLocation);
+        p.Add("ticket", patch.SkidTicketIfWhed);
+        p.Add("status", patch.SkidSheetStatus, DbType.Int32);
+        p.Add("id", sheetSkidNum);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE sheet_skid SET
+                skid_location = COALESCE(:loc, skid_location),
+                skid_ticket_if_whed = COALESCE(:ticket, skid_ticket_if_whed),
+                skid_sheet_status = COALESCE(:status, skid_sheet_status)
+            WHERE sheet_skid_num = :id
+            """,
+            p, cancellationToken: ct));
+        return n == 0 ? null : await GetSheetSkidAsync(sheetSkidNum, ct);
     }
 
     public async Task<ScrapSkid?> GetScrapSkidAsync(long scrapSkidNum, CancellationToken ct)
