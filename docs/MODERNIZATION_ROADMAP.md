@@ -143,18 +143,23 @@ the B-vs-C commitment until after a measured pilot.
       binds, ORA-00932 COALESCE typing, opaque-500 input) were found and fixed.
       See [`ORACLE_VALIDATION.md`](ORACLE_VALIDATION.md).
 
-### Phase 3 — Pilot both modernization paths on real modules
+### Phase 3 — Pilot both modernization paths on real modules  *(in progress)*
 
 > Detailed plan: [`PHASE3_PILOT_PLAN.md`](PHASE3_PILOT_PLAN.md) — candidate
 > modules, scoring rubric, prerequisites, and decision/exit criteria.
+> **Live results: [`PHASE3_PILOT_LOG.md`](PHASE3_PILOT_LOG.md).**
 
 - [ ] **Path B pilot:** run a self-contained, low-risk module (candidate:
-      `quotation` or a reporting screen) through Appeon PowerServer; measure
-      reuse %, UX, and operability.
-- [ ] **Path C pilot:** rebuild a high-value, high-churn module greenfield
-      against the Phase-2 API (candidate: `order_entry` or `inv_coil`); measure
-      effort and the quality ceiling.
-- [ ] **Decide** the per-module strategy from measured results, not opinion.
+      `quotation`) through Appeon PowerServer; measure reuse %, UX, operability.
+      **← blocked: needs the Windows PB IDE + a PowerServer license** (the 7
+      PFE/PFD libraries it also required are now committed — Phase 0).
+- [~] **Path C pilot:** rebuild a high-value, high-churn module greenfield
+      against the Phase-2 API. → `order_entry` **executed against live Oracle**
+      (search → full detail → transactional create on the real ~48k-order DB);
+      scored in the pilot log. `inv_coil` artifact exists (demo UI), not yet
+      measured. Remaining: a side-by-side UX/perf comparison vs the legacy screen.
+- [ ] **Decide** the per-module strategy from measured results — pending Path B,
+      which can't be scored until its prerequisites land.
 
 ### Phase 4 — Migrate module-by-module (strangler-fig)
 - [ ] Roll modules over behind the API seam in dependency order, oldest/most

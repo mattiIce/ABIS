@@ -86,7 +86,9 @@ A worked scoring table is filled in per module as pilots complete.
 
 ## How this environment can help before prerequisites land
 
-Even without the PB IDE / DB, work that advances Phase 3 and is doable here:
+Even without the PB IDE / DB, work that advances Phase 3 and is doable here.
+**Executed results live in [`PHASE3_PILOT_LOG.md`](PHASE3_PILOT_LOG.md)** — the
+Path C `order_entry` pilot has now been run against the live Oracle DB.
 - [x] Extend the Phase-2 API with the endpoints the **Path C** `order_entry`
   pilot needs (against the SQLite fixture): order search filters
   (`customerId`/`po`), the order→line-items relationship, an order-entry read
