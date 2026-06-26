@@ -8412,12 +8412,17 @@ export class Die {
         if (_data) {
             this.dieId = _data["dieId"];
             this.dieName = _data["dieName"];
+            this.owner = _data["owner"];
             this.status = _data["status"];
             this.toolNum = _data["toolNum"];
             this.partName = _data["partName"];
             this.grossWeight = _data["grossWeight"];
             this.location = _data["location"];
             this.description = _data["description"];
+            this.engineeredScrapYN = _data["engineeredScrapYN"];
+            this.numOfPartsPerHit = _data["numOfPartsPerHit"];
+            this.angleChangeMinutes = _data["angleChangeMinutes"];
+            this.averageDieChangeMinutes = _data["averageDieChangeMinutes"];
         }
     }
     static fromJS(data) {
@@ -8430,12 +8435,17 @@ export class Die {
         data = typeof data === 'object' ? data : {};
         data["dieId"] = this.dieId;
         data["dieName"] = this.dieName;
+        data["owner"] = this.owner;
         data["status"] = this.status;
         data["toolNum"] = this.toolNum;
         data["partName"] = this.partName;
         data["grossWeight"] = this.grossWeight;
         data["location"] = this.location;
         data["description"] = this.description;
+        data["engineeredScrapYN"] = this.engineeredScrapYN;
+        data["numOfPartsPerHit"] = this.numOfPartsPerHit;
+        data["angleChangeMinutes"] = this.angleChangeMinutes;
+        data["averageDieChangeMinutes"] = this.averageDieChangeMinutes;
         return data;
     }
 }
@@ -8493,12 +8503,17 @@ export class DieWrite {
     init(_data) {
         if (_data) {
             this.dieName = _data["dieName"];
+            this.owner = _data["owner"];
             this.status = _data["status"];
             this.toolNum = _data["toolNum"];
             this.partName = _data["partName"];
             this.grossWeight = _data["grossWeight"];
             this.location = _data["location"];
             this.description = _data["description"];
+            this.engineeredScrapYN = _data["engineeredScrapYN"];
+            this.numOfPartsPerHit = _data["numOfPartsPerHit"];
+            this.angleChangeMinutes = _data["angleChangeMinutes"];
+            this.averageDieChangeMinutes = _data["averageDieChangeMinutes"];
         }
     }
     static fromJS(data) {
@@ -8510,12 +8525,17 @@ export class DieWrite {
     toJSON(data) {
         data = typeof data === 'object' ? data : {};
         data["dieName"] = this.dieName;
+        data["owner"] = this.owner;
         data["status"] = this.status;
         data["toolNum"] = this.toolNum;
         data["partName"] = this.partName;
         data["grossWeight"] = this.grossWeight;
         data["location"] = this.location;
         data["description"] = this.description;
+        data["engineeredScrapYN"] = this.engineeredScrapYN;
+        data["numOfPartsPerHit"] = this.numOfPartsPerHit;
+        data["angleChangeMinutes"] = this.angleChangeMinutes;
+        data["averageDieChangeMinutes"] = this.averageDieChangeMinutes;
         return data;
     }
 }

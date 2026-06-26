@@ -7027,6 +7027,10 @@
             "type": "string",
             "nullable": true
           },
+          "owner": {
+            "type": "string",
+            "nullable": true
+          },
           "status": {
             "type": "integer",
             "format": "int32",
@@ -7051,6 +7055,25 @@
           },
           "description": {
             "type": "string",
+            "nullable": true
+          },
+          "engineeredScrapYN": {
+            "type": "string",
+            "nullable": true
+          },
+          "numOfPartsPerHit": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "angleChangeMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "averageDieChangeMinutes": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },
@@ -7099,6 +7122,10 @@
             "type": "string",
             "nullable": true
           },
+          "owner": {
+            "type": "string",
+            "nullable": true
+          },
           "status": {
             "type": "integer",
             "format": "int32",
@@ -7123,6 +7150,25 @@
           },
           "description": {
             "type": "string",
+            "nullable": true
+          },
+          "engineeredScrapYN": {
+            "type": "string",
+            "nullable": true
+          },
+          "numOfPartsPerHit": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "angleChangeMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "averageDieChangeMinutes": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },
