@@ -14,6 +14,7 @@ import {
   OrderItemWrite,
   CoilPatch,
   ShipmentStatusPatch,
+  MaintLogWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -62,6 +63,20 @@ test('createOrderWithItems writes via typed DTOs and returns a typed OrderDetail
   assert.ok(detail.order.orderAbcNum > 0);
   assert.equal(detail.items.length, 1);
   assert.equal(detail.items[0].enduserPartNum, 'PN-E2E');
+});
+
+// The maintenance SPA's flow: create a log, then load + replace it (typed).
+test('maintenance flow: create, get, update maint log (typed)', async () => {
+  const created = await client.createMaintLog(new MaintLogWrite({
+    maintLogStatus: 'Completed', probDateTime: new Date(), probDetails: 'E2E fault', author: 'e2e',
+  }));
+  assert.ok(created.maintLogId > 0);
+  const got = await client.getMaintLog(created.maintLogId);
+  assert.equal(got.maintLogId, created.maintLogId);
+  const updated = await client.updateMaintLog(created.maintLogId, new MaintLogWrite({
+    maintLogStatus: 'Completed', probDateTime: new Date(), probDetails: 'E2E fault', author: 'e2e', assignedTo: 'tech-2',
+  }));
+  assert.equal(updated.assignedTo, 'tech-2');
 });
 
 // The shipping SPA's flow: list shipments, open one, record dispatch (patch).
