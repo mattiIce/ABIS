@@ -117,6 +117,19 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
   assert.equal(updated.status, 1);
 });
 
+// The quality/recovery flow: defect catalog, product types, recovery customers, per-customer defects (typed).
+test('quality flow: recovery catalog + customer defects (typed)', async () => {
+  const scrap = await client.getScrapTypes();
+  assert.ok(Array.isArray(scrap) && scrap.length > 0);
+  const prods = await client.getProductTypes();
+  assert.ok(Array.isArray(prods) && prods.length > 0);
+  const custs = await client.getRecoveryCustomers();
+  assert.ok(custs.some((c) => c.customerId === 4001));
+  const defects = await client.getCustomerDefects(4001);
+  assert.equal(defects.length, 2);
+  assert.ok(defects.every((d) => typeof d.scrapCode === 'string'));
+});
+
 // The reporting flow: per-line production summary aggregation (typed, read-only).
 test('reporting flow: production summary by line (typed)', async () => {
   const rows = await client.getProductionSummary(undefined, undefined);

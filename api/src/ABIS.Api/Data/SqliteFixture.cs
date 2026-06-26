@@ -195,6 +195,20 @@ public static class SqliteFixture
             CREATE TABLE customer_edi (
                 customer_edi_name TEXT, customer_id INTEGER, edi_type_id INTEGER, edi_version TEXT,
                 customer_edi_desc TEXT, PRIMARY KEY (customer_edi_name, customer_id));
+
+            -- Quality / Recovery (legacy w_recovery): the customer-defect setup. Column
+            -- names are authoritative (from the legacy DataWindow dbnames); Y/N flags.
+            CREATE TABLE scrap_type (
+                scrap_type_id INTEGER PRIMARY KEY, scrap_code TEXT, scrap_defect TEXT);
+            CREATE TABLE product_type (
+                product_type_id INTEGER PRIMARY KEY, product_type TEXT);
+            CREATE TABLE recovery_report_customer (
+                customer_id INTEGER PRIMARY KEY, customer_name TEXT,
+                all_products TEXT, auto_only TEXT, comm_only TEXT);
+            CREATE TABLE cust_scrap_type_needed (
+                customer_id INTEGER, scrap_type_id INTEGER,
+                abc_or_mill TEXT, autoparts TEXT, non_autoparts TEXT,
+                PRIMARY KEY (customer_id, scrap_type_id));
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -559,6 +573,38 @@ public static class SqliteFixture
             {
                 new { CustomerEdiName = "ASN_ALCAN_FORD", CustomerId = 4001L, EdiTypeId = (int?)856, EdiVersion = "2002FORD", CustomerEdiDesc = "Ford ASN route" },
                 new { CustomerEdiName = "ORDER_STATUS", CustomerId = 4002L, EdiTypeId = (int?)870, EdiVersion = "3030", CustomerEdiDesc = "870 per job" }
+            });
+
+        // ---- Quality / Recovery setup ----
+        conn.Execute(
+            "INSERT INTO scrap_type (scrap_type_id, scrap_code, scrap_defect) VALUES (:ScrapTypeId, :ScrapCode, :ScrapDefect)",
+            new[]
+            {
+                new { ScrapTypeId = 1L, ScrapCode = "DENT", ScrapDefect = "Surface dent" },
+                new { ScrapTypeId = 2L, ScrapCode = "SCR", ScrapDefect = "Scratch" },
+                new { ScrapTypeId = 3L, ScrapCode = "EDGE", ScrapDefect = "Edge damage" }
+            });
+        conn.Execute(
+            "INSERT INTO product_type (product_type_id, product_type) VALUES (:ProductTypeId, :ProductType)",
+            new[]
+            {
+                new { ProductTypeId = 1L, ProductType = "Automotive" },
+                new { ProductTypeId = 2L, ProductType = "Commercial" }
+            });
+        conn.Execute(
+            "INSERT INTO recovery_report_customer (customer_id, customer_name, all_products, auto_only, comm_only) VALUES (:CustomerId, :CustomerName, :AllProducts, :AutoOnly, :CommOnly)",
+            new[]
+            {
+                new { CustomerId = 4001L, CustomerName = "Alcan / Ford", AllProducts = "N", AutoOnly = "Y", CommOnly = "N" },
+                new { CustomerId = 4002L, CustomerName = "Constellium", AllProducts = "Y", AutoOnly = "N", CommOnly = "N" }
+            });
+        conn.Execute(
+            "INSERT INTO cust_scrap_type_needed (customer_id, scrap_type_id, abc_or_mill, autoparts, non_autoparts) VALUES (:CustomerId, :ScrapTypeId, :AbcOrMill, :Autoparts, :NonAutoparts)",
+            new[]
+            {
+                new { CustomerId = 4001L, ScrapTypeId = 1L, AbcOrMill = "ABC", Autoparts = "Y", NonAutoparts = "N" },
+                new { CustomerId = 4001L, ScrapTypeId = 2L, AbcOrMill = "ABC", Autoparts = "Y", NonAutoparts = "N" },
+                new { CustomerId = 4002L, ScrapTypeId = 3L, AbcOrMill = "MILL", Autoparts = "N", NonAutoparts = "Y" }
             });
     }
 }

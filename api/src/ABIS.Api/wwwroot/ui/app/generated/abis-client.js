@@ -4276,6 +4276,214 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * The scrap/defect type catalog.
+     * @return OK
+     */
+    getScrapTypes() {
+        let url_ = this.baseUrl + "/api/quality/scrap-types";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetScrapTypes(_response);
+        });
+    }
+    processGetScrapTypes(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(ScrapType.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * The product-type lookup.
+     * @return OK
+     */
+    getProductTypes() {
+        let url_ = this.baseUrl + "/api/quality/product-types";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetProductTypes(_response);
+        });
+    }
+    processGetProductTypes(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(ProductType.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Customers configured for recovery reporting.
+     * @return OK
+     */
+    getRecoveryCustomers() {
+        let url_ = this.baseUrl + "/api/quality/recovery-customers";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetRecoveryCustomers(_response);
+        });
+    }
+    processGetRecoveryCustomers(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(RecoveryCustomer.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * The scrap/defect types a customer tracks.
+     * @return OK
+     */
+    getCustomerDefects(customerId) {
+        let url_ = this.baseUrl + "/api/quality/customer-defects?";
+        if (customerId === undefined || customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' must be defined and cannot be null.");
+        else
+            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetCustomerDefects(_response);
+        });
+    }
+    processGetCustomerDefects(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(CustomerDefect.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * List inbound receiving BOLs (paged, sortable; filter by customerId/status).
      * @param page (optional)
      * @param pageSize (optional)
@@ -6943,6 +7151,44 @@ export class CustomerContactWrite {
         return data;
     }
 }
+export class CustomerDefect {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.customerId = _data["customerId"];
+            this.scrapTypeId = _data["scrapTypeId"];
+            this.scrapCode = _data["scrapCode"];
+            this.scrapDefect = _data["scrapDefect"];
+            this.abcOrMill = _data["abcOrMill"];
+            this.autoparts = _data["autoparts"];
+            this.nonAutoparts = _data["nonAutoparts"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustomerDefect();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["customerId"] = this.customerId;
+        data["scrapTypeId"] = this.scrapTypeId;
+        data["scrapCode"] = this.scrapCode;
+        data["scrapDefect"] = this.scrapDefect;
+        data["abcOrMill"] = this.abcOrMill;
+        data["autoparts"] = this.autoparts;
+        data["nonAutoparts"] = this.nonAutoparts;
+        return data;
+    }
+}
 export class CustomerEdi {
     constructor(data) {
         if (data) {
@@ -8539,6 +8785,34 @@ export class ProcessCoil {
         return data;
     }
 }
+export class ProductType {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.productTypeId = _data["productTypeId"];
+            this.productTypeName = _data["productTypeName"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProductType();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["productTypeId"] = this.productTypeId;
+        data["productTypeName"] = this.productTypeName;
+        return data;
+    }
+}
 export class ProductionLine {
     constructor(data) {
         if (data) {
@@ -8714,6 +8988,40 @@ export class ReceivingBolWrite {
         data["createdBy"] = this.createdBy;
         data["receivedDate"] = this.receivedDate ? this.receivedDate.toISOString() : undefined;
         data["status"] = this.status;
+        return data;
+    }
+}
+export class RecoveryCustomer {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.customerId = _data["customerId"];
+            this.customerName = _data["customerName"];
+            this.allProducts = _data["allProducts"];
+            this.autoOnly = _data["autoOnly"];
+            this.commOnly = _data["commOnly"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new RecoveryCustomer();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["customerId"] = this.customerId;
+        data["customerName"] = this.customerName;
+        data["allProducts"] = this.allProducts;
+        data["autoOnly"] = this.autoOnly;
+        data["commOnly"] = this.commOnly;
         return data;
     }
 }
@@ -8950,6 +9258,36 @@ export class ScrapSkidWrite {
         data["scrapLocation"] = this.scrapLocation;
         data["scrapNotes"] = this.scrapNotes;
         data["skidScrapStatus"] = this.skidScrapStatus;
+        return data;
+    }
+}
+export class ScrapType {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.scrapTypeId = _data["scrapTypeId"];
+            this.scrapCode = _data["scrapCode"];
+            this.scrapDefect = _data["scrapDefect"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ScrapType();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["scrapTypeId"] = this.scrapTypeId;
+        data["scrapCode"] = this.scrapCode;
+        data["scrapDefect"] = this.scrapDefect;
         return data;
     }
 }

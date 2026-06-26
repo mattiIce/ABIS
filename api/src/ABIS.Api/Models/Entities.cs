@@ -79,6 +79,47 @@ public sealed class ProductionSummaryRow
     public double? ProcessedWt { get; set; }
 }
 
+// ---- Quality / Recovery (legacy w_recovery) — the customer-defect setup. ----
+
+/// <summary>A scrap/defect type in the recovery catalog (table <c>scrap_type</c>).</summary>
+public sealed class ScrapType
+{
+    public long ScrapTypeId { get; set; }
+    public string? ScrapCode { get; set; }
+    public string? ScrapDefect { get; set; }
+}
+
+/// <summary>A product type (table <c>product_type</c>).</summary>
+public sealed class ProductType
+{
+    public long ProductTypeId { get; set; }
+    public string? ProductTypeName { get; set; }
+}
+
+/// <summary>A customer configured for recovery reporting, with product-scope flags
+/// (table <c>recovery_report_customer</c>).</summary>
+public sealed class RecoveryCustomer
+{
+    public long CustomerId { get; set; }
+    public string? CustomerName { get; set; }
+    public string? AllProducts { get; set; }
+    public string? AutoOnly { get; set; }
+    public string? CommOnly { get; set; }
+}
+
+/// <summary>A scrap/defect type a customer tracks (<c>cust_scrap_type_needed ⋈ scrap_type</c>),
+/// with the ABC/mill scope and autoparts flags.</summary>
+public sealed class CustomerDefect
+{
+    public long CustomerId { get; set; }
+    public long ScrapTypeId { get; set; }
+    public string? ScrapCode { get; set; }
+    public string? ScrapDefect { get; set; }
+    public string? AbcOrMill { get; set; }
+    public string? Autoparts { get; set; }
+    public string? NonAutoparts { get; set; }
+}
+
 /// <summary>A rejected/rebanded coil that affects a job's invoice (the legacy
 /// w_invoice / d_rej_reband_coil_list_for_invoice: <c>coil ⋈ process_coil</c> where
 /// <c>process_coil_status IN (3,7)</c> — 3 = rejected, 7 = rebanded).</summary>
