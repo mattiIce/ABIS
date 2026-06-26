@@ -89,6 +89,9 @@ Libraries grouped by domain (counts in [`OBJECT_INVENTORY.md`](OBJECT_INVENTORY.
 
 ## Integration surface (modernization risk hot-spots)
 
+> Precise inventory (transaction sets, the 29 `WSC32` serial calls, EDI tables
+> and trading partners) is catalogued in [`INTEGRATIONS.md`](INTEGRATIONS.md).
+
 These external couplings cannot simply be "moved to the cloud" and need explicit
 plans:
 
@@ -116,14 +119,15 @@ supported PB rather than an end-of-life one.
 
 ## Repository / build-readiness issues found
 
-1. **Missing libraries — will not build as committed.** `lion.pbt`'s `LibList`
-   names **50** libraries; **7 are absent** from the repo — the entire PFE/PFD
-   extension layer: `PFD_ABC.PBL`, `PFE_ABC.PBL`, `pfeapsrv.pbl`, `pfedwsrv.pbl`,
-   `pfemain.pbl`, `pfeutil.pbl`, `pfewnsrv.pbl`. These hold the app's PFC
-   subclasses and must be located (or regenerated) before a clean build.
-2. **Stale backup copies committed.** `daily_prod_12032020.pbl` and
-   `silverdome2_06092022.pbl` are dated snapshots not referenced by the target.
-   They inflate the repo and confuse "which file is live."
+1. ~~**Missing libraries — will not build as committed.**~~ **Resolved.**
+   `lion.pbt`'s `LibList` names **50** libraries; the 7 previously-absent PFE/PFD
+   extension libraries (`PFD_ABC.PBL`, `PFE_ABC.PBL`, `pfeapsrv.pbl`,
+   `pfedwsrv.pbl`, `pfemain.pbl`, `pfeutil.pbl`, `pfewnsrv.pbl`) were located in a
+   complete build tree (shared `pfc*` libraries byte-identical to the repo's) and
+   committed. **All 50 are now present** — the target builds as committed.
+2. ~~**Stale backup copies committed.**~~ **Resolved.** `daily_prod_12032020.pbl`
+   and `silverdome2_06092022.pbl` (dated snapshots not referenced by the target)
+   were removed from the tree (recoverable from git history).
 3. **Binary sources under git.** The `.pbl` libraries are binary blobs; git
    cannot diff or merge them. Meaningful version control requires exporting
    PowerBuilder objects to text (the `.srd`/`.sra`/`.srq`/`.src` files already in
