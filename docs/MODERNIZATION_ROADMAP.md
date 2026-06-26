@@ -56,12 +56,17 @@ the B-vs-C commitment until after a measured pilot.
 - [x] Reproducible analysis tooling (`tools/extract_schema.py`,
       `tools/extract_inventory.py`).
 - [x] Architecture, data-model, and inventory docs + this roadmap.
-- [ ] Decide how to handle binary `.pbl` files in git (see "Source control"
-      below); add `.gitignore`/`.gitattributes` accordingly.
+- [x] Decide how to handle binary `.pbl` files in git (see "Source control"
+      below); add `.gitignore`/`.gitattributes` accordingly. → `.gitattributes`
+      marks `.pbl`/`.pbd`/`.dll` binary and the text exports (`.srd`/`.srw`/…)
+      LF-normalized; `.gitignore` excludes build output and generated artifacts.
 - [ ] Track the **7 missing PFE/PFD libraries** as a blocking issue; locate or
-      regenerate them so the app builds.
-- [ ] Resolve the **stale backup PBLs** (`*_12032020`, `*_06092022`): archive
-      out of the main tree or document why they stay.
+      regenerate them so the app builds. **← the remaining Phase 0 blocker**
+      (user-blocked: the binary `.pbl`s must be found on a dev machine / backup /
+      the PFC install — they can't be produced from this repo).
+- [x] Resolve the **stale backup PBLs** (`*_12032020`, `*_06092022`): removed
+      from the tree (not referenced by `lion.pbt`'s LibList; recoverable from git
+      history if ever needed).
 
 ### Phase 1 — Recover the full picture  *(needs PB IDE for export)*
 - [ ] **Export every PB object to text** from the IDE (`.srw`, `.srd`, `.sru`,
