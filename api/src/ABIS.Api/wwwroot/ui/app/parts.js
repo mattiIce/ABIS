@@ -78,6 +78,29 @@ async function loadPart(id) {
         setV('#pTemper', p.temper);
         setV('#pGauge', p.gauge);
         setV('#pStatus', p.itemStatus);
+        setV('#pGaugeP', p.gaugeP);
+        setV('#pGaugeM', p.gaugeM);
+        setV('#pSurface', p.surface);
+        setV('#pFlatness', p.flatness);
+        setV('#pMaterialEndUse', p.materialEndUse);
+        setV('#pTheoUnitWt', p.theoreticalUnitWt);
+        setV('#pIncomingWidth', p.incomingCoilWidth);
+        setV('#pTrimmedWidth', p.trimmedCoilWidth);
+        setV('#pTrimmingReq', p.trimmingRequired);
+        setV('#pShTolPlus', p.shTolerancePlus);
+        setV('#pShTolMinus', p.shToleranceMinus);
+        setV('#pDieId', p.dieId);
+        setV('#pLineNum', p.lineNum);
+        setV('#pSpm', p.spm);
+        setV('#pAutoparts', p.autoparts);
+        setV('#pSpecialPart', p.specialPart);
+        setV('#pPiecesSkid', p.piecesSkid);
+        setV('#pMaxSkidWt', p.maxSkidWt);
+        setV('#pStacksSkid', p.stacksSkid);
+        setV('#pSupplierCode', p.supplierCode);
+        setV('#pPackagingBands', p.packagingBands);
+        setV('#pItemDesc', p.itemDesc);
+        setV('#pItemNote', p.itemNote);
     }
     catch (e) {
         setErr(`Load failed: ${e.message}`);
@@ -89,7 +112,11 @@ async function loadPart(id) {
 function newPart() {
     editingId = null;
     $('#formTitle').textContent = 'New part';
-    ['#pCustomer', '#pEnduser', '#pPartNum', '#pSheet', '#pAlloy', '#pTemper', '#pGauge', '#pStatus']
+    ['#pCustomer', '#pEnduser', '#pPartNum', '#pSheet', '#pAlloy', '#pTemper', '#pGauge', '#pStatus',
+        '#pGaugeP', '#pGaugeM', '#pSurface', '#pFlatness', '#pMaterialEndUse', '#pTheoUnitWt',
+        '#pIncomingWidth', '#pTrimmedWidth', '#pTrimmingReq', '#pShTolPlus', '#pShTolMinus',
+        '#pDieId', '#pLineNum', '#pSpm', '#pAutoparts', '#pSpecialPart',
+        '#pPiecesSkid', '#pMaxSkidWt', '#pStacksSkid', '#pSupplierCode', '#pPackagingBands', '#pItemDesc', '#pItemNote']
         .forEach((id) => setV(id, ''));
     setOk('');
     setErr('');
@@ -107,6 +134,29 @@ async function save() {
         temper: v('#pTemper') || undefined,
         gauge: v('#pGauge') ? Number(v('#pGauge')) : undefined,
         itemStatus: v('#pStatus') ? Number(v('#pStatus')) : undefined,
+        gaugeP: v('#pGaugeP') ? Number(v('#pGaugeP')) : undefined,
+        gaugeM: v('#pGaugeM') ? Number(v('#pGaugeM')) : undefined,
+        surface: v('#pSurface') || undefined,
+        flatness: v('#pFlatness') || undefined,
+        materialEndUse: v('#pMaterialEndUse') || undefined,
+        theoreticalUnitWt: v('#pTheoUnitWt') ? Number(v('#pTheoUnitWt')) : undefined,
+        incomingCoilWidth: v('#pIncomingWidth') ? Number(v('#pIncomingWidth')) : undefined,
+        trimmedCoilWidth: v('#pTrimmedWidth') ? Number(v('#pTrimmedWidth')) : undefined,
+        trimmingRequired: v('#pTrimmingReq') || undefined,
+        shTolerancePlus: v('#pShTolPlus') ? Number(v('#pShTolPlus')) : undefined,
+        shToleranceMinus: v('#pShTolMinus') ? Number(v('#pShTolMinus')) : undefined,
+        dieId: v('#pDieId') ? Number(v('#pDieId')) : undefined,
+        lineNum: v('#pLineNum') ? Number(v('#pLineNum')) : undefined,
+        spm: v('#pSpm') ? Number(v('#pSpm')) : undefined,
+        autoparts: v('#pAutoparts') ? Number(v('#pAutoparts')) : undefined,
+        specialPart: v('#pSpecialPart') || undefined,
+        piecesSkid: v('#pPiecesSkid') ? Number(v('#pPiecesSkid')) : undefined,
+        maxSkidWt: v('#pMaxSkidWt') ? Number(v('#pMaxSkidWt')) : undefined,
+        stacksSkid: v('#pStacksSkid') ? Number(v('#pStacksSkid')) : undefined,
+        supplierCode: v('#pSupplierCode') ? Number(v('#pSupplierCode')) : undefined,
+        packagingBands: v('#pPackagingBands') || undefined,
+        itemDesc: v('#pItemDesc') || undefined,
+        itemNote: v('#pItemNote') || undefined,
     });
     try {
         if (editingId == null) {

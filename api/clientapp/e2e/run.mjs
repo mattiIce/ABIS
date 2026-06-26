@@ -282,16 +282,33 @@ test('carriers flow: create, get, update carrier (typed)', async () => {
 
 // The parts SPA's flow: create a part, then load + replace it (typed).
 test('parts flow: create, get, update part (typed)', async () => {
+  // Back-check widening: the full part_num schema round-trips (tolerances, trim,
+  // tooling/line, skid/packaging, notes) — columns SQLite CI previously never saw.
   const created = await client.createPart(new PartWrite({
     customerId: 4001, enduserPartNum: 'E2E-PN', sheetType: 'SHEET', alloy: '3003', temper: 'H14', gauge: 0.05, itemStatus: 1,
+    gaugeP: 0.002, gaugeM: 0.002, materialEndUse: 'Heat shield', theoreticalUnitWt: 1.2345,
+    incomingCoilWidth: 48.5, trimmedCoilWidth: 47.25, trimmingRequired: 'Y', shTolerancePlus: 3, shToleranceMinus: 2,
+    dieId: 2001, lineNum: 110, spm: 80, autoparts: 1, specialPart: 'N',
+    piecesSkid: 500, maxSkidWt: 4000, stacksSkid: 4, supplierCode: 77,
+    packagingBands: '2 straps', itemDesc: 'E2E part desc', itemNote: 'E2E note',
   }));
   assert.ok(created.partNumId > 0);
+  assert.equal(created.gaugeP, 0.002);
+  assert.equal(created.materialEndUse, 'Heat shield');
+  assert.equal(created.dieId, 2001);
+  assert.equal(created.piecesSkid, 500);
   const got = await client.getPart(created.partNumId);
   assert.equal(got.enduserPartNum, 'E2E-PN');
+  assert.equal(got.trimmingRequired, 'Y');
+  assert.equal(got.lineNum, 110);
+  assert.equal(got.itemNote, 'E2E note');
   const updated = await client.updatePart(created.partNumId, new PartWrite({
     customerId: 4001, enduserPartNum: 'E2E-PN', alloy: '5052', itemStatus: 0,
+    dieId: 2002, lineNum: 120, maxSkidWt: 5000,
   }));
   assert.equal(updated.alloy, '5052');
+  assert.equal(updated.dieId, 2002);
+  assert.equal(updated.maxSkidWt, 5000);
 });
 
 // The customers SPA's flow: create a customer, load + replace it, add a contact (typed).
