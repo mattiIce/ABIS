@@ -117,6 +117,15 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
   assert.equal(updated.status, 1);
 });
 
+// The reporting flow: per-line production summary aggregation (typed, read-only).
+test('reporting flow: production summary by line (typed)', async () => {
+  const rows = await client.getProductionSummary(undefined, undefined);
+  assert.ok(Array.isArray(rows) && rows.length > 0);
+  // Every line row carries a numeric job count; at least one line has run jobs.
+  assert.ok(rows.every((r) => typeof r.jobCount === 'number'));
+  assert.ok(rows.some((r) => r.jobCount > 0));
+});
+
 // The accounting/invoicing flow: a job's rejected/rebanded coils that drive its invoice (typed).
 test('accounting flow: invoice rej/reband coils for a job (typed)', async () => {
   const coils = await client.getInvoiceCoils(1002);

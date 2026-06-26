@@ -3622,6 +3622,51 @@
         }
       }
     },
+    "/api/reporting/production-summary": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "Per-line production summary (job count, avg yield, processed weight) over an optional date range.",
+        "operationId": "GetProductionSummary",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductionSummaryRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/scan-logs": {
       "get": {
         "tags": [
@@ -7320,6 +7365,34 @@
           },
           "lineLocation": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductionSummaryRow": {
+        "type": "object",
+        "properties": {
+          "lineNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lineDesc": {
+            "type": "string",
+            "nullable": true
+          },
+          "jobCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "avgYield": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "processedWt": {
+            "type": "number",
+            "format": "double",
             "nullable": true
           }
         },

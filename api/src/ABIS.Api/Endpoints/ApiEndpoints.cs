@@ -897,6 +897,14 @@ public static class ApiEndpoints
            .WithSummary("Rejected (3) / rebanded (7) coils for a job's invoice.")
            .Produces<IReadOnlyList<InvoiceCoil>>();
 
+        // ---- Reporting (daily production) -------------------------------
+        // Per-line production roll-up over an optional date window (by job start).
+        api.MapGet("/reporting/production-summary", async (DateTime? from, DateTime? to, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetProductionSummaryAsync(from, to, ct)))
+           .WithName("GetProductionSummary").WithTags("Reporting")
+           .WithSummary("Per-line production summary (job count, avg yield, processed weight) over an optional date range.")
+           .Produces<IReadOnlyList<ProductionSummaryRow>>();
+
         api.MapGet("/scrap-skids", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? sort = null, string? dir = null) =>
             {

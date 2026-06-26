@@ -667,6 +667,30 @@ public sealed class AbisRepository : IAbisRepository
         return (await GetSheetSkidAsync(id, ct))!;
     }
 
+    public async Task<IReadOnlyList<ProductionSummaryRow>> GetProductionSummaryAsync(DateTime? from, DateTime? to, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // Per-line production roll-up. The date filter lives in the LEFT JOIN ON so
+        // idle lines still appear (0 jobs). Processed weight via a correlated subquery
+        // to avoid the job×coil fan-out inflating COUNT/AVG. Portable Oracle + SQLite.
+        var p = new DynamicParameters();
+        var dateFilter = "";
+        if (from is not null) { dateFilter += " AND j.time_date_started >= :dfrom"; p.Add("dfrom", from, DbType.DateTime); }
+        if (to is not null) { dateFilter += " AND j.time_date_started < :dto"; p.Add("dto", to, DbType.DateTime); }
+        var rows = await conn.QueryAsync<ProductionSummaryRow>(new CommandDefinition(
+            $"""
+            SELECT l.line_num AS LineNum, l.line_desc AS LineDesc,
+                   COUNT(j.ab_job_num) AS JobCount,
+                   AVG(j.material_yield) AS AvgYield,
+                   COALESCE(SUM((SELECT SUM(pc.process_end_wt) FROM process_coil pc WHERE pc.ab_job_num = j.ab_job_num)), 0.0) AS ProcessedWt
+            FROM line l
+            LEFT JOIN ab_job j ON j.line_num = l.line_num{dateFilter}
+            GROUP BY l.line_num, l.line_desc
+            ORDER BY l.line_num
+            """, p, cancellationToken: ct));
+        return rows.AsList();
+    }
+
     public async Task<IReadOnlyList<InvoiceCoil>> GetInvoiceCoilsAsync(long abJobNum, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
