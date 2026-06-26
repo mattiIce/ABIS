@@ -396,6 +396,235 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * The coil-ownership transfer ledger (optionally scoped to a customer).
+     * @param customerId (optional)
+     * @return OK
+     */
+    getCoilOwnershipTransfers(customerId) {
+        let url_ = this.baseUrl + "/api/coil-ownership/transfers?";
+        if (customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' cannot be null.");
+        else if (customerId !== undefined)
+            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetCoilOwnershipTransfers(_response);
+        });
+    }
+    processGetCoilOwnershipTransfers(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(CoilOwnershipTransfer.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Record a coil-ownership transfer (issues a certificate; re-points coil ownership).
+     * @return Created
+     */
+    createCoilOwnershipTransfer(body) {
+        let url_ = this.baseUrl + "/api/coil-ownership/transfers";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateCoilOwnershipTransfer(_response);
+        });
+    }
+    processCreateCoilOwnershipTransfer(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = CoilOwnershipTransfer.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * The printable transfer certificate (full customer addresses + coil details).
+     * @return OK
+     */
+    getCoilOwnershipTransferCertificate(certificateNum) {
+        let url_ = this.baseUrl + "/api/coil-ownership/transfers/{certificateNum}/certificate";
+        if (certificateNum === undefined || certificateNum === null)
+            throw new globalThis.Error("The parameter 'certificateNum' must be defined.");
+        url_ = url_.replace("{certificateNum}", encodeURIComponent("" + certificateNum));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetCoilOwnershipTransferCertificate(_response);
+        });
+    }
+    processGetCoilOwnershipTransferCertificate(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = CoilOwnershipTransferCertificate.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Coils eligible to transfer, with their current owner (the coil picker).
+     * @param customerId (optional)
+     * @param search (optional)
+     * @return OK
+     */
+    getTransferableCoils(customerId, search) {
+        let url_ = this.baseUrl + "/api/coil-ownership/transferable-coils?";
+        if (customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' cannot be null.");
+        else if (customerId !== undefined)
+            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        if (search === null)
+            throw new globalThis.Error("The parameter 'search' cannot be null.");
+        else if (search !== undefined)
+            url_ += "search=" + encodeURIComponent("" + search) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetTransferableCoils(_response);
+        });
+    }
+    processGetTransferableCoils(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(TransferableCoil.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * List raw input coils (paged, filterable, sortable).
      * @param page (optional)
      * @param pageSize (optional)
@@ -7424,6 +7653,182 @@ export class CoilInventoryGroup {
         return data;
     }
 }
+export class CoilOwnershipTransfer {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.certificateNum = _data["certificateNum"];
+            this.coilAbcNumOrig = _data["coilAbcNumOrig"];
+            this.coilAbcNumNew = _data["coilAbcNumNew"];
+            this.coilOrgNum = _data["coilOrgNum"];
+            this.customerIdOrig = _data["customerIdOrig"];
+            this.customerShortNameOrig = _data["customerShortNameOrig"];
+            this.customerIdNew = _data["customerIdNew"];
+            this.customerShortNameNew = _data["customerShortNameNew"];
+            this.transferDatetime = _data["transferDatetime"] ? new Date(_data["transferDatetime"].toString()) : undefined;
+            this.transferPerformedBy = _data["transferPerformedBy"];
+            this.authorizationNote = _data["authorizationNote"];
+            this.notes = _data["notes"];
+            this.netWt = _data["netWt"];
+            this.netWtBalance = _data["netWtBalance"];
+            this.coilAlloy2 = _data["coilAlloy2"];
+            this.coilTemper = _data["coilTemper"];
+            this.coilGauge = _data["coilGauge"];
+            this.coilWidth = _data["coilWidth"];
+            this.lotNum = _data["lotNum"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CoilOwnershipTransfer();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["certificateNum"] = this.certificateNum;
+        data["coilAbcNumOrig"] = this.coilAbcNumOrig;
+        data["coilAbcNumNew"] = this.coilAbcNumNew;
+        data["coilOrgNum"] = this.coilOrgNum;
+        data["customerIdOrig"] = this.customerIdOrig;
+        data["customerShortNameOrig"] = this.customerShortNameOrig;
+        data["customerIdNew"] = this.customerIdNew;
+        data["customerShortNameNew"] = this.customerShortNameNew;
+        data["transferDatetime"] = this.transferDatetime ? this.transferDatetime.toISOString() : undefined;
+        data["transferPerformedBy"] = this.transferPerformedBy;
+        data["authorizationNote"] = this.authorizationNote;
+        data["notes"] = this.notes;
+        data["netWt"] = this.netWt;
+        data["netWtBalance"] = this.netWtBalance;
+        data["coilAlloy2"] = this.coilAlloy2;
+        data["coilTemper"] = this.coilTemper;
+        data["coilGauge"] = this.coilGauge;
+        data["coilWidth"] = this.coilWidth;
+        data["lotNum"] = this.lotNum;
+        return data;
+    }
+}
+export class CoilOwnershipTransferCertificate {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.certificateNum = _data["certificateNum"];
+            this.coilAbcNumOrig = _data["coilAbcNumOrig"];
+            this.coilAbcNumNew = _data["coilAbcNumNew"];
+            this.coilOrgNum = _data["coilOrgNum"];
+            this.transferDatetime = _data["transferDatetime"] ? new Date(_data["transferDatetime"].toString()) : undefined;
+            this.transferPerformedBy = _data["transferPerformedBy"];
+            this.authorizationNote = _data["authorizationNote"];
+            this.notes = _data["notes"];
+            this.customerIdOrig = _data["customerIdOrig"];
+            this.customerFullNameOrig = _data["customerFullNameOrig"];
+            this.customerShortNameOrig = _data["customerShortNameOrig"];
+            this.customerCityOrig = _data["customerCityOrig"];
+            this.customerStateOrig = _data["customerStateOrig"];
+            this.customerZipOrig = _data["customerZipOrig"];
+            this.customerIdNew = _data["customerIdNew"];
+            this.customerFullNameNew = _data["customerFullNameNew"];
+            this.customerShortNameNew = _data["customerShortNameNew"];
+            this.customerCityNew = _data["customerCityNew"];
+            this.customerStateNew = _data["customerStateNew"];
+            this.customerZipNew = _data["customerZipNew"];
+            this.netWt = _data["netWt"];
+            this.netWtBalance = _data["netWtBalance"];
+            this.coilAlloy2 = _data["coilAlloy2"];
+            this.coilTemper = _data["coilTemper"];
+            this.coilGauge = _data["coilGauge"];
+            this.coilWidth = _data["coilWidth"];
+            this.lotNum = _data["lotNum"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CoilOwnershipTransferCertificate();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["certificateNum"] = this.certificateNum;
+        data["coilAbcNumOrig"] = this.coilAbcNumOrig;
+        data["coilAbcNumNew"] = this.coilAbcNumNew;
+        data["coilOrgNum"] = this.coilOrgNum;
+        data["transferDatetime"] = this.transferDatetime ? this.transferDatetime.toISOString() : undefined;
+        data["transferPerformedBy"] = this.transferPerformedBy;
+        data["authorizationNote"] = this.authorizationNote;
+        data["notes"] = this.notes;
+        data["customerIdOrig"] = this.customerIdOrig;
+        data["customerFullNameOrig"] = this.customerFullNameOrig;
+        data["customerShortNameOrig"] = this.customerShortNameOrig;
+        data["customerCityOrig"] = this.customerCityOrig;
+        data["customerStateOrig"] = this.customerStateOrig;
+        data["customerZipOrig"] = this.customerZipOrig;
+        data["customerIdNew"] = this.customerIdNew;
+        data["customerFullNameNew"] = this.customerFullNameNew;
+        data["customerShortNameNew"] = this.customerShortNameNew;
+        data["customerCityNew"] = this.customerCityNew;
+        data["customerStateNew"] = this.customerStateNew;
+        data["customerZipNew"] = this.customerZipNew;
+        data["netWt"] = this.netWt;
+        data["netWtBalance"] = this.netWtBalance;
+        data["coilAlloy2"] = this.coilAlloy2;
+        data["coilTemper"] = this.coilTemper;
+        data["coilGauge"] = this.coilGauge;
+        data["coilWidth"] = this.coilWidth;
+        data["lotNum"] = this.lotNum;
+        return data;
+    }
+}
+export class CoilOwnershipTransferWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.coilAbcNumOrig = _data["coilAbcNumOrig"];
+            this.customerIdNew = _data["customerIdNew"];
+            this.coilAbcNumNew = _data["coilAbcNumNew"];
+            this.transferPerformedBy = _data["transferPerformedBy"];
+            this.authorizationNote = _data["authorizationNote"];
+            this.notes = _data["notes"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CoilOwnershipTransferWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["coilAbcNumOrig"] = this.coilAbcNumOrig;
+        data["customerIdNew"] = this.customerIdNew;
+        data["coilAbcNumNew"] = this.coilAbcNumNew;
+        data["transferPerformedBy"] = this.transferPerformedBy;
+        data["authorizationNote"] = this.authorizationNote;
+        data["notes"] = this.notes;
+        return data;
+    }
+}
 export class CoilPagedResult {
     constructor(data) {
         if (data) {
@@ -10965,6 +11370,54 @@ export class TestResultPagedResult {
         data["pageSize"] = this.pageSize;
         data["totalCount"] = this.totalCount;
         data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class TransferableCoil {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.customerId = _data["customerId"];
+            this.customerShortName = _data["customerShortName"];
+            this.coilOrgNum = _data["coilOrgNum"];
+            this.lotNum = _data["lotNum"];
+            this.coilStatus = _data["coilStatus"];
+            this.coilAlloy2 = _data["coilAlloy2"];
+            this.coilTemper = _data["coilTemper"];
+            this.coilGauge = _data["coilGauge"];
+            this.coilWidth = _data["coilWidth"];
+            this.netWtBalance = _data["netWtBalance"];
+            this.coilNotes = _data["coilNotes"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new TransferableCoil();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["customerId"] = this.customerId;
+        data["customerShortName"] = this.customerShortName;
+        data["coilOrgNum"] = this.coilOrgNum;
+        data["lotNum"] = this.lotNum;
+        data["coilStatus"] = this.coilStatus;
+        data["coilAlloy2"] = this.coilAlloy2;
+        data["coilTemper"] = this.coilTemper;
+        data["coilGauge"] = this.coilGauge;
+        data["coilWidth"] = this.coilWidth;
+        data["netWtBalance"] = this.netWtBalance;
+        data["coilNotes"] = this.coilNotes;
         return data;
     }
 }

@@ -334,6 +334,170 @@
         }
       }
     },
+    "/api/coil-ownership/transfers": {
+      "get": {
+        "tags": [
+          "CoilOwnership"
+        ],
+        "summary": "The coil-ownership transfer ledger (optionally scoped to a customer).",
+        "operationId": "GetCoilOwnershipTransfers",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CoilOwnershipTransfer"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CoilOwnership"
+        ],
+        "summary": "Record a coil-ownership transfer (issues a certificate; re-points coil ownership).",
+        "operationId": "CreateCoilOwnershipTransfer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoilOwnershipTransferWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoilOwnershipTransfer"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/coil-ownership/transfers/{certificateNum}/certificate": {
+      "get": {
+        "tags": [
+          "CoilOwnership"
+        ],
+        "summary": "The printable transfer certificate (full customer addresses + coil details).",
+        "operationId": "GetCoilOwnershipTransferCertificate",
+        "parameters": [
+          {
+            "name": "certificateNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoilOwnershipTransferCertificate"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/coil-ownership/transferable-coils": {
+      "get": {
+        "tags": [
+          "CoilOwnership"
+        ],
+        "summary": "Coils eligible to transfer, with their current owner (the coil picker).",
+        "operationId": "GetTransferableCoils",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TransferableCoil"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/coils": {
       "get": {
         "tags": [
@@ -6093,6 +6257,253 @@
         },
         "additionalProperties": false
       },
+      "CoilOwnershipTransfer": {
+        "type": "object",
+        "properties": {
+          "certificateNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "coilAbcNumOrig": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "coilAbcNumNew": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "coilOrgNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerIdOrig": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "customerShortNameOrig": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerIdNew": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "customerShortNameNew": {
+            "type": "string",
+            "nullable": true
+          },
+          "transferDatetime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "transferPerformedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorizationNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "netWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "netWtBalance": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coilAlloy2": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilTemper": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilGauge": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "lotNum": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CoilOwnershipTransferCertificate": {
+        "type": "object",
+        "properties": {
+          "certificateNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "coilAbcNumOrig": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "coilAbcNumNew": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "coilOrgNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "transferDatetime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "transferPerformedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorizationNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerIdOrig": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "customerFullNameOrig": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerShortNameOrig": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerCityOrig": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerStateOrig": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerZipOrig": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerIdNew": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "customerFullNameNew": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerShortNameNew": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerCityNew": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerStateNew": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerZipNew": {
+            "type": "string",
+            "nullable": true
+          },
+          "netWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "netWtBalance": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coilAlloy2": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilTemper": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilGauge": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "lotNum": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CoilOwnershipTransferWrite": {
+        "type": "object",
+        "properties": {
+          "coilAbcNumOrig": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "customerIdNew": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "coilAbcNumNew": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "transferPerformedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorizationNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CoilPagedResult": {
         "required": [
           "items",
@@ -9521,6 +9932,65 @@
             "type": "integer",
             "format": "int32",
             "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TransferableCoil": {
+        "type": "object",
+        "properties": {
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "customerShortName": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilOrgNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "lotNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "coilAlloy2": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilTemper": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilGauge": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "netWtBalance": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coilNotes": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

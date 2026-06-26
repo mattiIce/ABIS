@@ -860,6 +860,127 @@ public sealed class AbisRepository : IAbisRepository
         return (await GetSalesProbabilityAsync(quoteId, revisionId, ct)).First(r => r.ProbabilityId == id);
     }
 
+    // ---- Coil ownership transfer (legacy w_coil_ownership_transfer, silverdome4) ----
+
+    // The transfer ledger (legacy d_coil_ownership_transfer): each certificate joined to its
+    // orig/new customer short names and the original coil's metal details.
+    public async Task<IReadOnlyList<CoilOwnershipTransfer>> GetCoilOwnershipTransfersAsync(long? customerId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<CoilOwnershipTransfer>(new CommandDefinition(
+            """
+            SELECT t.certificate_num AS CertificateNum, t.coil_abc_num_orig AS CoilAbcNumOrig,
+                   t.coil_abc_num_new AS CoilAbcNumNew, t.coil_org_num AS CoilOrgNum,
+                   t.customer_id_orig AS CustomerIdOrig, co.customer_short_name AS CustomerShortNameOrig,
+                   t.customer_id_new AS CustomerIdNew, cn.customer_short_name AS CustomerShortNameNew,
+                   t.transfer_datetime AS TransferDatetime, t.transfer_performed_by AS TransferPerformedBy,
+                   t.authorization_note AS AuthorizationNote, t.notes AS Notes,
+                   c.net_wt AS NetWt, c.net_wt_balance AS NetWtBalance, c.coil_alloy2 AS CoilAlloy2,
+                   c.coil_temper AS CoilTemper, c.coil_gauge AS CoilGauge, c.coil_width AS CoilWidth, c.lot_num AS LotNum
+            FROM coil_ownership_transfer t
+            LEFT JOIN customer co ON co.customer_id = t.customer_id_orig
+            LEFT JOIN customer cn ON cn.customer_id = t.customer_id_new
+            LEFT JOIN coil c ON c.coil_abc_num = t.coil_abc_num_orig
+            WHERE (:cust IS NULL OR t.customer_id_orig = :cust OR t.customer_id_new = :cust)
+            ORDER BY t.transfer_datetime DESC, t.certificate_num DESC
+            """, new { cust = customerId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    // The printable certificate (legacy d_coil_ownership_transfer_certificate): full orig/new
+    // customer addresses + the coil's metal details for one certificate.
+    public async Task<CoilOwnershipTransferCertificate?> GetCoilOwnershipTransferCertificateAsync(long certificateNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<CoilOwnershipTransferCertificate>(new CommandDefinition(
+            """
+            SELECT t.certificate_num AS CertificateNum, t.coil_abc_num_orig AS CoilAbcNumOrig,
+                   t.coil_abc_num_new AS CoilAbcNumNew, t.coil_org_num AS CoilOrgNum,
+                   t.transfer_datetime AS TransferDatetime, t.transfer_performed_by AS TransferPerformedBy,
+                   t.authorization_note AS AuthorizationNote, t.notes AS Notes,
+                   t.customer_id_orig AS CustomerIdOrig, co.customer_full_name AS CustomerFullNameOrig,
+                   co.customer_short_name AS CustomerShortNameOrig, co.customer_city AS CustomerCityOrig,
+                   co.customer_state AS CustomerStateOrig, co.customer_zip AS CustomerZipOrig,
+                   t.customer_id_new AS CustomerIdNew, cn.customer_full_name AS CustomerFullNameNew,
+                   cn.customer_short_name AS CustomerShortNameNew, cn.customer_city AS CustomerCityNew,
+                   cn.customer_state AS CustomerStateNew, cn.customer_zip AS CustomerZipNew,
+                   c.net_wt AS NetWt, c.net_wt_balance AS NetWtBalance, c.coil_alloy2 AS CoilAlloy2,
+                   c.coil_temper AS CoilTemper, c.coil_gauge AS CoilGauge, c.coil_width AS CoilWidth, c.lot_num AS LotNum
+            FROM coil_ownership_transfer t
+            JOIN customer co ON co.customer_id = t.customer_id_orig
+            JOIN customer cn ON cn.customer_id = t.customer_id_new
+            JOIN coil c ON c.coil_abc_num = t.coil_abc_num_orig
+            WHERE t.certificate_num = :cert
+            """, new { cert = certificateNum }, cancellationToken: ct));
+    }
+
+    // The coil picker (legacy d_ownership_transfer_coil_list): coils that can be transferred,
+    // with their current owner. Optional customer scope + a text search on org-num / lot / notes.
+    public async Task<IReadOnlyList<TransferableCoil>> GetTransferableCoilsAsync(long? customerId, string? search, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var like = string.IsNullOrWhiteSpace(search) ? null : $"%{search.Trim()}%";
+        var rows = await conn.QueryAsync<TransferableCoil>(new CommandDefinition(
+            """
+            SELECT c.coil_abc_num AS CoilAbcNum, c.customer_id AS CustomerId, cu.customer_short_name AS CustomerShortName,
+                   c.coil_org_num AS CoilOrgNum, c.lot_num AS LotNum, c.coil_status AS CoilStatus,
+                   c.coil_alloy2 AS CoilAlloy2, c.coil_temper AS CoilTemper, c.coil_gauge AS CoilGauge,
+                   c.coil_width AS CoilWidth, c.net_wt_balance AS NetWtBalance, c.coil_notes AS CoilNotes
+            FROM coil c
+            LEFT JOIN customer cu ON cu.customer_id = c.customer_id
+            WHERE (:cust IS NULL OR c.customer_id = :cust)
+              AND (:like IS NULL OR c.coil_org_num LIKE :like OR c.lot_num LIKE :like OR c.coil_notes LIKE :like)
+            ORDER BY c.coil_abc_num
+            """, new { cust = customerId, like }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    // Record a transfer: read the coil's current owner (orig), insert the certificate, and
+    // re-point the coil's customer_id to the new owner (its prior owner kept in
+    // coil_from_cust_id). Returns null if the coil does not exist.
+    public async Task<CoilOwnershipTransfer?> CreateCoilOwnershipTransferAsync(CoilOwnershipTransferWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        var coil = await conn.QuerySingleOrDefaultAsync<CoilOwnerRow>(new CommandDefinition(
+            "SELECT customer_id AS CurrentCustomerId, coil_org_num AS CoilOrgNum FROM coil WHERE coil_abc_num = :id",
+            new { id = body.CoilAbcNumOrig }, transaction: tx, cancellationToken: ct));
+        if (coil is null) return null; // the coil to transfer does not exist
+
+        var cert = await NextIdAsync(conn, tx, "coil_ownership_transfer", "certificate_num", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO coil_ownership_transfer (certificate_num, coil_abc_num_orig, coil_abc_num_new,
+                coil_org_num, customer_id_orig, customer_id_new, transfer_datetime, transfer_performed_by,
+                authorization_note, notes)
+            VALUES (:cert, :coilOrig, :coilNew, :org, :custOrig, :custNew, :dt, :perf, :auth, :note)
+            """,
+            new
+            {
+                cert, coilOrig = body.CoilAbcNumOrig, coilNew = body.CoilAbcNumNew, org = coil.CoilOrgNum,
+                custOrig = coil.CurrentCustomerId, custNew = body.CustomerIdNew, dt = (DateTime?)DateTime.UtcNow,
+                perf = body.TransferPerformedBy, auth = body.AuthorizationNote, note = body.Notes
+            },
+            transaction: tx, cancellationToken: ct));
+
+        // Re-point ownership; SQLite and Oracle both evaluate the RHS with pre-update values,
+        // so coil_from_cust_id captures the prior owner in the same statement.
+        await conn.ExecuteAsync(new CommandDefinition(
+            "UPDATE coil SET coil_from_cust_id = customer_id, customer_id = :custNew WHERE coil_abc_num = :id",
+            new { custNew = body.CustomerIdNew, id = body.CoilAbcNumOrig }, transaction: tx, cancellationToken: ct));
+
+        await tx.CommitAsync(ct);
+        return (await GetCoilOwnershipTransfersAsync(null, ct)).First(t => t.CertificateNum == cert);
+    }
+
+    // The current owner + org-num of a coil being transferred (null row => coil missing).
+    private sealed class CoilOwnerRow
+    {
+        public long? CurrentCustomerId { get; set; }
+        public string? CoilOrgNum { get; set; }
+    }
+
     public async Task<IReadOnlyList<ScrapType>> GetScrapTypesAsync(CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);

@@ -31,6 +31,7 @@ import {
   SheetSkidWarehousePatch,
   SalesReminderWrite,
   SalesProbabilityWrite,
+  CoilOwnershipTransferWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -416,5 +417,87 @@ test('sales flow: createSalesProbability rejects out-of-range percent (typed)', 
   await assert.rejects(
     () => client.createSalesProbability(7001, 1, new SalesProbabilityWrite({ salesProbabilityPercent: 150 })),
     (err) => err?.status === 400 && !!err?.errors?.salesProbabilityPercent,
+  );
+});
+
+// The coil-ownership transfer ledger: the seeded historical transfer joins orig/new
+// customer names and the coil's metal details (typed, read-only).
+test('coil-ownership flow: ledger carries owner change + coil details (typed)', async () => {
+  const ledger = await client.getCoilOwnershipTransfers(undefined);
+  assert.ok(ledger.length >= 1);
+  const seeded = ledger.find((t) => t.certificateNum === 8001);
+  assert.ok(seeded, 'seeded certificate 8001 present');
+  assert.equal(seeded.coilAbcNumOrig, 5001);
+  assert.equal(seeded.customerShortNameOrig, 'ACME');
+  assert.equal(seeded.customerShortNameNew, 'BETA');
+  assert.equal(seeded.coilAlloy2, '3003');
+});
+
+// The printable certificate joins full orig/new customer addresses + coil details.
+test('coil-ownership flow: certificate has full addresses (typed)', async () => {
+  const cert = await client.getCoilOwnershipTransferCertificate(8001);
+  assert.equal(cert.customerFullNameOrig, 'ACME METALS');
+  assert.equal(cert.customerCityOrig, 'Detroit');
+  assert.equal(cert.customerFullNameNew, 'BETA FAB');
+  assert.equal(cert.customerCityNew, 'Cleveland');
+  assert.equal(cert.coilTemper, 'H14');
+});
+
+// Missing certificate → typed ApiException(404).
+test('coil-ownership flow: certificate(missing) throws ApiException(404) (typed)', async () => {
+  await assert.rejects(
+    () => client.getCoilOwnershipTransferCertificate(999999),
+    (e) => e instanceof ApiException && e.status === 404,
+  );
+});
+
+// The transferable-coil picker, optionally scoped to a customer.
+test('coil-ownership flow: transferable coils picker (typed)', async () => {
+  const all = await client.getTransferableCoils(undefined, undefined);
+  assert.ok(all.length >= 4);
+  const beta = await client.getTransferableCoils(4002, undefined);
+  assert.ok(beta.length >= 1);
+  assert.ok(beta.every((c) => c.customerId === 4002));
+});
+
+// The transfer write flow: record a transfer; it issues the next certificate and
+// re-points the coil's owner to the new customer (prior owner preserved).
+test('coil-ownership flow: createTransfer issues cert + re-points owner (typed)', async () => {
+  // coil 5002 is owned by ACME (4001); transfer it to BETA (4002).
+  const before = await client.getCoil(5002);
+  assert.equal(before.customerId, 4001);
+
+  const created = await client.createCoilOwnershipTransfer(new CoilOwnershipTransferWrite({
+    coilAbcNumOrig: 5002, customerIdNew: 4002, transferPerformedBy: 'e2e',
+    authorizationNote: 'E2E auth', notes: 'E2E transfer',
+  }));
+  assert.ok(created.certificateNum > 8001); // server-assigned, after the seed
+  assert.equal(created.customerIdOrig, 4001);
+  assert.equal(created.customerIdNew, 4002);
+
+  // the coil's ownership moved, prior owner kept in coil_from_cust_id
+  const after = await client.getCoil(5002);
+  assert.equal(after.customerId, 4002);
+  assert.equal(after.coilFromCustId, 4001);
+
+  // and the certificate is retrievable with both customers resolved
+  const cert = await client.getCoilOwnershipTransferCertificate(created.certificateNum);
+  assert.equal(cert.customerShortNameOrig, 'ACME');
+  assert.equal(cert.customerShortNameNew, 'BETA');
+});
+
+// Transfer of a non-existent coil → 404.
+test('coil-ownership flow: transfer of missing coil → 404 (typed)', async () => {
+  await assert.rejects(
+    () => client.createCoilOwnershipTransfer(new CoilOwnershipTransferWrite({ coilAbcNumOrig: 888888, customerIdNew: 4002 })),
+    (e) => e instanceof ApiException && e.status === 404,
+  );
+});
+
+// Transfer validation: coil + new owner are required.
+test('coil-ownership flow: createTransfer requires coil + new owner (typed)', async () => {
+  await assert.rejects(
+    () => client.createCoilOwnershipTransfer(new CoilOwnershipTransferWrite({ notes: 'missing required' })),
+    (err) => err?.status === 400 && !!err?.errors?.coilAbcNumOrig && !!err?.errors?.customerIdNew,
   );
 });

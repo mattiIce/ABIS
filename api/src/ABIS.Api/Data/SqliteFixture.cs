@@ -60,6 +60,7 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS sales_quote;
             DROP TABLE IF EXISTS sales_reminder;
             DROP TABLE IF EXISTS sales_probability;
+            DROP TABLE IF EXISTS coil_ownership_transfer;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
@@ -251,6 +252,15 @@ public static class SqliteFixture
             CREATE TABLE sales_probability (
                 probability_id INTEGER PRIMARY KEY, quote_id INTEGER, quote_revision_id INTEGER,
                 review_date TEXT, sales_probability INTEGER, probability_note TEXT);
+
+            -- Coil ownership transfer (legacy w_coil_ownership_transfer, silverdome4): the
+            -- toll-processing ledger. Each row is one certificate moving a coil's ownership
+            -- from customer_id_orig to customer_id_new. Column names are authoritative
+            -- (legacy d_coil_ownership_transfer / _certificate dbnames).
+            CREATE TABLE coil_ownership_transfer (
+                certificate_num INTEGER PRIMARY KEY, coil_abc_num_orig INTEGER, coil_abc_num_new INTEGER,
+                coil_org_num TEXT, customer_id_orig INTEGER, customer_id_new INTEGER,
+                transfer_datetime TEXT, transfer_performed_by TEXT, authorization_note TEXT, notes TEXT);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -720,6 +730,24 @@ public static class SqliteFixture
                 new { ProbabilityId = 1L, QuoteId = 7001L, QuoteRevisionId = 1L, ReviewDate = d.AddDays(-15).ToString("yyyy-MM-dd HH:mm:ss"), SalesProbability = 40, ProbabilityNote = "Early stage; competitor also quoting." },
                 new { ProbabilityId = 2L, QuoteId = 7001L, QuoteRevisionId = 1L, ReviewDate = d.AddDays(-5).ToString("yyyy-MM-dd HH:mm:ss"), SalesProbability = 65, ProbabilityNote = "Positive feedback on pricing." },
                 new { ProbabilityId = 3L, QuoteId = 7002L, QuoteRevisionId = 2L, ReviewDate = d.AddDays(-1).ToString("yyyy-MM-dd HH:mm:ss"), SalesProbability = 75, ProbabilityNote = "Revised gauge accepted; likely PO next week." }
+            });
+
+        // ---- Coil ownership transfer ----
+        // One historical transfer: coil 5001's ownership moved ACME (4001) -> BETA (4002).
+        // The coil seed keeps its current owner; the certificate reads orig/new from this row.
+        conn.Execute(
+            """
+            INSERT INTO coil_ownership_transfer (certificate_num, coil_abc_num_orig, coil_abc_num_new,
+                coil_org_num, customer_id_orig, customer_id_new, transfer_datetime, transfer_performed_by,
+                authorization_note, notes)
+            VALUES (:CertificateNum, :CoilAbcNumOrig, :CoilAbcNumNew, :CoilOrgNum, :CustomerIdOrig,
+                :CustomerIdNew, :TransferDatetime, :TransferPerformedBy, :AuthorizationNote, :Notes)
+            """,
+            new[]
+            {
+                new { CertificateNum = 8001L, CoilAbcNumOrig = 5001L, CoilAbcNumNew = (long?)null, CoilOrgNum = "ORG-5001",
+                    CustomerIdOrig = 4001L, CustomerIdNew = 4002L, TransferDatetime = d.AddDays(-3).ToString("yyyy-MM-dd HH:mm:ss"),
+                    TransferPerformedBy = "jsmith", AuthorizationNote = "Auth #A-204 (toll conversion)", Notes = "Ownership moved per processing agreement." }
             });
     }
 }

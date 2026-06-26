@@ -707,3 +707,84 @@ public sealed class SalesProbability
     public int? SalesProbabilityPercent { get; set; }
     public string? ProbabilityNote { get; set; }
 }
+
+// ---- Coil ownership transfer (legacy w_coil_ownership_transfer, silverdome4) ----
+
+/// <summary>One coil-ownership-transfer record (table <c>coil_ownership_transfer</c>) —
+/// the toll-processing ledger: a coil's ownership moving from one customer to another,
+/// stamped with a certificate number. Joined to the orig/new customer short names and the
+/// coil's metal details. Column names are authoritative (legacy <c>d_coil_ownership_transfer</c>).</summary>
+public sealed class CoilOwnershipTransfer
+{
+    public long CertificateNum { get; set; }
+    public long? CoilAbcNumOrig { get; set; }
+    public long? CoilAbcNumNew { get; set; }
+    public string? CoilOrgNum { get; set; }
+    public long? CustomerIdOrig { get; set; }
+    public string? CustomerShortNameOrig { get; set; }
+    public long? CustomerIdNew { get; set; }
+    public string? CustomerShortNameNew { get; set; }
+    public DateTime? TransferDatetime { get; set; }
+    public string? TransferPerformedBy { get; set; }
+    public string? AuthorizationNote { get; set; }
+    public string? Notes { get; set; }
+    public decimal? NetWt { get; set; }
+    public decimal? NetWtBalance { get; set; }
+    public string? CoilAlloy2 { get; set; }
+    public string? CoilTemper { get; set; }
+    public decimal? CoilGauge { get; set; }
+    public decimal? CoilWidth { get; set; }
+    public string? LotNum { get; set; }
+}
+
+/// <summary>The printable transfer certificate (legacy
+/// <c>d_coil_ownership_transfer_certificate</c>): the transfer joined to the full orig/new
+/// customer addresses and the coil's metal details — what the certificate document shows.</summary>
+public sealed class CoilOwnershipTransferCertificate
+{
+    public long CertificateNum { get; set; }
+    public long? CoilAbcNumOrig { get; set; }
+    public long? CoilAbcNumNew { get; set; }
+    public string? CoilOrgNum { get; set; }
+    public DateTime? TransferDatetime { get; set; }
+    public string? TransferPerformedBy { get; set; }
+    public string? AuthorizationNote { get; set; }
+    public string? Notes { get; set; }
+    public long? CustomerIdOrig { get; set; }
+    public string? CustomerFullNameOrig { get; set; }
+    public string? CustomerShortNameOrig { get; set; }
+    public string? CustomerCityOrig { get; set; }
+    public string? CustomerStateOrig { get; set; }
+    public string? CustomerZipOrig { get; set; }
+    public long? CustomerIdNew { get; set; }
+    public string? CustomerFullNameNew { get; set; }
+    public string? CustomerShortNameNew { get; set; }
+    public string? CustomerCityNew { get; set; }
+    public string? CustomerStateNew { get; set; }
+    public string? CustomerZipNew { get; set; }
+    public decimal? NetWt { get; set; }
+    public decimal? NetWtBalance { get; set; }
+    public string? CoilAlloy2 { get; set; }
+    public string? CoilTemper { get; set; }
+    public decimal? CoilGauge { get; set; }
+    public decimal? CoilWidth { get; set; }
+    public string? LotNum { get; set; }
+}
+
+/// <summary>A coil eligible to be transferred (legacy <c>d_ownership_transfer_coil_list</c>) —
+/// the coil picker, with its current owner and metal details.</summary>
+public sealed class TransferableCoil
+{
+    public long CoilAbcNum { get; set; }
+    public long? CustomerId { get; set; }
+    public string? CustomerShortName { get; set; }
+    public string? CoilOrgNum { get; set; }
+    public string? LotNum { get; set; }
+    public int? CoilStatus { get; set; }
+    public string? CoilAlloy2 { get; set; }
+    public string? CoilTemper { get; set; }
+    public decimal? CoilGauge { get; set; }
+    public decimal? CoilWidth { get; set; }
+    public decimal? NetWtBalance { get; set; }
+    public string? CoilNotes { get; set; }
+}
