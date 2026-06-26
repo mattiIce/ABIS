@@ -33,10 +33,18 @@ var opcCfg = builder.Configuration.GetSection("Edge:Opc");
 var opcProvider = opcCfg.GetValue("Provider", "Mock")!;
 var opcTags = opcCfg.GetSection("Tags").Get<string[]>() ?? Array.Empty<string>();
 
-builder.Services.AddSingleton<ITagSource>(_ => opcProvider.ToLowerInvariant() switch
+builder.Services.AddSingleton<ITagSource>(sp => opcProvider.ToLowerInvariant() switch
 {
     "opcua" => new OpcUaTagSource(
-        opcCfg.GetValue<string>("Endpoint") ?? throw new InvalidOperationException("Edge:Opc:Endpoint is required for the opcua provider.")),
+        new OpcUaOptions(opcCfg.GetValue<string>("Endpoint")
+                ?? throw new InvalidOperationException("Edge:Opc:Endpoint is required for the opcua provider."))
+        {
+            UseSecurity = opcCfg.GetValue("UseSecurity", false),
+            AcceptUntrusted = opcCfg.GetValue("AcceptUntrusted", true),
+            Username = opcCfg.GetValue<string?>("Username", null),
+            Password = opcCfg.GetValue<string?>("Password", null),
+        },
+        sp.GetRequiredService<ILogger<OpcUaTagSource>>()),
     _ => new MockTagSource(),
 });
 builder.Services.AddSingleton(new TagSet(opcTags));
@@ -57,6 +65,14 @@ app.MapGet("/reading", (LatestReading latest) =>
 app.MapGet("/tags", (LatestTags tags) => Results.Ok(tags.All()));
 app.MapGet("/tags/{name}", (string name, LatestTags tags) =>
     tags.Get(name) is { } t ? Results.Ok(t) : Results.NotFound(new { tag = name, status = "no-value-yet" }));
+
+// Discovery: browse the UA server's address space to find node ids (the wrapper's
+// view of the INGEAR tags). Pass ?node=<id> to descend; omit for the Objects root.
+// Only available on the OPC UA provider (the mock can't browse).
+app.MapGet("/opc/browse", async (string? node, ITagSource tags, CancellationToken ct) =>
+    tags is ITagBrowser browser
+        ? Results.Ok(await browser.BrowseAsync(node, ct))
+        : Results.Json(new { status = "browse-unavailable", source = tags.Name }, statusCode: 501));
 
 app.Run();
 

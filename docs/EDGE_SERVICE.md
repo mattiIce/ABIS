@@ -9,9 +9,10 @@ small **edge service** that runs on the shop-floor PC, talks to the devices
 locally, and exposes them to the modern stack over HTTP.
 
 > This is the **Phase-4 "edge" prerequisite** from the roadmap: replace serial/OPC
-> integration with a small, well-tested edge service. This repo ships a working,
-> tested **skeleton**; the device-specific parsing and OPC address space need real
-> hardware to finish (flagged below).
+> integration with a small, well-tested edge service. The serial scale path and the
+> **real OPC UA client** are built and tested; what remains is **site setup** —
+> per-device scale framing and standing up the Classic-DA→UA wrapper for the plant's
+> INGEAR servers (flagged below).
 
 ## Topology
 
@@ -38,9 +39,18 @@ COM port. The web screens (or the API) consume readings over HTTP on the LAN.
   format, plus the bare `+00123.4 LB` form) into a typed `WeightReading`.
 - **OPC / PLC tags** — `ITagSource` reads named PLC tags; a background pump polls
   the configured `Edge:Opc:Tags` into a per-tag cache. `OpcUaTagSource` is the
-  real OPC UA reader (a **scaffold** — the connection/read is the one piece that
-  needs the OPC Foundation library + a live server's address space; see its
-  source + below). `MockTagSource` simulates a PLC so the path runs without one.
+  **real OPC UA client** (OPC Foundation `.NET` stack): it keeps one session, reads
+  the requested node ids, and re-establishes the session if it drops. Any
+  connect/read failure yields `Bad`-quality readings (not an exception), so the
+  pump and `/health` stay up and the fault shows in `/tags`. `MockTagSource`
+  simulates a PLC so the path runs without one.
+  - **Plant reality (this site):** the OPC servers are **Classic OPC DA** (INGEAR
+    OPC Server for Allen-Bradley), which has no native UA endpoint. The chosen path
+    is a **Classic-DA→UA wrapper** on the OPC box (OPC Foundation UA Wrapper or
+    Softing dataFEED); this UA client connects to the wrapper's `opc.tcp` endpoint.
+    The PLCs and existing DA clients are untouched — see [the setup steps](#standing-up-the-uadawrapper-ingear).
+  - **Discovery:** `GET /opc/browse?node=<id>` walks the wrapper's address space so
+    you can find the node ids of the wrapped INGEAR tags without hand-mapping them.
 - **No-hardware mode** — `MockScale` + `MockTagSource` let the whole service run
   and be tested on any machine (the defaults `Edge:Scale:Provider=Mock`,
   `Edge:Opc:Provider=Mock`).
@@ -49,6 +59,8 @@ COM port. The web screens (or the API) consume readings over HTTP on the LAN.
   - `GET /reading` → the latest `WeightReading` (`503` until one arrives)
   - `GET /tags` → the latest value of each configured OPC tag
   - `GET /tags/{name}` → one tag's latest value (`404` until polled)
+  - `GET /opc/browse?node=<id>` → browse the UA address space for discovery
+    (`501` on the mock provider)
 - **Resilience** — background pumps reconnect with backoff if a device drops.
 
 ## Configuration (`Edge:Scale:*`, env or appsettings)
@@ -60,8 +72,11 @@ COM port. The web screens (or the API) consume readings over HTTP on the LAN.
 | `BaudRate` / `Parity` / `DataBits` / `StopBits` | per the indicator's manual | defaults 9600/None/8/One |
 | `Setpoint` / `Unit` | mock only | the simulated weight |
 | `Edge:Opc:Provider` | `Mock` (default) / `OpcUa` | which tag source |
-| `Edge:Opc:Endpoint` | e.g. `opc.tcp://plc.local:4840` | required for `OpcUa` |
-| `Edge:Opc:Tags` | array of node ids | the PLC tags to poll |
+| `Edge:Opc:Endpoint` | e.g. `opc.tcp://192.168.10.170:4840` | required for `OpcUa` (the wrapper) |
+| `Edge:Opc:Tags` | array of node ids | the PLC tags to poll (use `/opc/browse` to find them) |
+| `Edge:Opc:UseSecurity` | `false` (default) / `true` | `false` = start unencrypted on the trusted LAN; `true` selects a signed/encrypted endpoint |
+| `Edge:Opc:AcceptUntrusted` | `true` (default) | auto-accept the server cert (LAN/bring-up); set `false` once certs are exchanged |
+| `Edge:Opc:Username` / `Password` | optional | for a wrapper that requires user auth (default: anonymous) |
 
 ```sh
 # mock (any machine)
@@ -91,7 +106,7 @@ needed (it talks only to devices + the API).
 - `WeightParser` + the tag sources are **unit-tested** (`edge/AbisEdge.Tests`,
   17 tests): scale continuous/bare formats, sign, units, stable/unstable,
   unparseable input; OPC tag readings per request, simulation, and that the OPC UA
-  source faults clearly until its client is wired.
+  client degrades to `Bad` readings (no throw) when the server is unreachable.
 - `MockScale` + `MockTagSource` let the whole service run + be smoke-tested with no
   hardware (verified: `/health` → both sources, `/reading` → a `WeightReading`,
   `/tags` → the configured tags' simulated values).
@@ -103,7 +118,36 @@ needed (it talks only to devices + the API).
   `WeightParser` if needed. The legacy `da` object's exact parsing is recoverable
   from the PB source if exported.
 - **OPC / PLC.** The `ITagSource` abstraction, the poll pump, the `/tags` surface,
-  and a tested mock are **built**. Finishing `OpcUaTagSource` needs the **OPC
-  Foundation client package** + the **server's address space** (the real node
-  ids/types) — both hardware/site-specific. The source file marks exactly where
-  `session.Read` goes.
+  a tested mock, **and the real `OpcUaTagSource` UA client** are all **built**. What
+  remains is **site setup**: stand up the Classic-DA→UA wrapper (below), then point
+  `Edge:Opc:Endpoint` at it and fill `Edge:Opc:Tags` with the node ids discovered
+  via `/opc/browse`. The UA client itself can't be validated end-to-end without a
+  live UA endpoint to connect to.
+
+## Standing up the UA/DA wrapper (INGEAR) {#standing-up-the-uadawrapper-ingear}
+
+This site's OPC servers (`192.168.10.170`, `192.168.9.175`) run **INGEAR OPC Server
+for Allen-Bradley** — Classic **OPC DA**, no native UA endpoint. A small **wrapper**
+on the OPC box exposes the DA address space as UA; this service connects to that.
+The wrapper talks to INGEAR over **local COM** (no network DCOM to configure), and
+the PLCs + existing DA clients are **untouched** (additive).
+
+**On the OPC server (controls team, maintenance window):**
+
+1. **Install a Classic-DA→UA wrapper.** Free option: the **OPC Foundation UA
+   Wrapper** (a.k.a. UA COM Server) from the OPC Foundation. Commercial alternatives:
+   **Softing dataFEED** (Softing OPC Toolbox is already installed here), KEPServerEX's
+   DA-client driver, Matrikon, Unified Automation UaGateway.
+2. **Point it at the DA server** `CimQuestInc.IGOPCAB.1` (the INGEAR ProgID).
+3. **Configure the UA endpoint:** `opc.tcp://<opc-host>:4840`. For bring-up use
+   **Security: None** + **anonymous** (matches the edge defaults). Harden later to
+   `Basic256Sha256` + a trusted client cert.
+4. **Open the firewall** on the OPC box for **TCP 4840** to the edge host only.
+
+**On the edge host:**
+
+5. `Edge__Opc__Provider=OpcUa`, `Edge__Opc__Endpoint=opc.tcp://192.168.10.170:4840`.
+6. Discover node ids: `curl "http://localhost:<edgeport>/opc/browse"` (then drill in
+   with `?node=<id>`), and put the ones you want in `Edge__Opc__Tags`.
+7. Tighten security: set `Edge__Opc__UseSecurity=true` + `Edge__Opc__AcceptUntrusted=false`
+   once the edge client cert is trusted by the wrapper (and vice-versa).
