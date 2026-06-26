@@ -1,0 +1,2 @@
+$PBExportHeader$q_prod_item_query.srq
+PBSELECT( VERSION(400) TABLE(NAME="production_sheet_item" )  TABLE(NAME="sheet_skid_detail" ) COLUMN(NAME="production_sheet_item.prod_item_num") COLUMN(NAME="production_sheet_item.coil_abc_num") COLUMN(NAME="production_sheet_item.ab_job_num") COLUMN(NAME="production_sheet_item.prod_item_pieces") COLUMN(NAME="production_sheet_item.prod_item_net_wt")    JOIN (LEFT="sheet_skid_detail.prod_item_num"    OP ="="RIGHT="production_sheet_item.prod_item_num" )WHERE(    EXP1 ="~"SHEET_SKID_DETAIL~".~"SHEET_SKID_NUM~""   OP ="="    EXP2 ="" ) ) 

@@ -1,0 +1,71 @@
+$PBExportHeader$d_sample_sticker.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=1848 color="536870912" )
+table(column=(type=char(10) updatewhereclause=yes name=curr_date dbname="curr_date" )
+ column=(type=decimal(0) updatewhereclause=yes name=ab_job_num dbname="process_coil.ab_job_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=customer_id dbname="customer.customer_id" )
+ column=(type=char(18) updatewhereclause=yes name=customer_short_name dbname="customer.customer_short_name" )
+ column=(type=char(32) updatewhereclause=yes name=coil_org_num dbname="coil.coil_org_num" )
+ column=(type=char(8) updatewhereclause=yes name=coil_alloy2 dbname="coil.coil_alloy2" )
+ column=(type=char(8) updatewhereclause=yes name=coil_temper dbname="coil.coil_temper" )
+ column=(type=decimal(4) updatewhereclause=yes name=coil_gauge dbname="coil.coil_gauge" )
+ column=(type=char(18) updatewhereclause=yes name=lot_num dbname="coil.lot_num" )
+ column=(type=char(128) updatewhereclause=yes name=defect dbname="defect" )
+ column=(type=char(12) updatewhereclause=yes name=grain_direction dbname="grain_direction" )
+ column=(type=char(10) updatewhereclause=yes name=shift dbname="shift" values="1st Shift	1st Shift/2nd Shift	2nd Shift/3rd Shift	3rd Shift/" )
+ column=(type=char(6) updatewhereclause=yes name=sample_location dbname="sample_location" values="  	  /Head	Head/Middle	Middle/Tail	tail/" )
+ retrieve="select   distinct
+			to_char(sysdate, 'mm/dd/yyyy') curr_date,
+         process_coil.ab_job_num, 
+         customer.customer_id,
+         customer.customer_short_name,
+         coil.coil_org_num,
+         coil.coil_alloy2,
+         coil.coil_temper,
+         coil.coil_gauge,
+         coil.lot_num,
+         rpad(' ', 128) defect,
+         rpad(' ', 12) grain_direction,
+			rpad(' ', 10) shift,
+			rpad(' ', 6) sample_location
+from     coil
+         join process_coil on coil.coil_abc_num = process_coil.coil_abc_num
+         join ab_job on ab_job.ab_job_num = process_coil.ab_job_num
+         join customer_order on customer_order.order_abc_num = ab_job.order_abc_num
+         join customer on customer.customer_id = customer_order.orig_customer_id
+where    process_coil.ab_job_num = :al_ab_job_num
+and      coil.coil_abc_num = :al_coil_abc_num" arguments=(("al_ab_job_num", number),("al_coil_abc_num", number)) )
+text(band=detail alignment="2" text="Coil Sample Sticker" border="0" color="0" x="0" y="8" height="100" width="1390" html.valueishtml="0"  name=t_13 visible="1"  font.face="Arial" font.height="-15" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=10 alignment="0" tabsequence=40 border="5" color="33554432" x="384" y="1492" height="340" width="1115" format="[general]" html.valueishtml="0"  name=defect pointer="IBeam!" visible="1" edit.limit=128 edit.case=any edit.autoselect=yes edit.nilisnull=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Defect:" border="6" color="0" x="0" y="1492" height="92" width="338" html.valueishtml="0"  name=t_7 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=13 alignment="0" tabsequence=20 border="5" color="33554432" x="375" y="1288" height="92" width="329" format="[general]" html.valueishtml="0"  name=sample_location pointer="Arrow!" visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.useasborder=yes ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Location:" border="6" color="0" x="0" y="1288" height="92" width="338" html.valueishtml="0"  name=t_6 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Grain Dir.:" border="6" color="0" x="768" y="1288" height="92" width="357" html.valueishtml="0"  name=t_11 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=11 alignment="0" tabsequence=30 border="5" color="33554432" x="1143" y="1288" height="92" width="357" format="[general]" html.valueishtml="0"  name=grain_direction pointer="IBeam!" visible="1" edit.limit=12 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.nilisnull=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Lot:" border="6" color="0" x="0" y="1120" height="92" width="338" html.valueishtml="0"  name=t_12 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=9 alignment="0" tabsequence=32766 border="5" color="33554432" x="379" y="1120" height="92" width="1120" format="[general]" html.valueishtml="0"  name=lot_num visible="1" edit.limit=18 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Cust.Coil:" border="6" color="0" x="0" y="920" height="92" width="338" html.valueishtml="0"  name=t_5 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="5" color="33554432" x="379" y="920" height="92" width="1120" format="[general]" html.valueishtml="0"  name=coil_org_num visible="1" edit.limit=32 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=8 alignment="0" tabsequence=32766 border="5" color="33554432" x="379" y="720" height="92" width="329" format="[general]" html.valueishtml="0"  name=coil_gauge visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Gauge:" border="6" color="0" x="5" y="720" height="92" width="338" html.valueishtml="0"  name=t_4 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Temper:" border="6" color="0" x="768" y="720" height="92" width="357" html.valueishtml="0"  name=t_10 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="5" color="33554432" x="1143" y="720" height="92" width="357" format="[general]" html.valueishtml="0"  name=coil_temper visible="1" edit.limit=8 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="5" color="33554432" x="379" y="536" height="92" width="329" format="[general]" html.valueishtml="0"  name=coil_alloy2 visible="1" edit.limit=8 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Alloy:" border="6" color="0" x="0" y="536" height="92" width="338" html.valueishtml="0"  name=t_3 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Shift:" border="6" color="0" x="768" y="536" height="92" width="357" html.valueishtml="0"  name=t_9 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=12 alignment="0" tabsequence=10 border="5" color="33554432" x="1143" y="536" height="92" width="357" format="[general]" html.valueishtml="0"  name=shift visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.useasborder=yes ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Customer:" border="6" color="0" x="0" y="356" height="92" width="338" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="5" color="33554432" x="379" y="356" height="92" width="1120" format="[general]" html.valueishtml="0"  name=customer_short_name visible="1" edit.limit=18 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="5" color="33554432" x="379" y="168" height="92" width="329" format="[general]" html.valueishtml="0"  name=ab_job_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Job:" border="6" color="0" x="0" y="168" height="92" width="338" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Date:" border="6" color="0" x="768" y="168" height="92" width="357" html.valueishtml="0"  name=t_8 visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="5" color="33554432" x="1143" y="168" height="92" width="357" format="[general]" html.valueishtml="0"  name=curr_date visible="1" edit.limit=19 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

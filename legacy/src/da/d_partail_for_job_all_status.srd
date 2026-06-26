@@ -1,0 +1,45 @@
+$PBExportHeader$d_partail_for_job_all_status.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=83 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=102 color="536870912" )
+table(column=(type=number updatewhereclause=yes name=sheet_skid_sheet_skid_num dbname="sheet_skid.sheet_skid_num" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_skid_pieces dbname="sheet_skid.skid_pieces" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_sheet_net_wt dbname="sheet_skid.sheet_net_wt" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_sheet_tare_wt dbname="sheet_skid.sheet_tare_wt" )
+ column=(type=number updatewhereclause=yes name=sheet_skid_skid_sheet_status dbname="sheet_skid.skid_sheet_status" )
+ retrieve="SELECT	~"SHEET_SKID~".~"SHEET_SKID_NUM~",
+			~"SHEET_SKID~".~"SKID_PIECES~",
+			~"SHEET_SKID~".~"SHEET_NET_WT~",
+			~"SHEET_SKID~".~"SHEET_TARE_WT~",
+			~"SHEET_SKID~".~"SKID_SHEET_STATUS~"
+FROM ~"PROCESS_PARTIAL_SKID~",
+         ~"SHEET_SKID~"
+WHERE ( ~"PROCESS_PARTIAL_SKID~".~"SHEET_SKID_NUM~" = ~"SHEET_SKID~".~"SHEET_SKID_NUM~") and
+         ( ~"PROCESS_PARTIAL_SKID~".~"AB_JOB_NUM~" = :al_job )
+UNION
+SELECT	~"SHEET_SKID~".~"SHEET_SKID_NUM~",
+			~"SHEET_SKID~".~"SKID_PIECES~",
+			~"SHEET_SKID~".~"SHEET_NET_WT~",
+			~"SHEET_SKID~".~"SHEET_TARE_WT~",
+			~"SHEET_SKID~".~"SKID_SHEET_STATUS~"
+FROM ~"SHEET_SKID~"
+WHERE ~"SHEET_SKID~".~"AB_JOB_NUM~" = :al_job" arguments=(("al_job", number)) )
+text(band=header alignment="0" text="Skid Num" border="6" color="33554432" x="7" y="3" height="77" width="391" html.valueishtml="0"  name=sheet_skid_sheet_skid_num_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Partial Pcs" border="6" color="33554432" x="406" y="3" height="77" width="351" html.valueishtml="0"  name=sheet_skid_skid_pieces_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Net Wt" border="6" color="33554432" x="764" y="3" height="77" width="373" html.valueishtml="0"  name=sheet_skid_sheet_net_wt_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Tare Wt" border="6" color="33554432" x="1145" y="3" height="77" width="351" html.valueishtml="0"  name=sheet_skid_sheet_tare_wt_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Status" border="6" color="0" x="1503" y="3" height="77" width="333" html.valueishtml="0"  name=sheet_skid_skid_sheet_status_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="7" y="0" height="93" width="391" format="[general]" html.valueishtml="0"  name=sheet_skid_sheet_skid_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="406" y="0" height="93" width="351" format="[general]" html.valueishtml="0"  name=sheet_skid_skid_pieces visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="764" y="0" height="93" width="373" format="[general]" html.valueishtml="0"  name=sheet_skid_sheet_net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="1145" y="0" height="93" width="351" format="[general]" html.valueishtml="0"  name=sheet_skid_sheet_tare_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="33554432" x="1503" y="0" height="93" width="333" format="[general]" html.valueishtml="0"  name=sheet_skid_skid_sheet_status visible="1" dddw.name=d_dddw_skid_status_desc dddw.displaycolumn=skid_status_desc dddw.datacolumn=skid_status_code dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0  template=(comment="" encoding="UTF-8" name="q" xml="<?xml version=~"1.0~" encoding=~"UTF-8~" standalone=~"no~"?><d_partail_for_job><d_partail_for_job_row __pbband=~"detail~"><sheet_skid_num/><partial_skid_pieces/></d_partail_for_job_row></d_partail_for_job>"))
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

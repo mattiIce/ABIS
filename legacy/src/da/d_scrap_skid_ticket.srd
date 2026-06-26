@@ -1,0 +1,64 @@
+$PBExportHeader$d_scrap_skid_ticket.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="Zebra  Z4M Plus (200dpi)" print.documentname="skid_ticket" print.orientation = 2 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=no print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=810 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=70 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_ab_job_num dbname="return_scrap_item.ab_job_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_scrap_item_pieces dbname="return_scrap_item.scrap_item_pieces" )
+ column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_return_item_net_wt dbname="return_scrap_item.return_item_net_wt" )
+ column=(type=char(8) updatewhereclause=yes name=coil_coil_alloy2 dbname="coil.coil_alloy2" )
+ column=(type=char(8) updatewhereclause=yes name=coil_coil_temper dbname="coil.coil_temper" )
+ column=(type=decimal(4) updatewhereclause=yes name=coil_coil_gauge dbname="coil.coil_gauge" )
+ column=(type=char(32) updatewhereclause=yes name=coil_coil_org_num dbname="coil.coil_org_num" )
+ column=(type=char(18) updatewhereclause=yes name=coil_lot_num dbname="coil.lot_num" )
+ retrieve="  SELECT ~"RETURN_SCRAP_ITEM~".~"AB_JOB_NUM~",   
+         ~"RETURN_SCRAP_ITEM~".~"SCRAP_ITEM_PIECES~",   
+         ~"RETURN_SCRAP_ITEM~".~"RETURN_ITEM_NET_WT~",   
+         ~"COIL~".~"COIL_ALLOY2~",   
+         ~"COIL~".~"COIL_TEMPER~",   
+         ~"COIL~".~"COIL_GAUGE~",   
+         ~"COIL~".~"COIL_ORG_NUM~",   
+         ~"COIL~".~"LOT_NUM~"  
+    FROM ~"COIL~",   
+         ~"SCRAP_SKID_DETAIL~",   
+         ~"RETURN_SCRAP_ITEM~"  
+   WHERE ( ~"RETURN_SCRAP_ITEM~".~"RETURN_SCRAP_ITEM_NUM~" = ~"SCRAP_SKID_DETAIL~".~"RETURN_SCRAP_ITEM_NUM~" ) and  
+         ( return_scrap_item.coil_abc_num = coil.coil_abc_num (+)) and  
+         ( ( ~"SCRAP_SKID_DETAIL~".~"SCRAP_SKID_NUM~" = :al_skid_num ) )    
+" arguments=(("al_skid_num", number)) )
+text(band=header alignment="0" text="SCRAP - Customer Material Tag" border="0" color="33554432" x="241" y="54" height="80" width="1134" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-12" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="text" border="0" color="33554432" x="421" y="374" height="77" width="1053" html.valueishtml="0"  name=t_customer visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Net:" border="0" color="33554432" x="863" y="502" height="77" width="132" html.valueishtml="0"  name=t_10 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="text" border="0" color="33554432" x="1086" y="502" height="77" width="307" html.valueishtml="0"  name=t_net visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="text" border="0" color="33554432" x="501" y="502" height="77" width="252" html.valueishtml="0"  name=t_gross_wt visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="text" border="0" color="33554432" x="501" y="630" height="77" width="252" html.valueishtml="0"  name=t_tare visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Scrap Skid Num:" border="0" color="33554432" x="44" y="224" height="77" width="538" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Customer:" border="0" color="33554432" x="44" y="374" height="77" width="333" html.valueishtml="0"  name=t_12 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Gross Wt:" border="0" color="33554432" x="48" y="502" height="77" width="333" html.valueishtml="0"  name=t_9 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Tare Wt:" border="0" color="33554432" x="48" y="630" height="77" width="285" html.valueishtml="0"  name=t_11 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="*3S123456*" border="0" color="33554432" x="618" y="173" height="131" width="856" html.valueishtml="0"  name=t_skid_num_b visible="1"  font.face="C39 Medium 24pt LJ4" font.height="-24" font.weight="400"  font.family="0" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="123456" border="0" color="33554432" x="618" y="298" height="77" width="856" html.valueishtml="0"  name=t_skid_num_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="929" y="0" height="67" width="69" format="[general]" html.valueishtml="0"  name=return_scrap_item_return_item_net_wt visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Job No." border="0" color="33554432" x="40" y="755" height="51" width="201" html.valueishtml="0"  name=t_3 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Net" border="0" color="33554432" x="951" y="755" height="51" width="55" html.valueishtml="0"  name=t_7 visible="0"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="44" y="0" height="67" width="201" format="[general]" html.valueishtml="0"  name=return_scrap_item_ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Lot Num" border="0" color="33554432" x="245" y="755" height="51" width="274" html.valueishtml="0"  name=coil_lot_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=8 alignment="0" tabsequence=32766 border="0" color="33554432" x="249" y="0" height="67" width="274" format="[general]" html.valueishtml="0"  name=coil_lot_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Coil Num" border="0" color="33554432" x="516" y="755" height="51" width="285" html.valueishtml="0"  name=coil_coil_org_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="0" color="33554432" x="516" y="0" height="67" width="285" format="[general]" html.valueishtml="0"  name=coil_coil_org_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Pcs" border="0" color="33554432" x="805" y="755" height="51" width="132" html.valueishtml="0"  name=production_sheet_item_prod_item_pieces_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="801" y="0" height="67" width="139" format="[general]" html.valueishtml="0"  name=return_scrap_item_scrap_item_pieces visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Alloy" border="0" color="33554432" x="936" y="755" height="51" width="165" html.valueishtml="0"  name=t_4 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="933" y="0" height="67" width="172" format="[general]" html.valueishtml="0"  name=coil_coil_alloy2 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Temper" border="0" color="33554432" x="1119" y="755" height="51" width="176" html.valueishtml="0"  name=t_5 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="33554432" x="1115" y="0" height="67" width="176" format="[general]" html.valueishtml="0"  name=coil_coil_temper visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Gage" border="0" color="33554432" x="1298" y="755" height="51" width="157" html.valueishtml="0"  name=t_6 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="33554432" x="1291" y="0" height="67" width="161" format="[general]" html.valueishtml="0"  name=coil_coil_gauge visible="1" edit.name="#####" editmask.mask="#.000" editmask.imemode=0 editmask.focusrectangle=no  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0  template=(comment="" encoding="UTF-8" name="q" xml="<?xml version=~"1.0~" encoding=~"UTF-8~" standalone=~"no~"?><d_skid_ticket><d_skid_ticket_row><production_sheet_item_prod_item_pieces/><production_sheet_item_prod_item_net_wt/><coil_coil_org_num __pbband=~"detail~"/><coil_lot_num/></d_skid_ticket_row></d_skid_ticket>"))
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 
