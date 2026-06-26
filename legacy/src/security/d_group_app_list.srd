@@ -1,0 +1,19 @@
+$PBExportHeader$d_group_app_list.srd
+$PBExportComments$list all group and app relations
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no grid.lines=0 )
+header(height=64 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=74 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=application_id dbname="security_group_application.application_id" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=user_group_id dbname="security_group_application.user_group_id" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=group_application_privilege dbname="security_group_application.group_application_privilege" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"security_group_application~" ) COLUMN(NAME=~"security_group_application.application_id~") COLUMN(NAME=~"security_group_application.user_group_id~") COLUMN(NAME=~"security_group_application.group_application_privilege~")) " update="SECURITY_GROUP_APPLICATION" updatewhere=1 updatekeyinplace=yes )
+text(band=header alignment="2" text="Application Id"border="0" color="0" x="7" y="6" height="51" width="322"  name=application_id_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="User Group Id"border="0" color="0" x="336" y="6" height="51" width="318"  name=user_group_id_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Group Application Privilege"border="0" color="0" x="662" y="3" height="51" width="307"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=1 alignment="1" tabsequence=10 border="0" color="0" x="7" y="6" height="61" width="322" format="[general]"  name=application_id edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=20 border="0" color="0" x="336" y="6" height="61" width="318" format="[general]"  name=user_group_id edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=30 border="0" color="0" x="662" y="6" height="61" width="307" format="[General]"  name=group_application_privilege edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

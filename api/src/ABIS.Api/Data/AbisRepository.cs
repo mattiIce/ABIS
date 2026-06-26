@@ -1082,6 +1082,199 @@ public sealed class AbisRepository : IAbisRepository
         public string? CoilOrgNum { get; set; }
     }
 
+    // ---- Security / authorization (legacy security.pbl) ----
+
+    public async Task<IReadOnlyList<SecurityUser>> GetSecurityUsersAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<SecurityUser>(new CommandDefinition(
+            """
+            SELECT user_id AS UserId, login_id AS LoginId, user_last_name AS UserLastName,
+                   user_first_name AS UserFirstName, user_middle_initial AS UserMiddleInitial,
+                   last_login_time AS LastLoginTime, last_modified_date AS LastModifiedDate,
+                   user_status AS UserStatus, user_notes AS UserNotes
+            FROM security_user ORDER BY login_id
+            """, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<SecurityUser?> GetSecurityUserAsync(long userId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<SecurityUser>(new CommandDefinition(
+            """
+            SELECT user_id AS UserId, login_id AS LoginId, user_last_name AS UserLastName,
+                   user_first_name AS UserFirstName, user_middle_initial AS UserMiddleInitial,
+                   last_login_time AS LastLoginTime, last_modified_date AS LastModifiedDate,
+                   user_status AS UserStatus, user_notes AS UserNotes
+            FROM security_user WHERE user_id = :id
+            """, new { id = userId }, cancellationToken: ct));
+    }
+
+    public async Task<IReadOnlyList<SecurityGroup>> GetSecurityGroupsAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<SecurityGroup>(new CommandDefinition(
+            "SELECT user_group_id AS UserGroupId, group_name AS GroupName, group_notes AS GroupNotes FROM security_group ORDER BY group_name",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<SecurityApplication>> GetSecurityApplicationsAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<SecurityApplication>(new CommandDefinition(
+            "SELECT application_id AS ApplicationId, application_name AS ApplicationName, application_notes AS ApplicationNotes FROM security_application ORDER BY application_name",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<SecurityGroup>> GetUserGroupsAsync(long userId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<SecurityGroup>(new CommandDefinition(
+            """
+            SELECT g.user_group_id AS UserGroupId, g.group_name AS GroupName, g.group_notes AS GroupNotes
+            FROM security_user_group ug JOIN security_group g ON g.user_group_id = ug.user_group_id
+            WHERE ug.user_id = :id ORDER BY g.group_name
+            """, new { id = userId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    // The effective permission map (legacy f_security_door): per feature, the MAX privilege
+    // across the user's direct grant and any of their groups' grants. Portable (UNION ALL +
+    // MAX + GROUP BY; no LIMIT/ROWNUM). via_group = 1 when no direct grant tied the max.
+    public async Task<IReadOnlyList<EffectivePermission>> GetUserEffectivePermissionsAsync(long userId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<EffectivePermission>(new CommandDefinition(
+            """
+            SELECT a.application_id AS ApplicationId, a.application_name AS ApplicationName,
+                   MAX(grants.priv) AS Privilege,
+                   CASE WHEN MAX(CASE WHEN grants.src = 'U' THEN grants.priv END) IS NULL
+                          OR MAX(grants.priv) > COALESCE(MAX(CASE WHEN grants.src = 'U' THEN grants.priv END), -1)
+                        THEN 1 ELSE 0 END AS ViaGroup
+            FROM security_application a
+            JOIN (
+                SELECT application_id, user_application_privilege AS priv, 'U' AS src
+                FROM security_user_application WHERE user_id = :id
+                UNION ALL
+                SELECT ga.application_id, ga.group_application_privilege AS priv, 'G' AS src
+                FROM security_group_application ga
+                JOIN security_user_group ug ON ug.user_group_id = ga.user_group_id
+                WHERE ug.user_id = :id
+            ) grants ON grants.application_id = a.application_id
+            GROUP BY a.application_id, a.application_name
+            ORDER BY a.application_name
+            """, new { id = userId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<SecurityUser> CreateSecurityUserAsync(SecurityUserWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "security_user", "user_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO security_user (user_id, login_id, user_last_name, user_first_name, user_middle_initial, user_status, user_notes, last_modified_date)
+            VALUES (:id, :login, :last, :first, :mi, :status, :notes, :modified)
+            """,
+            new { id, login = body.LoginId, last = body.UserLastName, first = body.UserFirstName, mi = body.UserMiddleInitial,
+                  status = body.UserStatus, notes = body.UserNotes, modified = (DateTime?)DateTime.UtcNow },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetSecurityUserAsync(id, ct))!;
+    }
+
+    public async Task<SecurityGroup> CreateSecurityGroupAsync(SecurityGroupWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "security_group", "user_group_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            "INSERT INTO security_group (user_group_id, group_name, group_notes) VALUES (:id, :name, :notes)",
+            new { id, name = body.GroupName, notes = body.GroupNotes }, transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await conn.QuerySingleAsync<SecurityGroup>(new CommandDefinition(
+            "SELECT user_group_id AS UserGroupId, group_name AS GroupName, group_notes AS GroupNotes FROM security_group WHERE user_group_id = :id",
+            new { id }, cancellationToken: ct)));
+    }
+
+    public async Task<SecurityApplication> CreateSecurityApplicationAsync(SecurityApplicationWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "security_application", "application_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            "INSERT INTO security_application (application_id, application_name, application_notes) VALUES (:id, :name, :notes)",
+            new { id, name = body.ApplicationName, notes = body.ApplicationNotes }, transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await conn.QuerySingleAsync<SecurityApplication>(new CommandDefinition(
+            "SELECT application_id AS ApplicationId, application_name AS ApplicationName, application_notes AS ApplicationNotes FROM security_application WHERE application_id = :id",
+            new { id }, cancellationToken: ct)));
+    }
+
+    // Upsert a user→application grant. Returns false if the user or application is missing.
+    public async Task<bool> SetUserApplicationGrantAsync(long userId, long applicationId, int privilege, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        if (!await ExistsAsync(conn, "security_user", "user_id", userId, ct) ||
+            !await ExistsAsync(conn, "security_application", "application_id", applicationId, ct)) return false;
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            "UPDATE security_user_application SET user_application_privilege = :priv WHERE user_id = :uid AND application_id = :aid",
+            new { priv = privilege, uid = userId, aid = applicationId }, cancellationToken: ct));
+        if (n == 0)
+            await conn.ExecuteAsync(new CommandDefinition(
+                "INSERT INTO security_user_application (user_id, application_id, user_application_privilege) VALUES (:uid, :aid, :priv)",
+                new { uid = userId, aid = applicationId, priv = privilege }, cancellationToken: ct));
+        return true;
+    }
+
+    public async Task<bool> SetGroupApplicationGrantAsync(long groupId, long applicationId, int privilege, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        if (!await ExistsAsync(conn, "security_group", "user_group_id", groupId, ct) ||
+            !await ExistsAsync(conn, "security_application", "application_id", applicationId, ct)) return false;
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            "UPDATE security_group_application SET group_application_privilege = :priv WHERE user_group_id = :gid AND application_id = :aid",
+            new { priv = privilege, gid = groupId, aid = applicationId }, cancellationToken: ct));
+        if (n == 0)
+            await conn.ExecuteAsync(new CommandDefinition(
+                "INSERT INTO security_group_application (application_id, user_group_id, group_application_privilege) VALUES (:aid, :gid, :priv)",
+                new { aid = applicationId, gid = groupId, priv = privilege }, cancellationToken: ct));
+        return true;
+    }
+
+    public async Task<bool> AddUserToGroupAsync(long userId, long groupId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        if (!await ExistsAsync(conn, "security_user", "user_id", userId, ct) ||
+            !await ExistsAsync(conn, "security_group", "user_group_id", groupId, ct)) return false;
+        // Idempotent: only insert if the membership is absent.
+        var exists = await conn.ExecuteScalarAsync<long>(new CommandDefinition(
+            "SELECT COUNT(*) FROM security_user_group WHERE user_id = :uid AND user_group_id = :gid",
+            new { uid = userId, gid = groupId }, cancellationToken: ct));
+        if (exists == 0)
+            await conn.ExecuteAsync(new CommandDefinition(
+                "INSERT INTO security_user_group (user_id, user_group_id) VALUES (:uid, :gid)",
+                new { uid = userId, gid = groupId }, cancellationToken: ct));
+        return true;
+    }
+
+    public async Task<bool> RemoveUserFromGroupAsync(long userId, long groupId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            "DELETE FROM security_user_group WHERE user_id = :uid AND user_group_id = :gid",
+            new { uid = userId, gid = groupId }, cancellationToken: ct));
+        return n > 0;
+    }
+
+    private static async Task<bool> ExistsAsync(DbConnection conn, string table, string idCol, long id, CancellationToken ct) =>
+        await conn.ExecuteScalarAsync<long>(new CommandDefinition(
+            $"SELECT COUNT(*) FROM {table} WHERE {idCol} = :id", new { id }, cancellationToken: ct)) > 0;
+
     public async Task<IReadOnlyList<ScrapType>> GetScrapTypesAsync(CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);

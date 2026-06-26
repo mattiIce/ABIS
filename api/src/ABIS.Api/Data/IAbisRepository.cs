@@ -81,6 +81,21 @@ public interface IAbisRepository
     Task<IReadOnlyList<TransferableCoil>> GetTransferableCoilsAsync(long? customerId, string? search, CancellationToken ct);
     Task<CoilOwnershipTransfer?> CreateCoilOwnershipTransferAsync(CoilOwnershipTransferWrite body, CancellationToken ct);
 
+    // ---- Security / authorization -------------------------------------
+    Task<IReadOnlyList<SecurityUser>> GetSecurityUsersAsync(CancellationToken ct);
+    Task<SecurityUser?> GetSecurityUserAsync(long userId, CancellationToken ct);
+    Task<IReadOnlyList<SecurityGroup>> GetSecurityGroupsAsync(CancellationToken ct);
+    Task<IReadOnlyList<SecurityApplication>> GetSecurityApplicationsAsync(CancellationToken ct);
+    Task<IReadOnlyList<SecurityGroup>> GetUserGroupsAsync(long userId, CancellationToken ct);
+    Task<IReadOnlyList<EffectivePermission>> GetUserEffectivePermissionsAsync(long userId, CancellationToken ct);
+    Task<SecurityUser> CreateSecurityUserAsync(SecurityUserWrite body, CancellationToken ct);
+    Task<SecurityGroup> CreateSecurityGroupAsync(SecurityGroupWrite body, CancellationToken ct);
+    Task<SecurityApplication> CreateSecurityApplicationAsync(SecurityApplicationWrite body, CancellationToken ct);
+    Task<bool> SetUserApplicationGrantAsync(long userId, long applicationId, int privilege, CancellationToken ct);
+    Task<bool> SetGroupApplicationGrantAsync(long groupId, long applicationId, int privilege, CancellationToken ct);
+    Task<bool> AddUserToGroupAsync(long userId, long groupId, CancellationToken ct);
+    Task<bool> RemoveUserFromGroupAsync(long userId, long groupId, CancellationToken ct);
+
     Task<IReadOnlyList<ScrapType>> GetScrapTypesAsync(CancellationToken ct);
     Task<IReadOnlyList<ProductType>> GetProductTypesAsync(CancellationToken ct);
     Task<IReadOnlyList<RecoveryCustomer>> GetRecoveryCustomersAsync(CancellationToken ct);

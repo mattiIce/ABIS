@@ -32,6 +32,10 @@ import {
   SalesReminderWrite,
   SalesProbabilityWrite,
   CoilOwnershipTransferWrite,
+  SecurityUserWrite,
+  SecurityGroupWrite,
+  SecurityApplicationWrite,
+  GrantWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -555,5 +559,72 @@ test('coil-ownership flow: createTransfer requires coil + new owner (typed)', as
   await assert.rejects(
     () => client.createCoilOwnershipTransfer(new CoilOwnershipTransferWrite({ notes: 'missing required' })),
     (err) => err?.status === 400 && !!err?.errors?.coilAbcNumOrig && !!err?.errors?.customerIdNew,
+  );
+});
+
+// The Security/authorization flow: the load-bearing effective-permission resolution
+// (MAX of direct + group grants), the admin reads, and the grant/membership writes.
+test('security flow: effective permissions = MAX(direct, group) (typed)', async () => {
+  // Seeded: jsmith(9001) in Operators(10). Operators grant: Order Entry=ReadOnly(0),
+  // Coil Inventory=Write(1). jsmith ALSO has a DIRECT Order Entry=Write(1) grant.
+  const perms = await client.getUserEffectivePermissions(9001);
+  const oe = perms.find((p) => p.applicationName === 'Order Entry');
+  const ci = perms.find((p) => p.applicationName === 'Coil Inventory');
+  assert.ok(oe && ci, 'both granted features present');
+  assert.equal(oe.privilege, 1);          // MAX(direct 1, group 0) = 1
+  assert.equal(oe.viaGroup, false);       // the direct grant tied the max
+  assert.equal(oe.privilegeLabel, 'Write');
+  assert.equal(ci.privilege, 1);          // group-only
+  assert.equal(ci.viaGroup, true);
+  // mlee(9002) in Admins(11): only User Control=Write.
+  const adminPerms = await client.getUserEffectivePermissions(9002);
+  assert.ok(adminPerms.some((p) => p.applicationName === 'User Control' && p.privilege === 1 && p.viaGroup === true));
+});
+
+test('security flow: admin reads — users, groups, applications, user groups (typed)', async () => {
+  const users = await client.getSecurityUsers();
+  assert.ok(users.some((u) => u.loginId === 'jsmith'));
+  const groups = await client.getSecurityGroups();
+  assert.ok(groups.some((g) => g.groupName === 'Operators'));
+  const apps = await client.getSecurityApplications();
+  assert.ok(apps.some((a) => a.applicationName === 'User Control'));
+  const jsmithGroups = await client.getUserGroups(9001);
+  assert.ok(jsmithGroups.some((g) => g.userGroupId === 10));
+});
+
+test('security flow: create user/group/app, grant + membership change perms (typed)', async () => {
+  const u = await client.createSecurityUser(new SecurityUserWrite({ loginId: 'e2euser', userFirstName: 'E2E', userLastName: 'User', userStatus: 1 }));
+  assert.ok(u.userId > 0);
+  const g = await client.createSecurityGroup(new SecurityGroupWrite({ groupName: 'E2E-Group' }));
+  const a = await client.createSecurityApplication(new SecurityApplicationWrite({ applicationName: 'E2E-Feature' }));
+
+  // New user has no permissions yet.
+  let perms = await client.getUserEffectivePermissions(u.userId);
+  assert.equal(perms.length, 0);
+
+  // Grant the group Write on the feature, then add the user to the group → user inherits it.
+  await client.setGroupApplicationGrant(g.userGroupId, a.applicationId, new GrantWrite({ privilege: 1 }));
+  await client.addUserToGroup(u.userId, g.userGroupId);
+  perms = await client.getUserEffectivePermissions(u.userId);
+  const feat = perms.find((p) => p.applicationName === 'E2E-Feature');
+  assert.ok(feat && feat.privilege === 1 && feat.viaGroup === true);
+
+  // A direct ReadOnly grant does NOT lower the effective Write (MAX wins).
+  await client.setUserApplicationGrant(u.userId, a.applicationId, new GrantWrite({ privilege: 0 }));
+  perms = await client.getUserEffectivePermissions(u.userId);
+  assert.equal(perms.find((p) => p.applicationName === 'E2E-Feature').privilege, 1);
+
+  // Remove from group → only the direct ReadOnly remains.
+  await client.removeUserFromGroup(u.userId, g.userGroupId);
+  perms = await client.getUserEffectivePermissions(u.userId);
+  const after = perms.find((p) => p.applicationName === 'E2E-Feature');
+  assert.ok(after && after.privilege === 0 && after.viaGroup === false);
+});
+
+// Grant against a missing user/application → 404.
+test('security flow: grant to missing user → 404 (typed)', async () => {
+  await assert.rejects(
+    () => client.setUserApplicationGrant(888888, 1, new GrantWrite({ privilege: 1 })),
+    (e) => e instanceof ApiException && e.status === 404,
   );
 });

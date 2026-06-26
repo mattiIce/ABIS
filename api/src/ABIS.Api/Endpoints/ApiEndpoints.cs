@@ -1028,6 +1028,82 @@ public static class ApiEndpoints
            .Produces<CoilOwnershipTransfer>(StatusCodes.Status201Created)
            .Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
+        // ---- Security / authorization (legacy security.pbl) ----
+        api.MapGet("/security/users", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetSecurityUsersAsync(ct)))
+           .WithName("GetSecurityUsers").WithTags("Security")
+           .WithSummary("The application user roster.").Produces<IReadOnlyList<SecurityUser>>();
+
+        api.MapGet("/security/users/{userId:long}", async (long userId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetSecurityUserAsync(userId, ct) is { } u ? Results.Ok(u) : Results.NotFound())
+           .WithName("GetSecurityUser").WithTags("Security")
+           .WithSummary("One application user.").Produces<SecurityUser>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapGet("/security/users/{userId:long}/groups", async (long userId, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetUserGroupsAsync(userId, ct)))
+           .WithName("GetUserGroups").WithTags("Security")
+           .WithSummary("The groups a user belongs to.").Produces<IReadOnlyList<SecurityGroup>>();
+
+        api.MapGet("/security/users/{userId:long}/permissions", async (long userId, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetUserEffectivePermissionsAsync(userId, ct)))
+           .WithName("GetUserEffectivePermissions").WithTags("Security")
+           .WithSummary("A user's effective per-feature permissions (MAX of direct + group grants).")
+           .Produces<IReadOnlyList<EffectivePermission>>();
+
+        api.MapGet("/security/groups", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetSecurityGroupsAsync(ct)))
+           .WithName("GetSecurityGroups").WithTags("Security")
+           .WithSummary("The security groups / roles.").Produces<IReadOnlyList<SecurityGroup>>();
+
+        api.MapGet("/security/applications", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetSecurityApplicationsAsync(ct)))
+           .WithName("GetSecurityApplications").WithTags("Security")
+           .WithSummary("The protected feature catalog.").Produces<IReadOnlyList<SecurityApplication>>();
+
+        api.MapPost("/security/users", async (SecurityUserWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (string.IsNullOrWhiteSpace(body.LoginId))
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["loginId"] = ["loginId is required."] });
+                var created = await repo.CreateSecurityUserAsync(body, ct);
+                return Results.Created($"/api/security/users/{created.UserId}", created);
+            })
+           .WithName("CreateSecurityUser").WithTags("Security")
+           .WithSummary("Create an application user.").Produces<SecurityUser>(StatusCodes.Status201Created).ProducesValidationProblem();
+
+        api.MapPost("/security/groups", async (SecurityGroupWrite body, IAbisRepository repo, CancellationToken ct) =>
+                Results.Created("/api/security/groups", await repo.CreateSecurityGroupAsync(body, ct)))
+           .WithName("CreateSecurityGroup").WithTags("Security")
+           .WithSummary("Create a security group.").Produces<SecurityGroup>(StatusCodes.Status201Created);
+
+        api.MapPost("/security/applications", async (SecurityApplicationWrite body, IAbisRepository repo, CancellationToken ct) =>
+                Results.Created("/api/security/applications", await repo.CreateSecurityApplicationAsync(body, ct)))
+           .WithName("CreateSecurityApplication").WithTags("Security")
+           .WithSummary("Create a protected feature.").Produces<SecurityApplication>(StatusCodes.Status201Created);
+
+        api.MapPut("/security/users/{userId:long}/applications/{applicationId:long}", async (long userId, long applicationId, GrantWrite body, IAbisRepository repo, CancellationToken ct) =>
+                await repo.SetUserApplicationGrantAsync(userId, applicationId, body.Privilege ?? 0, ct)
+                    ? Results.NoContent() : Results.NotFound())
+           .WithName("SetUserApplicationGrant").WithTags("Security")
+           .WithSummary("Set a user's privilege on a feature (0 = ReadOnly, 1 = Write).")
+           .Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound);
+
+        api.MapPut("/security/groups/{groupId:long}/applications/{applicationId:long}", async (long groupId, long applicationId, GrantWrite body, IAbisRepository repo, CancellationToken ct) =>
+                await repo.SetGroupApplicationGrantAsync(groupId, applicationId, body.Privilege ?? 0, ct)
+                    ? Results.NoContent() : Results.NotFound())
+           .WithName("SetGroupApplicationGrant").WithTags("Security")
+           .WithSummary("Set a group's privilege on a feature (0 = ReadOnly, 1 = Write).")
+           .Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound);
+
+        api.MapPost("/security/users/{userId:long}/groups/{groupId:long}", async (long userId, long groupId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.AddUserToGroupAsync(userId, groupId, ct) ? Results.NoContent() : Results.NotFound())
+           .WithName("AddUserToGroup").WithTags("Security")
+           .WithSummary("Add a user to a group.").Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound);
+
+        api.MapDelete("/security/users/{userId:long}/groups/{groupId:long}", async (long userId, long groupId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.RemoveUserFromGroupAsync(userId, groupId, ct) ? Results.NoContent() : Results.NotFound())
+           .WithName("RemoveUserFromGroup").WithTags("Security")
+           .WithSummary("Remove a user from a group.").Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound);
+
         api.MapGet("/scrap-skids", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? sort = null, string? dir = null) =>
             {
