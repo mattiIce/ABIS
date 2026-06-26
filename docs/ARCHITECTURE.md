@@ -89,6 +89,9 @@ Libraries grouped by domain (counts in [`OBJECT_INVENTORY.md`](OBJECT_INVENTORY.
 
 ## Integration surface (modernization risk hot-spots)
 
+> Precise inventory (transaction sets, the 29 `WSC32` serial calls, EDI tables
+> and trading partners) is catalogued in [`INTEGRATIONS.md`](INTEGRATIONS.md).
+
 These external couplings cannot simply be "moved to the cloud" and need explicit
 plans:
 

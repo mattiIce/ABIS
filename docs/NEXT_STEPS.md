@@ -45,14 +45,15 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
 ## Next steps, prioritized
 
 ### Blocked on environment (highest leverage — need the user)
-1. **Get DB access (connection string) or a DDL dump.** Unblocks:
-   - Validate the **Oracle** data path (CI only exercises SQLite today) — a
-     turnkey runbook + a secret-gated CI smoke job are ready in
-     [`ORACLE_VALIDATION.md`](ORACLE_VALIDATION.md); set the
-     `ORACLE_CONNECTION_STRING` secret to light up the `oracle-smoke` CI job.
-   - Replace the **partial/inferred schema** with the real one; confirm the
-     inferred `order_item.order_abc_num` FK and the `order_item_num` PK.
-   - Point the Phase-3 pilots at real data.
+1. ~~**Get DB access (connection string) or a DDL dump.**~~ **Done** — a live
+   non-prod Oracle 11g (`abc11`) connection was provided. This unblocked:
+   - ✅ **Oracle data path validated** — read *and* write/update paths exercised
+     live; three live-only bug classes found and fixed (see
+     [`ORACLE_VALIDATION.md`](ORACLE_VALIDATION.md)). A secret-gated `oracle-smoke`
+     CI job is still available via the `ORACLE_CONNECTION_STRING` secret.
+   - ✅ **Real schema recovered** — `DATA_MODEL.md` regenerated from the live
+     `DBO` dictionary (412 tables); the `order_item` composite key confirmed (#10).
+   - ⏳ Point the Phase-3 pilots at real data (Phase 3 — still ahead).
 2. **Locate/regenerate the 7 missing PFE/PFD libraries** (`PFE_ABC.PBL`,
    `pfemain.pbl`, …) so the legacy app builds — prerequisite for the PowerServer
    pilot. See [`ARCHITECTURE.md`](ARCHITECTURE.md) §build-readiness.
@@ -157,5 +158,6 @@ The codebase is deliberately uniform. To add a resource:
 | [`MODERNIZATION_ROADMAP.md`](MODERNIZATION_ROADMAP.md) | Strategy + phased checklist |
 | [`PHASE3_PILOT_PLAN.md`](PHASE3_PILOT_PLAN.md) | The PowerServer-vs-greenfield bake-off |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | As-is system, integration surface, build-readiness |
-| [`DATA_MODEL.md`](DATA_MODEL.md) | Recovered schema + inferred relationships |
+| [`INTEGRATIONS.md`](INTEGRATIONS.md) | External integration catalog (EDI, serial/WSC32, OPC) |
+| [`DATA_MODEL.md`](DATA_MODEL.md) | Full recovered schema (live Oracle, 412 tables) |
 | [`../api/README.md`](../api/README.md) | Run/test/auth, demo UIs, OpenAPI |

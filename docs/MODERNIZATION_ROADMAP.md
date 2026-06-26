@@ -25,8 +25,9 @@ ERP/MES). It is grounded in the analysis in
 
 - ✅ The app was **migrated onto a current, supported Appeon PowerBuilder**
   (Aug 2025) — see `lion_mig.log`. The end-of-life risk is already addressed.
-- ✅ **Discovery done** (this effort): reproducible extractors, a partial data
-  model, an object inventory, and this roadmap.
+- ✅ **Discovery done** (this effort): reproducible extractors, a **full data
+  model recovered from the live Oracle schema (412 tables)**, an object
+  inventory, and this roadmap.
 - ✅ **Phase 2 seam started**: a read-first ASP.NET Core API over the core
   entities, with tests and CI — see [`../api/`](../api/README.md).
 - ⚠️ **Not buildable as committed**: 7 PFE/PFD libraries referenced by the
@@ -72,10 +73,22 @@ the B-vs-C commitment until after a measured pilot.
 - [ ] **Export every PB object to text** from the IDE (`.srw`, `.srd`, `.sru`,
       `.srf`, `.srs`, `.srm`) and commit it, so git diffs become meaningful and
       the extractors can see the *whole* app, not just ~40 DataWindows.
-- [ ] **Introspect the real database** (or obtain DDL) and replace the partial
-      `DATA_MODEL.md` with full tables/PKs/FKs/indexes; confirm the inferred FKs.
-- [ ] Catalog all external integrations precisely (every `WSC32`/Win32 call,
-      every OPC tag, every EDI transaction set).
+      **← remaining blocker: needs the Windows PowerBuilder IDE (can't be done
+      in this environment).**
+- [x] **Introspect the real database** and replace the partial `DATA_MODEL.md`
+      with full tables/PKs/FKs/indexes. → Done: [`DATA_MODEL.md`](DATA_MODEL.md)
+      is regenerated from a live `DBO` data-dictionary dump by
+      [`../tools/ingest_oracle_schema.py`](../tools/ingest_oracle_schema.py) —
+      **412 tables, 335 PKs, 238 FKs, 82 sequences** with row counts
+      (machine-readable: `data-model/oracle_schema.json`; full DDL+PL/SQL:
+      `data-model/oracle_ddl.sql`). The inferred `order_item` composite key was
+      confirmed and corrected (#10).
+- [~] Catalog all external integrations precisely (every `WSC32`/Win32 call,
+      every OPC tag, every EDI transaction set). → **EDI** catalogued in
+      [`INTEGRATIONS.md`](INTEGRATIONS.md) from the X12/EDI schema + the EDI DB
+      procedures in `oracle_ddl.sql`. The full per-call **WSC32/OPC** inventory
+      still needs the PB source export (blocked, as above); the surface is mapped
+      in [`ARCHITECTURE.md`](ARCHITECTURE.md) §Integration surface.
 
 ### Phase 2 — Build the seam (the missing API tier)  *(in progress)*
 - [x] Stand up a **REST API** over the existing database (read-first), starting
