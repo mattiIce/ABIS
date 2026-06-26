@@ -45,11 +45,18 @@ ERP/MES). It is grounded in the analysis in
 | **C. Incremental greenfield rewrite (strangler-fig)** | Build a new web app + REST API; migrate one module at a time; both run against the same DB during transition | Real modernization; testable; cloud-ready; hire-able stack | Highest effort; must re-derive business rules from compiled code |
 | **D. Hybrid (recommended)** | Phase 0–2 below are common to all; *then* pilot **B** for a low-risk module to measure reuse, and **C** for a high-value module, and choose per-module | Keeps options open; lets data (not opinion) pick the path; immediate value | Requires discipline to avoid two parallel stacks long-term |
 
-**Recommendation: D (Hybrid), starting with the foundation phases.** The
-foundation work (below) is mandatory under *every* option, delivers value
-immediately, and is the only part fully doable in this Linux/CI environment
-(the PB-native paths additionally require the Windows PowerBuilder IDE). Defer
-the B-vs-C commitment until after a measured pilot.
+**Original recommendation: D (Hybrid)** — pilot both paths, decide per module.
+
+> **Decision (2026-06-26): commit to Path C (greenfield) and drop Path B
+> (PowerServer).** After Phases 0–2 delivered and validated the API seam, and the
+> Path C `order_entry` pilot ran successfully against the live DB
+> ([`PHASE3_PILOT_LOG.md`](PHASE3_PILOT_LOG.md)), the team chose to build and own a
+> modern stack rather than evaluate Appeon's auto-migration. **PowerServer is no
+> longer needed** (no license, no Appeon lock-in, no DataWindow-shaped UI). The
+> Windows **PB IDE is now optional** — useful only as a *reference* for recovering
+> business rules (the DB-side PL/SQL is already in the repo as text). This makes
+> Phase 3 a greenfield build rather than a bake-off, and points straight at Phase 4
+> (module-by-module migration on our own stack).
 
 ## Phased plan
 

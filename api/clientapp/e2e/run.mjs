@@ -61,3 +61,14 @@ test('createOrderWithItems writes via typed DTOs and returns a typed OrderDetail
   assert.equal(detail.items.length, 1);
   assert.equal(detail.items[0].enduserPartNum, 'PN-E2E');
 });
+
+// The order-entry SPA's read flow: search → open an order's full detail.
+test('order-entry read flow: listOrders then getOrderDetail (typed)', async () => {
+  const page = await client.listOrders(1, 25, undefined, undefined, undefined, undefined);
+  assert.ok(page.totalCount >= 1);
+  assert.ok(page.items.length >= 1);
+  const id = page.items[0].orderAbcNum;
+  const detail = await client.getOrderDetail(id);
+  assert.equal(detail.order.orderAbcNum, id);
+  assert.ok(Array.isArray(detail.items));
+});

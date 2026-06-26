@@ -12,6 +12,7 @@ export class AbisClient {
         this.baseUrl = baseUrl ?? "";
     }
     /**
+     * List the action/audit log, newest first.
      * @param page (optional)
      * @param pageSize (optional)
      * @param source (optional)
@@ -88,6 +89,259 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List carriers / trucking partners (paged, sortable; filter by status).
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param status (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listCarriers(page, pageSize, status, sort, dir) {
+        let url_ = this.baseUrl + "/api/carriers?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (status === null)
+            throw new globalThis.Error("The parameter 'status' cannot be null.");
+        else if (status !== undefined)
+            url_ += "status=" + encodeURIComponent("" + status) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListCarriers(_response);
+        });
+    }
+    processListCarriers(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = CarrierPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Create a carrier (server-assigned id; requires carrierFullName).
+     * @return Created
+     */
+    createCarrier(body) {
+        let url_ = this.baseUrl + "/api/carriers";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateCarrier(_response);
+        });
+    }
+    processCreateCarrier(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = Carrier.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Get one carrier by id.
+     * @return OK
+     */
+    getCarrier(carrierId) {
+        let url_ = this.baseUrl + "/api/carriers/{carrierId}";
+        if (carrierId === undefined || carrierId === null)
+            throw new globalThis.Error("The parameter 'carrierId' must be defined.");
+        url_ = url_.replace("{carrierId}", encodeURIComponent("" + carrierId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetCarrier(_response);
+        });
+    }
+    processGetCarrier(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Carrier.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Replace a carrier. Supports If-Match.
+     * @return OK
+     */
+    updateCarrier(carrierId, body) {
+        let url_ = this.baseUrl + "/api/carriers/{carrierId}";
+        if (carrierId === undefined || carrierId === null)
+            throw new globalThis.Error("The parameter 'carrierId' must be defined.");
+        url_ = url_.replace("{carrierId}", encodeURIComponent("" + carrierId));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processUpdateCarrier(_response);
+        });
+    }
+    processUpdateCarrier(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Carrier.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List raw input coils (paged, filterable, sortable).
      * @param page (optional)
      * @param pageSize (optional)
      * @param status (optional)
@@ -179,6 +433,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Create a coil on receipt.
      * @return Created
      */
     createCoil(body) {
@@ -233,6 +488,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Coil inventory weight rollup grouped by alloy or location.
      * @param groupBy (optional)
      * @return OK
      */
@@ -296,6 +552,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Get one coil by id.
      * @return OK
      */
     getCoil(coilAbcNum) {
@@ -347,6 +604,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Update a coil's status, location, or notes. Supports If-Match.
      * @return OK
      */
     patchCoil(coilAbcNum, body) {
@@ -393,6 +651,11 @@ export class AbisClient {
                 return throwException("Not Found", status, _responseText, _headers);
             });
         }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
         else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
                 return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -401,6 +664,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List a coil's processing history (the jobs that consumed it).
      * @return OK
      */
     getCoilProcessing(coilAbcNum) {
@@ -454,6 +718,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List customers (paged, sortable).
      * @param page (optional)
      * @param pageSize (optional)
      * @param name (optional)
@@ -530,6 +795,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Create a customer.
      * @return Created
      */
     createCustomer(body) {
@@ -584,6 +850,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Get one customer by id.
      * @return OK
      */
     getCustomer(customerId) {
@@ -635,6 +902,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Replace a customer. Supports If-Match.
      * @return OK
      */
     updateCustomer(customerId, body) {
@@ -689,6 +957,11 @@ export class AbisClient {
                 return throwException("Not Found", status, _responseText, _headers);
             });
         }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
         else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
                 return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -697,6 +970,959 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List the contacts for a customer.
+     * @return OK
+     */
+    getCustomerContacts(customerId) {
+        let url_ = this.baseUrl + "/api/customers/{customerId}/contacts";
+        if (customerId === undefined || customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' must be defined.");
+        url_ = url_.replace("{customerId}", encodeURIComponent("" + customerId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetCustomerContacts(_response);
+        });
+    }
+    processGetCustomerContacts(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(CustomerContact.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Add a contact to a customer (server-assigned id; requires lastName).
+     * @return Created
+     */
+    createCustomerContact(customerId, body) {
+        let url_ = this.baseUrl + "/api/customers/{customerId}/contacts";
+        if (customerId === undefined || customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' must be defined.");
+        url_ = url_.replace("{customerId}", encodeURIComponent("" + customerId));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateCustomerContact(_response);
+        });
+    }
+    processCreateCustomerContact(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = CustomerContact.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Get one customer contact by id.
+     * @return OK
+     */
+    getCustomerContact(contactId) {
+        let url_ = this.baseUrl + "/api/customer-contacts/{contactId}";
+        if (contactId === undefined || contactId === null)
+            throw new globalThis.Error("The parameter 'contactId' must be defined.");
+        url_ = url_.replace("{contactId}", encodeURIComponent("" + contactId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetCustomerContact(_response);
+        });
+    }
+    processGetCustomerContact(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = CustomerContact.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Replace a customer contact (owning customer unchanged). Supports If-Match.
+     * @return OK
+     */
+    updateCustomerContact(contactId, body) {
+        let url_ = this.baseUrl + "/api/customer-contacts/{contactId}";
+        if (contactId === undefined || contactId === null)
+            throw new globalThis.Error("The parameter 'contactId' must be defined.");
+        url_ = url_.replace("{contactId}", encodeURIComponent("" + contactId));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processUpdateCustomerContact(_response);
+        });
+    }
+    processUpdateCustomerContact(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = CustomerContact.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List dies/tooling (paged, sortable; filter by status).
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param status (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listDies(page, pageSize, status, sort, dir) {
+        let url_ = this.baseUrl + "/api/dies?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (status === null)
+            throw new globalThis.Error("The parameter 'status' cannot be null.");
+        else if (status !== undefined)
+            url_ += "status=" + encodeURIComponent("" + status) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListDies(_response);
+        });
+    }
+    processListDies(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = DiePagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Create a die/tooling record (server-assigned id; requires dieName).
+     * @return Created
+     */
+    createDie(body) {
+        let url_ = this.baseUrl + "/api/dies";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateDie(_response);
+        });
+    }
+    processCreateDie(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = Die.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Get one die by id.
+     * @return OK
+     */
+    getDie(dieId) {
+        let url_ = this.baseUrl + "/api/dies/{dieId}";
+        if (dieId === undefined || dieId === null)
+            throw new globalThis.Error("The parameter 'dieId' must be defined.");
+        url_ = url_.replace("{dieId}", encodeURIComponent("" + dieId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetDie(_response);
+        });
+    }
+    processGetDie(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Die.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Replace a die/tooling record. Supports If-Match.
+     * @return OK
+     */
+    updateDie(dieId, body) {
+        let url_ = this.baseUrl + "/api/dies/{dieId}";
+        if (dieId === undefined || dieId === null)
+            throw new globalThis.Error("The parameter 'dieId' must be defined.");
+        url_ = url_.replace("{dieId}", encodeURIComponent("" + dieId));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processUpdateDie(_response);
+        });
+    }
+    processUpdateDie(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Die.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List downtime instances, newest first (paged, sortable; filter by abJobNum/shiftNum).
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param abJobNum (optional)
+     * @param shiftNum (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listDowntime(page, pageSize, abJobNum, shiftNum, sort, dir) {
+        let url_ = this.baseUrl + "/api/downtime?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (abJobNum === null)
+            throw new globalThis.Error("The parameter 'abJobNum' cannot be null.");
+        else if (abJobNum !== undefined)
+            url_ += "abJobNum=" + encodeURIComponent("" + abJobNum) + "&";
+        if (shiftNum === null)
+            throw new globalThis.Error("The parameter 'shiftNum' cannot be null.");
+        else if (shiftNum !== undefined)
+            url_ += "shiftNum=" + encodeURIComponent("" + shiftNum) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListDowntime(_response);
+        });
+    }
+    processListDowntime(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = DowntimeInstancePagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Log a downtime instance.
+     * @return Created
+     */
+    createDowntimeInstance(body) {
+        let url_ = this.baseUrl + "/api/downtime";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateDowntimeInstance(_response);
+        });
+    }
+    processCreateDowntimeInstance(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = DowntimeInstance.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Get one downtime instance by id.
+     * @return OK
+     */
+    getDowntimeInstance(instanceNum) {
+        let url_ = this.baseUrl + "/api/downtime/{instanceNum}";
+        if (instanceNum === undefined || instanceNum === null)
+            throw new globalThis.Error("The parameter 'instanceNum' must be defined.");
+        url_ = url_.replace("{instanceNum}", encodeURIComponent("" + instanceNum));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetDowntimeInstance(_response);
+        });
+    }
+    processGetDowntimeInstance(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = DowntimeInstance.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Replace a downtime instance. Supports If-Match.
+     * @return OK
+     */
+    updateDowntimeInstance(instanceNum, body) {
+        let url_ = this.baseUrl + "/api/downtime/{instanceNum}";
+        if (instanceNum === undefined || instanceNum === null)
+            throw new globalThis.Error("The parameter 'instanceNum' must be defined.");
+        url_ = url_.replace("{instanceNum}", encodeURIComponent("" + instanceNum));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processUpdateDowntimeInstance(_response);
+        });
+    }
+    processUpdateDowntimeInstance(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = DowntimeInstance.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List outbound EDI transactions, newest first (paged, sortable; filter by customerId/transactionTypeId).
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param customerId (optional)
+     * @param transactionTypeId (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listEdiTransactions(page, pageSize, customerId, transactionTypeId, sort, dir) {
+        let url_ = this.baseUrl + "/api/edi/transactions?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' cannot be null.");
+        else if (customerId !== undefined)
+            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        if (transactionTypeId === null)
+            throw new globalThis.Error("The parameter 'transactionTypeId' cannot be null.");
+        else if (transactionTypeId !== undefined)
+            url_ += "transactionTypeId=" + encodeURIComponent("" + transactionTypeId) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListEdiTransactions(_response);
+        });
+    }
+    processListEdiTransactions(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = EdiTransactionPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Get one outbound EDI transaction by its EDI file id.
+     * @return OK
+     */
+    getEdiTransaction(ediFileId) {
+        let url_ = this.baseUrl + "/api/edi/transactions/{ediFileId}";
+        if (ediFileId === undefined || ediFileId === null)
+            throw new globalThis.Error("The parameter 'ediFileId' must be defined.");
+        url_ = url_.replace("{ediFileId}", encodeURIComponent("" + ediFileId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetEdiTransaction(_response);
+        });
+    }
+    processGetEdiTransaction(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = EdiTransaction.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List EDI transmission-log entries, newest first (paged, sortable; filter by customerId).
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param customerId (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listEdiLog(page, pageSize, customerId, sort, dir) {
+        let url_ = this.baseUrl + "/api/edi/log?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' cannot be null.");
+        else if (customerId !== undefined)
+            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListEdiLog(_response);
+        });
+    }
+    processListEdiLog(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = EdiLogEntryPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List production jobs (paged, filterable by status, sortable).
      * @param page (optional)
      * @param pageSize (optional)
      * @param status (optional)
@@ -773,6 +1999,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Create a production job.
      * @return Created
      */
     createJob(body) {
@@ -819,6 +2046,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Get one production job by id.
      * @return OK
      */
     getJob(abJobNum) {
@@ -870,6 +2098,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Update a job's status, notes, men, or finish time. Supports If-Match.
      * @return OK
      */
     patchJob(abJobNum, body) {
@@ -916,6 +2145,11 @@ export class AbisClient {
                 return throwException("Not Found", status, _responseText, _headers);
             });
         }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
         else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
                 return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -924,6 +2158,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List the coils a job has processed.
      * @return OK
      */
     getJobCoils(abJobNum) {
@@ -977,6 +2212,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List the finished sheet skids produced by a job.
      * @return OK
      */
     getJobSkids(abJobNum) {
@@ -1030,6 +2266,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List the scrap skids generated by a job.
      * @return OK
      */
     getJobScrap(abJobNum) {
@@ -1083,6 +2320,115 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List a job's in-process partial skids.
+     * @return OK
+     */
+    getJobPartialSkids(abJobNum) {
+        let url_ = this.baseUrl + "/api/jobs/{abJobNum}/partial-skids";
+        if (abJobNum === undefined || abJobNum === null)
+            throw new globalThis.Error("The parameter 'abJobNum' must be defined.");
+        url_ = url_.replace("{abJobNum}", encodeURIComponent("" + abJobNum));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetJobPartialSkids(_response);
+        });
+    }
+    processGetJobPartialSkids(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(PartialSkid.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List shop-floor scan events for a job.
+     * @return OK
+     */
+    getJobScans(abJobNum) {
+        let url_ = this.baseUrl + "/api/jobs/{abJobNum}/scans";
+        if (abJobNum === undefined || abJobNum === null)
+            throw new globalThis.Error("The parameter 'abJobNum' must be defined.");
+        url_ = url_.replace("{abJobNum}", encodeURIComponent("" + abJobNum));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetJobScans(_response);
+        });
+    }
+    processGetJobScans(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(ScanLog.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List distinct alloys (reference data for dropdowns).
      * @return OK
      */
     listAlloys() {
@@ -1133,6 +2479,672 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List production lines (referenced by jobs, coils, downtime).
+     * @return OK
+     */
+    listLines() {
+        let url_ = this.baseUrl + "/api/lookups/lines";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListLines(_response);
+        });
+    }
+    processListLines(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(ProductionLine.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List maintenance groups/departments (referenced by maintenance logs).
+     * @return OK
+     */
+    listGroupDepartments() {
+        let url_ = this.baseUrl + "/api/lookups/groupdepartments";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListGroupDepartments(_response);
+        });
+    }
+    processListGroupDepartments(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(GroupDepartment.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List downtime causes/reasons (master data for the downtime feature).
+     * @return OK
+     */
+    listDowntimeCauses() {
+        let url_ = this.baseUrl + "/api/lookups/downtime-causes";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListDowntimeCauses(_response);
+        });
+    }
+    processListDowntimeCauses(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(DowntimeCause.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List transportation method codes (referenced by shipments).
+     * @return OK
+     */
+    listTransportationMethods() {
+        let url_ = this.baseUrl + "/api/lookups/transportation-methods";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListTransportationMethods(_response);
+        });
+    }
+    processListTransportationMethods(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(TransportationMethod.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List shipping equipment type codes (referenced by shipments).
+     * @return OK
+     */
+    listEquipmentTypes() {
+        let url_ = this.baseUrl + "/api/lookups/equipment-types";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListEquipmentTypes(_response);
+        });
+    }
+    processListEquipmentTypes(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(EquipmentType.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List customer classifications (referenced by customers).
+     * @return OK
+     */
+    listCustomerTypes() {
+        let url_ = this.baseUrl + "/api/lookups/customer-types";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListCustomerTypes(_response);
+        });
+    }
+    processListCustomerTypes(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(CustomerType.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List EDI transaction-set types and X12 versions (table edi_type).
+     * @return OK
+     */
+    listEdiTypes() {
+        let url_ = this.baseUrl + "/api/lookups/edi-types";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListEdiTypes(_response);
+        });
+    }
+    processListEdiTypes(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(EdiType.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List customer EDI trading-partner configuration (table customer_edi).
+     * @return OK
+     */
+    listCustomerEdi() {
+        let url_ = this.baseUrl + "/api/lookups/customer-edi";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListCustomerEdi(_response);
+        });
+    }
+    processListCustomerEdi(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(CustomerEdi.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List maintenance log entries, newest first (paged, sortable; filter by status/groupDepartmentId).
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param status (optional)
+     * @param groupDepartmentId (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listMaintLogs(page, pageSize, status, groupDepartmentId, sort, dir) {
+        let url_ = this.baseUrl + "/api/maint-logs?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (status === null)
+            throw new globalThis.Error("The parameter 'status' cannot be null.");
+        else if (status !== undefined)
+            url_ += "status=" + encodeURIComponent("" + status) + "&";
+        if (groupDepartmentId === null)
+            throw new globalThis.Error("The parameter 'groupDepartmentId' cannot be null.");
+        else if (groupDepartmentId !== undefined)
+            url_ += "groupDepartmentId=" + encodeURIComponent("" + groupDepartmentId) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListMaintLogs(_response);
+        });
+    }
+    processListMaintLogs(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = MaintLogPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Create a maintenance log entry (requires probDateTime, probDetails, author).
+     * @return Created
+     */
+    createMaintLog(body) {
+        let url_ = this.baseUrl + "/api/maint-logs";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateMaintLog(_response);
+        });
+    }
+    processCreateMaintLog(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = MaintLog.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Get one maintenance log entry by id.
+     * @return OK
+     */
+    getMaintLog(maintLogId) {
+        let url_ = this.baseUrl + "/api/maint-logs/{maintLogId}";
+        if (maintLogId === undefined || maintLogId === null)
+            throw new globalThis.Error("The parameter 'maintLogId' must be defined.");
+        url_ = url_.replace("{maintLogId}", encodeURIComponent("" + maintLogId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetMaintLog(_response);
+        });
+    }
+    processGetMaintLog(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = MaintLog.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Replace a maintenance log entry. Supports If-Match.
+     * @return OK
+     */
+    updateMaintLog(maintLogId, body) {
+        let url_ = this.baseUrl + "/api/maint-logs/{maintLogId}";
+        if (maintLogId === undefined || maintLogId === null)
+            throw new globalThis.Error("The parameter 'maintLogId' must be defined.");
+        url_ = url_.replace("{maintLogId}", encodeURIComponent("" + maintLogId));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processUpdateMaintLog(_response);
+        });
+    }
+    processUpdateMaintLog(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = MaintLog.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Service info, version, and links.
      * @return OK
      */
     root() {
@@ -1166,6 +3178,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Liveness probe — the process is up.
      * @return OK
      */
     health() {
@@ -1199,6 +3212,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Readiness probe — verifies database connectivity (503 when unreachable).
      * @return OK
      */
     ready() {
@@ -1237,6 +3251,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List order line items (paged, sortable).
      * @param page (optional)
      * @param pageSize (optional)
      * @param alloy (optional)
@@ -1313,64 +3328,14 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
-     * @return Created
-     */
-    createOrderItem(body) {
-        let url_ = this.baseUrl + "/api/order-items";
-        url_ = url_.replace(/[?&]$/, "");
-        const content_ = JSON.stringify(body);
-        let options_ = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-        return this.http.fetch(url_, options_).then((_response) => {
-            return this.processCreateOrderItem(_response);
-        });
-    }
-    processCreateOrderItem(response) {
-        const status = response.status;
-        let _headers = {};
-        if (response.headers && response.headers.forEach) {
-            response.headers.forEach((v, k) => _headers[k] = v);
-        }
-        ;
-        if (status === 201) {
-            return response.text().then((_responseText) => {
-                let result201 = null;
-                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result201 = OrderItem.fromJS(resultData201);
-                return result201;
-            });
-        }
-        else if (status === 400) {
-            return response.text().then((_responseText) => {
-                let result400 = null;
-                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result400 = HttpValidationProblemDetails.fromJS(resultData400);
-                return throwException("Bad Request", status, _responseText, _headers, result400);
-            });
-        }
-        else if (status === 401) {
-            return response.text().then((_responseText) => {
-                return throwException("Unauthorized", status, _responseText, _headers);
-            });
-        }
-        else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve(null);
-    }
-    /**
+     * Get one order line item by its composite key (order + line number).
      * @return OK
      */
-    getOrderItem(orderItemNum) {
-        let url_ = this.baseUrl + "/api/order-items/{orderItemNum}";
+    getOrderItem(orderAbcNum, orderItemNum) {
+        let url_ = this.baseUrl + "/api/orders/{orderAbcNum}/items/{orderItemNum}";
+        if (orderAbcNum === undefined || orderAbcNum === null)
+            throw new globalThis.Error("The parameter 'orderAbcNum' must be defined.");
+        url_ = url_.replace("{orderAbcNum}", encodeURIComponent("" + orderAbcNum));
         if (orderItemNum === undefined || orderItemNum === null)
             throw new globalThis.Error("The parameter 'orderItemNum' must be defined.");
         url_ = url_.replace("{orderItemNum}", encodeURIComponent("" + orderItemNum));
@@ -1418,10 +3383,14 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Replace an order line item (by order + line number). Supports If-Match.
      * @return OK
      */
-    updateOrderItem(orderItemNum, body) {
-        let url_ = this.baseUrl + "/api/order-items/{orderItemNum}";
+    updateOrderItem(orderAbcNum, orderItemNum, body) {
+        let url_ = this.baseUrl + "/api/orders/{orderAbcNum}/items/{orderItemNum}";
+        if (orderAbcNum === undefined || orderAbcNum === null)
+            throw new globalThis.Error("The parameter 'orderAbcNum' must be defined.");
+        url_ = url_.replace("{orderAbcNum}", encodeURIComponent("" + orderAbcNum));
         if (orderItemNum === undefined || orderItemNum === null)
             throw new globalThis.Error("The parameter 'orderItemNum' must be defined.");
         url_ = url_.replace("{orderItemNum}", encodeURIComponent("" + orderItemNum));
@@ -1472,6 +3441,11 @@ export class AbisClient {
                 return throwException("Not Found", status, _responseText, _headers);
             });
         }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
         else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
                 return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1480,6 +3454,119 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Add a line item to an order (line number assigned per order).
+     * @return Created
+     */
+    createOrderItem(orderAbcNum, body) {
+        let url_ = this.baseUrl + "/api/orders/{orderAbcNum}/items";
+        if (orderAbcNum === undefined || orderAbcNum === null)
+            throw new globalThis.Error("The parameter 'orderAbcNum' must be defined.");
+        url_ = url_.replace("{orderAbcNum}", encodeURIComponent("" + orderAbcNum));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateOrderItem(_response);
+        });
+    }
+    processCreateOrderItem(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = OrderItem.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List the line items for an order.
+     * @return OK
+     */
+    getOrderItemsForOrder(orderAbcNum) {
+        let url_ = this.baseUrl + "/api/orders/{orderAbcNum}/items";
+        if (orderAbcNum === undefined || orderAbcNum === null)
+            throw new globalThis.Error("The parameter 'orderAbcNum' must be defined.");
+        url_ = url_.replace("{orderAbcNum}", encodeURIComponent("" + orderAbcNum));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetOrderItemsForOrder(_response);
+        });
+    }
+    processGetOrderItemsForOrder(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(OrderItem.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List customer orders (paged, filterable, sortable).
      * @param page (optional)
      * @param pageSize (optional)
      * @param customerId (optional)
@@ -1561,6 +3648,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Create an order header.
      * @return Created
      */
     createOrder(body) {
@@ -1594,6 +3682,14 @@ export class AbisClient {
                 return result201;
             });
         }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
         else if (status === 401) {
             return response.text().then((_responseText) => {
                 return throwException("Unauthorized", status, _responseText, _headers);
@@ -1607,6 +3703,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Get one order header by id.
      * @return OK
      */
     getOrder(orderAbcNum) {
@@ -1658,6 +3755,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Replace an order header. Supports If-Match.
      * @return OK
      */
     updateOrder(orderAbcNum, body) {
@@ -1694,6 +3792,14 @@ export class AbisClient {
                 return result200;
             });
         }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
         else if (status === 401) {
             return response.text().then((_responseText) => {
                 return throwException("Unauthorized", status, _responseText, _headers);
@@ -1704,57 +3810,9 @@ export class AbisClient {
                 return throwException("Not Found", status, _responseText, _headers);
             });
         }
-        else if (status !== 200 && status !== 204) {
+        else if (status === 412) {
             return response.text().then((_responseText) => {
-                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve(null);
-    }
-    /**
-     * @return OK
-     */
-    getOrderItemsForOrder(orderAbcNum) {
-        let url_ = this.baseUrl + "/api/orders/{orderAbcNum}/items";
-        if (orderAbcNum === undefined || orderAbcNum === null)
-            throw new globalThis.Error("The parameter 'orderAbcNum' must be defined.");
-        url_ = url_.replace("{orderAbcNum}", encodeURIComponent("" + orderAbcNum));
-        url_ = url_.replace(/[?&]$/, "");
-        let options_ = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-        return this.http.fetch(url_, options_).then((_response) => {
-            return this.processGetOrderItemsForOrder(_response);
-        });
-    }
-    processGetOrderItemsForOrder(response) {
-        const status = response.status;
-        let _headers = {};
-        if (response.headers && response.headers.forEach) {
-            response.headers.forEach((v, k) => _headers[k] = v);
-        }
-        ;
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-                let result200 = null;
-                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                if (Array.isArray(resultData200)) {
-                    result200 = [];
-                    for (let item of resultData200)
-                        result200.push(OrderItem.fromJS(item));
-                }
-                else {
-                    result200 = null;
-                }
-                return result200;
-            });
-        }
-        else if (status === 401) {
-            return response.text().then((_responseText) => {
-                return throwException("Unauthorized", status, _responseText, _headers);
+                return throwException("Precondition Failed", status, _responseText, _headers);
             });
         }
         else if (status !== 200 && status !== 204) {
@@ -1765,6 +3823,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Get an order with its customer and line items (order-entry read model).
      * @return OK
      */
     getOrderDetail(orderAbcNum) {
@@ -1816,6 +3875,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Create an order header and its line items in one transaction.
      * @return Created
      */
     createOrderWithItems(body) {
@@ -1870,6 +3930,1521 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List part-number master records (paged, sortable; filter by customerId/alloy).
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param customerId (optional)
+     * @param alloy (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listParts(page, pageSize, customerId, alloy, sort, dir) {
+        let url_ = this.baseUrl + "/api/parts?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' cannot be null.");
+        else if (customerId !== undefined)
+            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        if (alloy === null)
+            throw new globalThis.Error("The parameter 'alloy' cannot be null.");
+        else if (alloy !== undefined)
+            url_ += "alloy=" + encodeURIComponent("" + alloy) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListParts(_response);
+        });
+    }
+    processListParts(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = PartPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Create a part-number record (server-assigned id; requires customerId).
+     * @return Created
+     */
+    createPart(body) {
+        let url_ = this.baseUrl + "/api/parts";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreatePart(_response);
+        });
+    }
+    processCreatePart(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = Part.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Get one part-number record by id.
+     * @return OK
+     */
+    getPart(partNumId) {
+        let url_ = this.baseUrl + "/api/parts/{partNumId}";
+        if (partNumId === undefined || partNumId === null)
+            throw new globalThis.Error("The parameter 'partNumId' must be defined.");
+        url_ = url_.replace("{partNumId}", encodeURIComponent("" + partNumId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetPart(_response);
+        });
+    }
+    processGetPart(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Part.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Replace a part-number record. Supports If-Match.
+     * @return OK
+     */
+    updatePart(partNumId, body) {
+        let url_ = this.baseUrl + "/api/parts/{partNumId}";
+        if (partNumId === undefined || partNumId === null)
+            throw new globalThis.Error("The parameter 'partNumId' must be defined.");
+        url_ = url_.replace("{partNumId}", encodeURIComponent("" + partNumId));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processUpdatePart(_response);
+        });
+    }
+    processUpdatePart(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Part.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List inbound receiving BOLs (paged, sortable; filter by customerId/status).
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param customerId (optional)
+     * @param status (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listReceivingBols(page, pageSize, customerId, status, sort, dir) {
+        let url_ = this.baseUrl + "/api/receiving-bols?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' cannot be null.");
+        else if (customerId !== undefined)
+            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        if (status === null)
+            throw new globalThis.Error("The parameter 'status' cannot be null.");
+        else if (status !== undefined)
+            url_ += "status=" + encodeURIComponent("" + status) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListReceivingBols(_response);
+        });
+    }
+    processListReceivingBols(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = ReceivingBolPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Create an inbound receiving BOL (requires bol and customerId).
+     * @return Created
+     */
+    createReceivingBol(body) {
+        let url_ = this.baseUrl + "/api/receiving-bols";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateReceivingBol(_response);
+        });
+    }
+    processCreateReceivingBol(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = ReceivingBol.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Get one receiving BOL by id.
+     * @return OK
+     */
+    getReceivingBol(receivingBolId) {
+        let url_ = this.baseUrl + "/api/receiving-bols/{receivingBolId}";
+        if (receivingBolId === undefined || receivingBolId === null)
+            throw new globalThis.Error("The parameter 'receivingBolId' must be defined.");
+        url_ = url_.replace("{receivingBolId}", encodeURIComponent("" + receivingBolId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetReceivingBol(_response);
+        });
+    }
+    processGetReceivingBol(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = ReceivingBol.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Replace a receiving BOL. Supports If-Match.
+     * @return OK
+     */
+    updateReceivingBol(receivingBolId, body) {
+        let url_ = this.baseUrl + "/api/receiving-bols/{receivingBolId}";
+        if (receivingBolId === undefined || receivingBolId === null)
+            throw new globalThis.Error("The parameter 'receivingBolId' must be defined.");
+        url_ = url_.replace("{receivingBolId}", encodeURIComponent("" + receivingBolId));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processUpdateReceivingBol(_response);
+        });
+    }
+    processUpdateReceivingBol(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = ReceivingBol.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List shop-floor scan events, newest first (paged, sortable; filter by abJobNum).
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param abJobNum (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listScanLogs(page, pageSize, abJobNum, sort, dir) {
+        let url_ = this.baseUrl + "/api/scan-logs?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (abJobNum === null)
+            throw new globalThis.Error("The parameter 'abJobNum' cannot be null.");
+        else if (abJobNum !== undefined)
+            url_ += "abJobNum=" + encodeURIComponent("" + abJobNum) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListScanLogs(_response);
+        });
+    }
+    processListScanLogs(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = ScanLogPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Record a shop-floor scan event (append-only; requires abJobNum, scanStation, note).
+     * @return Created
+     */
+    createScanLog(body) {
+        let url_ = this.baseUrl + "/api/scan-logs";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateScanLog(_response);
+        });
+    }
+    processCreateScanLog(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = ScanLog.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Get one scan event by id.
+     * @return OK
+     */
+    getScanLog(scanId) {
+        let url_ = this.baseUrl + "/api/scan-logs/{scanId}";
+        if (scanId === undefined || scanId === null)
+            throw new globalThis.Error("The parameter 'scanId' must be defined.");
+        url_ = url_.replace("{scanId}", encodeURIComponent("" + scanId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetScanLog(_response);
+        });
+    }
+    processGetScanLog(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = ScanLog.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List production shifts, newest first (paged, sortable; filter by lineNum).
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param lineNum (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listShifts(page, pageSize, lineNum, sort, dir) {
+        let url_ = this.baseUrl + "/api/shifts?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (lineNum === null)
+            throw new globalThis.Error("The parameter 'lineNum' cannot be null.");
+        else if (lineNum !== undefined)
+            url_ += "lineNum=" + encodeURIComponent("" + lineNum) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListShifts(_response);
+        });
+    }
+    processListShifts(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = ShiftPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Create a production shift.
+     * @return Created
+     */
+    createShift(body) {
+        let url_ = this.baseUrl + "/api/shifts";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateShift(_response);
+        });
+    }
+    processCreateShift(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = Shift.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Get one shift by id.
+     * @return OK
+     */
+    getShift(shiftNum) {
+        let url_ = this.baseUrl + "/api/shifts/{shiftNum}";
+        if (shiftNum === undefined || shiftNum === null)
+            throw new globalThis.Error("The parameter 'shiftNum' must be defined.");
+        url_ = url_.replace("{shiftNum}", encodeURIComponent("" + shiftNum));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetShift(_response);
+        });
+    }
+    processGetShift(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Shift.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Replace a production shift. Supports If-Match.
+     * @return OK
+     */
+    updateShift(shiftNum, body) {
+        let url_ = this.baseUrl + "/api/shifts/{shiftNum}";
+        if (shiftNum === undefined || shiftNum === null)
+            throw new globalThis.Error("The parameter 'shiftNum' must be defined.");
+        url_ = url_.replace("{shiftNum}", encodeURIComponent("" + shiftNum));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processUpdateShift(_response);
+        });
+    }
+    processUpdateShift(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Shift.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List shipments / packing lists (paged, sortable; filter by customerId).
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param customerId (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listShipments(page, pageSize, customerId, sort, dir) {
+        let url_ = this.baseUrl + "/api/shipments?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' cannot be null.");
+        else if (customerId !== undefined)
+            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListShipments(_response);
+        });
+    }
+    processListShipments(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = ShipmentPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Create a shipment header (packing-list and bill-of-lading numbers server-assigned).
+     * @return Created
+     */
+    createShipment(body) {
+        let url_ = this.baseUrl + "/api/shipments";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateShipment(_response);
+        });
+    }
+    processCreateShipment(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = Shipment.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Get one shipment by packing-list number.
+     * @return OK
+     */
+    getShipment(packingList) {
+        let url_ = this.baseUrl + "/api/shipments/{packingList}";
+        if (packingList === undefined || packingList === null)
+            throw new globalThis.Error("The parameter 'packingList' must be defined.");
+        url_ = url_.replace("{packingList}", encodeURIComponent("" + packingList));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetShipment(_response);
+        });
+    }
+    processGetShipment(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Shipment.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Replace a shipment header (packing-list and bill-of-lading numbers preserved). Supports If-Match.
+     * @return OK
+     */
+    updateShipment(packingList, body) {
+        let url_ = this.baseUrl + "/api/shipments/{packingList}";
+        if (packingList === undefined || packingList === null)
+            throw new globalThis.Error("The parameter 'packingList' must be defined.");
+        url_ = url_.replace("{packingList}", encodeURIComponent("" + packingList));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processUpdateShipment(_response);
+        });
+    }
+    processUpdateShipment(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Shipment.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Update a shipment's dispatch status (status, vehicle status, sent/actual times, notes). Supports If-Match.
+     * @return OK
+     */
+    patchShipment(packingList, body) {
+        let url_ = this.baseUrl + "/api/shipments/{packingList}";
+        if (packingList === undefined || packingList === null)
+            throw new globalThis.Error("The parameter 'packingList' must be defined.");
+        url_ = url_.replace("{packingList}", encodeURIComponent("" + packingList));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processPatchShipment(_response);
+        });
+    }
+    processPatchShipment(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Shipment.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List part sketches/drawings (paged, sortable; filter by status). Excludes the binary image.
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param status (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listSketches(page, pageSize, status, sort, dir) {
+        let url_ = this.baseUrl + "/api/sketches?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (status === null)
+            throw new globalThis.Error("The parameter 'status' cannot be null.");
+        else if (status !== undefined)
+            url_ += "status=" + encodeURIComponent("" + status) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListSketches(_response);
+        });
+    }
+    processListSketches(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = SketchPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Create a sketch header (server-assigned id; requires sketchName; image not written via API).
+     * @return Created
+     */
+    createSketch(body) {
+        let url_ = this.baseUrl + "/api/sketches";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateSketch(_response);
+        });
+    }
+    processCreateSketch(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = Sketch.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Get one sketch header by id (no image).
+     * @return OK
+     */
+    getSketch(sketchId) {
+        let url_ = this.baseUrl + "/api/sketches/{sketchId}";
+        if (sketchId === undefined || sketchId === null)
+            throw new globalThis.Error("The parameter 'sketchId' must be defined.");
+        url_ = url_.replace("{sketchId}", encodeURIComponent("" + sketchId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetSketch(_response);
+        });
+    }
+    processGetSketch(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Sketch.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Replace a sketch header (image left untouched). Supports If-Match.
+     * @return OK
+     */
+    updateSketch(sketchId, body) {
+        let url_ = this.baseUrl + "/api/sketches/{sketchId}";
+        if (sketchId === undefined || sketchId === null)
+            throw new globalThis.Error("The parameter 'sketchId' must be defined.");
+        url_ = url_.replace("{sketchId}", encodeURIComponent("" + sketchId));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processUpdateSketch(_response);
+        });
+    }
+    processUpdateSketch(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Sketch.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status === 412) {
+            return response.text().then((_responseText) => {
+                return throwException("Precondition Failed", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List finished sheet skids (paged, sortable).
      * @param page (optional)
      * @param pageSize (optional)
      * @param sort (optional)
@@ -1941,6 +5516,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Create a finished sheet skid.
      * @return Created
      */
     createSheetSkid(body) {
@@ -1995,6 +5571,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Get one sheet skid by id.
      * @return OK
      */
     getSheetSkid(sheetSkidNum) {
@@ -2046,6 +5623,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List scrap skids (paged, sortable).
      * @param page (optional)
      * @param pageSize (optional)
      * @param sort (optional)
@@ -2117,6 +5695,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Create a scrap skid.
      * @return Created
      */
     createScrapSkid(body) {
@@ -2171,6 +5750,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Get one scrap skid by id.
      * @return OK
      */
     getScrapSkid(scrapSkidNum) {
@@ -2222,6 +5802,79 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * List in-process partial skids (paged, sortable).
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listPartialSkids(page, pageSize, sort, dir) {
+        let url_ = this.baseUrl + "/api/partial-skids?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListPartialSkids(_response);
+        });
+    }
+    processListPartialSkids(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = PartialSkidPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List posted mechanical test results (paged, filterable, sortable).
      * @param page (optional)
      * @param pageSize (optional)
      * @param testType (optional)
@@ -2289,6 +5942,98 @@ export class AbisClient {
                 let result200 = null;
                 let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = TestResultPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * List in-progress (working-set) mechanical test results.
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param testType (optional)
+     * @param position (optional)
+     * @param from (optional)
+     * @param to (optional)
+     * @param sort (optional)
+     * @param dir (optional)
+     * @return OK
+     */
+    listTempTestResults(page, pageSize, testType, position, from, to, sort, dir) {
+        let url_ = this.baseUrl + "/api/temp-test-results?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (testType === null)
+            throw new globalThis.Error("The parameter 'testType' cannot be null.");
+        else if (testType !== undefined)
+            url_ += "testType=" + encodeURIComponent("" + testType) + "&";
+        if (position === null)
+            throw new globalThis.Error("The parameter 'position' cannot be null.");
+        else if (position !== undefined)
+            url_ += "position=" + encodeURIComponent("" + position) + "&";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (dir === null)
+            throw new globalThis.Error("The parameter 'dir' cannot be null.");
+        else if (dir !== undefined)
+            url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListTempTestResults(_response);
+        });
+    }
+    processListTempTestResults(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = TempTestResultPagedResult.fromJS(resultData200);
                 return result200;
             });
         }
@@ -2480,6 +6225,126 @@ export class AuditEntryPagedResult {
         data["pageSize"] = this.pageSize;
         data["totalCount"] = this.totalCount;
         data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class Carrier {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.carrierId = _data["carrierId"];
+            this.scac = _data["scac"];
+            this.carrierFullName = _data["carrierFullName"];
+            this.carrierTypeCode = _data["carrierTypeCode"];
+            this.carrierCity = _data["carrierCity"];
+            this.carrierState = _data["carrierState"];
+            this.carrierPhoneNumber = _data["carrierPhoneNumber"];
+            this.status = _data["status"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new Carrier();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["carrierId"] = this.carrierId;
+        data["scac"] = this.scac;
+        data["carrierFullName"] = this.carrierFullName;
+        data["carrierTypeCode"] = this.carrierTypeCode;
+        data["carrierCity"] = this.carrierCity;
+        data["carrierState"] = this.carrierState;
+        data["carrierPhoneNumber"] = this.carrierPhoneNumber;
+        data["status"] = this.status;
+        return data;
+    }
+}
+export class CarrierPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(Carrier.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CarrierPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class CarrierWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.scac = _data["scac"];
+            this.carrierFullName = _data["carrierFullName"];
+            this.carrierTypeCode = _data["carrierTypeCode"];
+            this.carrierCity = _data["carrierCity"];
+            this.carrierState = _data["carrierState"];
+            this.carrierPhoneNumber = _data["carrierPhoneNumber"];
+            this.status = _data["status"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CarrierWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["scac"] = this.scac;
+        data["carrierFullName"] = this.carrierFullName;
+        data["carrierTypeCode"] = this.carrierTypeCode;
+        data["carrierCity"] = this.carrierCity;
+        data["carrierState"] = this.carrierState;
+        data["carrierPhoneNumber"] = this.carrierPhoneNumber;
+        data["status"] = this.status;
         return data;
     }
 }
@@ -2763,8 +6628,9 @@ export class Customer {
             this.customerId = _data["customerId"];
             this.customerName = _data["customerName"];
             this.customerShortName = _data["customerShortName"];
-            this.enduserName = _data["enduserName"];
-            this.shiptoCustomerZip = _data["shiptoCustomerZip"];
+            this.customerCity = _data["customerCity"];
+            this.customerState = _data["customerState"];
+            this.customerZip = _data["customerZip"];
         }
     }
     static fromJS(data) {
@@ -2778,8 +6644,123 @@ export class Customer {
         data["customerId"] = this.customerId;
         data["customerName"] = this.customerName;
         data["customerShortName"] = this.customerShortName;
-        data["enduserName"] = this.enduserName;
-        data["shiptoCustomerZip"] = this.shiptoCustomerZip;
+        data["customerCity"] = this.customerCity;
+        data["customerState"] = this.customerState;
+        data["customerZip"] = this.customerZip;
+        return data;
+    }
+}
+export class CustomerContact {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.contactId = _data["contactId"];
+            this.customerId = _data["customerId"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.department = _data["department"];
+            this.city = _data["city"];
+            this.state = _data["state"];
+            this.phone1 = _data["phone1"];
+            this.email1 = _data["email1"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustomerContact();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["contactId"] = this.contactId;
+        data["customerId"] = this.customerId;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["department"] = this.department;
+        data["city"] = this.city;
+        data["state"] = this.state;
+        data["phone1"] = this.phone1;
+        data["email1"] = this.email1;
+        return data;
+    }
+}
+export class CustomerContactWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.department = _data["department"];
+            this.city = _data["city"];
+            this.state = _data["state"];
+            this.phone1 = _data["phone1"];
+            this.email1 = _data["email1"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustomerContactWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["department"] = this.department;
+        data["city"] = this.city;
+        data["state"] = this.state;
+        data["phone1"] = this.phone1;
+        data["email1"] = this.email1;
+        return data;
+    }
+}
+export class CustomerEdi {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.customerEdiName = _data["customerEdiName"];
+            this.customerId = _data["customerId"];
+            this.ediTypeId = _data["ediTypeId"];
+            this.ediVersion = _data["ediVersion"];
+            this.customerEdiDesc = _data["customerEdiDesc"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustomerEdi();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["customerEdiName"] = this.customerEdiName;
+        data["customerId"] = this.customerId;
+        data["ediTypeId"] = this.ediTypeId;
+        data["ediVersion"] = this.ediVersion;
+        data["customerEdiDesc"] = this.customerEdiDesc;
         return data;
     }
 }
@@ -2933,6 +6914,34 @@ export class CustomerPagedResult {
         return data;
     }
 }
+export class CustomerType {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.customerTypeCode = _data["customerTypeCode"];
+            this.customerTypeDescription = _data["customerTypeDescription"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustomerType();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["customerTypeCode"] = this.customerTypeCode;
+        data["customerTypeDescription"] = this.customerTypeDescription;
+        return data;
+    }
+}
 export class CustomerWrite {
     constructor(data) {
         if (data) {
@@ -2946,8 +6955,9 @@ export class CustomerWrite {
         if (_data) {
             this.customerName = _data["customerName"];
             this.customerShortName = _data["customerShortName"];
-            this.enduserName = _data["enduserName"];
-            this.shiptoCustomerZip = _data["shiptoCustomerZip"];
+            this.customerCity = _data["customerCity"];
+            this.customerState = _data["customerState"];
+            this.customerZip = _data["customerZip"];
         }
     }
     static fromJS(data) {
@@ -2960,8 +6970,543 @@ export class CustomerWrite {
         data = typeof data === 'object' ? data : {};
         data["customerName"] = this.customerName;
         data["customerShortName"] = this.customerShortName;
-        data["enduserName"] = this.enduserName;
-        data["shiptoCustomerZip"] = this.shiptoCustomerZip;
+        data["customerCity"] = this.customerCity;
+        data["customerState"] = this.customerState;
+        data["customerZip"] = this.customerZip;
+        return data;
+    }
+}
+export class Die {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.dieId = _data["dieId"];
+            this.dieName = _data["dieName"];
+            this.status = _data["status"];
+            this.toolNum = _data["toolNum"];
+            this.partName = _data["partName"];
+            this.grossWeight = _data["grossWeight"];
+            this.location = _data["location"];
+            this.description = _data["description"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new Die();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["dieId"] = this.dieId;
+        data["dieName"] = this.dieName;
+        data["status"] = this.status;
+        data["toolNum"] = this.toolNum;
+        data["partName"] = this.partName;
+        data["grossWeight"] = this.grossWeight;
+        data["location"] = this.location;
+        data["description"] = this.description;
+        return data;
+    }
+}
+export class DiePagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(Die.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new DiePagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class DieWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.dieName = _data["dieName"];
+            this.status = _data["status"];
+            this.toolNum = _data["toolNum"];
+            this.partName = _data["partName"];
+            this.grossWeight = _data["grossWeight"];
+            this.location = _data["location"];
+            this.description = _data["description"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new DieWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["dieName"] = this.dieName;
+        data["status"] = this.status;
+        data["toolNum"] = this.toolNum;
+        data["partName"] = this.partName;
+        data["grossWeight"] = this.grossWeight;
+        data["location"] = this.location;
+        data["description"] = this.description;
+        return data;
+    }
+}
+export class DowntimeCause {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.id = _data["id"];
+            this.causeName = _data["causeName"];
+            this.note = _data["note"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new DowntimeCause();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["causeName"] = this.causeName;
+        data["note"] = this.note;
+        return data;
+    }
+}
+export class DowntimeInstance {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.instanceNum = _data["instanceNum"];
+            this.abJobNum = _data["abJobNum"];
+            this.lineNum = _data["lineNum"];
+            this.startingTime = _data["startingTime"] ? new Date(_data["startingTime"].toString()) : undefined;
+            this.endingTime = _data["endingTime"] ? new Date(_data["endingTime"].toString()) : undefined;
+            this.note = _data["note"];
+            this.shiftNum = _data["shiftNum"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new DowntimeInstance();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["instanceNum"] = this.instanceNum;
+        data["abJobNum"] = this.abJobNum;
+        data["lineNum"] = this.lineNum;
+        data["startingTime"] = this.startingTime ? this.startingTime.toISOString() : undefined;
+        data["endingTime"] = this.endingTime ? this.endingTime.toISOString() : undefined;
+        data["note"] = this.note;
+        data["shiftNum"] = this.shiftNum;
+        return data;
+    }
+}
+export class DowntimeInstancePagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(DowntimeInstance.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new DowntimeInstancePagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class DowntimeInstanceWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.abJobNum = _data["abJobNum"];
+            this.lineNum = _data["lineNum"];
+            this.startingTime = _data["startingTime"] ? new Date(_data["startingTime"].toString()) : undefined;
+            this.endingTime = _data["endingTime"] ? new Date(_data["endingTime"].toString()) : undefined;
+            this.note = _data["note"];
+            this.shiftNum = _data["shiftNum"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new DowntimeInstanceWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["abJobNum"] = this.abJobNum;
+        data["lineNum"] = this.lineNum;
+        data["startingTime"] = this.startingTime ? this.startingTime.toISOString() : undefined;
+        data["endingTime"] = this.endingTime ? this.endingTime.toISOString() : undefined;
+        data["note"] = this.note;
+        data["shiftNum"] = this.shiftNum;
+        return data;
+    }
+}
+export class EdiLogEntry {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.ediLogTimestamp = _data["ediLogTimestamp"] ? new Date(_data["ediLogTimestamp"].toString()) : undefined;
+            this.customerId = _data["customerId"];
+            this.customerEdiName = _data["customerEdiName"];
+            this.ediLogContents = _data["ediLogContents"];
+            this.ediLogFlag = _data["ediLogFlag"];
+            this.ediFileId = _data["ediFileId"];
+            this.isaSeq = _data["isaSeq"];
+            this.gsSeq = _data["gsSeq"];
+            this.ediText = _data["ediText"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new EdiLogEntry();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["ediLogTimestamp"] = this.ediLogTimestamp ? this.ediLogTimestamp.toISOString() : undefined;
+        data["customerId"] = this.customerId;
+        data["customerEdiName"] = this.customerEdiName;
+        data["ediLogContents"] = this.ediLogContents;
+        data["ediLogFlag"] = this.ediLogFlag;
+        data["ediFileId"] = this.ediFileId;
+        data["isaSeq"] = this.isaSeq;
+        data["gsSeq"] = this.gsSeq;
+        data["ediText"] = this.ediText;
+        return data;
+    }
+}
+export class EdiLogEntryPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(EdiLogEntry.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new EdiLogEntryPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class EdiTransaction {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.ediFileId = _data["ediFileId"];
+            this.dunsFrom = _data["dunsFrom"];
+            this.dunsTo = _data["dunsTo"];
+            this.interchangeControlNumber = _data["interchangeControlNumber"];
+            this.groupControlNumber = _data["groupControlNumber"];
+            this.transactionTime = _data["transactionTime"] ? new Date(_data["transactionTime"].toString()) : undefined;
+            this.customerSentTo = _data["customerSentTo"];
+            this.ediFileName = _data["ediFileName"];
+            this.faReceiveStatus = _data["faReceiveStatus"];
+            this.customerId = _data["customerId"];
+            this.setControlNum = _data["setControlNum"];
+            this.transactionTypeId = _data["transactionTypeId"];
+            this.faReceivedTime = _data["faReceivedTime"];
+            this.faReceivedFileName = _data["faReceivedFileName"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new EdiTransaction();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["ediFileId"] = this.ediFileId;
+        data["dunsFrom"] = this.dunsFrom;
+        data["dunsTo"] = this.dunsTo;
+        data["interchangeControlNumber"] = this.interchangeControlNumber;
+        data["groupControlNumber"] = this.groupControlNumber;
+        data["transactionTime"] = this.transactionTime ? this.transactionTime.toISOString() : undefined;
+        data["customerSentTo"] = this.customerSentTo;
+        data["ediFileName"] = this.ediFileName;
+        data["faReceiveStatus"] = this.faReceiveStatus;
+        data["customerId"] = this.customerId;
+        data["setControlNum"] = this.setControlNum;
+        data["transactionTypeId"] = this.transactionTypeId;
+        data["faReceivedTime"] = this.faReceivedTime;
+        data["faReceivedFileName"] = this.faReceivedFileName;
+        return data;
+    }
+}
+export class EdiTransactionPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(EdiTransaction.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new EdiTransactionPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class EdiType {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.ediTypeId = _data["ediTypeId"];
+            this.ediVersion = _data["ediVersion"];
+            this.ediTypeDescription = _data["ediTypeDescription"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new EdiType();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["ediTypeId"] = this.ediTypeId;
+        data["ediVersion"] = this.ediVersion;
+        data["ediTypeDescription"] = this.ediTypeDescription;
+        return data;
+    }
+}
+export class EquipmentType {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.equipmentTypeCode = _data["equipmentTypeCode"];
+            this.equipmentTypeDesc = _data["equipmentTypeDesc"];
+            this.equipmentTypeNote = _data["equipmentTypeNote"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new EquipmentType();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["equipmentTypeCode"] = this.equipmentTypeCode;
+        data["equipmentTypeDesc"] = this.equipmentTypeDesc;
+        data["equipmentTypeNote"] = this.equipmentTypeNote;
+        return data;
+    }
+}
+export class GroupDepartment {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.groupDepartmentId = _data["groupDepartmentId"];
+            this.groupDepartmentName = _data["groupDepartmentName"];
+            this.deptType = _data["deptType"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new GroupDepartment();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["groupDepartmentId"] = this.groupDepartmentId;
+        data["groupDepartmentName"] = this.groupDepartmentName;
+        data["deptType"] = this.deptType;
         return data;
     }
 }
@@ -3094,6 +7639,160 @@ export class JobWrite {
         data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : undefined;
         data["jobNotes"] = this.jobNotes;
         data["sketchJobNote"] = this.sketchJobNote;
+        return data;
+    }
+}
+export class MaintLog {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.maintLogId = _data["maintLogId"];
+            this.maintLogStatus = _data["maintLogStatus"];
+            this.groupDepartmentId = _data["groupDepartmentId"];
+            this.systemEquipment = _data["systemEquipment"];
+            this.subsystemEquipment = _data["subsystemEquipment"];
+            this.itemDevice = _data["itemDevice"];
+            this.probDateTime = _data["probDateTime"] ? new Date(_data["probDateTime"].toString()) : undefined;
+            this.probDetails = _data["probDetails"];
+            this.actions = _data["actions"];
+            this.author = _data["author"];
+            this.reportedBy = _data["reportedBy"];
+            this.enteredDateTime = _data["enteredDateTime"] ? new Date(_data["enteredDateTime"].toString()) : undefined;
+            this.assignedTo = _data["assignedTo"];
+            this.completedDateTime = _data["completedDateTime"] ? new Date(_data["completedDateTime"].toString()) : undefined;
+            this.completedBy = _data["completedBy"];
+            this.laborHours = _data["laborHours"];
+            this.probCost = _data["probCost"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new MaintLog();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["maintLogId"] = this.maintLogId;
+        data["maintLogStatus"] = this.maintLogStatus;
+        data["groupDepartmentId"] = this.groupDepartmentId;
+        data["systemEquipment"] = this.systemEquipment;
+        data["subsystemEquipment"] = this.subsystemEquipment;
+        data["itemDevice"] = this.itemDevice;
+        data["probDateTime"] = this.probDateTime ? this.probDateTime.toISOString() : undefined;
+        data["probDetails"] = this.probDetails;
+        data["actions"] = this.actions;
+        data["author"] = this.author;
+        data["reportedBy"] = this.reportedBy;
+        data["enteredDateTime"] = this.enteredDateTime ? this.enteredDateTime.toISOString() : undefined;
+        data["assignedTo"] = this.assignedTo;
+        data["completedDateTime"] = this.completedDateTime ? this.completedDateTime.toISOString() : undefined;
+        data["completedBy"] = this.completedBy;
+        data["laborHours"] = this.laborHours;
+        data["probCost"] = this.probCost;
+        return data;
+    }
+}
+export class MaintLogPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(MaintLog.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new MaintLogPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class MaintLogWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.maintLogStatus = _data["maintLogStatus"];
+            this.groupDepartmentId = _data["groupDepartmentId"];
+            this.systemEquipment = _data["systemEquipment"];
+            this.subsystemEquipment = _data["subsystemEquipment"];
+            this.itemDevice = _data["itemDevice"];
+            this.probDateTime = _data["probDateTime"] ? new Date(_data["probDateTime"].toString()) : undefined;
+            this.probDetails = _data["probDetails"];
+            this.actions = _data["actions"];
+            this.author = _data["author"];
+            this.reportedBy = _data["reportedBy"];
+            this.assignedTo = _data["assignedTo"];
+            this.completedDateTime = _data["completedDateTime"] ? new Date(_data["completedDateTime"].toString()) : undefined;
+            this.completedBy = _data["completedBy"];
+            this.laborHours = _data["laborHours"];
+            this.probCost = _data["probCost"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new MaintLogWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["maintLogStatus"] = this.maintLogStatus;
+        data["groupDepartmentId"] = this.groupDepartmentId;
+        data["systemEquipment"] = this.systemEquipment;
+        data["subsystemEquipment"] = this.subsystemEquipment;
+        data["itemDevice"] = this.itemDevice;
+        data["probDateTime"] = this.probDateTime ? this.probDateTime.toISOString() : undefined;
+        data["probDetails"] = this.probDetails;
+        data["actions"] = this.actions;
+        data["author"] = this.author;
+        data["reportedBy"] = this.reportedBy;
+        data["assignedTo"] = this.assignedTo;
+        data["completedDateTime"] = this.completedDateTime ? this.completedDateTime.toISOString() : undefined;
+        data["completedBy"] = this.completedBy;
+        data["laborHours"] = this.laborHours;
+        data["probCost"] = this.probCost;
         return data;
     }
 }
@@ -3331,6 +8030,210 @@ export class OrderItemWrite {
         return data;
     }
 }
+export class Part {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.partNumId = _data["partNumId"];
+            this.customerId = _data["customerId"];
+            this.enduserId = _data["enduserId"];
+            this.enduserPartNum = _data["enduserPartNum"];
+            this.sheetType = _data["sheetType"];
+            this.alloy = _data["alloy"];
+            this.temper = _data["temper"];
+            this.gauge = _data["gauge"];
+            this.itemStatus = _data["itemStatus"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new Part();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["partNumId"] = this.partNumId;
+        data["customerId"] = this.customerId;
+        data["enduserId"] = this.enduserId;
+        data["enduserPartNum"] = this.enduserPartNum;
+        data["sheetType"] = this.sheetType;
+        data["alloy"] = this.alloy;
+        data["temper"] = this.temper;
+        data["gauge"] = this.gauge;
+        data["itemStatus"] = this.itemStatus;
+        return data;
+    }
+}
+export class PartPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(Part.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new PartPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class PartWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.customerId = _data["customerId"];
+            this.enduserId = _data["enduserId"];
+            this.enduserPartNum = _data["enduserPartNum"];
+            this.sheetType = _data["sheetType"];
+            this.alloy = _data["alloy"];
+            this.temper = _data["temper"];
+            this.gauge = _data["gauge"];
+            this.itemStatus = _data["itemStatus"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new PartWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["customerId"] = this.customerId;
+        data["enduserId"] = this.enduserId;
+        data["enduserPartNum"] = this.enduserPartNum;
+        data["sheetType"] = this.sheetType;
+        data["alloy"] = this.alloy;
+        data["temper"] = this.temper;
+        data["gauge"] = this.gauge;
+        data["itemStatus"] = this.itemStatus;
+        return data;
+    }
+}
+export class PartialSkid {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.abJobNum = _data["abJobNum"];
+            this.partialSkidAbJobNum = _data["partialSkidAbJobNum"];
+            this.sheetSkidNum = _data["sheetSkidNum"];
+            this.partialSheetNetWt = _data["partialSheetNetWt"];
+            this.partialSkidPieces = _data["partialSkidPieces"];
+            this.partialSkidLocation = _data["partialSkidLocation"];
+            this.partialSkidDate = _data["partialSkidDate"] ? new Date(_data["partialSkidDate"].toString()) : undefined;
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new PartialSkid();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["abJobNum"] = this.abJobNum;
+        data["partialSkidAbJobNum"] = this.partialSkidAbJobNum;
+        data["sheetSkidNum"] = this.sheetSkidNum;
+        data["partialSheetNetWt"] = this.partialSheetNetWt;
+        data["partialSkidPieces"] = this.partialSkidPieces;
+        data["partialSkidLocation"] = this.partialSkidLocation;
+        data["partialSkidDate"] = this.partialSkidDate ? this.partialSkidDate.toISOString() : undefined;
+        return data;
+    }
+}
+export class PartialSkidPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(PartialSkid.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new PartialSkidPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
 export class ProcessCoil {
     constructor(data) {
         if (data) {
@@ -3370,6 +8273,256 @@ export class ProcessCoil {
         data["coilAlloy2"] = this.coilAlloy2;
         data["coilGauge"] = this.coilGauge;
         data["coilWidth"] = this.coilWidth;
+        return data;
+    }
+}
+export class ProductionLine {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.lineNum = _data["lineNum"];
+            this.lineDesc = _data["lineDesc"];
+            this.lineLocation = _data["lineLocation"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProductionLine();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["lineNum"] = this.lineNum;
+        data["lineDesc"] = this.lineDesc;
+        data["lineLocation"] = this.lineLocation;
+        return data;
+    }
+}
+export class ReceivingBol {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.receivingBolId = _data["receivingBolId"];
+            this.bol = _data["bol"];
+            this.customerId = _data["customerId"];
+            this.createdBy = _data["createdBy"];
+            this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : undefined;
+            this.receivedDate = _data["receivedDate"] ? new Date(_data["receivedDate"].toString()) : undefined;
+            this.status = _data["status"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReceivingBol();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["receivingBolId"] = this.receivingBolId;
+        data["bol"] = this.bol;
+        data["customerId"] = this.customerId;
+        data["createdBy"] = this.createdBy;
+        data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : undefined;
+        data["receivedDate"] = this.receivedDate ? this.receivedDate.toISOString() : undefined;
+        data["status"] = this.status;
+        return data;
+    }
+}
+export class ReceivingBolPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(ReceivingBol.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReceivingBolPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class ReceivingBolWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.bol = _data["bol"];
+            this.customerId = _data["customerId"];
+            this.createdBy = _data["createdBy"];
+            this.receivedDate = _data["receivedDate"] ? new Date(_data["receivedDate"].toString()) : undefined;
+            this.status = _data["status"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReceivingBolWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["bol"] = this.bol;
+        data["customerId"] = this.customerId;
+        data["createdBy"] = this.createdBy;
+        data["receivedDate"] = this.receivedDate ? this.receivedDate.toISOString() : undefined;
+        data["status"] = this.status;
+        return data;
+    }
+}
+export class ScanLog {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.scanId = _data["scanId"];
+            this.scanDatetime = _data["scanDatetime"] ? new Date(_data["scanDatetime"].toString()) : undefined;
+            this.abJobNum = _data["abJobNum"];
+            this.scanStation = _data["scanStation"];
+            this.note = _data["note"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ScanLog();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["scanId"] = this.scanId;
+        data["scanDatetime"] = this.scanDatetime ? this.scanDatetime.toISOString() : undefined;
+        data["abJobNum"] = this.abJobNum;
+        data["scanStation"] = this.scanStation;
+        data["note"] = this.note;
+        return data;
+    }
+}
+export class ScanLogPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(ScanLog.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ScanLogPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class ScanLogWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.abJobNum = _data["abJobNum"];
+            this.scanStation = _data["scanStation"];
+            this.note = _data["note"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ScanLogWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["abJobNum"] = this.abJobNum;
+        data["scanStation"] = this.scanStation;
+        data["note"] = this.note;
         return data;
     }
 }
@@ -3617,6 +8770,488 @@ export class SheetSkidWrite {
         return data;
     }
 }
+export class Shift {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.shiftNum = _data["shiftNum"];
+            this.startTime = _data["startTime"] ? new Date(_data["startTime"].toString()) : undefined;
+            this.endTime = _data["endTime"] ? new Date(_data["endTime"].toString()) : undefined;
+            this.lineNum = _data["lineNum"];
+            this.scheduleType = _data["scheduleType"];
+            this.dtTotal = _data["dtTotal"];
+            this.operatorInitial = _data["operatorInitial"];
+            this.shiftDataStatus = _data["shiftDataStatus"];
+            this.note = _data["note"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new Shift();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["shiftNum"] = this.shiftNum;
+        data["startTime"] = this.startTime ? this.startTime.toISOString() : undefined;
+        data["endTime"] = this.endTime ? this.endTime.toISOString() : undefined;
+        data["lineNum"] = this.lineNum;
+        data["scheduleType"] = this.scheduleType;
+        data["dtTotal"] = this.dtTotal;
+        data["operatorInitial"] = this.operatorInitial;
+        data["shiftDataStatus"] = this.shiftDataStatus;
+        data["note"] = this.note;
+        return data;
+    }
+}
+export class ShiftPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(Shift.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ShiftPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class ShiftWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.startTime = _data["startTime"] ? new Date(_data["startTime"].toString()) : undefined;
+            this.endTime = _data["endTime"] ? new Date(_data["endTime"].toString()) : undefined;
+            this.lineNum = _data["lineNum"];
+            this.scheduleType = _data["scheduleType"];
+            this.dtTotal = _data["dtTotal"];
+            this.operatorInitial = _data["operatorInitial"];
+            this.shiftDataStatus = _data["shiftDataStatus"];
+            this.note = _data["note"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ShiftWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["startTime"] = this.startTime ? this.startTime.toISOString() : undefined;
+        data["endTime"] = this.endTime ? this.endTime.toISOString() : undefined;
+        data["lineNum"] = this.lineNum;
+        data["scheduleType"] = this.scheduleType;
+        data["dtTotal"] = this.dtTotal;
+        data["operatorInitial"] = this.operatorInitial;
+        data["shiftDataStatus"] = this.shiftDataStatus;
+        data["note"] = this.note;
+        return data;
+    }
+}
+export class Shipment {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.packingList = _data["packingList"];
+            this.billOfLading = _data["billOfLading"];
+            this.carrierId = _data["carrierId"];
+            this.customerId = _data["customerId"];
+            this.desShCustId = _data["desShCustId"];
+            this.vehicleId = _data["vehicleId"];
+            this.vehicleStatus = _data["vehicleStatus"];
+            this.shipmentStatus = _data["shipmentStatus"];
+            this.shipmentScheduledDateTime = _data["shipmentScheduledDateTime"] ? new Date(_data["shipmentScheduledDateTime"].toString()) : undefined;
+            this.dateSent = _data["dateSent"] ? new Date(_data["dateSent"].toString()) : undefined;
+            this.shipmentActualedDateTime = _data["shipmentActualedDateTime"] ? new Date(_data["shipmentActualedDateTime"].toString()) : undefined;
+            this.shipmentNotes = _data["shipmentNotes"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new Shipment();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["packingList"] = this.packingList;
+        data["billOfLading"] = this.billOfLading;
+        data["carrierId"] = this.carrierId;
+        data["customerId"] = this.customerId;
+        data["desShCustId"] = this.desShCustId;
+        data["vehicleId"] = this.vehicleId;
+        data["vehicleStatus"] = this.vehicleStatus;
+        data["shipmentStatus"] = this.shipmentStatus;
+        data["shipmentScheduledDateTime"] = this.shipmentScheduledDateTime ? this.shipmentScheduledDateTime.toISOString() : undefined;
+        data["dateSent"] = this.dateSent ? this.dateSent.toISOString() : undefined;
+        data["shipmentActualedDateTime"] = this.shipmentActualedDateTime ? this.shipmentActualedDateTime.toISOString() : undefined;
+        data["shipmentNotes"] = this.shipmentNotes;
+        return data;
+    }
+}
+export class ShipmentPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(Shipment.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ShipmentPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class ShipmentStatusPatch {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.shipmentStatus = _data["shipmentStatus"];
+            this.vehicleStatus = _data["vehicleStatus"];
+            this.dateSent = _data["dateSent"] ? new Date(_data["dateSent"].toString()) : undefined;
+            this.shipmentActualedDateTime = _data["shipmentActualedDateTime"] ? new Date(_data["shipmentActualedDateTime"].toString()) : undefined;
+            this.shipmentNotes = _data["shipmentNotes"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ShipmentStatusPatch();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["shipmentStatus"] = this.shipmentStatus;
+        data["vehicleStatus"] = this.vehicleStatus;
+        data["dateSent"] = this.dateSent ? this.dateSent.toISOString() : undefined;
+        data["shipmentActualedDateTime"] = this.shipmentActualedDateTime ? this.shipmentActualedDateTime.toISOString() : undefined;
+        data["shipmentNotes"] = this.shipmentNotes;
+        return data;
+    }
+}
+export class ShipmentWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.carrierId = _data["carrierId"];
+            this.customerId = _data["customerId"];
+            this.desShCustId = _data["desShCustId"];
+            this.vehicleId = _data["vehicleId"];
+            this.vehicleStatus = _data["vehicleStatus"];
+            this.shipmentStatus = _data["shipmentStatus"];
+            this.shipmentScheduledDateTime = _data["shipmentScheduledDateTime"] ? new Date(_data["shipmentScheduledDateTime"].toString()) : undefined;
+            this.shipmentNotes = _data["shipmentNotes"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ShipmentWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["carrierId"] = this.carrierId;
+        data["customerId"] = this.customerId;
+        data["desShCustId"] = this.desShCustId;
+        data["vehicleId"] = this.vehicleId;
+        data["vehicleStatus"] = this.vehicleStatus;
+        data["shipmentStatus"] = this.shipmentStatus;
+        data["shipmentScheduledDateTime"] = this.shipmentScheduledDateTime ? this.shipmentScheduledDateTime.toISOString() : undefined;
+        data["shipmentNotes"] = this.shipmentNotes;
+        return data;
+    }
+}
+export class Sketch {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.sketchId = _data["sketchId"];
+            this.sketchName = _data["sketchName"];
+            this.sketchNotes = _data["sketchNotes"];
+            this.sketchSysNote = _data["sketchSysNote"];
+            this.sketchStatus = _data["sketchStatus"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new Sketch();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["sketchId"] = this.sketchId;
+        data["sketchName"] = this.sketchName;
+        data["sketchNotes"] = this.sketchNotes;
+        data["sketchSysNote"] = this.sketchSysNote;
+        data["sketchStatus"] = this.sketchStatus;
+        return data;
+    }
+}
+export class SketchPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(Sketch.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new SketchPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class SketchWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.sketchName = _data["sketchName"];
+            this.sketchNotes = _data["sketchNotes"];
+            this.sketchSysNote = _data["sketchSysNote"];
+            this.sketchStatus = _data["sketchStatus"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new SketchWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["sketchName"] = this.sketchName;
+        data["sketchNotes"] = this.sketchNotes;
+        data["sketchSysNote"] = this.sketchSysNote;
+        data["sketchStatus"] = this.sketchStatus;
+        return data;
+    }
+}
+export class TempTestResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : undefined;
+            this.testType = _data["testType"];
+            this.position = _data["position"];
+            this.yts = _data["yts"];
+            this.uts = _data["uts"];
+            this.elongation = _data["elongation"];
+            this.n = _data["n"];
+            this.r = _data["r"];
+            this.thickness = _data["thickness"];
+            this.width = _data["width"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new TempTestResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : undefined;
+        data["testType"] = this.testType;
+        data["position"] = this.position;
+        data["yts"] = this.yts;
+        data["uts"] = this.uts;
+        data["elongation"] = this.elongation;
+        data["n"] = this.n;
+        data["r"] = this.r;
+        data["thickness"] = this.thickness;
+        data["width"] = this.width;
+        return data;
+    }
+}
+export class TempTestResultPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(TempTestResult.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new TempTestResultPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
 export class TestResult {
     constructor(data) {
         if (data) {
@@ -3700,6 +9335,34 @@ export class TestResultPagedResult {
         data["pageSize"] = this.pageSize;
         data["totalCount"] = this.totalCount;
         data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class TransportationMethod {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.transMethodCode = _data["transMethodCode"];
+            this.transDesc = _data["transDesc"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new TransportationMethod();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["transMethodCode"] = this.transMethodCode;
+        data["transDesc"] = this.transDesc;
         return data;
     }
 }

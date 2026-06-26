@@ -25,12 +25,18 @@ Prerequisites (from the plan) — current state:
 
 ## Path C — `order_entry` pilot (greenfield on the Phase-2 API)
 
-**Artifacts.** The greenfield order-entry module already exists on the Phase-2
-seam: the read/write endpoints (`/api/orders`, `/api/orders/{id}/full`,
-`/api/orders/with-items`, `/api/lookups/alloys`), a **typed TypeScript client**
-(NSwag-generated, exercised by `clientapp/` and `/ui/typed.html`), and a
-dependency-free demo UI ([`wwwroot/ui/index.html`](../api/src/ABIS.Api/wwwroot/ui/index.html))
-that drives search → detail → create end-to-end with no framework lock-in.
+**Artifacts.** The greenfield order-entry module runs on the Phase-2 seam: the
+read/write endpoints (`/api/orders`, `/api/orders/{id}/full`,
+`/api/orders/with-items`, `/api/lookups/alloys`) and a dedicated **typed SPA**
+([`wwwroot/ui/order-entry.html`](../api/src/ABIS.Api/wwwroot/ui/order-entry.html),
+source `clientapp/src/order-entry.ts`) — search → detail → transactional
+create-with-items, driven entirely by the NSwag-generated, compiler-checked
+client. Built with `tsc` (no framework), covered by the clientapp e2e.
+
+> **Path-C decision (2026-06-26):** the team committed to Path C and **dropped
+> PowerServer** (no Appeon license / lock-in). See
+> [`MODERNIZATION_ROADMAP.md`](MODERNIZATION_ROADMAP.md) §Strategic options. The
+> Path B column below is therefore retired, not merely pending.
 
 **Pilot run (live Oracle, 2026-06-26).** The full order-entry flow was exercised
 against the real database (≈48k orders), through the API the greenfield UI uses:
