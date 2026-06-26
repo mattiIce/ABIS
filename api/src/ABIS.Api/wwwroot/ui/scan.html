@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ABIS Carriers</title>
+<title>ABIS Scan</title>
 <style>
   :root { --bd:#d0d7de; --bg:#f6f8fa; --ac:#0969da; }
   * { box-sizing: border-box; }
@@ -15,33 +15,25 @@
   header nav { display:flex; gap:12px; flex-wrap:wrap; }
   header nav a { color:#9ecbff; text-decoration:none; }
   header .key { margin-left:auto; display:flex; gap:6px; align-items:center; }
-  main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns:3fr 2fr; }
+  main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns:1fr; }
   section { border:1px solid var(--bd); border-radius:8px; padding:14px; }
-  section.wide { grid-column:1 / -1; }
   h2 { font-size:14px; margin:0 0 10px; text-transform:uppercase; letter-spacing:.04em; color:#57606a; }
   label { font-size:12px; color:#57606a; }
   input, select, button { font:inherit; padding:6px 8px; border:1px solid var(--bd); border-radius:6px; }
   button { background:var(--ac); color:#fff; border-color:var(--ac); cursor:pointer; }
-  button.sec { background:#fff; color:#1f2328; border-color:var(--bd); }
   table { width:100%; border-collapse:collapse; margin-top:8px; }
   th, td { text-align:left; padding:5px 6px; border-bottom:1px solid var(--bd); font-size:13px; }
   th { color:#57606a; font-weight:600; }
   .row { display:flex; gap:8px; flex-wrap:wrap; align-items:end; }
-  .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  .grid .full { grid-column:1 / -1; }
-  .fld label { display:block; }
-  .fld input { width:100%; }
   .muted { color:#8b949e; }
   .pill { background:var(--bg); border:1px solid var(--bd); border-radius:12px; padding:1px 8px; font-size:12px; }
   .err { color:#cf222e; min-height:18px; }
   .ok { color:#1a7f37; min-height:18px; font-size:13px; }
-  tbody tr.click { cursor:pointer; }
-  tbody tr.click:hover { background:var(--bg); }
 </style>
 </head>
 <body>
 <header>
-  <h1>ABIS Carriers <span class="pill">greenfield · typed client</span></h1>
+  <h1>ABIS Scan <span class="pill">greenfield · typed client</span></h1>
   <nav>
     <a href="/ui/order-entry.html">Order entry</a>
     <a href="/ui/coil-inventory.html">Coil inventory</a>
@@ -64,39 +56,32 @@
 
 <main>
   <section>
-    <h2>Carrier master</h2>
+    <h2>Record a scan</h2>
+    <form id="scanForm" class="row">
+      <div><label>Job # *</label><br /><input id="sJob" type="number" placeholder="ab_job_num" style="width:130px" /></div>
+      <div><label>Station *</label><br /><input id="sStation" maxlength="16" placeholder="e.g. SLIT-110" style="width:140px" /></div>
+      <div style="flex:1; min-width:220px"><label>Note *</label><br /><input id="sNote" maxlength="128" placeholder="scanned value / note" style="width:100%" /></div>
+      <button type="submit">Record</button>
+      <span id="ok" class="ok"></span>
+    </form>
+  </section>
+
+  <section>
+    <h2>Recent scans</h2>
     <form id="searchForm" class="row">
-      <div><label>Status</label><br /><input id="fStatus" placeholder="code" type="number" style="width:90px" /></div>
+      <div><label>Filter by job #</label><br /><input id="fJob" type="number" placeholder="ab_job_num" style="width:130px" /></div>
       <button type="submit">Search</button>
       <span id="count" class="muted"></span>
     </form>
     <table>
-      <thead><tr><th>Id</th><th>SCAC</th><th>Name</th><th>Type</th><th>City / State</th><th>Phone</th><th>Status</th></tr></thead>
-      <tbody id="carriers"></tbody>
+      <thead><tr><th>Scan #</th><th>When</th><th>Job #</th><th>Station</th><th>Note</th></tr></thead>
+      <tbody id="scans"></tbody>
     </table>
   </section>
 
-  <section>
-    <h2 id="formTitle">New carrier</h2>
-    <div class="grid">
-      <div class="fld full"><label>Full name *</label><input id="cName" maxlength="60" placeholder="required" /></div>
-      <div class="fld"><label>SCAC</label><input id="cScac" maxlength="8" /></div>
-      <div class="fld"><label>Type code</label><input id="cType" maxlength="36" /></div>
-      <div class="fld"><label>City</label><input id="cCity" maxlength="18" /></div>
-      <div class="fld"><label>State</label><input id="cState" maxlength="30" /></div>
-      <div class="fld"><label>Phone</label><input id="cPhone" maxlength="18" /></div>
-      <div class="fld"><label>Status</label><input id="cStatus" type="number" placeholder="code" /></div>
-    </div>
-    <div class="row" style="margin-top:10px">
-      <button id="btnSave" type="button">Save</button>
-      <button id="btnNew" type="button" class="sec">New</button>
-    </div>
-    <div id="ok" class="ok"></div>
-  </section>
-
-  <section class="wide"><div id="err" class="err"></div></section>
+  <section><div id="err" class="err"></div></section>
 </main>
 
-<script type="module" src="/ui/app/carriers.js"></script>
+<script type="module" src="/ui/app/scan.js"></script>
 </body>
 </html>
