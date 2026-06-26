@@ -1,3 +1,4 @@
+using System.Data;
 using System.Data.Common;
 using Abis.Api.Models;
 using Dapper;
@@ -429,6 +430,15 @@ public sealed class AbisRepository : IAbisRepository
     {
         await using var conn = await OpenAsync(ct);
         // COALESCE(:new, col) keeps the existing value when the field is omitted.
+        // Nullable non-string params must carry an explicit DbType: ODP.NET binds a
+        // null as CHAR otherwise, and COALESCE(charNull, numericOrDateCol) raises
+        // ORA-00932 on Oracle (SQLite is typeless, so CI never sees it).
+        var p = new DynamicParameters();
+        p.Add("status", patch.JobStatus, DbType.Int32);
+        p.Add("notes", patch.JobNotes);
+        p.Add("men", patch.NumberOfMenUsed, DbType.Int32);
+        p.Add("finished", patch.TimeDateFinished, DbType.DateTime);
+        p.Add("id", abJobNum);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
             UPDATE ab_job SET
@@ -438,14 +448,20 @@ public sealed class AbisRepository : IAbisRepository
                 time_date_finished = COALESCE(:finished, time_date_finished)
             WHERE ab_job_num = :id
             """,
-            new { status = patch.JobStatus, notes = patch.JobNotes, men = patch.NumberOfMenUsed, finished = patch.TimeDateFinished, id = abJobNum },
-            cancellationToken: ct));
+            p, cancellationToken: ct));
         return n == 0 ? null : await GetJobAsync(abJobNum, ct);
     }
 
     public async Task<Coil?> PatchCoilAsync(long coilAbcNum, CoilPatch patch, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
+        // :status is nullable NUMBER — type it explicitly (see PatchJobAsync) so a
+        // null binds as NUMBER, not CHAR, avoiding ORA-00932 in the COALESCE.
+        var p = new DynamicParameters();
+        p.Add("status", patch.CoilStatus, DbType.Int32);
+        p.Add("location", patch.CoilLocation);
+        p.Add("notes", patch.CoilNotes);
+        p.Add("id", coilAbcNum);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
             UPDATE coil SET
@@ -454,8 +470,7 @@ public sealed class AbisRepository : IAbisRepository
                 coil_notes = COALESCE(:notes, coil_notes)
             WHERE coil_abc_num = :id
             """,
-            new { status = patch.CoilStatus, location = patch.CoilLocation, notes = patch.CoilNotes, id = coilAbcNum },
-            cancellationToken: ct));
+            p, cancellationToken: ct));
         return n == 0 ? null : await GetCoilAsync(coilAbcNum, ct);
     }
 
@@ -761,6 +776,18 @@ public sealed class AbisRepository : IAbisRepository
     {
         await using var conn = await OpenAsync(ct);
         // item_status preserved when omitted (COALESCE) so a partial body can't null a NOT NULL column.
+        // :status is nullable NUMBER — type it explicitly so a null binds as NUMBER,
+        // not CHAR, avoiding ORA-00932 in the COALESCE (see PatchJobAsync).
+        var p = new DynamicParameters();
+        p.Add("cust", body.CustomerId);
+        p.Add("enduser", body.EnduserId);
+        p.Add("part", body.EnduserPartNum);
+        p.Add("sheet", body.SheetType);
+        p.Add("alloy", body.Alloy);
+        p.Add("temper", body.Temper);
+        p.Add("gauge", body.Gauge);
+        p.Add("status", body.ItemStatus, DbType.Int32);
+        p.Add("id", partNumId);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
             UPDATE part_num SET customer_id = :cust, enduser_id = :enduser, enduser_part_num = :part,
@@ -768,8 +795,7 @@ public sealed class AbisRepository : IAbisRepository
                    item_status = COALESCE(:status, item_status)
             WHERE part_num_id = :id
             """,
-            new { cust = body.CustomerId, enduser = body.EnduserId, part = body.EnduserPartNum, sheet = body.SheetType,
-                  alloy = body.Alloy, temper = body.Temper, gauge = body.Gauge, status = body.ItemStatus, id = partNumId },
+            p,
             cancellationToken: ct));
         return n == 0 ? null : await GetPartAsync(partNumId, ct);
     }
@@ -874,6 +900,16 @@ public sealed class AbisRepository : IAbisRepository
     public async Task<Shipment?> PatchShipmentAsync(long packingList, ShipmentStatusPatch patch, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
+        // Nullable non-string params must carry an explicit DbType: ODP.NET binds a
+        // null as CHAR otherwise, and COALESCE(charNull, numericOrDateCol) raises
+        // ORA-00932 on Oracle (SQLite is typeless, so CI never sees it).
+        var p = new DynamicParameters();
+        p.Add("sStatus", patch.ShipmentStatus, DbType.Int32);
+        p.Add("vStatus", patch.VehicleStatus, DbType.Int32);
+        p.Add("sent", patch.DateSent, DbType.DateTime);
+        p.Add("actual", patch.ShipmentActualedDateTime, DbType.DateTime);
+        p.Add("notes", patch.ShipmentNotes);
+        p.Add("id", packingList);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
             UPDATE shipment SET
@@ -884,9 +920,7 @@ public sealed class AbisRepository : IAbisRepository
                 shipment_notes = COALESCE(:notes, shipment_notes)
             WHERE packing_list = :id
             """,
-            new { sStatus = patch.ShipmentStatus, vStatus = patch.VehicleStatus, sent = patch.DateSent,
-                  actual = patch.ShipmentActualedDateTime, notes = patch.ShipmentNotes, id = packingList },
-            cancellationToken: ct));
+            p, cancellationToken: ct));
         return n == 0 ? null : await GetShipmentAsync(packingList, ct);
     }
 

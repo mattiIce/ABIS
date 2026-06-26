@@ -102,12 +102,17 @@ A full DDL+PL/SQL export (`data-model/oracle_ddl.sql`: 412 tables, 82 sequences,
 The full write surface (#14) was exercised end-to-end against the live database
 with [`../tools/validate_oracle_writes.ps1`](../tools/validate_oracle_writes.ps1)
 (run from inside the network — the managed sandbox's egress proxy can't carry
-Oracle's TCP protocol). **All 9 write endpoints returned `201` and all 6 new
-lookup reads resolved** against the real schema: dies, sketches, customer
-contacts, shipments (dual sequence: `packing_list_num_seq` + `bill_of_lading_seq`),
-receiving BOLs, scan logs, maint logs (MAX+1 id), shifts, and downtime instances.
+Oracle's TCP protocol). **Every create (`201`), update, and the 6 new lookup
+reads resolved** against the real schema:
 
-**Bug found and fixed** (only a live run exposes it; CI runs SQLite)
+- **POST** dies, sketches, customer contacts, shipments (dual sequence:
+  `packing_list_num_seq` + `bill_of_lading_seq`), receiving BOLs, scan logs, maint
+  logs (MAX+1 id), shifts, downtime instances, and orders + order items.
+- **PUT** dies, sketches, customer contacts, receiving BOLs, maint logs, shifts,
+  downtime instances, order items, and order headers (`200`).
+- **PATCH** shipment dispatch status (`200`).
+
+**Bugs found and fixed** (only a live run exposes these; CI runs SQLite)
 
 - `ORA-01745: invalid host/bind variable name` on every write whose Dapper bind
   name collided with an Oracle **reserved word** — `:desc`, `:date`, `:by`,
@@ -116,6 +121,12 @@ receiving BOLs, scan logs, maint logs (MAX+1 id), shifts, and downtime instances
   names (`:idesc`, `:dval`, `:cby`, `:stime`, `:etime`) in `AbisRepository.cs`.
   Affected: order-items, orders, sheet/scrap skids, dies, receiving BOLs, shifts,
   downtime instances.
+- `ORA-00932: inconsistent datatypes` in the `COALESCE(:param, col)` partial-update
+  pattern. When a nullable non-string field was omitted, ODP.NET bound the null as
+  **CHAR**, so `COALESCE(charNull, numericOrDateCol)` failed type unification (SQLite
+  is typeless, so CI passed). Fixed by binding those params with an explicit
+  `DbType` (`Int32`/`DateTime`) via `DynamicParameters` in the job, coil, shipment,
+  and part update paths.
 
 **Schema facts confirmed by the run** (fixtures in the validation script encode these)
 

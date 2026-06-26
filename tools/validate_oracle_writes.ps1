@@ -33,6 +33,12 @@ function Step($m) { Write-Host "`n=== $m ===" -ForegroundColor Cyan }
 function Post($path, $body) {
     return Invoke-RestMethod -Method Post -Uri "$BaseUrl$path" -ContentType 'application/json' -Body ($body | ConvertTo-Json -Depth 6)
 }
+function Put($path, $body) {
+    return Invoke-RestMethod -Method Put -Uri "$BaseUrl$path" -ContentType 'application/json' -Body ($body | ConvertTo-Json -Depth 6)
+}
+function Patch($path, $body) {
+    return Invoke-RestMethod -Method Patch -Uri "$BaseUrl$path" -ContentType 'application/json' -Body ($body | ConvertTo-Json -Depth 6)
+}
 function Get-($path) { return Invoke-RestMethod -Method Get -Uri "$BaseUrl$path" }
 
 # --- Configure + launch the API in Oracle mode ---------------------------------
@@ -109,6 +115,39 @@ try {
     $r = Post "/api/downtime" @{ abJobNum = $jobNum; startingTime = (Get-Date).ToString("s"); note = "ZZ_WRITE_TEST" }
     $created["dt_instance (instance_num)"] = $r.instanceNum; Write-Host "  instance_num=$($r.instanceNum)"
 
+    Step "POST /api/orders  (header) + POST .../items  (line) for order_item update coverage"
+    $r = Post "/api/orders" @{ origCustomerId = $custId; origCustomerPo = "ZZ_WRITE_TEST"; enduserPo = "ZZ_WRITE_TEST" }
+    $orderNum = $r.orderAbcNum; $created["customer_order (order_abc_num)"] = $orderNum; Write-Host "  order_abc_num=$orderNum"
+    # sheet_type is CHAR(18) NOT NULL — must be supplied.
+    $r = Post "/api/orders/$orderNum/items" @{ enduserPartNum = "ZZTEST"; orderItemDesc = "ZZ_WRITE_TEST"; alloy2 = "3003"; sheetType = "ZZ"; piecesSkid = 1 }
+    $orderItemNum = $r.orderItemNum; Write-Host "  order_item_num=$orderItemNum"
+
+    # --- Updates (PUT/PATCH) — exercises the UPDATE SQL, never run live before ---
+    # The reserved-word bind fix (ORA-01745) touched these UPDATE paths; verify them live.
+    Step "PUT updates on the rows just created (each returns 200 with the changed value)"
+    $u = Put  "/api/dies/$($created['die (die_id)'])"                 @{ dieName = "ZZ_WRITE_TEST die"; status = 1; toolNum = "ZZT-2"; description = "ZZ upd" }
+    Write-Host "  die                status -> $($u.status)"
+    $u = Put  "/api/sketches/$($created['sketch (sketch_id)'])"       @{ sketchName = "ZZ_WRITE_TEST"; sketchNotes = "ZZ upd"; sketchStatus = 1 }
+    Write-Host "  sketch             status -> $($u.sketchStatus)"
+    $u = Put  "/api/customer-contacts/$($created['customer_contact (contact_id)'])" @{ firstName = "ZZ"; lastName = "WRITE_TEST"; department = "QA2" }
+    Write-Host "  customer_contact   department -> $($u.department)"
+    $u = Put  "/api/receiving-bols/$($created['receiving_bol (receiving_bol_id)'])" @{ bol = "ZZ_WRITE_TEST-BOL"; customerId = $custId; createdBy = "zztest2"; status = 1 }
+    Write-Host "  receiving_bol      created_by -> $($u.createdBy)"
+    $u = Put  "/api/maint-logs/$($created['maint_log (maint_log_id)'])" @{ maintLogStatus = "Completed"; probDateTime = (Get-Date).ToString("s"); probDetails = "ZZ_WRITE_TEST fault"; author = "zztest2" }
+    Write-Host "  maint_log          author -> $($u.author)"
+    $u = Put  "/api/shifts/$($created['shift (shift_num)'])"          @{ startTime = (Get-Date).ToString("s"); endTime = (Get-Date).ToString("s"); operatorInitial = "ZY"; note = "ZZ_WRITE_TEST" }
+    Write-Host "  shift              operator -> $($u.operatorInitial)"
+    $u = Put  "/api/downtime/$($created['dt_instance (instance_num)'])" @{ abJobNum = $jobNum; startingTime = (Get-Date).ToString("s"); endingTime = (Get-Date).ToString("s"); note = "ZZ_WRITE_TEST" }
+    Write-Host "  dt_instance        note -> $($u.note)"
+    $u = Put  "/api/orders/$orderNum/items/$orderItemNum"             @{ enduserPartNum = "ZZTEST2"; orderItemDesc = "ZZ_WRITE_TEST"; alloy2 = "5052"; sheetType = "ZZ"; piecesSkid = 2 }
+    Write-Host "  order_item         part -> $($u.enduserPartNum)"
+    $u = Put  "/api/orders/$orderNum"                                @{ origCustomerId = $custId; origCustomerPo = "ZZ_WRITE_TEST"; enduserPo = "ZZ_WRITE_TEST_2" }
+    Write-Host "  customer_order     enduser_po -> $($u.enduserPo)"
+
+    Step "PATCH /api/shipments/{packingList} (dispatch status)"
+    $u = Patch "/api/shipments/$($created['shipment (packing_list)'])" @{ shipmentStatus = 1; shipmentNotes = "ZZ_WRITE_TEST" }
+    Write-Host "  shipment           status -> $($u.shipmentStatus)"
+
     # --- Lookup reads (verify the new columns exist in the real schema) -------
     Step "GET the 6 new lookup endpoints (verifies columns resolve against live schema)"
     foreach ($lk in "lines", "groupdepartments", "downtime-causes", "transportation-methods", "equipment-types", "customer-types") {
@@ -134,6 +173,8 @@ try {
     Write-Host "DELETE FROM maint_log       WHERE prob_details   = 'ZZ_WRITE_TEST fault';"
     Write-Host "DELETE FROM shift           WHERE note           = 'ZZ_WRITE_TEST';"
     Write-Host "DELETE FROM dt_instance     WHERE note           = 'ZZ_WRITE_TEST';"
+    Write-Host "DELETE FROM order_item      WHERE order_abc_num IN (SELECT order_abc_num FROM customer_order WHERE orig_customer_po = 'ZZ_WRITE_TEST');"
+    Write-Host "DELETE FROM customer_order  WHERE orig_customer_po = 'ZZ_WRITE_TEST';"
     Write-Host "COMMIT;"
 }
 finally {
