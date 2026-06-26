@@ -72,14 +72,34 @@ test('listJobs filters + sorts via the typed client', async () => {
 });
 
 test('createOrderWithItems writes via typed DTOs and returns a typed OrderDetail', async () => {
+  // Back-check widening: the full customer_order header + order_item line round-trip
+  // (quantity/tolerance, item_status, notes, packaging, part linkage) — columns SQLite
+  // CI previously never exercised.
   const body = new OrderCreateWithItems({
-    order: new CustomerOrderWrite({ origCustomerId: 4001, origCustomerPo: 'PO-E2E' }),
-    items: [new OrderItemWrite({ enduserPartNum: 'PN-E2E', alloy2: '3003', sheetType: 'FLAT' })],
+    order: new CustomerOrderWrite({
+      origCustomerId: 4001, enduserId: 4002, origCustomerPo: 'PO-E2E', enduserPo: 'EPO-E2E',
+      orderType: 1, term: 'NET30', salesOrder: 'SO-E2E', custOrderNote: 'rush',
+    }),
+    items: [new OrderItemWrite({
+      enduserPartNum: 'PN-E2E', alloy2: '3003', sheetType: 'FLAT', gauge: 0.05,
+      quantity: 1000, quantityPlus: 50, quantityMinus: 25, itemStatus: 1, maxSkidWt: 4000,
+      unitPrice: 1.2345, itemNote: 'line note', packagingSpec1: 'wrap', partNumId: 6001, trimmingRequired: 'Y',
+    })],
   });
   const detail = await client.createOrderWithItems(body);
   assert.ok(detail.order.orderAbcNum > 0);
+  assert.equal(detail.order.enduserId, 4002);
+  assert.equal(detail.order.term, 'NET30');
+  assert.equal(detail.order.salesOrder, 'SO-E2E');
   assert.equal(detail.items.length, 1);
   assert.equal(detail.items[0].enduserPartNum, 'PN-E2E');
+  assert.equal(detail.items[0].quantity, 1000);
+  assert.equal(detail.items[0].quantityPlus, 50);
+  assert.equal(detail.items[0].itemStatus, 1);
+  assert.equal(detail.items[0].unitPrice, 1.2345);
+  assert.equal(detail.items[0].itemNote, 'line note');
+  assert.equal(detail.items[0].partNumId, 6001);
+  assert.equal(detail.items[0].trimmingRequired, 'Y');
 });
 
 // The downtime SPA's flow: create an instance, then load + replace it (typed).
