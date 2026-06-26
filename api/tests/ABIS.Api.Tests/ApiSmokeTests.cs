@@ -349,6 +349,50 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task List_edi_transactions_newest_first()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/edi/transactions");
+        Assert.True(body.GetProperty("totalCount").GetInt32() >= 2);
+        var items = body.GetProperty("items");
+        // default order is edi_file_id DESC
+        Assert.Equal(9002, items[0].GetProperty("ediFileId").GetInt64());
+        Assert.Equal("870", items[0].GetProperty("transactionTypeId").GetString());
+    }
+
+    [Fact]
+    public async Task Get_edi_transaction_by_id()
+    {
+        var tx = await _client.GetFromJsonAsync<JsonElement>("/api/edi/transactions/9001");
+        Assert.Equal("856", tx.GetProperty("transactionTypeId").GetString());
+        Assert.Equal(4001, tx.GetProperty("customerId").GetInt64());
+    }
+
+    [Fact]
+    public async Task Edi_transactions_filter_by_type()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/edi/transactions?transactionTypeId=856");
+        var types = body.GetProperty("items").EnumerateArray()
+            .Select(e => e.GetProperty("transactionTypeId").GetString()).Distinct().ToList();
+        Assert.Equal(new[] { "856" }, types);
+    }
+
+    [Fact]
+    public async Task List_edi_log_paged()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/edi/log");
+        Assert.True(body.GetProperty("totalCount").GetInt32() >= 2);
+    }
+
+    [Fact]
+    public async Task Lookups_edi_types_contains_seeded()
+    {
+        var body = await _client.GetFromJsonAsync<JsonElement>("/api/lookups/edi-types");
+        var ids = body.EnumerateArray().Select(e => e.GetProperty("ediTypeId").GetInt32()).ToList();
+        Assert.Contains(856, ids);
+        Assert.Contains(870, ids);
+    }
+
+    [Fact]
     public async Task Coils_filter_by_alloy()
     {
         var body = await _client.GetFromJsonAsync<JsonElement>("/api/coils?alloy=3003");

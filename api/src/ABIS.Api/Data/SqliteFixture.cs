@@ -47,6 +47,10 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS transportation_method;
             DROP TABLE IF EXISTS equipment_type;
             DROP TABLE IF EXISTS customer_type;
+            DROP TABLE IF EXISTS outbound_edi_transaction;
+            DROP TABLE IF EXISTS edi_log;
+            DROP TABLE IF EXISTS edi_type;
+            DROP TABLE IF EXISTS customer_edi;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
@@ -171,6 +175,25 @@ public static class SqliteFixture
 
             CREATE TABLE customer_type (
                 customer_type TEXT PRIMARY KEY, customer_type_description TEXT);
+
+            CREATE TABLE outbound_edi_transaction (
+                edi_file_id INTEGER PRIMARY KEY, duns_from TEXT, duns_to TEXT,
+                interchange_control_number INTEGER, group_control_number INTEGER, transaction_time TEXT,
+                customer_sent_to TEXT, edi_file_name TEXT, fa_receive_status INTEGER, customer_id INTEGER,
+                set_control_num INTEGER, transaction_type_id TEXT, fa_received_time TEXT, fa_received_file_name TEXT);
+
+            CREATE TABLE edi_log (
+                edi_log_timestamp TEXT, customer_id INTEGER, customer_edi_name TEXT, edi_log_contents TEXT,
+                edi_log_flag INTEGER, edi_file_id INTEGER, isa_seq INTEGER, gs_seq INTEGER, edi_text TEXT,
+                PRIMARY KEY (edi_log_timestamp, customer_id, customer_edi_name));
+
+            CREATE TABLE edi_type (
+                edi_type_id INTEGER, edi_version TEXT, edi_type_description TEXT,
+                PRIMARY KEY (edi_type_id, edi_version));
+
+            CREATE TABLE customer_edi (
+                customer_edi_name TEXT, customer_id INTEGER, edi_type_id INTEGER, edi_version TEXT,
+                customer_edi_desc TEXT, PRIMARY KEY (customer_edi_name, customer_id));
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -491,6 +514,49 @@ public static class SqliteFixture
             {
                 new { CustomerType = "OEM", CustomerTypeDescription = "Original equipment manufacturer" },
                 new { CustomerType = "DIST", CustomerTypeDescription = "Distributor" }
+            });
+
+        conn.Execute("""
+            INSERT INTO outbound_edi_transaction
+                (edi_file_id, duns_from, duns_to, interchange_control_number, group_control_number,
+                 transaction_time, customer_sent_to, edi_file_name, fa_receive_status, customer_id,
+                 set_control_num, transaction_type_id, fa_received_time, fa_received_file_name)
+            VALUES (:EdiFileId, :DunsFrom, :DunsTo, :InterchangeControlNumber, :GroupControlNumber,
+                 :TransactionTime, :CustomerSentTo, :EdiFileName, :FaReceiveStatus, :CustomerId,
+                 :SetControlNum, :TransactionTypeId, :FaReceivedTime, :FaReceivedFileName)
+            """,
+            new[]
+            {
+                new { EdiFileId = 9001L, DunsFrom = "039630926", DunsTo = "001234567", InterchangeControlNumber = (long?)1001L, GroupControlNumber = (long?)2001L, TransactionTime = (DateTime?)d, CustomerSentTo = "ASN_ALCAN_FORD", EdiFileName = "856_20260102_1001.x12", FaReceiveStatus = (int?)1, CustomerId = (long?)4001L, SetControlNum = (long?)3001L, TransactionTypeId = "856", FaReceivedTime = (string?)"20260102T1015", FaReceivedFileName = (string?)"997_in_1001.x12" },
+                new { EdiFileId = 9002L, DunsFrom = "039630926", DunsTo = "007654321", InterchangeControlNumber = (long?)1002L, GroupControlNumber = (long?)2002L, TransactionTime = (DateTime?)d.AddHours(3), CustomerSentTo = "ORDER_STATUS", EdiFileName = "870_20260102_1002.x12", FaReceiveStatus = (int?)0, CustomerId = (long?)4002L, SetControlNum = (long?)3002L, TransactionTypeId = "870", FaReceivedTime = (string?)null, FaReceivedFileName = (string?)null }
+            });
+
+        conn.Execute("""
+            INSERT INTO edi_log (edi_log_timestamp, customer_id, customer_edi_name, edi_log_contents, edi_log_flag, edi_file_id, isa_seq, gs_seq, edi_text)
+            VALUES (:EdiLogTimestamp, :CustomerId, :CustomerEdiName, :EdiLogContents, :EdiLogFlag, :EdiFileId, :IsaSeq, :GsSeq, :EdiText)
+            """,
+            new[]
+            {
+                new { EdiLogTimestamp = (DateTime?)d, CustomerId = 4001L, CustomerEdiName = "ASN_ALCAN_FORD", EdiLogContents = "856 sent OK", EdiLogFlag = (int?)1, EdiFileId = (long?)9001L, IsaSeq = (long?)1001L, GsSeq = (long?)2001L, EdiText = "ISA*00*...*~" },
+                new { EdiLogTimestamp = (DateTime?)d.AddHours(3), CustomerId = 4002L, CustomerEdiName = "ORDER_STATUS", EdiLogContents = "870 queued", EdiLogFlag = (int?)0, EdiFileId = (long?)9002L, IsaSeq = (long?)1002L, GsSeq = (long?)2002L, EdiText = "ISA*00*...*~" }
+            });
+
+        conn.Execute("""
+            INSERT INTO edi_type (edi_type_id, edi_version, edi_type_description) VALUES (:EdiTypeId, :EdiVersion, :EdiTypeDescription)
+            """,
+            new[]
+            {
+                new { EdiTypeId = 856, EdiVersion = "2002FORD", EdiTypeDescription = "Advance Ship Notice (Ford)" },
+                new { EdiTypeId = 870, EdiVersion = "3030", EdiTypeDescription = "Order status report" }
+            });
+
+        conn.Execute("""
+            INSERT INTO customer_edi (customer_edi_name, customer_id, edi_type_id, edi_version, customer_edi_desc) VALUES (:CustomerEdiName, :CustomerId, :EdiTypeId, :EdiVersion, :CustomerEdiDesc)
+            """,
+            new[]
+            {
+                new { CustomerEdiName = "ASN_ALCAN_FORD", CustomerId = 4001L, EdiTypeId = (int?)856, EdiVersion = "2002FORD", CustomerEdiDesc = "Ford ASN route" },
+                new { CustomerEdiName = "ORDER_STATUS", CustomerId = 4002L, EdiTypeId = (int?)870, EdiVersion = "3030", CustomerEdiDesc = "870 per job" }
             });
     }
 }

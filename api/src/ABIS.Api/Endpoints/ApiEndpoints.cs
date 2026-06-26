@@ -473,6 +473,37 @@ public static class ApiEndpoints
            .WithSummary("Replace a receiving BOL.")
            .Produces<ReceivingBol>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
+        // ---- EDI (outbound X12 transaction ledger + transmission log) --
+        api.MapGet("/edi/transactions", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, long? customerId = null, string? transactionTypeId = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("ediTransactions", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetEdiTransactionsAsync(page, pageSize, customerId, transactionTypeId, orderBy, ct));
+            })
+           .WithName("ListEdiTransactions").WithTags("EDI")
+           .WithSummary("List outbound EDI transactions, newest first (paged, sortable; filter by customerId/transactionTypeId).")
+           .Produces<PagedResult<EdiTransaction>>().ProducesValidationProblem();
+
+        api.MapGet("/edi/transactions/{ediFileId:long}", async (long ediFileId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetEdiTransactionAsync(ediFileId, ct) is { } tx
+                    ? Results.Ok(tx)
+                    : Results.NotFound())
+           .WithName("GetEdiTransaction").WithTags("EDI")
+           .WithSummary("Get one outbound EDI transaction by its EDI file id.")
+           .Produces<EdiTransaction>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapGet("/edi/log", async (IAbisRepository repo, CancellationToken ct,
+                int page = 1, int pageSize = 25, long? customerId = null, string? sort = null, string? dir = null) =>
+            {
+                if (!Sort.TryResolve("ediLog", sort, dir, out var orderBy, out var problems))
+                    return Results.ValidationProblem(problems!);
+                return Results.Ok(await repo.GetEdiLogAsync(page, pageSize, customerId, orderBy, ct));
+            })
+           .WithName("ListEdiLog").WithTags("EDI")
+           .WithSummary("List EDI transmission-log entries, newest first (paged, sortable; filter by customerId).")
+           .Produces<PagedResult<EdiLogEntry>>().ProducesValidationProblem();
+
         // ---- Scan log (shop-floor tracking) ----------------------------
         api.MapGet("/scan-logs", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, long? abJobNum = null, string? sort = null, string? dir = null) =>
@@ -945,6 +976,18 @@ public static class ApiEndpoints
            .WithName("ListCustomerTypes").WithTags("Lookups")
            .WithSummary("List customer classifications (referenced by customers).")
            .Produces<IEnumerable<CustomerType>>();
+
+        api.MapGet("/lookups/edi-types", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetEdiTypesAsync(ct)))
+           .WithName("ListEdiTypes").WithTags("Lookups")
+           .WithSummary("List EDI transaction-set types and X12 versions (table edi_type).")
+           .Produces<IEnumerable<EdiType>>();
+
+        api.MapGet("/lookups/customer-edi", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetCustomerEdiAsync(ct)))
+           .WithName("ListCustomerEdi").WithTags("Lookups")
+           .WithSummary("List customer EDI trading-partner configuration (table customer_edi).")
+           .Produces<IEnumerable<CustomerEdi>>();
 
         // ---- Audit / action log ----------------------------------------
         api.MapGet("/audit-log", async (IAbisRepository repo, CancellationToken ct,

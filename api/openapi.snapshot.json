@@ -1430,6 +1430,203 @@
         }
       }
     },
+    "/api/edi/transactions": {
+      "get": {
+        "tags": [
+          "EDI"
+        ],
+        "summary": "List outbound EDI transactions, newest first (paged, sortable; filter by customerId/transactionTypeId).",
+        "operationId": "ListEdiTransactions",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          },
+          {
+            "name": "customerId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "transactionTypeId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dir",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EdiTransactionPagedResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/edi/transactions/{ediFileId}": {
+      "get": {
+        "tags": [
+          "EDI"
+        ],
+        "summary": "Get one outbound EDI transaction by its EDI file id.",
+        "operationId": "GetEdiTransaction",
+        "parameters": [
+          {
+            "name": "ediFileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EdiTransaction"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/edi/log": {
+      "get": {
+        "tags": [
+          "EDI"
+        ],
+        "summary": "List EDI transmission-log entries, newest first (paged, sortable; filter by customerId).",
+        "operationId": "ListEdiLog",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          },
+          {
+            "name": "customerId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dir",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EdiLogEntryPagedResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/jobs": {
       "get": {
         "tags": [
@@ -1990,6 +2187,60 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/CustomerType"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/lookups/edi-types": {
+      "get": {
+        "tags": [
+          "Lookups"
+        ],
+        "summary": "List EDI transaction-set types and X12 versions (table edi_type).",
+        "operationId": "ListEdiTypes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EdiType"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/lookups/customer-edi": {
+      "get": {
+        "tags": [
+          "Lookups"
+        ],
+        "summary": "List customer EDI trading-partner configuration (table customer_edi).",
+        "operationId": "ListCustomerEdi",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerEdi"
                   }
                 }
               }
@@ -5379,6 +5630,33 @@
         },
         "additionalProperties": false
       },
+      "CustomerEdi": {
+        "type": "object",
+        "properties": {
+          "customerEdiName": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ediTypeId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ediVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerEdiDesc": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CustomerOrder": {
         "type": "object",
         "properties": {
@@ -5776,6 +6054,211 @@
           "shiftNum": {
             "type": "integer",
             "format": "int64",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EdiLogEntry": {
+        "type": "object",
+        "properties": {
+          "ediLogTimestamp": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "customerEdiName": {
+            "type": "string",
+            "nullable": true
+          },
+          "ediLogContents": {
+            "type": "string",
+            "nullable": true
+          },
+          "ediLogFlag": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ediFileId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "isaSeq": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "gsSeq": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "ediText": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EdiLogEntryPagedResult": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EdiLogEntry"
+            },
+            "nullable": true
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EdiTransaction": {
+        "type": "object",
+        "properties": {
+          "ediFileId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "dunsFrom": {
+            "type": "string",
+            "nullable": true
+          },
+          "dunsTo": {
+            "type": "string",
+            "nullable": true
+          },
+          "interchangeControlNumber": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "groupControlNumber": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "transactionTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "customerSentTo": {
+            "type": "string",
+            "nullable": true
+          },
+          "ediFileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "faReceiveStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "setControlNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "transactionTypeId": {
+            "type": "string",
+            "nullable": true
+          },
+          "faReceivedTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "faReceivedFileName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EdiTransactionPagedResult": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EdiTransaction"
+            },
+            "nullable": true
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EdiType": {
+        "type": "object",
+        "properties": {
+          "ediTypeId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ediVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "ediTypeDescription": {
+            "type": "string",
             "nullable": true
           }
         },
