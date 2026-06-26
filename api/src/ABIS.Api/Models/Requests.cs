@@ -14,6 +14,33 @@ public sealed class CustomerWrite
     public string? CustomerZip { get; set; }
 }
 
+/// <summary>Create or fully replace a part-number record. <see cref="CustomerId"/>
+/// is required (the table's <c>customer_id</c> is NOT NULL).</summary>
+public sealed class PartWrite
+{
+    public long? CustomerId { get; set; }
+    public long? EnduserId { get; set; }
+    public string? EnduserPartNum { get; set; }
+    public string? SheetType { get; set; }
+    public string? Alloy { get; set; }
+    public string? Temper { get; set; }
+    public decimal? Gauge { get; set; }
+    /// <summary>Maps to <c>item_status</c> (NOT NULL); defaults to 0 on create.</summary>
+    public int? ItemStatus { get; set; }
+}
+
+/// <summary>Create or fully replace a carrier. <see cref="CarrierFullName"/> is required.</summary>
+public sealed class CarrierWrite
+{
+    public string? Scac { get; set; }
+    public string? CarrierFullName { get; set; }
+    public string? CarrierTypeCode { get; set; }
+    public string? CarrierCity { get; set; }
+    public string? CarrierState { get; set; }
+    public string? CarrierPhoneNumber { get; set; }
+    public int? Status { get; set; }
+}
+
 /// <summary>Partial update of a production job. Null fields are left unchanged
 /// (PATCH semantics via COALESCE) — a field cannot be cleared to null this way.</summary>
 public sealed class JobPatch

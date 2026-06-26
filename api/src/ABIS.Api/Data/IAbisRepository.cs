@@ -70,8 +70,12 @@ public interface IAbisRepository
     // ---- Parts & dies (read) -------------------------------------------
     Task<PagedResult<Part>> GetPartsAsync(int page, int pageSize, long? customerId, string? alloy, string? orderBy, CancellationToken ct);
     Task<Part?> GetPartAsync(long partNumId, CancellationToken ct);
+    Task<Part> CreatePartAsync(PartWrite body, CancellationToken ct);
+    Task<Part?> UpdatePartAsync(long partNumId, PartWrite body, CancellationToken ct);
     Task<PagedResult<Die>> GetDiesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct);
     Task<Die?> GetDieAsync(long dieId, CancellationToken ct);
+    Task<Carrier> CreateCarrierAsync(CarrierWrite body, CancellationToken ct);
+    Task<Carrier?> UpdateCarrierAsync(long carrierId, CarrierWrite body, CancellationToken ct);
 
     // ---- Shipping / receiving / tracking (read) ------------------------
     Task<PagedResult<Shipment>> GetShipmentsAsync(int page, int pageSize, long? customerId, string? orderBy, CancellationToken ct);

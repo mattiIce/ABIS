@@ -90,7 +90,7 @@ public sealed class AbisRepository : IAbisRepository
     private const string PartCols = """
         part_num_id AS PartNumId, customer_id AS CustomerId, enduser_id AS EnduserId,
         enduser_part_num AS EnduserPartNum, sheet_type AS SheetType, alloy AS Alloy,
-        temper AS Temper, gauge AS Gauge
+        temper AS Temper, gauge AS Gauge, item_status AS ItemStatus
         """;
 
     private const string DieCols = """
@@ -739,6 +739,41 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {PartCols} FROM part_num WHERE part_num_id = :id", new { id = partNumId }, cancellationToken: ct));
     }
 
+    public async Task<Part> CreatePartAsync(PartWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "part_num", "part_num_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO part_num (part_num_id, customer_id, enduser_id, enduser_part_num, sheet_type, alloy, temper, gauge, item_status)
+            VALUES (:id, :cust, :enduser, :part, :sheet, :alloy, :temper, :gauge, :status)
+            """,
+            // item_status is NOT NULL; default to 0 (inactive) when not supplied.
+            new { id, cust = body.CustomerId, enduser = body.EnduserId, part = body.EnduserPartNum, sheet = body.SheetType,
+                  alloy = body.Alloy, temper = body.Temper, gauge = body.Gauge, status = body.ItemStatus ?? 0 },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetPartAsync(id, ct))!;
+    }
+
+    public async Task<Part?> UpdatePartAsync(long partNumId, PartWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // item_status preserved when omitted (COALESCE) so a partial body can't null a NOT NULL column.
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE part_num SET customer_id = :cust, enduser_id = :enduser, enduser_part_num = :part,
+                   sheet_type = :sheet, alloy = :alloy, temper = :temper, gauge = :gauge,
+                   item_status = COALESCE(:status, item_status)
+            WHERE part_num_id = :id
+            """,
+            new { cust = body.CustomerId, enduser = body.EnduserId, part = body.EnduserPartNum, sheet = body.SheetType,
+                  alloy = body.Alloy, temper = body.Temper, gauge = body.Gauge, status = body.ItemStatus, id = partNumId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetPartAsync(partNumId, ct);
+    }
+
     public Task<PagedResult<Die>> GetDiesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct) =>
         PageAsync<Die>(DieCols, "die", orderBy ?? "die_id",
             status is null ? null : "status = :status",
@@ -827,6 +862,38 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         return await conn.QuerySingleOrDefaultAsync<Carrier>(new CommandDefinition(
             $"SELECT {CarrierCols} FROM carrier WHERE carrier_id = :id", new { id = carrierId }, cancellationToken: ct));
+    }
+
+    public async Task<Carrier> CreateCarrierAsync(CarrierWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "carrier", "carrier_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO carrier (carrier_id, scac, carrier_full_name, carrier_type_code, carrier_city, carrier_state, carrier_phone_number, status)
+            VALUES (:id, :scac, :name, :type, :city, :state, :phone, :status)
+            """,
+            new { id, scac = body.Scac, name = body.CarrierFullName, type = body.CarrierTypeCode, city = body.CarrierCity,
+                  state = body.CarrierState, phone = body.CarrierPhoneNumber, status = body.Status },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetCarrierAsync(id, ct))!;
+    }
+
+    public async Task<Carrier?> UpdateCarrierAsync(long carrierId, CarrierWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE carrier SET scac = :scac, carrier_full_name = :name, carrier_type_code = :type,
+                   carrier_city = :city, carrier_state = :state, carrier_phone_number = :phone, status = :status
+            WHERE carrier_id = :id
+            """,
+            new { scac = body.Scac, name = body.CarrierFullName, type = body.CarrierTypeCode, city = body.CarrierCity,
+                  state = body.CarrierState, phone = body.CarrierPhoneNumber, status = body.Status, id = carrierId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetCarrierAsync(carrierId, ct);
     }
 
     public Task<PagedResult<Shift>> GetShiftsAsync(int page, int pageSize, long? lineNum, string? orderBy, CancellationToken ct) =>

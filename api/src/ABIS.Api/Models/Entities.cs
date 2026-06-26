@@ -243,6 +243,7 @@ public sealed class Part
     public string? Alloy { get; set; }
     public string? Temper { get; set; }
     public decimal? Gauge { get; set; }
+    public int? ItemStatus { get; set; }
 }
 
 /// <summary>A die / tooling record (table <c>die</c>).</summary>

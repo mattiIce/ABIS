@@ -102,7 +102,7 @@ public static class SqliteFixture
 
             CREATE TABLE part_num (
                 part_num_id INTEGER PRIMARY KEY, customer_id INTEGER, enduser_id INTEGER,
-                enduser_part_num TEXT, sheet_type TEXT, alloy TEXT, temper TEXT, gauge REAL);
+                enduser_part_num TEXT, sheet_type TEXT, alloy TEXT, temper TEXT, gauge REAL, item_status INTEGER);
 
             CREATE TABLE die (
                 die_id INTEGER PRIMARY KEY, die_name TEXT, status INTEGER, tool_num TEXT,
@@ -177,14 +177,14 @@ public static class SqliteFixture
             });
 
         conn.Execute("""
-            INSERT INTO part_num (part_num_id, customer_id, enduser_id, enduser_part_num, sheet_type, alloy, temper, gauge)
-            VALUES (:PartNumId, :CustomerId, :EnduserId, :EnduserPartNum, :SheetType, :Alloy, :Temper, :Gauge)
+            INSERT INTO part_num (part_num_id, customer_id, enduser_id, enduser_part_num, sheet_type, alloy, temper, gauge, item_status)
+            VALUES (:PartNumId, :CustomerId, :EnduserId, :EnduserPartNum, :SheetType, :Alloy, :Temper, :Gauge, :ItemStatus)
             """,
             new[]
             {
-                new { PartNumId = 6001L, CustomerId = (long?)4001L, EnduserId = (long?)null, EnduserPartNum = "PN-3003-A", SheetType = "SHEET", Alloy = "3003", Temper = "H14", Gauge = (decimal?)0.125m },
-                new { PartNumId = 6002L, CustomerId = (long?)4001L, EnduserId = (long?)null, EnduserPartNum = "PN-5052-B", SheetType = "SHEET", Alloy = "5052", Temper = "H32", Gauge = (decimal?)0.0625m },
-                new { PartNumId = 6003L, CustomerId = (long?)4002L, EnduserId = (long?)null, EnduserPartNum = "PN-3003-C", SheetType = "PLATE", Alloy = "3003", Temper = "H14", Gauge = (decimal?)0.25m }
+                new { PartNumId = 6001L, CustomerId = (long?)4001L, EnduserId = (long?)null, EnduserPartNum = "PN-3003-A", SheetType = "SHEET", Alloy = "3003", Temper = "H14", Gauge = (decimal?)0.125m, ItemStatus = (int?)1 },
+                new { PartNumId = 6002L, CustomerId = (long?)4001L, EnduserId = (long?)null, EnduserPartNum = "PN-5052-B", SheetType = "SHEET", Alloy = "5052", Temper = "H32", Gauge = (decimal?)0.0625m, ItemStatus = (int?)1 },
+                new { PartNumId = 6003L, CustomerId = (long?)4002L, EnduserId = (long?)null, EnduserPartNum = "PN-3003-C", SheetType = "PLATE", Alloy = "3003", Temper = "H14", Gauge = (decimal?)0.25m, ItemStatus = (int?)0 }
             });
 
         conn.Execute("""

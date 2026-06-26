@@ -307,6 +307,29 @@ public static class ApiEndpoints
            .WithSummary("Get one part-number record by id.")
            .Produces<Part>().Produces(StatusCodes.Status404NotFound);
 
+        api.MapPost("/parts", async (PartWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreatePartAsync(body, ct);
+                return Results.Created($"/api/parts/{created.PartNumId}", created);
+            })
+           .WithName("CreatePart").WithTags("Parts")
+           .WithSummary("Create a part-number record (server-assigned id; requires customerId).")
+           .Produces<Part>(StatusCodes.Status201Created).ProducesValidationProblem();
+
+        api.MapPut("/parts/{partNumId:long}", async (long partNumId, PartWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdatePartAsync(partNumId, body, ct) is { } part
+                    ? Results.Ok(part)
+                    : Results.NotFound();
+            })
+           .WithName("UpdatePart").WithTags("Parts")
+           .WithSummary("Replace a part-number record.")
+           .Produces<Part>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+
         // ---- Dies (die / tooling) --------------------------------------
         api.MapGet("/dies", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, int? status = null, string? sort = null, string? dir = null) =>
@@ -432,6 +455,29 @@ public static class ApiEndpoints
            .WithName("GetCarrier").WithTags("Carriers")
            .WithSummary("Get one carrier by id.")
            .Produces<Carrier>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapPost("/carriers", async (CarrierWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateCarrierAsync(body, ct);
+                return Results.Created($"/api/carriers/{created.CarrierId}", created);
+            })
+           .WithName("CreateCarrier").WithTags("Carriers")
+           .WithSummary("Create a carrier (server-assigned id; requires carrierFullName).")
+           .Produces<Carrier>(StatusCodes.Status201Created).ProducesValidationProblem();
+
+        api.MapPut("/carriers/{carrierId:long}", async (long carrierId, CarrierWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                return await repo.UpdateCarrierAsync(carrierId, body, ct) is { } carrier
+                    ? Results.Ok(carrier)
+                    : Results.NotFound();
+            })
+           .WithName("UpdateCarrier").WithTags("Carriers")
+           .WithSummary("Replace a carrier.")
+           .Produces<Carrier>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
         // ---- Shifts ----------------------------------------------------
         api.MapGet("/shifts", async (IAbisRepository repo, CancellationToken ct,
@@ -684,6 +730,22 @@ public static class ApiEndpoints
         var errors = new Dictionary<string, string[]>();
         if (string.IsNullOrWhiteSpace(body.EnduserPartNum))
             errors["enduserPartNum"] = ["enduserPartNum is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(PartWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (body.CustomerId is null)
+            errors["customerId"] = ["customerId is required."];
+        return errors.Count == 0 ? null : errors;
+    }
+
+    private static Dictionary<string, string[]>? Validate(CarrierWrite body)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (string.IsNullOrWhiteSpace(body.CarrierFullName))
+            errors["carrierFullName"] = ["carrierFullName is required."];
         return errors.Count == 0 ? null : errors;
     }
 
