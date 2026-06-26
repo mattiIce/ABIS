@@ -3399,6 +3399,125 @@
         }
       }
     },
+    "/api/quality/scrap-types": {
+      "get": {
+        "tags": [
+          "Quality"
+        ],
+        "summary": "The scrap/defect type catalog.",
+        "operationId": "GetScrapTypes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScrapType"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/quality/product-types": {
+      "get": {
+        "tags": [
+          "Quality"
+        ],
+        "summary": "The product-type lookup.",
+        "operationId": "GetProductTypes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductType"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/quality/recovery-customers": {
+      "get": {
+        "tags": [
+          "Quality"
+        ],
+        "summary": "Customers configured for recovery reporting.",
+        "operationId": "GetRecoveryCustomers",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecoveryCustomer"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/quality/customer-defects": {
+      "get": {
+        "tags": [
+          "Quality"
+        ],
+        "summary": "The scrap/defect types a customer tracks.",
+        "operationId": "GetCustomerDefects",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerDefect"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/receiving-bols": {
       "get": {
         "tags": [
@@ -5833,6 +5952,40 @@
         },
         "additionalProperties": false
       },
+      "CustomerDefect": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "scrapTypeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "scrapCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "scrapDefect": {
+            "type": "string",
+            "nullable": true
+          },
+          "abcOrMill": {
+            "type": "string",
+            "nullable": true
+          },
+          "autoparts": {
+            "type": "string",
+            "nullable": true
+          },
+          "nonAutoparts": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CustomerEdi": {
         "type": "object",
         "properties": {
@@ -7352,6 +7505,20 @@
         },
         "additionalProperties": false
       },
+      "ProductType": {
+        "type": "object",
+        "properties": {
+          "productTypeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "productTypeName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ProductionLine": {
         "type": "object",
         "properties": {
@@ -7496,6 +7663,32 @@
           "status": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RecoveryCustomer": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "customerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "allProducts": {
+            "type": "string",
+            "nullable": true
+          },
+          "autoOnly": {
+            "type": "string",
+            "nullable": true
+          },
+          "commOnly": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -7716,6 +7909,24 @@
           "skidScrapStatus": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScrapType": {
+        "type": "object",
+        "properties": {
+          "scrapTypeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "scrapCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "scrapDefect": {
+            "type": "string",
             "nullable": true
           }
         },

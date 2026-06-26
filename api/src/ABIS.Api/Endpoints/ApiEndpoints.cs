@@ -905,6 +905,27 @@ public static class ApiEndpoints
            .WithSummary("Per-line production summary (job count, avg yield, processed weight) over an optional date range.")
            .Produces<IReadOnlyList<ProductionSummaryRow>>();
 
+        // ---- Quality / Recovery (customer-defect setup) -----------------
+        api.MapGet("/quality/scrap-types", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetScrapTypesAsync(ct)))
+           .WithName("GetScrapTypes").WithTags("Quality")
+           .WithSummary("The scrap/defect type catalog.").Produces<IReadOnlyList<ScrapType>>();
+
+        api.MapGet("/quality/product-types", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetProductTypesAsync(ct)))
+           .WithName("GetProductTypes").WithTags("Quality")
+           .WithSummary("The product-type lookup.").Produces<IReadOnlyList<ProductType>>();
+
+        api.MapGet("/quality/recovery-customers", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetRecoveryCustomersAsync(ct)))
+           .WithName("GetRecoveryCustomers").WithTags("Quality")
+           .WithSummary("Customers configured for recovery reporting.").Produces<IReadOnlyList<RecoveryCustomer>>();
+
+        api.MapGet("/quality/customer-defects", async (long customerId, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetCustomerDefectsAsync(customerId, ct)))
+           .WithName("GetCustomerDefects").WithTags("Quality")
+           .WithSummary("The scrap/defect types a customer tracks.").Produces<IReadOnlyList<CustomerDefect>>();
+
         api.MapGet("/scrap-skids", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? sort = null, string? dir = null) =>
             {

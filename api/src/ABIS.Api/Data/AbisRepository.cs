@@ -691,6 +691,52 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
+    public async Task<IReadOnlyList<ScrapType>> GetScrapTypesAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<ScrapType>(new CommandDefinition(
+            "SELECT scrap_type_id AS ScrapTypeId, scrap_code AS ScrapCode, scrap_defect AS ScrapDefect FROM scrap_type ORDER BY scrap_type_id",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<ProductType>> GetProductTypesAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<ProductType>(new CommandDefinition(
+            "SELECT product_type_id AS ProductTypeId, product_type AS ProductTypeName FROM product_type ORDER BY product_type_id",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<RecoveryCustomer>> GetRecoveryCustomersAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<RecoveryCustomer>(new CommandDefinition(
+            """
+            SELECT customer_id AS CustomerId, customer_name AS CustomerName,
+                   all_products AS AllProducts, auto_only AS AutoOnly, comm_only AS CommOnly
+            FROM recovery_report_customer ORDER BY customer_name
+            """, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<CustomerDefect>> GetCustomerDefectsAsync(long customerId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // The scrap/defect types a customer tracks (legacy d_recovery_customer_defect_list).
+        var rows = await conn.QueryAsync<CustomerDefect>(new CommandDefinition(
+            """
+            SELECT c.customer_id AS CustomerId, c.scrap_type_id AS ScrapTypeId,
+                   s.scrap_code AS ScrapCode, s.scrap_defect AS ScrapDefect,
+                   c.abc_or_mill AS AbcOrMill, c.autoparts AS Autoparts, c.non_autoparts AS NonAutoparts
+            FROM cust_scrap_type_needed c JOIN scrap_type s ON s.scrap_type_id = c.scrap_type_id
+            WHERE c.customer_id = :id
+            ORDER BY s.scrap_code
+            """, new { id = customerId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
     public async Task<IReadOnlyList<InvoiceCoil>> GetInvoiceCoilsAsync(long abJobNum, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
