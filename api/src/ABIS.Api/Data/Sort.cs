@@ -77,6 +77,17 @@ public static class Sort
             ("status", "status"), ("receivedDate", "received_date")),
             DefaultOrderBy: "receiving_bol_id", TieBreaker: "receiving_bol_id"),
 
+        ["ediTransactions"] = new(Cols(
+            ("ediFileId", "edi_file_id"), ("transactionTime", "transaction_time"),
+            ("transactionTypeId", "transaction_type_id"), ("customerId", "customer_id"),
+            ("faReceiveStatus", "fa_receive_status")),
+            DefaultOrderBy: "edi_file_id DESC", TieBreaker: "edi_file_id"),
+
+        ["ediLog"] = new(Cols(
+            ("ediLogTimestamp", "edi_log_timestamp"), ("customerId", "customer_id"),
+            ("customerEdiName", "customer_edi_name"), ("ediFileId", "edi_file_id")),
+            DefaultOrderBy: "edi_log_timestamp DESC", TieBreaker: "customer_id"),
+
         ["scanLogs"] = new(Cols(
             ("scanId", "scan_id"), ("abJobNum", "ab_job_num"), ("scanStation", "scan_station"),
             ("scanDatetime", "scan_datetime")),

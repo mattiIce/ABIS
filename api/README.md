@@ -206,6 +206,9 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/receiving-bols/{receivingBolId}` | One receiving BOL |
 | `POST /api/receiving-bols` | Create a receiving BOL (requires `bol`, `customerId`) → 201 |
 | `PUT /api/receiving-bols/{receivingBolId}` | Replace a receiving BOL |
+| `GET /api/edi/transactions?page&pageSize&customerId&transactionTypeId&sort&dir` | List outbound EDI transactions, newest first (paged, filterable, sortable) |
+| `GET /api/edi/transactions/{ediFileId}` | One outbound EDI transaction |
+| `GET /api/edi/log?page&pageSize&customerId&sort&dir` | List EDI transmission-log entries, newest first |
 | `GET /api/scan-logs?page&pageSize&abJobNum&sort&dir` | List shop-floor scan events, newest first (paged, filterable, sortable) |
 | `GET /api/scan-logs/{scanId}` | One scan event |
 | `POST /api/scan-logs` | Record a scan event, append-only (requires `abJobNum`, `scanStation`, `note`) → 201 |
@@ -243,6 +246,8 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/lookups/transportation-methods` | Transportation method codes (referenced by shipments) |
 | `GET /api/lookups/equipment-types` | Shipping equipment type codes (referenced by shipments) |
 | `GET /api/lookups/customer-types` | Customer classifications (referenced by customers) |
+| `GET /api/lookups/edi-types` | EDI transaction-set types + X12 versions (table `edi_type`) |
+| `GET /api/lookups/customer-edi` | Customer EDI trading-partner configuration (table `customer_edi`) |
 | `GET /api/audit-log?page&pageSize&source&sort&dir` | List the action/audit log, newest first (sortable) |
 
 Collections return a paged envelope: `{ items, page, pageSize, totalCount, totalPages }`.

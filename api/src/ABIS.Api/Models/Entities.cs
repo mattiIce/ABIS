@@ -437,3 +437,59 @@ public sealed class CustomerType
     public string? CustomerTypeCode { get; set; }
     public string? CustomerTypeDescription { get; set; }
 }
+
+/// <summary>One outbound EDI transaction sent to a trading partner (table
+/// <c>outbound_edi_transaction</c>) — the X12 send ledger. The binary
+/// <c>edi_file_raw</c> (LONG RAW) payload is not exposed via this read model.</summary>
+public sealed class EdiTransaction
+{
+    public long EdiFileId { get; set; }
+    public string? DunsFrom { get; set; }
+    public string? DunsTo { get; set; }
+    public long? InterchangeControlNumber { get; set; }
+    public long? GroupControlNumber { get; set; }
+    public DateTime? TransactionTime { get; set; }
+    public string? CustomerSentTo { get; set; }
+    public string? EdiFileName { get; set; }
+    /// <summary>Functional-acknowledgment status for this transaction (997 received?).</summary>
+    public int? FaReceiveStatus { get; set; }
+    public long? CustomerId { get; set; }
+    public long? SetControlNum { get; set; }
+    /// <summary>The X12 transaction set (e.g. "856", "870").</summary>
+    public string? TransactionTypeId { get; set; }
+    public string? FaReceivedTime { get; set; }
+    public string? FaReceivedFileName { get; set; }
+}
+
+/// <summary>An EDI transmission log entry (table <c>edi_log</c>).</summary>
+public sealed class EdiLogEntry
+{
+    public DateTime? EdiLogTimestamp { get; set; }
+    public long CustomerId { get; set; }
+    public string? CustomerEdiName { get; set; }
+    public string? EdiLogContents { get; set; }
+    public int? EdiLogFlag { get; set; }
+    public long? EdiFileId { get; set; }
+    public long? IsaSeq { get; set; }
+    public long? GsSeq { get; set; }
+    public string? EdiText { get; set; }
+}
+
+/// <summary>An EDI transaction-set type + X12 version (table <c>edi_type</c>).</summary>
+public sealed class EdiType
+{
+    public int EdiTypeId { get; set; }
+    public string? EdiVersion { get; set; }
+    public string? EdiTypeDescription { get; set; }
+}
+
+/// <summary>A customer's EDI trading-partner configuration (table
+/// <c>customer_edi</c>) — which transaction set/version maps to a partner route.</summary>
+public sealed class CustomerEdi
+{
+    public string? CustomerEdiName { get; set; }
+    public long CustomerId { get; set; }
+    public int? EdiTypeId { get; set; }
+    public string? EdiVersion { get; set; }
+    public string? CustomerEdiDesc { get; set; }
+}

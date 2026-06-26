@@ -93,7 +93,7 @@ the B-vs-C commitment until after a measured pilot.
       still needs the PB source export (blocked, as above); the surface is mapped
       in [`ARCHITECTURE.md`](ARCHITECTURE.md) §Integration surface.
 
-### Phase 2 — Build the seam (the missing API tier)  *(in progress)*
+### Phase 2 — Build the seam (the missing API tier)  *(complete)*
 - [x] Stand up a **REST API** over the existing database (read-first), starting
       with the core entities (`ab_job`, `coil`, `customer_order`/`order_item`,
       test results). This is the integration point everything else hangs off of.
@@ -124,9 +124,12 @@ the B-vs-C commitment until after a measured pilot.
       items, jobs, coils, sheet skids, and scrap skids (POST/PUT, server-assigned
       ids, validation, 201/400/404) plus operational PATCH on jobs and coils —
       all tested against the fixture.
-- [ ] Shipping / EDI surface (`inbound_shipment`, `shipment`) — deferred until
-      Phase 1's full schema lands (these tables are too thinly represented in the
-      recovered model to build faithfully).
+- [x] Shipping / EDI surface. → Done (the full schema landed). **Shipping**:
+      shipments (GET/POST/PUT + dispatch PATCH) and receiving BOLs (GET/POST/PUT).
+      **EDI** (read): outbound transaction ledger (`GET /api/edi/transactions`
+      [+ `/{id}`], filter by customer/transaction-set), transmission log
+      (`GET /api/edi/log`), and the `edi-types` / `customer-edi` lookups — all
+      validated against the live 87k-row ledger.
 - [x] **Observability / audit parity**: `AuditMiddleware` records every mutating
       request into the legacy `opc_action_log`, exposed via `GET /api/audit-log`.
 - [x] **Authentication**: API-key auth (`X-Api-Key`) gates the `/api` surface
@@ -134,8 +137,11 @@ the B-vs-C commitment until after a measured pilot.
 - [x] **Deployment readiness**: multi-stage `Dockerfile` (built **and smoke-tested**
       in CI — the image must boot and serve `/health` + `/health/ready`), CORS for
       a future SPA, a `/` service-info endpoint, and a `requests.http` collection.
-- [ ] Validate the **Oracle** data-access path against a real database (CI only
-      exercises the SQLite fixture today).
+- [x] Validate the **Oracle** data-access path against a real database. → Done:
+      the read **and** write/update paths were exercised end-to-end against the
+      live non-prod Oracle 11g; three live-only bug classes (ORA-01745 reserved
+      binds, ORA-00932 COALESCE typing, opaque-500 input) were found and fixed.
+      See [`ORACLE_VALIDATION.md`](ORACLE_VALIDATION.md).
 
 ### Phase 3 — Pilot both modernization paths on real modules
 

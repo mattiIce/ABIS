@@ -117,6 +117,21 @@ public sealed class AbisRepository : IAbisRepository
         scan_station AS ScanStation, note AS Note
         """;
 
+    // edi_file_raw (LONG RAW binary payload) is intentionally excluded.
+    private const string EdiTransactionCols = """
+        edi_file_id AS EdiFileId, duns_from AS DunsFrom, duns_to AS DunsTo,
+        interchange_control_number AS InterchangeControlNumber, group_control_number AS GroupControlNumber,
+        transaction_time AS TransactionTime, customer_sent_to AS CustomerSentTo, edi_file_name AS EdiFileName,
+        fa_receive_status AS FaReceiveStatus, customer_id AS CustomerId, set_control_num AS SetControlNum,
+        transaction_type_id AS TransactionTypeId, fa_received_time AS FaReceivedTime, fa_received_file_name AS FaReceivedFileName
+        """;
+
+    private const string EdiLogCols = """
+        edi_log_timestamp AS EdiLogTimestamp, customer_id AS CustomerId, customer_edi_name AS CustomerEdiName,
+        edi_log_contents AS EdiLogContents, edi_log_flag AS EdiLogFlag, edi_file_id AS EdiFileId,
+        isa_seq AS IsaSeq, gs_seq AS GsSeq, edi_text AS EdiText
+        """;
+
     private const string ContactCols = """
         contact_id AS ContactId, customer_id AS CustomerId, first_name AS FirstName, last_name AS LastName,
         department AS Department, city AS City, state AS State, phone1 AS Phone1, email1 AS Email1
@@ -939,6 +954,50 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         return await conn.QuerySingleOrDefaultAsync<ReceivingBol>(new CommandDefinition(
             $"SELECT {ReceivingBolCols} FROM receiving_bol WHERE receiving_bol_id = :id", new { id = receivingBolId }, cancellationToken: ct));
+    }
+
+    // ---- EDI (outbound transaction ledger + transmission log) ------------
+    public Task<PagedResult<EdiTransaction>> GetEdiTransactionsAsync(int page, int pageSize, long? customerId, string? transactionTypeId, string? orderBy, CancellationToken ct)
+    {
+        var p = new DynamicParameters();
+        var conditions = new List<string>();
+        if (customerId is not null) { conditions.Add("customer_id = :customerId"); p.Add("customerId", customerId); }
+        if (transactionTypeId is not null) { conditions.Add("transaction_type_id = :ttype"); p.Add("ttype", transactionTypeId); }
+        var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
+        return PageAsync<EdiTransaction>(EdiTransactionCols, "outbound_edi_transaction", orderBy ?? "edi_file_id DESC", where, p, page, pageSize, ct);
+    }
+
+    public async Task<EdiTransaction?> GetEdiTransactionAsync(long ediFileId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<EdiTransaction>(new CommandDefinition(
+            $"SELECT {EdiTransactionCols} FROM outbound_edi_transaction WHERE edi_file_id = :id", new { id = ediFileId }, cancellationToken: ct));
+    }
+
+    public Task<PagedResult<EdiLogEntry>> GetEdiLogAsync(int page, int pageSize, long? customerId, string? orderBy, CancellationToken ct)
+    {
+        var p = new DynamicParameters();
+        var where = customerId is null ? null : "customer_id = :customerId";
+        if (customerId is not null) p.Add("customerId", customerId);
+        return PageAsync<EdiLogEntry>(EdiLogCols, "edi_log", orderBy ?? "edi_log_timestamp DESC", where, p, page, pageSize, ct);
+    }
+
+    public async Task<IReadOnlyList<EdiType>> GetEdiTypesAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<EdiType>(new CommandDefinition(
+            "SELECT edi_type_id AS EdiTypeId, edi_version AS EdiVersion, edi_type_description AS EdiTypeDescription FROM edi_type ORDER BY edi_type_id, edi_version",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<CustomerEdi>> GetCustomerEdiAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<CustomerEdi>(new CommandDefinition(
+            "SELECT customer_edi_name AS CustomerEdiName, customer_id AS CustomerId, edi_type_id AS EdiTypeId, edi_version AS EdiVersion, customer_edi_desc AS CustomerEdiDesc FROM customer_edi ORDER BY customer_edi_name",
+            cancellationToken: ct));
+        return rows.AsList();
     }
 
     public async Task<ReceivingBol> CreateReceivingBolAsync(ReceivingBolWrite body, CancellationToken ct)
