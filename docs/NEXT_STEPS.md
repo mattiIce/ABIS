@@ -163,6 +163,7 @@ The codebase is deliberately uniform. To add a resource:
 | [`MODERNIZATION_ROADMAP.md`](MODERNIZATION_ROADMAP.md) | Strategy + phased checklist |
 | [`PHASE3_PILOT_PLAN.md`](PHASE3_PILOT_PLAN.md) | The PowerServer-vs-greenfield bake-off |
 | [`PHASE3_PILOT_LOG.md`](PHASE3_PILOT_LOG.md) | Live pilot results + scoring (Path C executed; Path B blocked) |
+| [`PHASE4_CUTOVER_PLAN.md`](PHASE4_CUTOVER_PLAN.md) | Module-by-module migration: sequencing, procedure, rollback |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | As-is system, integration surface, build-readiness |
 | [`INTEGRATIONS.md`](INTEGRATIONS.md) | External integration catalog (EDI, serial/WSC32, OPC) |
 | [`EDGE_SERVICE.md`](EDGE_SERVICE.md) | Shop-floor edge service (serial scales/gauges → HTTP) |

@@ -169,8 +169,15 @@ ERP/MES). It is grounded in the analysis in
       which can't be scored until its prerequisites land.
 
 ### Phase 4 — Migrate module-by-module (strangler-fig)
+
+> Plan: [`PHASE4_CUTOVER_PLAN.md`](PHASE4_CUTOVER_PLAN.md) — sequencing, the
+> per-module pilot→watch→flip procedure, rollback, and exit criteria.
+
 - [ ] Roll modules over behind the API seam in dependency order, oldest/most
       painful first; keep legacy and new running against one DB until cutover.
+      → **Plan written**; seven greenfield screens are built and ready to pilot
+      (read-only first: `qa-results`, then low-volume writes, then the
+      transactional core). Execution needs production rollout + monitoring.
 - [~] Replace serial/OPC integration with a small, well-tested **edge service**
       on the shop floor exposing those devices to the API. → **Skeleton built +
       tested** ([`edge/AbisEdge`](../edge/AbisEdge), [`EDGE_SERVICE.md`](EDGE_SERVICE.md)):
