@@ -99,8 +99,10 @@ public sealed class AbisRepository : IAbisRepository
         """;
 
     private const string DieCols = """
-        die_id AS DieId, die_name AS DieName, status AS Status, tool_num AS ToolNum,
-        part_name AS PartName, gross_weight AS GrossWeight, location AS Location, description AS Description
+        die_id AS DieId, die_name AS DieName, owner AS Owner, status AS Status, tool_num AS ToolNum,
+        part_name AS PartName, gross_weight AS GrossWeight, location AS Location, description AS Description,
+        engineered_scrap_y_n AS EngineeredScrapYN, num_of_parts_per_hit AS NumOfPartsPerHit,
+        angle_change_minutes AS AngleChangeMinutes, average_die_change_minutes AS AverageDieChangeMinutes
         """;
 
     private const string ShipmentCols = """
@@ -1240,11 +1242,15 @@ public sealed class AbisRepository : IAbisRepository
         var id = await NextIdAsync(conn, tx, "die", "die_id", ct);
         await conn.ExecuteAsync(new CommandDefinition(
             """
-            INSERT INTO die (die_id, die_name, status, tool_num, part_name, gross_weight, location, description)
-            VALUES (:id, :name, :status, :tool, :part, :weight, :loc, :idesc)
+            INSERT INTO die (die_id, die_name, owner, status, tool_num, part_name, gross_weight, location, description,
+                engineered_scrap_y_n, num_of_parts_per_hit, angle_change_minutes, average_die_change_minutes)
+            VALUES (:id, :name, :owner, :status, :tool, :part, :weight, :loc, :idesc,
+                :espyn, :npph, :acm, :adcm)
             """,
-            new { id, name = body.DieName, status = body.Status, tool = body.ToolNum, part = body.PartName,
-                  weight = body.GrossWeight, loc = body.Location, idesc = body.Description },
+            new { id, name = body.DieName, owner = body.Owner, status = body.Status, tool = body.ToolNum, part = body.PartName,
+                  weight = body.GrossWeight, loc = body.Location, idesc = body.Description,
+                  espyn = body.EngineeredScrapYN, npph = body.NumOfPartsPerHit,
+                  acm = body.AngleChangeMinutes, adcm = body.AverageDieChangeMinutes },
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
         return (await GetDieAsync(id, ct))!;
@@ -1255,12 +1261,16 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         var n = await conn.ExecuteAsync(new CommandDefinition(
             """
-            UPDATE die SET die_name = :name, status = :status, tool_num = :tool, part_name = :part,
-                   gross_weight = :weight, location = :loc, description = :idesc
+            UPDATE die SET die_name = :name, owner = :owner, status = :status, tool_num = :tool, part_name = :part,
+                   gross_weight = :weight, location = :loc, description = :idesc,
+                   engineered_scrap_y_n = :espyn, num_of_parts_per_hit = :npph,
+                   angle_change_minutes = :acm, average_die_change_minutes = :adcm
             WHERE die_id = :id
             """,
-            new { name = body.DieName, status = body.Status, tool = body.ToolNum, part = body.PartName,
-                  weight = body.GrossWeight, loc = body.Location, idesc = body.Description, id = dieId },
+            new { name = body.DieName, owner = body.Owner, status = body.Status, tool = body.ToolNum, part = body.PartName,
+                  weight = body.GrossWeight, loc = body.Location, idesc = body.Description,
+                  espyn = body.EngineeredScrapYN, npph = body.NumOfPartsPerHit,
+                  acm = body.AngleChangeMinutes, adcm = body.AverageDieChangeMinutes, id = dieId },
             cancellationToken: ct));
         return n == 0 ? null : await GetDieAsync(dieId, ct);
     }

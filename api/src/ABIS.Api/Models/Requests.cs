@@ -45,12 +45,18 @@ public sealed class CarrierWrite
 public sealed class DieWrite
 {
     public string? DieName { get; set; }
+    public string? Owner { get; set; }
     public int? Status { get; set; }
     public string? ToolNum { get; set; }
     public string? PartName { get; set; }
     public decimal? GrossWeight { get; set; }
     public string? Location { get; set; }
     public string? Description { get; set; }
+    /// <summary>Y/N flag (<c>die.engineered_scrap_y_n</c>, CHAR(1)).</summary>
+    public string? EngineeredScrapYN { get; set; }
+    public int? NumOfPartsPerHit { get; set; }
+    public int? AngleChangeMinutes { get; set; }
+    public int? AverageDieChangeMinutes { get; set; }
 }
 
 /// <summary>Create or fully replace a sketch header. <see cref="SketchName"/> is

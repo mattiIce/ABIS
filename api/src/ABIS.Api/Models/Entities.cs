@@ -366,12 +366,19 @@ public sealed class Die
 {
     public long DieId { get; set; }
     public string? DieName { get; set; }
+    /// <summary>The die's owner (real <c>die.owner</c>, an editable header field).</summary>
+    public string? Owner { get; set; }
     public int? Status { get; set; }
     public string? ToolNum { get; set; }
     public string? PartName { get; set; }
     public decimal? GrossWeight { get; set; }
     public string? Location { get; set; }
     public string? Description { get; set; }
+    /// <summary>Y/N — whether the die produces engineered scrap (<c>die.engineered_scrap_y_n</c>).</summary>
+    public string? EngineeredScrapYN { get; set; }
+    public int? NumOfPartsPerHit { get; set; }
+    public int? AngleChangeMinutes { get; set; }
+    public int? AverageDieChangeMinutes { get; set; }
 }
 
 /// <summary>A shipment / packing list (table <c>shipment</c>; PK <c>packing_list</c>).</summary>

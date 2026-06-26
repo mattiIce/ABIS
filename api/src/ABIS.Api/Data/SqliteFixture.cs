@@ -133,8 +133,10 @@ public static class SqliteFixture
                 enduser_part_num TEXT, sheet_type TEXT, alloy TEXT, temper TEXT, gauge REAL, item_status INTEGER);
 
             CREATE TABLE die (
-                die_id INTEGER PRIMARY KEY, die_name TEXT, status INTEGER, tool_num TEXT,
-                part_name TEXT, gross_weight REAL, location TEXT, description TEXT);
+                die_id INTEGER PRIMARY KEY, die_name TEXT, owner TEXT, status INTEGER, tool_num TEXT,
+                part_name TEXT, gross_weight REAL, location TEXT, description TEXT,
+                engineered_scrap_y_n TEXT, num_of_parts_per_hit INTEGER,
+                angle_change_minutes INTEGER, average_die_change_minutes INTEGER);
 
             CREATE TABLE shipment (
                 packing_list INTEGER PRIMARY KEY, bill_of_lading INTEGER, carrier_id INTEGER,
@@ -309,13 +311,15 @@ public static class SqliteFixture
             });
 
         conn.Execute("""
-            INSERT INTO die (die_id, die_name, status, tool_num, part_name, gross_weight, location, description)
-            VALUES (:DieId, :DieName, :Status, :ToolNum, :PartName, :GrossWeight, :Location, :Description)
+            INSERT INTO die (die_id, die_name, owner, status, tool_num, part_name, gross_weight, location, description,
+                engineered_scrap_y_n, num_of_parts_per_hit, angle_change_minutes, average_die_change_minutes)
+            VALUES (:DieId, :DieName, :Owner, :Status, :ToolNum, :PartName, :GrossWeight, :Location, :Description,
+                :EngineeredScrapYN, :NumOfPartsPerHit, :AngleChangeMinutes, :AverageDieChangeMinutes)
             """,
             new[]
             {
-                new { DieId = 2001L, DieName = "DIE-ALPHA", Status = (int?)1, ToolNum = "T-100", PartName = "BRACKET-A", GrossWeight = (decimal?)1250.0m, Location = "RACK-1", Description = "Alpha progressive die" },
-                new { DieId = 2002L, DieName = "DIE-BETA", Status = (int?)0, ToolNum = "T-200", PartName = "PANEL-B", GrossWeight = (decimal?)3400.0m, Location = "RACK-2", Description = "Beta blank die" }
+                new { DieId = 2001L, DieName = "DIE-ALPHA", Owner = "ABC", Status = (int?)1, ToolNum = "T-100", PartName = "BRACKET-A", GrossWeight = (decimal?)1250.0m, Location = "RACK-1", Description = "Alpha progressive die", EngineeredScrapYN = "N", NumOfPartsPerHit = (int?)2, AngleChangeMinutes = (int?)15, AverageDieChangeMinutes = (int?)45 },
+                new { DieId = 2002L, DieName = "DIE-BETA", Owner = "CUST-4002", Status = (int?)0, ToolNum = "T-200", PartName = "PANEL-B", GrossWeight = (decimal?)3400.0m, Location = "RACK-2", Description = "Beta blank die", EngineeredScrapYN = "Y", NumOfPartsPerHit = (int?)1, AngleChangeMinutes = (int?)20, AverageDieChangeMinutes = (int?)60 }
             });
 
         conn.Execute("""

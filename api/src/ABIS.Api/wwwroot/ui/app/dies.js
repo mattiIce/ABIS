@@ -54,12 +54,17 @@ async function loadDie(id) {
         editingId = id;
         $('#formTitle').textContent = `Edit die #${id}`;
         setV('#dName', d.dieName);
+        setV('#dOwner', d.owner);
         setV('#dStatus', d.status);
         setV('#dTool', d.toolNum);
         setV('#dPart', d.partName);
         setV('#dWeight', d.grossWeight);
         setV('#dLocation', d.location);
         setV('#dDesc', d.description);
+        setV('#dEngScrap', d.engineeredScrapYN);
+        setV('#dPartsHit', d.numOfPartsPerHit);
+        setV('#dAngleMin', d.angleChangeMinutes);
+        setV('#dAvgChgMin', d.averageDieChangeMinutes);
     }
     catch (e) {
         setErr(`Load failed: ${e.message}`);
@@ -71,7 +76,8 @@ async function loadDie(id) {
 function newDie() {
     editingId = null;
     $('#formTitle').textContent = 'New die';
-    ['#dName', '#dStatus', '#dTool', '#dPart', '#dWeight', '#dLocation', '#dDesc'].forEach((id) => setV(id, ''));
+    ['#dName', '#dOwner', '#dStatus', '#dTool', '#dPart', '#dWeight', '#dLocation', '#dDesc',
+        '#dEngScrap', '#dPartsHit', '#dAngleMin', '#dAvgChgMin'].forEach((id) => setV(id, ''));
     setOk('');
     setErr('');
 }
@@ -81,12 +87,17 @@ async function save() {
     setBusy(true);
     const body = new DieWrite({
         dieName: v('#dName') || undefined,
+        owner: v('#dOwner') || undefined,
         status: v('#dStatus') ? Number(v('#dStatus')) : undefined,
         toolNum: v('#dTool') || undefined,
         partName: v('#dPart') || undefined,
         grossWeight: v('#dWeight') ? Number(v('#dWeight')) : undefined,
         location: v('#dLocation') || undefined,
         description: v('#dDesc') || undefined,
+        engineeredScrapYN: v('#dEngScrap') || undefined,
+        numOfPartsPerHit: v('#dPartsHit') ? Number(v('#dPartsHit')) : undefined,
+        angleChangeMinutes: v('#dAngleMin') ? Number(v('#dAngleMin')) : undefined,
+        averageDieChangeMinutes: v('#dAvgChgMin') ? Number(v('#dAvgChgMin')) : undefined,
     });
     try {
         if (editingId == null) {

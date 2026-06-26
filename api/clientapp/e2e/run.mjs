@@ -98,12 +98,24 @@ test('downtime flow: create, get, update instance (typed)', async () => {
 
 // The dies SPA's flow: create a die, then load + replace it (typed).
 test('dies flow: create, get, update die (typed)', async () => {
-  const created = await client.createDie(new DieWrite({ dieName: 'E2E-DIE', status: 0, toolNum: 'T-E2E' }));
+  // Back-check widening: owner + the change-time / engineered-scrap columns round-trip.
+  const created = await client.createDie(new DieWrite({
+    dieName: 'E2E-DIE', owner: 'E2E-OWN', status: 0, toolNum: 'T-E2E',
+    engineeredScrapYN: 'Y', numOfPartsPerHit: 3, angleChangeMinutes: 12, averageDieChangeMinutes: 40,
+  }));
   assert.ok(created.dieId > 0);
+  assert.equal(created.owner, 'E2E-OWN');
+  assert.equal(created.engineeredScrapYN, 'Y');
+  assert.equal(created.numOfPartsPerHit, 3);
   const got = await client.getDie(created.dieId);
   assert.equal(got.dieId, created.dieId);
-  const updated = await client.updateDie(created.dieId, new DieWrite({ dieName: 'E2E-DIE', status: 1, location: 'BAY-9' }));
+  assert.equal(got.averageDieChangeMinutes, 40);
+  const updated = await client.updateDie(created.dieId, new DieWrite({
+    dieName: 'E2E-DIE', owner: 'E2E-OWN-2', status: 1, location: 'BAY-9', numOfPartsPerHit: 4,
+  }));
   assert.equal(updated.location, 'BAY-9');
+  assert.equal(updated.owner, 'E2E-OWN-2');
+  assert.equal(updated.numOfPartsPerHit, 4);
 });
 
 // The receiving SPA's flow: create a BOL, then load + replace it (typed).
