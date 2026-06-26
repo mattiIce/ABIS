@@ -29,6 +29,8 @@ import {
   SheetSkidWrite,
   ScrapSkidWrite,
   SheetSkidWarehousePatch,
+  SalesReminderWrite,
+  SalesProbabilityWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -353,4 +355,66 @@ test('order-entry read flow: listOrders then getOrderDetail (typed)', async () =
   const detail = await client.getOrderDetail(id);
   assert.equal(detail.order.orderAbcNum, id);
   assert.ok(Array.isArray(detail.items));
+});
+
+// The Sales SPA's read flow: pending-quote list carries the joined customer/contact and
+// the latest win probability; opening a quote returns the typed header.
+test('sales flow: listQuotes carries latest probability, getQuote header (typed)', async () => {
+  const quotes = await client.getSalesQuotes(undefined);
+  assert.ok(quotes.length >= 3);
+  const q1 = quotes.find((q) => q.quoteId === 7001 && q.quoteRevisionId === 1);
+  assert.ok(q1, 'seeded quote 7001-1 present');
+  assert.equal(q1.customerShortName !== undefined, true);
+  assert.equal(q1.latestProbability, 65); // newest of the two seeded reviews
+  const header = await client.getSalesQuote(7001, 1);
+  assert.equal(header.alloy, '3003');
+  assert.equal(header.approvalSales, 'Y');
+});
+
+// Sales search filters by customer / end-use / alloy.
+test('sales flow: getSalesQuotes(search) filters (typed)', async () => {
+  const hit = await client.getSalesQuotes('5052');
+  assert.ok(hit.length >= 1);
+  assert.ok(hit.every((q) => q.quoteId === 7002));
+  const miss = await client.getSalesQuotes('nope-no-match');
+  assert.equal(miss.length, 0);
+});
+
+// Sales contacts: the address book, optionally scoped to a customer.
+test('sales flow: getSalesContacts all + by customer (typed)', async () => {
+  const all = await client.getSalesContacts(undefined);
+  assert.ok(all.length >= 3);
+  const scoped = await client.getSalesContacts(4002);
+  assert.ok(scoped.length >= 1);
+  assert.ok(scoped.every((c) => c.customerId === 4002));
+});
+
+// The Sales CRM write flow: log a follow-up event, then record a probability review —
+// the recorded review becomes the quote's new latest probability.
+test('sales flow: createSalesReminder + createSalesProbability (typed)', async () => {
+  const events0 = await client.getSalesReminders(7002, 2);
+  const ev = await client.createSalesReminder(7002, 2, new SalesReminderWrite({
+    eventNotes: 'E2E follow-up', eventStatus: 'OPEN', userId: 'e2e',
+  }));
+  assert.ok(ev.eventId > 0);
+  assert.equal(ev.eventStatus, 'OPEN');
+  const events1 = await client.getSalesReminders(7002, 2);
+  assert.equal(events1.length, events0.length + 1);
+
+  const review = await client.createSalesProbability(7002, 2, new SalesProbabilityWrite({
+    salesProbabilityPercent: 90, probabilityNote: 'E2E very likely',
+  }));
+  assert.equal(review.salesProbabilityPercent, 90);
+  const quotes = await client.getSalesQuotes(undefined);
+  const q = quotes.find((x) => x.quoteId === 7002 && x.quoteRevisionId === 2);
+  assert.equal(q.latestProbability, 90); // the just-recorded review is now newest
+});
+
+// Probability validation: percent must be 0–100. The generated client surfaces a
+// declared 400 validation body by throwing the typed HttpValidationProblemDetails.
+test('sales flow: createSalesProbability rejects out-of-range percent (typed)', async () => {
+  await assert.rejects(
+    () => client.createSalesProbability(7001, 1, new SalesProbabilityWrite({ salesProbabilityPercent: 150 })),
+    (err) => err?.status === 400 && !!err?.errors?.salesProbabilityPercent,
+  );
 });

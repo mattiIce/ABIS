@@ -4958,6 +4958,409 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Pending sales / quote list (customer, contact, latest win probability).
+     * @param search (optional)
+     * @return OK
+     */
+    getSalesQuotes(search) {
+        let url_ = this.baseUrl + "/api/sales/quotes?";
+        if (search === null)
+            throw new globalThis.Error("The parameter 'search' cannot be null.");
+        else if (search !== undefined)
+            url_ += "search=" + encodeURIComponent("" + search) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetSalesQuotes(_response);
+        });
+    }
+    processGetSalesQuotes(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(SalesQuoteListRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * A quote header (a specific revision of a quote).
+     * @return OK
+     */
+    getSalesQuote(quoteId, revisionId) {
+        let url_ = this.baseUrl + "/api/sales/quotes/{quoteId}/{revisionId}";
+        if (quoteId === undefined || quoteId === null)
+            throw new globalThis.Error("The parameter 'quoteId' must be defined.");
+        url_ = url_.replace("{quoteId}", encodeURIComponent("" + quoteId));
+        if (revisionId === undefined || revisionId === null)
+            throw new globalThis.Error("The parameter 'revisionId' must be defined.");
+        url_ = url_.replace("{revisionId}", encodeURIComponent("" + revisionId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetSalesQuote(_response);
+        });
+    }
+    processGetSalesQuote(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = SalesQuote.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * The sales contact address book (optionally filtered to a customer).
+     * @param customerId (optional)
+     * @return OK
+     */
+    getSalesContacts(customerId) {
+        let url_ = this.baseUrl + "/api/sales/contacts?";
+        if (customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' cannot be null.");
+        else if (customerId !== undefined)
+            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetSalesContacts(_response);
+        });
+    }
+    processGetSalesContacts(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(SalesContact.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Scheduled follow-ups / reminders for a quote.
+     * @return OK
+     */
+    getSalesReminders(quoteId, revisionId) {
+        let url_ = this.baseUrl + "/api/sales/quotes/{quoteId}/{revisionId}/events";
+        if (quoteId === undefined || quoteId === null)
+            throw new globalThis.Error("The parameter 'quoteId' must be defined.");
+        url_ = url_.replace("{quoteId}", encodeURIComponent("" + quoteId));
+        if (revisionId === undefined || revisionId === null)
+            throw new globalThis.Error("The parameter 'revisionId' must be defined.");
+        url_ = url_.replace("{revisionId}", encodeURIComponent("" + revisionId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetSalesReminders(_response);
+        });
+    }
+    processGetSalesReminders(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(SalesReminder.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Log a follow-up / reminder against a quote.
+     * @return Created
+     */
+    createSalesReminder(quoteId, revisionId, body) {
+        let url_ = this.baseUrl + "/api/sales/quotes/{quoteId}/{revisionId}/events";
+        if (quoteId === undefined || quoteId === null)
+            throw new globalThis.Error("The parameter 'quoteId' must be defined.");
+        url_ = url_.replace("{quoteId}", encodeURIComponent("" + quoteId));
+        if (revisionId === undefined || revisionId === null)
+            throw new globalThis.Error("The parameter 'revisionId' must be defined.");
+        url_ = url_.replace("{revisionId}", encodeURIComponent("" + revisionId));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateSalesReminder(_response);
+        });
+    }
+    processCreateSalesReminder(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = SalesReminder.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Win-probability review history for a quote.
+     * @return OK
+     */
+    getSalesProbability(quoteId, revisionId) {
+        let url_ = this.baseUrl + "/api/sales/quotes/{quoteId}/{revisionId}/probability";
+        if (quoteId === undefined || quoteId === null)
+            throw new globalThis.Error("The parameter 'quoteId' must be defined.");
+        url_ = url_.replace("{quoteId}", encodeURIComponent("" + quoteId));
+        if (revisionId === undefined || revisionId === null)
+            throw new globalThis.Error("The parameter 'revisionId' must be defined.");
+        url_ = url_.replace("{revisionId}", encodeURIComponent("" + revisionId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetSalesProbability(_response);
+        });
+    }
+    processGetSalesProbability(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(SalesProbability.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Record a win-probability review on a quote.
+     * @return Created
+     */
+    createSalesProbability(quoteId, revisionId, body) {
+        let url_ = this.baseUrl + "/api/sales/quotes/{quoteId}/{revisionId}/probability";
+        if (quoteId === undefined || quoteId === null)
+            throw new globalThis.Error("The parameter 'quoteId' must be defined.");
+        url_ = url_.replace("{quoteId}", encodeURIComponent("" + quoteId));
+        if (revisionId === undefined || revisionId === null)
+            throw new globalThis.Error("The parameter 'revisionId' must be defined.");
+        url_ = url_.replace("{revisionId}", encodeURIComponent("" + revisionId));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateSalesProbability(_response);
+        });
+    }
+    processCreateSalesProbability(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = SalesProbability.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * List shop-floor scan events, newest first (paged, sortable; filter by abJobNum).
      * @param page (optional)
      * @param pageSize (optional)
@@ -9248,6 +9651,334 @@ export class RecoveryCustomer {
         data["allProducts"] = this.allProducts;
         data["autoOnly"] = this.autoOnly;
         data["commOnly"] = this.commOnly;
+        return data;
+    }
+}
+export class SalesContact {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.contactId = _data["contactId"];
+            this.customerId = _data["customerId"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.department = _data["department"];
+            this.city = _data["city"];
+            this.state = _data["state"];
+            this.phone1 = _data["phone1"];
+            this.email1 = _data["email1"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new SalesContact();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["contactId"] = this.contactId;
+        data["customerId"] = this.customerId;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["department"] = this.department;
+        data["city"] = this.city;
+        data["state"] = this.state;
+        data["phone1"] = this.phone1;
+        data["email1"] = this.email1;
+        return data;
+    }
+}
+export class SalesProbability {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.probabilityId = _data["probabilityId"];
+            this.quoteId = _data["quoteId"];
+            this.quoteRevisionId = _data["quoteRevisionId"];
+            this.reviewDate = _data["reviewDate"] ? new Date(_data["reviewDate"].toString()) : undefined;
+            this.salesProbabilityPercent = _data["salesProbabilityPercent"];
+            this.probabilityNote = _data["probabilityNote"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new SalesProbability();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["probabilityId"] = this.probabilityId;
+        data["quoteId"] = this.quoteId;
+        data["quoteRevisionId"] = this.quoteRevisionId;
+        data["reviewDate"] = this.reviewDate ? this.reviewDate.toISOString() : undefined;
+        data["salesProbabilityPercent"] = this.salesProbabilityPercent;
+        data["probabilityNote"] = this.probabilityNote;
+        return data;
+    }
+}
+export class SalesProbabilityWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.reviewDate = _data["reviewDate"] ? new Date(_data["reviewDate"].toString()) : undefined;
+            this.salesProbabilityPercent = _data["salesProbabilityPercent"];
+            this.probabilityNote = _data["probabilityNote"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new SalesProbabilityWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["reviewDate"] = this.reviewDate ? this.reviewDate.toISOString() : undefined;
+        data["salesProbabilityPercent"] = this.salesProbabilityPercent;
+        data["probabilityNote"] = this.probabilityNote;
+        return data;
+    }
+}
+export class SalesQuote {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.quoteId = _data["quoteId"];
+            this.quoteRevisionId = _data["quoteRevisionId"];
+            this.customerId = _data["customerId"];
+            this.customerShortName = _data["customerShortName"];
+            this.contactId = _data["contactId"];
+            this.contactFirstName = _data["contactFirstName"];
+            this.contactLastName = _data["contactLastName"];
+            this.enduserId = _data["enduserId"];
+            this.endUse = _data["endUse"];
+            this.partShape = _data["partShape"];
+            this.material = _data["material"];
+            this.alloy = _data["alloy"];
+            this.temper = _data["temper"];
+            this.gauge = _data["gauge"];
+            this.width = _data["width"];
+            this.length = _data["length"];
+            this.lineNum = _data["lineNum"];
+            this.lineSpeed = _data["lineSpeed"];
+            this.numOfCoil = _data["numOfCoil"];
+            this.numOfSkid = _data["numOfSkid"];
+            this.totalLbProcessed = _data["totalLbProcessed"];
+            this.totalRevPerHr = _data["totalRevPerHr"];
+            this.variableCost = _data["variableCost"];
+            this.fixedCost = _data["fixedCost"];
+            this.regProcessCharge = _data["regProcessCharge"];
+            this.ros = _data["ros"];
+            this.quoteNotes = _data["quoteNotes"];
+            this.approvalSales = _data["approvalSales"];
+            this.approvalVp = _data["approvalVp"];
+            this.approvalCeo = _data["approvalCeo"];
+            this.passOnQuote = _data["passOnQuote"];
+            this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : undefined;
+            this.validDate = _data["validDate"] ? new Date(_data["validDate"].toString()) : undefined;
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new SalesQuote();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["quoteId"] = this.quoteId;
+        data["quoteRevisionId"] = this.quoteRevisionId;
+        data["customerId"] = this.customerId;
+        data["customerShortName"] = this.customerShortName;
+        data["contactId"] = this.contactId;
+        data["contactFirstName"] = this.contactFirstName;
+        data["contactLastName"] = this.contactLastName;
+        data["enduserId"] = this.enduserId;
+        data["endUse"] = this.endUse;
+        data["partShape"] = this.partShape;
+        data["material"] = this.material;
+        data["alloy"] = this.alloy;
+        data["temper"] = this.temper;
+        data["gauge"] = this.gauge;
+        data["width"] = this.width;
+        data["length"] = this.length;
+        data["lineNum"] = this.lineNum;
+        data["lineSpeed"] = this.lineSpeed;
+        data["numOfCoil"] = this.numOfCoil;
+        data["numOfSkid"] = this.numOfSkid;
+        data["totalLbProcessed"] = this.totalLbProcessed;
+        data["totalRevPerHr"] = this.totalRevPerHr;
+        data["variableCost"] = this.variableCost;
+        data["fixedCost"] = this.fixedCost;
+        data["regProcessCharge"] = this.regProcessCharge;
+        data["ros"] = this.ros;
+        data["quoteNotes"] = this.quoteNotes;
+        data["approvalSales"] = this.approvalSales;
+        data["approvalVp"] = this.approvalVp;
+        data["approvalCeo"] = this.approvalCeo;
+        data["passOnQuote"] = this.passOnQuote;
+        data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : undefined;
+        data["validDate"] = this.validDate ? this.validDate.toISOString() : undefined;
+        return data;
+    }
+}
+export class SalesQuoteListRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.quoteId = _data["quoteId"];
+            this.quoteRevisionId = _data["quoteRevisionId"];
+            this.customerId = _data["customerId"];
+            this.customerShortName = _data["customerShortName"];
+            this.contactId = _data["contactId"];
+            this.contactFirstName = _data["contactFirstName"];
+            this.contactLastName = _data["contactLastName"];
+            this.endUse = _data["endUse"];
+            this.partShape = _data["partShape"];
+            this.alloy = _data["alloy"];
+            this.temper = _data["temper"];
+            this.gauge = _data["gauge"];
+            this.width = _data["width"];
+            this.length = _data["length"];
+            this.totalLbProcessed = _data["totalLbProcessed"];
+            this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : undefined;
+            this.validDate = _data["validDate"] ? new Date(_data["validDate"].toString()) : undefined;
+            this.latestProbability = _data["latestProbability"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new SalesQuoteListRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["quoteId"] = this.quoteId;
+        data["quoteRevisionId"] = this.quoteRevisionId;
+        data["customerId"] = this.customerId;
+        data["customerShortName"] = this.customerShortName;
+        data["contactId"] = this.contactId;
+        data["contactFirstName"] = this.contactFirstName;
+        data["contactLastName"] = this.contactLastName;
+        data["endUse"] = this.endUse;
+        data["partShape"] = this.partShape;
+        data["alloy"] = this.alloy;
+        data["temper"] = this.temper;
+        data["gauge"] = this.gauge;
+        data["width"] = this.width;
+        data["length"] = this.length;
+        data["totalLbProcessed"] = this.totalLbProcessed;
+        data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : undefined;
+        data["validDate"] = this.validDate ? this.validDate.toISOString() : undefined;
+        data["latestProbability"] = this.latestProbability;
+        return data;
+    }
+}
+export class SalesReminder {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.eventId = _data["eventId"];
+            this.quoteId = _data["quoteId"];
+            this.quoteRevisionId = _data["quoteRevisionId"];
+            this.eventDate = _data["eventDate"] ? new Date(_data["eventDate"].toString()) : undefined;
+            this.eventNotes = _data["eventNotes"];
+            this.eventStatus = _data["eventStatus"];
+            this.userId = _data["userId"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new SalesReminder();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["eventId"] = this.eventId;
+        data["quoteId"] = this.quoteId;
+        data["quoteRevisionId"] = this.quoteRevisionId;
+        data["eventDate"] = this.eventDate ? this.eventDate.toISOString() : undefined;
+        data["eventNotes"] = this.eventNotes;
+        data["eventStatus"] = this.eventStatus;
+        data["userId"] = this.userId;
+        return data;
+    }
+}
+export class SalesReminderWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.eventDate = _data["eventDate"] ? new Date(_data["eventDate"].toString()) : undefined;
+            this.eventNotes = _data["eventNotes"];
+            this.eventStatus = _data["eventStatus"];
+            this.userId = _data["userId"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new SalesReminderWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["eventDate"] = this.eventDate ? this.eventDate.toISOString() : undefined;
+        data["eventNotes"] = this.eventNotes;
+        data["eventStatus"] = this.eventStatus;
+        data["userId"] = this.userId;
         return data;
     }
 }

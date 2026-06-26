@@ -23,11 +23,12 @@ File types: `.srw` windows · `.srd` DataWindows (embedded SQL) · `.srm` menus 
 | `warehouse/` | Skid **warehouse** entry (`w_wh_business`, `w_wh_detail`, `d_wh_item`) |
 | `daily_prod/` | **Daily production reporting** (28 windows, 109 DataWindows) |
 | `rpabco/` | **Reporting** — 33 report-template DataWindows, no windows |
-| `sales/` | Sales screens |
+| `sales/` | **Sales / quote lifecycle** (`w_new_quote`, `w_edit_quote`, `w_sales_main`, `w_sales_quote_review`) — `sales_quote` (composite `quote_id`+`quote_revision_id`), `sales_reminder` (follow-ups), `sales_probability` (win-probability reviews), `customer_contact` (address book) |
 | `inv_skid/`, `skid_entry/` | Skid inventory / entry |
 | `coil_eval/` | Coil evaluation |
 | `stacker_110/` | Line #110 stacker |
 | `prod-folder/` | Production folder |
+| `da_offline/` | **DAS offline** variant of `da/` (operate a job without a live DB connection) — superseded by the always-connected web DAS console |
 | `opc_log/` | **OPC log** (`w_opc_log`) — `opc_log` + `opc_log_details` (host → device → item, value, quality) + `opc_action_log`. The `item_name`/`remote_host` structure is the real OPC tag layout for the edge. |
 | `downtime/`, `downtime2/` | Downtime reports + the shift coil-processing windows (`w_finish_coil`, `w_change_coil`, …) — the line-operator workflow |
 | `da/` | **DAS** data-acquisition console (`w_da_sheet` + tab user objects `u_da_{coil_job,skid,scrap,return_scrap_item,shift_coils,dt_log}_tabpg`) — the shop-floor operator screen: work a job, weigh skids, enter scrap, log downtime |

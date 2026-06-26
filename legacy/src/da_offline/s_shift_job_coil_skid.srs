@@ -1,0 +1,10 @@
+$PBExportHeader$s_shift_job_coil_skid.srs
+$PBExportComments$pass current shift, coil  job number and skid number
+global type s_shift_job_coil_skid from structure
+	long		job_num
+	long		coil_num
+	long		shift_num
+	long		skid_num
+	long		line_num
+end type
+
