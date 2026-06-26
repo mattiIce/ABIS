@@ -15,6 +15,7 @@ import {
   CoilPatch,
   ShipmentStatusPatch,
   MaintLogWrite,
+  DieWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -63,6 +64,16 @@ test('createOrderWithItems writes via typed DTOs and returns a typed OrderDetail
   assert.ok(detail.order.orderAbcNum > 0);
   assert.equal(detail.items.length, 1);
   assert.equal(detail.items[0].enduserPartNum, 'PN-E2E');
+});
+
+// The dies SPA's flow: create a die, then load + replace it (typed).
+test('dies flow: create, get, update die (typed)', async () => {
+  const created = await client.createDie(new DieWrite({ dieName: 'E2E-DIE', status: 0, toolNum: 'T-E2E' }));
+  assert.ok(created.dieId > 0);
+  const got = await client.getDie(created.dieId);
+  assert.equal(got.dieId, created.dieId);
+  const updated = await client.updateDie(created.dieId, new DieWrite({ dieName: 'E2E-DIE', status: 1, location: 'BAY-9' }));
+  assert.equal(updated.location, 'BAY-9');
 });
 
 // The maintenance SPA's flow: create a log, then load + replace it (typed).
