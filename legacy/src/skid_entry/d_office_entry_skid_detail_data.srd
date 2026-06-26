@@ -1,0 +1,18 @@
+$PBExportHeader$d_office_entry_skid_detail_data.srd
+$PBExportComments$list  a job in office entry application used to update sheet_skid_detail table
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no grid.lines=0 )
+header(height=115 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=74 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=sheet_skid_detail_prod_item_num dbname="sheet_skid_detail.prod_item_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=sheet_skid_detail_sheet_skid_num dbname="sheet_skid_detail.sheet_skid_num" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"sheet_skid~" )  TABLE(NAME=~"sheet_skid_detail~" ) COLUMN(NAME=~"sheet_skid_detail.prod_item_num~") COLUMN(NAME=~"sheet_skid_detail.sheet_skid_num~")    JOIN (LEFT=~"sheet_skid_detail.sheet_skid_num~"    OP =~"=~"RIGHT=~"sheet_skid.sheet_skid_num~" )WHERE(    EXP1 =~"~~~"SHEET_SKID~~~".~~~"AB_JOB_NUM~~~"~"   OP =~"=~"    EXP2 =~":al_job_num~" ) ) ARG(NAME = ~"al_job_num~" TYPE = number) " update="SHEET_SKID_DETAIL" updatewhere=1 updatekeyinplace=yes arguments=(("al_job_num", number)) )
+text(band=header alignment="2" text="Sheet Skid Detail
+Prod Item Num"border="0" color="0" x="7" y="6" height="102" width="402"  name=sheet_skid_detail_prod_item_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Sheet Skid Detail
+Sheet Skid Num"border="0" color="0" x="417" y="6" height="102" width="402"  name=sheet_skid_detail_sheet_skid_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="0" x="7" y="7" height="61" width="402" format="[general]"  name=sheet_skid_detail_prod_item_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=32766 border="0" color="0" x="417" y="7" height="61" width="402" format="[general]"  name=sheet_skid_detail_sheet_skid_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

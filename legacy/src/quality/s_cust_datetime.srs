@@ -1,0 +1,9 @@
+$PBExportHeader$s_cust_datetime.srs
+$PBExportComments$pass customer and start/end time
+global type s_cust_datetime from structure
+	long		customer_id
+	datetime		start_time
+	datetime		end_time
+	string		customer_name
+end type
+

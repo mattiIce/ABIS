@@ -1,0 +1,31 @@
+$PBExportHeader$d_daily_prod_shift_info.srd
+$PBExportComments$info about shift
+release 6;
+datawindow(units=0 timer_interval=0 color=276856960 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=307 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=shift_num dbname="SHIFT.SHIFT_NUM" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=line_num dbname="SHIFT.LINE_NUM" )
+ column=(type=datetime update=yes updatewhereclause=yes name=start_time dbname="SHIFT.START_TIME" )
+ column=(type=datetime updatewhereclause=yes name=shift_end_time dbname="SHIFT.END_TIME" )
+ column=(type=decimal(0) updatewhereclause=yes name=schedule_type dbname="SHIFT.SCHEDULE_TYPE" )
+ retrieve="  SELECT SHIFT.SHIFT_NUM,   
+         SHIFT.LINE_NUM,   
+         SHIFT.START_TIME,   
+         SHIFT.END_TIME,   
+         SHIFT.SCHEDULE_TYPE  
+    FROM SHIFT  
+   WHERE ( SHIFT.LINE_NUM = :al_line ) AND  
+         (To_date(SHIFT.START_TIME) = :ad_date)    
+" update="SHIFT" updatewhere=0 updatekeyinplace=no arguments=(("al_line", number),("ad_date", date)) )
+text(band=detail alignment="0" text="Shift ID:"border="0" color="0" x="37" y="3" height="51" width="227"  name=shift_num_t  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=10 border="1" color="0" x="278" y="3" height="48" width="161" format="[General]"  name=shift_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Line Num:"border="0" color="0" x="29" y="102" height="51" width="234"  name=line_num_t  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=20 border="1" color="0" x="278" y="102" height="54" width="187" format="[General]"  name=line_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Start Time:"border="0" color="0" x="29" y="205" height="51" width="234"  name=start_time_t  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=30 border="1" color="0" x="278" y="205" height="48" width="263" format="[shortdate] [time]"  name=start_time edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="0" x="541" y="0" height="51" width="640" format="[shortdate] [time]"  name=shift_end_time edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="0" x="713" y="90" height="51" width="947" format="[general]"  name=schedule_type edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="0" expression="if(  schedule_type =1,~"1ST~", if(  schedule_type =2, ~"2ND~", ~"3RD~") )"border="0" color="0" x="655" y="182" height="77" width="263" format="[general]"  name=shift_display  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

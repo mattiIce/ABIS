@@ -1,0 +1,14 @@
+$PBExportHeader$d_daily_prod_line_info.srd
+$PBExportComments$info about production line
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+header(height=48 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=83 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=line_num dbname="LINE.LINE_NUM" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=line_desc dbname="LINE.LINE_DESC" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"LINE~" ) COLUMN(NAME=~"LINE.LINE_NUM~") COLUMN(NAME=~"LINE.LINE_DESC~")WHERE(    EXP1 =~"LINE.LINE_NUM~"   OP =~">~"    EXP2 =~"0~" ) ) " update="LINE" updatewhere=1 updatekeyinplace=no )
+column(band=detail id=1 alignment="1" tabsequence=10 border="0" color="0" x="0" y="13" height="61" width="263" format="[general]"  name=line_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="0" tabsequence=20 border="0" color="0" x="300" y="22" height="61" width="2809" format="[general]"  name=line_desc edit.limit=255 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

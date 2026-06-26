@@ -1,0 +1,25 @@
+$PBExportHeader$d_qa_email_address.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=61 color="536870912" )
+table(column=(type=char(64) update=yes updatewhereclause=yes key=yes name=report_name dbname="auto_report_emails.report_name" )
+ column=(type=char(64) update=yes updatewhereclause=yes key=yes name=customer_name dbname="auto_report_emails.customer_name" )
+ column=(type=char(128) update=yes updatewhereclause=yes key=yes name=email_address dbname="auto_report_emails.email_address" )
+ retrieve="select	report_name,
+			customer_name,
+			email_address
+from		dbo.auto_report_emails
+where		report_name = 'qa_incoming_customer_quality'
+and		customer_name = :as_customer_name" update="auto_report_emails" updatewhere=0 updatekeyinplace=no arguments=(("as_customer_name", string)) )
+text(band=header alignment="2" text="Report Name" border="0" color="33554432" x="4" y="3" height="51" width="1426" html.valueishtml="0"  name=report_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Customer Name" border="0" color="33554432" x="1434" y="3" height="51" width="1426" html.valueishtml="0"  name=customer_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Email Address" border="0" color="33554432" x="2864" y="3" height="51" width="2831" html.valueishtml="0"  name=email_address_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=30 border="0" color="33554432" x="4" y="0" height="61" width="1024" format="[general]" html.valueishtml="0"  name=email_address pointer="IBeam!" visible="1" edit.limit=128 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

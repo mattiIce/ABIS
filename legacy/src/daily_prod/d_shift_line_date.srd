@@ -1,0 +1,29 @@
+$PBExportHeader$d_shift_line_date.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=52 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=624 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=shift_num dbname="shift.shift_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=schedule_type dbname="shift.schedule_type" )
+ column=(type=datetime updatewhereclause=yes name=planned_starting_time dbname="shift.planned_starting_time" )
+ column=(type=datetime updatewhereclause=yes name=planned_ending_time dbname="shift.planned_ending_time" )
+ retrieve="  SELECT  SHIFT.SHIFT_NUM,
+           SHIFT.SCHEDULE_TYPE,
+				SHIFT.PLANNED_STARTING_TIME, 
+				SHIFT.PLANNED_ENDING_TIME   
+        FROM SHIFT
+WHERE TO_CHAR(SHIFT.PLANNED_STARTING_TIME, 'MM/DD/YYYY') = :AS_DATE
+AND    SHIFT.LINE_NUM = :AL_LINE" update="SHIFT" updatewhere=1 updatekeyinplace=no arguments=(("as_date", string),("al_line", number)) )
+column(band=detail id=1 alignment="1" tabsequence=10 border="0" color="33554432" x="41" y="0" height="48" width="155" format="[General]" html.valueishtml="0"  name=shift_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=20 border="0" color="33554432" x="229" y="0" height="48" width="169" format="[General]" html.valueishtml="0"  name=schedule_type visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="0" expression="case(schedule_type  when 1 then ~" 1st SHIFT : ~" + string(planned_starting_time) + ~" - ~" +string(planned_ending_time) when 2 then ~" 2nd SHIFT : ~"  + string(planned_starting_time) + ~" - ~" +string(planned_ending_time)when 3 then ~" 3rd SHIFT : ~"  + string(planned_starting_time) + ~" - ~" +string(planned_ending_time)else ~" Other SHIFTS : ~" + string(planned_starting_time) + ~" - ~" +string(planned_ending_time))"border="0" color="33554432" x="1152" y="0" height="56" width="914" format="[GENERAL]" html.valueishtml="0"  name=display visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=30 border="0" color="33554432" x="443" y="0" height="56" width="667" format="[shortdate] [time]" html.valueishtml="0"  name=planned_starting_time visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=40 border="0" color="33554432" x="2112" y="0" height="56" width="137" format="[shortdate] [time]" html.valueishtml="0"  name=planned_ending_time visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

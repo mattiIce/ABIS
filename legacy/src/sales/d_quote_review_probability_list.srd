@@ -1,0 +1,26 @@
+$PBExportHeader$d_quote_review_probability_list.srd
+$PBExportComments$list all probalility of a quote
+release 9;
+datawindow(units=0 timer_interval=0 color=134217747 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=150 color="536870912" )
+table(column=(type=datetime updatewhereclause=yes name=review_date dbname="sales_probability.review_date" )
+ column=(type=decimal(2) updatewhereclause=yes name=sales_probability dbname="sales_probability.sales_probability" )
+ column=(type=char(1024) updatewhereclause=yes name=probability_note dbname="sales_probability.probability_note" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"sales_probability~" ) COLUMN(NAME=~"sales_probability.review_date~") COLUMN(NAME=~"sales_probability.sales_probability~") COLUMN(NAME=~"sales_probability.probability_note~")WHERE(    EXP1 =~"~~~"SALES_PROBABILITY~~~".~~~"QUOTE_ID~~~"~"   OP =~"=~"    EXP2 =~":al_quote~"    LOGIC =~"and~" ) WHERE(    EXP1 =~"~~~"SALES_PROBABILITY~~~".~~~"QUOTE_REVISION_ID~~~"~"   OP =~"=~"    EXP2 =~":al_revision~" ) ) ARG(NAME = ~"al_quote~" TYPE = number)  ARG(NAME = ~"al_revision~" TYPE = number) " arguments=(("al_quote", number),("al_revision", number))  sort="review_date A " )
+rectangle(band=detail x="775" y="13" height="54" width="998"  name=r_1 visible="1" brush.hatch="5" brush.color="0" pen.style="0" pen.width="4" pen.color="16777215"  background.mode="2" background.color="16777215" )
+text(band=detail alignment="0" text="Note:" border="0" color="33554432" x="29" y="80" height="51" width="143" html.valueishtml="0"  name=probability_note_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="5" color="33554432" x="187" y="83" height="54" width="1733" format="[general]" html.valueishtml="0"  name=probability_note visible="1" edit.limit=1024 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+rectangle(band=detail x="779" y="13" height="54" width="998~t1000 * (   sales_probability   /100)"  name=r_salep visible="1" brush.hatch="5" brush.color="0" pen.style="0" pen.width="4" pen.color="16777215"  background.mode="0" background.color="65280~tif (   sales_probability   > 49, RGB(191,255, 0), RGB(255,255, 0))" )
+text(band=detail alignment="0" text="Date:" border="0" color="33554432" x="26" y="13" height="54" width="154" html.valueishtml="0"  name=review_date_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="5" color="33554432" x="187" y="13" height="54" width="282" format="MM/DD/YYYY" html.valueishtml="0"  name=review_date visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Probability:" border="0" color="33554432" x="479" y="13" height="54" width="285" html.valueishtml="0"  name=sales_probability_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="1" expression=" String(sales_probability) +~"%~""border="0" color="33554432" x="1781" y="16" height="51" width="143" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+roundrectangle(band=detail ellipseheight="35" ellipsewidth="40"x="7" y="3" height="147" width="1946"  name=rr_1 visible="1" brush.hatch="7" brush.color="553648127" pen.style="0" pen.width="4" pen.color="65535"  background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

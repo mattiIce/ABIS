@@ -1,0 +1,23 @@
+$PBExportHeader$d_sales_quote_event_list.srd
+$PBExportComments$list all ascheduled events based on quote
+release 9;
+datawindow(units=0 timer_interval=0 color=12632256 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=182 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=sales_reminder_quote_id dbname="sales_reminder.quote_id" )
+ column=(type=decimal(0) updatewhereclause=yes name=sales_reminder_quote_revision_id dbname="sales_reminder.quote_revision_id" )
+ column=(type=datetime updatewhereclause=yes name=sales_reminder_event_date dbname="sales_reminder.event_date" )
+ column=(type=decimal(0) updatewhereclause=yes name=sales_reminder_user_id dbname="sales_reminder.user_id" )
+ column=(type=char(1024) updatewhereclause=yes name=sales_reminder_event_notes dbname="sales_reminder.event_notes" )
+ column=(type=decimal(0) updatewhereclause=yes name=sales_reminder_event_status dbname="sales_reminder.event_status" values="Done	0/Normal	1/Urgent	3/" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"sales_reminder~" ) COLUMN(NAME=~"sales_reminder.quote_id~") COLUMN(NAME=~"sales_reminder.quote_revision_id~") COLUMN(NAME=~"sales_reminder.event_date~") COLUMN(NAME=~"sales_reminder.user_id~") COLUMN(NAME=~"sales_reminder.event_notes~") COLUMN(NAME=~"sales_reminder.event_status~")WHERE(    EXP1 =~"~~~"SALES_REMINDER~~~".~~~"QUOTE_ID~~~"~"   OP =~"=~"    EXP2 =~":al_quote~"    LOGIC =~"and~" ) WHERE(    EXP1 =~"~~~"SALES_REMINDER~~~".~~~"QUOTE_REVISION_ID~~~"~"   OP =~"=~"    EXP2 =~":al_revision~" ) ) ARG(NAME = ~"al_quote~" TYPE = number)  ARG(NAME = ~"al_revision~" TYPE = number) " arguments=(("al_quote", number),("al_revision", number)) )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="5" color="33554432" x="702" y="6" height="163" width="1371" format="[general]" html.valueishtml="0"  name=sales_reminder_event_notes visible="1" edit.limit=1024 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="0~tif( sales_reminder_event_status =3, RGB(255,0,0), RGB(0,0,0))" x="11" y="3" height="54" width="267" format="[general]" html.valueishtml="0"  name=sales_reminder_event_status visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="5" color="0" x="293" y="3" height="58" width="395" format="MM/DD/YYYY" html.valueishtml="0"  name=sales_reminder_event_date visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

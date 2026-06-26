@@ -1,0 +1,28 @@
+$PBExportHeader$d_recovery_defect_input.srd
+$PBExportComments$dw for inputing defect data
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=64 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=74 color="536870912" )
+table(column=(type=number updatewhereclause=no name=id dbname="ID" )
+ column=(type=char(10) updatewhereclause=no name=scrap_code dbname="scrap_code" )
+ column=(type=char(64) updatewhereclause=no name=scrap_defect dbname="scrap_defect" )
+ column=(type=number updatewhereclause=no name=value dbname="value" )
+ column=(type=number updatewhereclause=no name=piece dbname="Piece" )
+ )
+text(band=header alignment="2" text="Code" border="6" color="33554432" x="7" y="6" height="51" width="132" html.valueishtml="0"  name=scrap_code_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="12632256" )
+text(band=header alignment="2" text="Scrap Defect" border="6" color="33554432" x="146" y="6" height="51" width="571" html.valueishtml="0"  name=scrap_defect_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="12632256" )
+text(band=header alignment="2" text="WT" border="6" color="33554432" x="724" y="6" height="51" width="139" html.valueishtml="0"  name=value_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="12632256" )
+text(band=header alignment="2" text="Piece" border="6" color="33554432" x="870" y="6" height="51" width="146" html.valueishtml="0"  name=piece_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="2" color="33554432" x="7" y="6" height="61" width="132" format="[general]" html.valueishtml="0"  name=scrap_code visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="65535" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="146" y="6" height="61" width="571" format="[general]" html.valueishtml="0"  name=scrap_defect visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="15780518" )
+column(band=detail id=4 alignment="2" tabsequence=10 border="5" color="33554432" x="724" y="6" height="61" width="139" format="[general]" html.valueishtml="0"  name=value visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="2" tabsequence=20 border="5" color="33554432" x="870" y="6" height="61" width="146" format="[general]" html.valueishtml="0"  name=piece visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

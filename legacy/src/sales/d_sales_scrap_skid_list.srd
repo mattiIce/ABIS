@@ -1,0 +1,65 @@
+$PBExportHeader$d_sales_scrap_skid_list.srd
+$PBExportComments$list all scrap skids
+release 9;
+datawindow(units=0 timer_interval=0 color=15780518 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=64 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=58 color="536870912" )
+detail(height=67 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=scrap_type dbname="scrap_skid.scrap_type" values="Rej.Sheet-Mill	1/Accu. Scrap	2/Others	3/Trailer	4/Rej.Sheet-Process	5/Sample	6/Tote	7/Edge Trim	8/" )
+ column=(type=decimal(0) updatewhereclause=yes name=scrap_net_wt dbname="scrap_skid.scrap_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=scrap_tare_wt dbname="scrap_skid.scrap_tare_wt" )
+ column=(type=char(18) updatewhereclause=yes name=scrap_location dbname="scrap_skid.scrap_location" )
+ column=(type=datetime updatewhereclause=yes name=scrap_date dbname="scrap_skid.scrap_date" )
+ column=(type=decimal(0) updatewhereclause=yes name=skid_scrap_status dbname="scrap_skid.skid_scrap_status" values="Gone	0/InProcess	1/Ready	2/OnHold	4/Canceled	3/" )
+ column=(type=decimal(0) updatewhereclause=yes name=scrap_skid_num dbname="scrap_skid.scrap_skid_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=customer_id dbname="scrap_skid.customer_id" )
+ column=(type=char(8) updatewhereclause=yes name=scrap_temper dbname="scrap_skid.scrap_temper" )
+ column=(type=char(32) updatewhereclause=yes name=scrap_cust_po dbname="scrap_skid.scrap_cust_po" )
+ column=(type=char(18) updatewhereclause=yes name=scrap_ab_job_num dbname="scrap_skid.scrap_ab_job_num" )
+ column=(type=char(255) updatewhereclause=yes name=scrap_notes dbname="scrap_skid.scrap_notes" )
+ column=(type=char(8) updatewhereclause=yes name=scrap_alloy2 dbname="scrap_skid.scrap_alloy2" )
+ column=(type=number updatewhereclause=yes name=compute_0014 dbname="compute_0014" )
+ column=(type=decimal(0) updatewhereclause=yes name=tote_num dbname="scrap_skid.tote_num" )
+ retrieve="  SELECT ~"SCRAP_SKID~".~"SCRAP_TYPE~",   
+         ~"SCRAP_SKID~".~"SCRAP_NET_WT~",   
+         ~"SCRAP_SKID~".~"SCRAP_TARE_WT~",   
+         ~"SCRAP_SKID~".~"SCRAP_LOCATION~",   
+         ~"SCRAP_SKID~".~"SCRAP_DATE~",   
+         ~"SCRAP_SKID~".~"SKID_SCRAP_STATUS~",   
+         ~"SCRAP_SKID~".~"SCRAP_SKID_NUM~",   
+         ~"SCRAP_SKID~".~"CUSTOMER_ID~",   
+         ~"SCRAP_SKID~".~"SCRAP_TEMPER~",   
+         ~"SCRAP_SKID~".~"SCRAP_CUST_PO~",   
+         ~"SCRAP_SKID~".~"SCRAP_AB_JOB_NUM~",   
+         ~"SCRAP_SKID~".~"SCRAP_NOTES~",   
+         ~"SCRAP_SKID~".~"SCRAP_ALLOY2~",
+			f_get_scrap_duration(scrap_skid.scrap_skid_num),   
+         ~"SCRAP_SKID~".~"TOTE_NUM~" 
+    FROM ~"SCRAP_SKID~",  
+			~"AB_JOB~",
+   		~"SALES_ORDER~" 
+   WHERE ( ~"SCRAP_SKID~".~"SCRAP_AB_JOB_NUM~" = ~"AB_JOB~".~"AB_JOB_NUM~" ) and 
+			( ~"AB_JOB~".~"ORDER_ABC_NUM~" = ~"SALES_ORDER~".~"ORDER_ABC_NUM~" ) and  
+         ( ( ~"SALES_ORDER~".~"QUOTE_ID~" = :al_quote ) AND  
+         ( ~"SALES_ORDER~".~"QUOTE_REVISION_ID~" = :al_revision ) )    " retrieve.asneeded=yes arguments=(("al_quote", number),("al_revision", number))  sort="scrap_skid_num D " )
+text(band=header alignment="2" text="Skid #" border="6" color="0" x="0" y="3" height="54" width="249" html.valueishtml="0"  name=scrap_skid_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="Scrap Type" border="6" color="0" x="260" y="3" height="54" width="512" html.valueishtml="0"  name=scrap_type_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="NetWT" border="6" color="0" x="786" y="3" height="54" width="172" html.valueishtml="0"  name=scrap_net_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="2" text="Job No." border="6" color="0" x="973" y="3" height="54" width="216" html.valueishtml="0"  name=scrap_ab_job_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=7 alignment="2" tabsequence=32766 border="5" color="0" x="4" y="6" height="51" width="245" format="[general]" html.valueishtml="0"  name=scrap_skid_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0 edit.displayonly=yes  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="5" color="0~tcase(skid_scrap_status when 0 then RGB(255,255,255) when 1 then  RGB(0,255,0)  when 2 then  RGB(0,0,0) when 3 then  RGB(255,0,0)  when 4 then  RGB(0,0,255)   else RGB(0,0,0))" x="267" y="3" height="51" width="505" format="[general]" html.valueishtml="0" protect="0~tif( skid_scrap_status = 0, 1, 0)"  name=scrap_type visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=8 alignment="0" tabsequence=32766 border="0" color="1090519039" x="3855" y="0" height="54" width="4" format="[general]" html.valueishtml="0"  name=customer_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="5" color="0~tcase(skid_scrap_status when 0 then RGB(255,255,255) when 1 then  RGB(0,255,0)  when 2 then  RGB(0,0,0) when 3 then  RGB(255,0,0)  when 4 then  RGB(0,0,255)   else RGB(0,0,0))" x="783" y="6" height="51" width="179" format="[general]" html.valueishtml="0" protect="0~tif( skid_scrap_status = 0, 1, 0)"  name=scrap_net_wt visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=11 alignment="2" tabsequence=32766 border="5" color="0~tcase(skid_scrap_status when 0 then RGB(255,255,255) when 1 then  RGB(0,255,0)  when 2 then  RGB(0,0,0) when 3 then  RGB(255,0,0)  when 4 then  RGB(0,0,255)   else RGB(0,0,0))" x="976" y="6" height="51" width="212" format="[general]" html.valueishtml="0" protect="0~tif( skid_scrap_status = 0, 1, 0)"  name=scrap_ab_job_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=footer alignment="0" text="Total:" border="0" color="0" x="4" y="3" height="51" width="161" html.valueishtml="0"  name=t_7 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=footer alignment="0" text="NetWT:" border="0" color="0" x="453" y="0" height="54" width="187" html.valueishtml="0"  name=t_8 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=footer alignment="0" text="LBs" border="0" color="0" x="1072" y="3" height="51" width="91" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=footer alignment="2" expression="count(scrap_skid_num for all)"border="0" color="0" x="194" y="0" height="54" width="179" format="[general]" html.valueishtml="0"  name=compute_3 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+compute(band=footer alignment="2" expression="sum(  scrap_net_wt  for all )"border="0" color="0" x="684" y="0" height="54" width="351" format="[general]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

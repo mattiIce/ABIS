@@ -1,0 +1,14 @@
+$PBExportHeader$dddw_colors.srd
+release 5;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.prompt=no )
+header(height=1 color="536870912" )
+summary(height=1 color="536870912" )
+footer(height=1 color="536870912" )
+detail(height=97 color="536870912" )
+table(column=(type=long updatewhereclause=yes name=c_color dbname="c_color" )
+  sort="green D blue D red D " )
+data(8421631,8453888,16777088,16744448,12615935,16744703,255,8454143,65408,12639424,16776960,15780004,12615808,4210816,65535,65280,8421376,8404992,16744576,4194432,8388863,128,33023,32768,4227072,16711680,4194304,8388736,16711808,64,16512,16384,4210688,8388608,4194368,8388672,0,32896,4227200,8421504,8421440,12632256,4194368,16777215,15269887,) 
+column(band=detail id=1 alignment="1" tabsequence=32766 border="2" color="0" x="14" y="16" height="65" width="74" format="\ "  name=c_color edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="16777215~tc_color" )
+compute(band=detail alignment="1" expression="(c_color - mod( c_color , 256*256)) / 256 / 256"border="0" color="0" x="202" y="24" height="57" width="343" format="[general]"  name=red visible="1~t0"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+compute(band=detail alignment="1" expression="(c_color - red*256*256 - mod(c_color - red*256*256, 256)) / 256"border="0" color="0" x="563" y="24" height="57" width="284" format="[general]"  name=green visible="1~t0"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+compute(band=detail alignment="1" expression=" c_color -  red*256*256 -  green*256 "border="0" color="0" x="860" y="20" height="57" width="334" format="[general]"  name=blue visible="1~t0"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )

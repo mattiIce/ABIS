@@ -1,0 +1,12 @@
+$PBExportHeader$s_new_daily_prod_info.srs
+$PBExportComments$structure for new daily production info
+global type s_new_daily_prod_info from structure
+	integer		line_id
+	string		line_desc
+	date		prod_date
+	boolean		cancel
+	integer		schedule_type
+	date		start_date
+	date		end_date
+	long		shift_id
+end type

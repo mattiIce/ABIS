@@ -1,0 +1,18 @@
+$PBExportHeader$d_daily_prod_dt_efficiency.srd
+$PBExportComments$downtime report -efficiency info
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=96 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=0 color="536870912" )
+table(column=(type=datetime updatewhereclause=yes name=shift_start_time dbname="SHIFT.START_TIME" )
+ column=(type=datetime updatewhereclause=yes name=shift_end_time dbname="SHIFT.END_TIME" )
+ column=(type=decimal(0) updatewhereclause=yes name=dt_summary_duration dbname="DT_SUMMARY.DURATION" )
+ column=(type=decimal(0) updatewhereclause=yes name=shift_dt_total dbname="SHIFT.DT_TOTAL" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"SHIFT~" )  TABLE(NAME=~"DT_SUMMARY~" ) COLUMN(NAME=~"SHIFT.START_TIME~") COLUMN(NAME=~"SHIFT.END_TIME~") COLUMN(NAME=~"DT_SUMMARY.DURATION~") COLUMN(NAME=~"SHIFT.DT_TOTAL~")    JOIN (LEFT=~"SHIFT.SHIFT_NUM~"    OP =~"=~"RIGHT=~"DT_SUMMARY.SHIFT_NUM~" )WHERE(    EXP1 =~"SHIFT.SHIFT_NUM~"   OP =~"=~"    EXP2 =~":al_shift~" ) ) ARG(NAME = ~"al_shift~" TYPE = number) " arguments=(("al_shift", number)) )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="0" x="0" y="3" height="48" width="263" format="[shortdate] [time]"  name=shift_start_time edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="0" x="7" y="54" height="48" width="263" format="[shortdate] [time]"  name=shift_end_time edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="0" x="7" y="99" height="51" width="607" format="[general]"  name=dt_summary_duration edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="0" x="614" y="0" height="51" width="947" format="[General]"  name=shift_dt_total edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=summary alignment="2" expression="if( shift_dt_total > 0, ((secondsafter( time( shift_start_time ), time( shift_end_time ) ) -  shift_dt_total ) / (secondsafter( time( shift_start_time ), time( shift_end_time ) ))),((secondsafter( time( shift_start_time ), time( shift_end_time ) ) - sum(  dt_summary_duration  for all )) / (secondsafter( time( shift_start_time ), time( shift_end_time ) ))) )* 100"border="0" color="0" x="0" y="3" height="80" width="183" format="###.##"  name=efficiency  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

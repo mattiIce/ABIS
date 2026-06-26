@@ -1,0 +1,40 @@
+$PBExportHeader$d_shifts_4job.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=64 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=64 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=shift_num dbname="shift.shift_num" )
+ column=(type=datetime update=yes updatewhereclause=yes name=start_time dbname="shift.start_time" )
+ column=(type=datetime update=yes updatewhereclause=yes name=end_time dbname="shift.end_time" )
+ column=(type=char(9) updatewhereclause=yes name=shift_desc dbname="shift_desc" )
+ retrieve="select   shift_num,
+			start_time,
+			end_time,
+			case schedule_type
+			  when 1 then
+				'1st Shift'
+			  when 2 then
+				'2nd Shift'
+			  when 3 then
+				'3rd Shift'
+			  else
+				'-'
+		  end shift_desc                       
+from     shift
+where   	(:ad_time_date_started between planned_starting_time and planned_ending_time or :ad_time_date_finished between planned_starting_time and planned_ending_time)
+and      line_num = :ai_line_num
+order by 1" update="shift" updatewhere=1 updatekeyinplace=no arguments=(("ad_time_date_started", datetime),("ad_time_date_finished", datetime),("ai_line_num", number)) )
+text(band=header alignment="0" text="Shift End Time" border="6" color="33554432" x="841" y="0" height="52" width="544" html.valueishtml="0"  name=end_time_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Shift Start Time" border="6" color="33554432" x="274" y="0" height="52" width="544" html.valueishtml="0"  name=start_time_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="0" text="Shift" border="6" color="33554432" x="0" y="0" height="52" width="251" html.valueishtml="0"  name=shift_desc_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="841" y="0" height="52" width="544" format="[shortdate] [time]" html.valueishtml="0"  name=end_time visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="274" y="0" height="52" width="544" format="[shortdate] [time]" html.valueishtml="0"  name=start_time visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="0" y="0" height="52" width="251" format="[general]" html.valueishtml="0"  name=shift_desc visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

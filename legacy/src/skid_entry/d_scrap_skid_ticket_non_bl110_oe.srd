@@ -1,0 +1,105 @@
+$PBExportHeader$d_scrap_skid_ticket_non_bl110_oe.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="skid_ticket" print.orientation = 2 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=1052 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=0 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=ab_job_num dbname="ab_job.ab_job_num" )
+ column=(type=char(0) updatewhereclause=yes name=scrap_item_pieces dbname="ab_job.scrap_item_pieces" )
+ column=(type=char(0) updatewhereclause=yes name=item_net_wt dbname="ab_job.item_net_wt" )
+ column=(type=char(0) updatewhereclause=yes name=coil_alloy2 dbname="ab_job.coil_alloy2" )
+ column=(type=char(0) updatewhereclause=yes name=coil_temper dbname="ab_job.coil_temper" )
+ column=(type=char(0) updatewhereclause=yes name=coil_gauge dbname="ab_job.coil_gauge" )
+ column=(type=char(0) updatewhereclause=yes name=coil_org_num dbname="ab_job.coil_org_num" )
+ column=(type=char(0) updatewhereclause=yes name=lot_num dbname="ab_job.lot_num" )
+ column=(type=char(18) updatewhereclause=yes name=customer_short_name dbname="customer_short_name" )
+ column=(type=char(22) updatewhereclause=yes name=current_date dbname="current_date" )
+ column=(type=char(255) updatewhereclause=yes name=line_desc dbname="line.line_desc" )
+ column=(type=char(0) updatewhereclause=yes name=shift dbname="shift" )
+ column=(type=decimal(0) updatewhereclause=yes name=scrap_skid_num dbname="scrap_skid.scrap_skid_num" )
+ column=(type=char(50) updatewhereclause=yes name=scrap_type_desc dbname="scrap_type_desc" )
+ column=(type=decimal(0) updatewhereclause=yes name=scrap_skid_scrap_net_wt dbname="scrap_skid.scrap_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=scrap_skid_scrap_tare_wt dbname="scrap_skid.scrap_tare_wt" )
+ column=(type=number updatewhereclause=yes name=gross_wt dbname="gross_wt" )
+ column=(type=char(44) updatewhereclause=yes name=compute_0018 dbname="compute_0018" )
+ retrieve="  select distinct 
+         ab_job.ab_job_num,
+         null scrap_item_pieces,   
+         null item_net_wt,  
+         null coil_alloy2,
+         null coil_temper,
+         null coil_gauge,
+         null coil_org_num,
+         null lot_num,
+         
+         /* Alex Gerlants. 11/15/2021. 1251_Print_Skid_Tags_BL78_BL84. Begin */
+         customer.customer_short_name customer_short_name,
+         to_char(sysdate, 'mm/dd/yyyy hh12:mi:ss PM') current_date,
+         line.line_desc,
+         '' shift,
+      	scrap_skid.scrap_skid_num,
+         /* Alex Gerlants. 11/15/2021. 1251_Print_Skid_Tags_BL78_BL84. End */
+			scrap_type_desc.scrap_type_desc,
+			scrap_skid.scrap_net_wt,
+      	scrap_skid.scrap_tare_wt,
+      	(scrap_skid.scrap_net_wt + scrap_skid.scrap_tare_wt) gross_wt,
+			'*3S' || to_char(scrap_skid.scrap_skid_num) || '*'
+    from ab_job
+         join scrap_skid on ab_job.ab_job_num = scrap_skid.scrap_ab_job_num
+         join customer_order on customer_order.order_abc_num = ab_job.order_abc_num
+         join customer on customer.customer_id = customer_order.orig_customer_id
+			left outer join scrap_type_desc on scrap_type_desc.scrap_type = scrap_skid.scrap_type
+         left outer join line on line.line_num = ab_job.line_num
+   where scrap_skid.scrap_skid_num = :al_skid_num  " arguments=(("al_skid_num", number)) )
+text(band=header alignment="0" text="text" border="0" color="33554432" x="896" y="1116" height="80" width="1051" html.valueishtml="0"  name=t_customer visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="123456" border="0" color="33554432" x="32" y="1328" height="76" width="855" html.valueishtml="0"  name=t_skid_num_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Line:" border="0" color="33554432" x="46" y="4" height="76" width="165" html.valueishtml="0"  name=t_8 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=11 alignment="0" tabsequence=32766 border="0" color="33554432" x="233" y="4" height="76" width="233" format="[general]" html.valueishtml="0"  name=line_desc visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Net" border="0" color="33554432" x="951" y="1004" height="48" width="55" html.valueishtml="0"  name=t_7 visible="0"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Job No." border="0" color="33554432" x="41" y="1004" height="48" width="201" html.valueishtml="0"  name=t_3 visible="0"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Pcs" border="0" color="33554432" x="805" y="1004" height="48" width="133" html.valueishtml="0"  name=production_sheet_item_prod_item_pieces_t visible="0"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Lot Num" border="0" color="33554432" x="274" y="1004" height="48" width="224" html.valueishtml="0"  name=coil_lot_num_t visible="0"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Coil Num" border="0" color="33554432" x="517" y="1004" height="48" width="283" html.valueishtml="0"  name=coil_coil_org_num_t visible="0"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Gage" border="0" color="33554432" x="1298" y="1004" height="48" width="155" html.valueishtml="0"  name=t_6 visible="0"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Temper" border="0" color="33554432" x="1120" y="1004" height="48" width="174" html.valueishtml="0"  name=t_5 visible="0"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Alloy" border="0" color="33554432" x="937" y="1004" height="48" width="165" html.valueishtml="0"  name=t_4 visible="0"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=header alignment="1" expression="~"Date: ~" +  current_date "border="0" color="33554432" x="480" y="4" height="76" width="1015" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Tare Wt:" border="0" color="33554432" x="50" y="920" height="76" width="283" html.valueishtml="0"  name=t_11 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Customer:" border="0" color="33554432" x="46" y="716" height="76" width="329" html.valueishtml="0"  name=t_12 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Gross Wt:" border="0" color="33554432" x="50" y="820" height="76" width="329" html.valueishtml="0"  name=t_9 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Net Wt:" border="0" color="33554432" x="741" y="820" height="76" width="242" html.valueishtml="0"  name=t_10 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="SCRAP - Customer Material Tag" border="0" color="33554432" x="242" y="364" height="80" width="1134" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-12" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Scrap Skid Num:" border="0" color="33554432" x="46" y="536" height="76" width="535" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=header alignment="2" expression=" al_skid_num "border="0" color="33554432" x="617" y="620" height="80" width="855" format="[GENERAL]" html.valueishtml="0"  name=compute_3 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="0" text="Scrap Type:" border="0" color="33554432" x="46" y="268" height="76" width="393" html.valueishtml="0"  name=t_14 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=14 alignment="0" tabsequence=32766 border="0" color="33554432" x="617" y="268" height="76" width="837" format="[general]" html.valueishtml="0"  name=scrap_type_desc visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Shift:" border="0" color="33554432" x="46" y="92" height="80" width="165" html.valueishtml="0"  name=t_13 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Job #:" border="0" color="33554432" x="46" y="180" height="76" width="201" html.valueishtml="0"  name=t_15 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=12 alignment="0" tabsequence=32766 border="0" color="33554432" x="617" y="92" height="80" width="448" format="[general]" html.valueishtml="0"  name=shift visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=header id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="617" y="180" height="76" width="352" format="[general]" html.valueishtml="0"  name=ab_job_num_1 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=header id=9 alignment="1" tabsequence=32766 border="0" color="33554432" x="402" y="716" height="76" width="1051" format="[general]" html.valueishtml="0"  name=customer_short_name visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=header id=17 alignment="0" tabsequence=32766 border="0" color="0" x="421" y="820" height="76" width="293" format="[general]" html.valueishtml="0"  name=gross_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=header id=15 alignment="0" tabsequence=32766 border="0" color="33554432" x="1033" y="820" height="76" width="329" format="[general]" html.valueishtml="0"  name=scrap_skid_scrap_net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=header id=16 alignment="0" tabsequence=32766 border="0" color="33554432" x="425" y="920" height="76" width="293" format="[general]" html.valueishtml="0"  name=scrap_skid_scrap_tare_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="text" border="0" color="33554432" x="2661" y="1092" height="76" width="293" html.valueishtml="0"  name=t_gross_wt visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=header alignment="2" expression="~"*S~" + string(al_skid_num) + ~"*~""border="0" color="33554432" x="617" y="484" height="132" width="855" format="[GENERAL]" html.valueishtml="0"  name=compute_4 visible="1"  font.face="C39 Medium 24pt LJ4" font.height="-24" font.weight="400"  font.family="0" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="937" y="4" height="52" width="165" format="[general]" html.valueishtml="0"  name=coil_alloy2 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="41" y="4" height="52" width="201" format="[general]" html.valueishtml="0"  name=ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=8 alignment="0" tabsequence=32766 border="0" color="33554432" x="274" y="4" height="52" width="224" format="[general]" html.valueishtml="0"  name=lot_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="0" color="33554432" x="517" y="4" height="52" width="283" format="[general]" html.valueishtml="0"  name=coil_org_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="805" y="4" height="52" width="133" format="[general]" html.valueishtml="0"  name=scrap_item_pieces visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="33554432" x="1120" y="4" height="52" width="174" format="[general]" html.valueishtml="0"  name=coil_temper visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="33554432" x="1298" y="4" height="52" width="155" format="[general]" html.valueishtml="0"  name=coil_gauge visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=detail alignment="0" text="text" border="0" color="33554432" x="2661" y="80" height="76" width="334" html.valueishtml="0"  name=t_net visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="text" border="0" color="33554432" x="2679" y="168" height="80" width="293" html.valueishtml="0"  name=t_tare visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="2" expression="~"*3S~" + String( al_skid_num ) + ~"*~""border="0" color="33554432" x="768" y="232" height="132" width="855" format="[GENERAL]" html.valueishtml="0"  name=compute_2 visible="1"  font.face="C39 Medium 24pt LJ4" font.height="-24" font.weight="400"  font.family="0" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=13 alignment="0" tabsequence=32766 border="0" color="33554432" x="1765" y="72" height="80" width="526" format="[general]" html.valueishtml="0"  name=scrap_skid_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=18 alignment="2" tabsequence=32766 border="0" color="33554432" x="3205" y="80" height="132" width="855" format="[general]" html.valueishtml="0"  name=compute_0018 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="C39 Medium 24pt LJ4" font.height="-24" font.weight="400"  font.family="0" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=detail alignment="2" text="*3S123456*" border="0" color="33554432" x="3182" y="280" height="132" width="855" html.valueishtml="0"  name=t_skid_num_b visible="1"  font.face="C39 Medium 24pt LJ4" font.height="-24" font.weight="400"  font.family="0" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0  template=(comment="" encoding="UTF-8" name="q" xml="<?xml version=~"1.0~" encoding=~"UTF-8~" standalone=~"no~"?><d_skid_ticket><d_skid_ticket_row><production_sheet_item_prod_item_pieces/><production_sheet_item_prod_item_net_wt/><coil_coil_org_num __pbband=~"detail~"/><coil_lot_num/></d_skid_ticket_row></d_skid_ticket>"))
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

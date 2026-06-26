@@ -1,0 +1,87 @@
+$PBExportHeader$d_report_combi_sheet_pn.srd
+$PBExportComments$sheet skid list form abco combi form
+release 9;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=yes print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=118 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=sheet_packing_item_sh_packing_item dbname="sheet_packing_item.sh_packing_item" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_packing_item_sheet_packaging_ticke dbname="sheet_packing_item.sheet_packaging_ticket" )
+ column=(type=char(18) updatewhereclause=yes name=coil_lot_num dbname="coil.lot_num" )
+ column=(type=char(32) updatewhereclause=yes name=coil_coil_org_num dbname="coil.coil_org_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=production_sheet_item_prod_item_pieces dbname="production_sheet_item.prod_item_pieces" )
+ column=(type=number updatewhereclause=yes name=production_sheet_item_prod_item_net_wt dbname="prod_item_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=production_sheet_item_prod_item_theoreti dbname="production_sheet_item.prod_item_theoretical_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_skid_sheet_tare_wt dbname="sheet_skid.sheet_tare_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_skid_sheet_net_wt dbname="sheet_skid.sheet_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=production_sheet_item_prod_item_status dbname="production_sheet_item.prod_item_status" values="NonConforming	11/	0/	1/	2/	3/	4/	5/	6/	7/	8/	9/	10/	12/	13/	14/	15/	16/	17/	18/	19/	20/" )
+ column=(type=char(16) updatewhereclause=yes name=sheet_skid_sheet_skid_display_num dbname="sheet_skid.sheet_skid_display_num" )
+ column=(type=number updatewhereclause=yes name=customer_id dbname="customer_id" )
+ column=(type=number updatewhereclause=yes name=package_num dbname="package_num" )
+ retrieve="  SELECT ~"SHEET_PACKING_ITEM~".~"SH_PACKING_ITEM~",   
+         ~"SHEET_PACKING_ITEM~".~"SHEET_PACKAGING_TICKET~",   
+         ~"COIL~".~"LOT_NUM~",   
+         ~"COIL~".~"COIL_ORG_NUM~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_PIECES~",   
+         case 
+           (
+             select distinct shipment.customer_id
+             from   sheet_packing_item
+                    join shipment on shipment.packing_list = sheet_packing_item.packing_list
+             where  sheet_packing_item.packing_list = :al_shipment           
+           )
+         when 2802 then
+           production_sheet_item.prod_item_theoretical_wt
+         else
+           production_sheet_item.prod_item_net_wt
+         end prod_item_net_wt,   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_THEORETICAL_WT~",   
+         ~"SHEET_SKID~".~"SHEET_TARE_WT~",   
+         ~"SHEET_SKID~".~"SHEET_NET_WT~",   
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_STATUS~",   
+         ~"SHEET_SKID~".~"SHEET_SKID_DISPLAY_NUM~",
+			(
+            select distinct shipment.customer_id
+            from   sheet_packing_item
+                   join shipment on shipment.packing_list = sheet_packing_item.packing_list
+            where  sheet_packing_item.packing_list = :al_shipment
+         ) customer_id,
+			(select nvl(package_num, 0) from dbo.sheet_skid_package where sheet_skid_num = sheet_skid.sheet_skid_num) package_num /* Alex Gerlants. 06/15/2018. Arconic_Package_Num */  
+    FROM ~"PRODUCTION_SHEET_ITEM~",   
+         ~"SHEET_PACKING_ITEM~",   
+         ~"SHEET_SKID~",   
+         ~"SHEET_SKID_DETAIL~",   
+         ~"COIL~"  
+   WHERE ( ~"SHEET_SKID~".~"SHEET_SKID_NUM~" = ~"SHEET_PACKING_ITEM~".~"SHEET_SKID_NUM~" ) and  
+         ( ~"SHEET_SKID_DETAIL~".~"SHEET_SKID_NUM~" = ~"SHEET_SKID~".~"SHEET_SKID_NUM~" ) and  
+         ( ~"SHEET_SKID_DETAIL~".~"PROD_ITEM_NUM~" = ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NUM~" ) and  
+         ( ~"PRODUCTION_SHEET_ITEM~".~"COIL_ABC_NUM~" = ~"COIL~".~"COIL_ABC_NUM~" ) and  
+         ( ( ~"SHEET_PACKING_ITEM~".~"PACKING_LIST~" = :al_shipment ) )    
+" arguments=(("al_shipment", number))  sort="sheet_packing_item_sh_packing_item A " )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="2" color="0" x="18" y="3" height="109" width="201" format="[general]" html.valueishtml="0"  name=sheet_packing_item_sh_packing_item visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="0" color="0" x="2849" y="10" height="3" width="4" format="[general]" html.valueishtml="0"  name=sheet_packing_item_sheet_packaging_ticke visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=3 alignment="2" tabsequence=32766 border="2" color="0" x="618" y="3" height="109" width="395" format="[general]" html.valueishtml="0"  name=coil_lot_num visible="1" edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="2" tabsequence=32766 border="2" color="0" x="1020" y="3" height="109" width="439" format="[general]" html.valueishtml="0"  name=coil_coil_org_num visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=5 alignment="2" tabsequence=32766 border="2" color="0" x="1467" y="3" height="109" width="307" format="[general]" html.valueishtml="0"  name=production_sheet_item_prod_item_pieces visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="2" expression=" ceiling(production_sheet_item_prod_item_net_wt  * 0.45359)"border="2" color="0" x="1777" y="61" height="51" width="241" format="[general]" html.valueishtml="0"  name=net_kg_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="2" expression="ceiling( production_sheet_item_prod_item_theoreti  *  0.45359)"border="2" color="0" x="2030" y="61" height="51" width="271" format="[general]" html.valueishtml="0"  name=theo_kg_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="2" expression="ceiling( gross_t * 0.45359)"border="2" color="0" x="2308" y="61" height="51" width="249" format="[general]" html.valueishtml="0"  name=gross_kg_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="2" expression="ceiling( sheet_skid_sheet_tare_wt * 0.45359)"border="2" color="0" x="2564" y="61" height="51" width="241" format="[general]" html.valueishtml="0"  name=tare_kg_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=11 alignment="2" tabsequence=32766 border="2" color="0" x="223" y="3" height="109" width="388" format="[general]" html.valueishtml="0"  name=sheet_skid_sheet_skid_display_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=7 alignment="2" tabsequence=32766 border="2" color="0" x="2030" y="0" height="51" width="271" format="[general]" html.valueishtml="0"  name=production_sheet_item_prod_item_theoreti visible="1~tif (  customer_id = 2802 , 0, 1)" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="12632256" )
+compute(band=detail alignment="2" expression=" sheet_skid_sheet_tare_wt  +  sheet_skid_sheet_net_wt "border="2" color="0" x="2308" y="3" height="51" width="249" format="[general]" html.valueishtml="0"  name=gross_t visible="1~tif (  customer_id = 2802 , 0, 1)"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="12632256" )
+column(band=detail id=8 alignment="2" tabsequence=32766 border="2" color="0" x="2564" y="3" height="51" width="241" format="[general]" html.valueishtml="0"  name=sheet_skid_sheet_tare_wt visible="1~tif (  customer_id = 2802 , 0, 1)" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="12632256" )
+column(band=detail id=6 alignment="2" tabsequence=32766 border="2" color="0" x="1777" y="3" height="51" width="241" format="[general]" html.valueishtml="0"  name=production_sheet_item_prod_item_net_wt visible="1~tif (  customer_id = 2802 , 0, 1)" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="12632256" )
+rectangle(band=detail x="1777" y="3" height="51" width="241"  name=r_1 visible="1~tif (  customer_id = 2802 , 1, 0)" brush.hatch="6" brush.color="12632256" pen.style="0" pen.width="4" pen.color="16777215"  background.mode="2" background.color="0" )
+rectangle(band=detail x="2030" y="3" height="51" width="271"  name=r_2 visible="1~tif (  customer_id = 2802 , 1, 0)" brush.hatch="6" brush.color="12632256" pen.style="0" pen.width="4" pen.color="16777215"  background.mode="2" background.color="0" )
+rectangle(band=detail x="2308" y="3" height="51" width="249"  name=r_3 visible="1~tif (  customer_id = 2802 , 1, 0)" brush.hatch="6" brush.color="12632256" pen.style="0" pen.width="4" pen.color="16777215"  background.mode="2" background.color="0" )
+rectangle(band=detail x="2564" y="3" height="51" width="241"  name=r_4 visible="1~tif (  customer_id = 2802 , 1, 0)" brush.hatch="6" brush.color="12632256" pen.style="0" pen.width="4" pen.color="16777215"  background.mode="2" background.color="0" )
+column(band=detail id=10 alignment="0" tabsequence=32766 border="0" color="0" x="2820" y="61" height="51" width="461" format="[general]" html.valueishtml="0"  name=production_sheet_item_prod_item_status visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="0" expression="~"Package: ~" + String( package_num )"border="2" color="0" x="2820" y="6" height="51" width="545" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+
+sparse(names="sheet_packing_item_sh_packing_item	sheet_packing_item_sheet_packaging_ticke")htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

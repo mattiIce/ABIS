@@ -1,0 +1,10 @@
+$PBExportHeader$s_quote_data.srs
+$PBExportComments$contains quote data
+global type s_quote_data from structure
+	long		quote_id
+	long		revision_id
+	long		customer_id
+	long		contact_id
+	long		catalog_id
+end type
+

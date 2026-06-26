@@ -1,0 +1,106 @@
+$PBExportHeader$d_customer_job_coil.srd
+$PBExportComments$main window for recovery report listing all coils
+release 9;
+datawindow(units=0 timer_interval=0 color=67108864 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=64 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=61 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=ab_job_ab_job_num dbname="ab_job.ab_job_num" )
+ column=(type=char(18) updatewhereclause=yes name=customer_customer_short_name dbname="customer.customer_short_name" )
+ column=(type=datetime updatewhereclause=yes name=ab_job_job_done_time dbname="ab_job.job_done_time" )
+ column=(type=datetime updatewhereclause=yes name=ab_job_time_date_finished dbname="ab_job.time_date_finished" )
+ column=(type=decimal(0) updatewhereclause=yes name=coil_coil_abc_num dbname="coil.coil_abc_num" )
+ column=(type=char(32) updatewhereclause=yes name=coil_coil_org_num dbname="coil.coil_org_num" )
+ column=(type=char(18) updatewhereclause=yes name=coil_lot_num dbname="coil.lot_num" )
+ column=(type=char(18) updatewhereclause=yes name=coil_coil_mid_num dbname="coil.coil_mid_num" )
+ column=(type=char(36) updatewhereclause=yes name=customer_order_orig_customer_po dbname="customer_order.orig_customer_po" )
+ column=(type=char(18) updatewhereclause=yes name=customer_customer_short_name_1 dbname="customer.customer_short_name" )
+ column=(type=decimal(0) updatewhereclause=yes name=ab_job_line_num dbname="ab_job.line_num" )
+ column=(type=char(255) updatewhereclause=yes name=line_line_desc dbname="line.line_desc" )
+ column=(type=char(8) updatewhereclause=yes name=coil_coil_alloy2 dbname="coil.coil_alloy2" )
+ column=(type=char(8) updatewhereclause=yes name=coil_coil_temper dbname="coil.coil_temper" )
+ column=(type=decimal(4) updatewhereclause=yes name=coil_coil_gauge dbname="coil.coil_gauge" )
+ column=(type=decimal(3) updatewhereclause=yes name=coil_coil_width dbname="coil.coil_width" )
+ column=(type=decimal(0) updatewhereclause=yes name=coil_net_wt dbname="coil.net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=coil_coil_status dbname="coil.coil_status" )
+ column=(type=decimal(0) updatewhereclause=yes name=coil_net_wt_balance dbname="coil.net_wt_balance" )
+ column=(type=decimal(5) updatewhereclause=yes name=order_item_theoretical_unit_wt dbname="order_item.theoretical_unit_wt" )
+ column=(type=char(255) updatewhereclause=yes name=order_item_material_end_use dbname="order_item.material_end_use" )
+ column=(type=number updatewhereclause=yes name=part_length dbname="part_length" )
+ retrieve="select   ab_job.ab_job_num,
+         orig_customer.customer_short_name, 
+         ab_job.job_done_time, 
+         ab_job.time_date_finished, 
+         coil.coil_abc_num, 
+         coil.coil_org_num, 
+         coil.lot_num, 
+         coil.coil_mid_num, 
+         customer_order.orig_customer_po,  
+         enduser.customer_short_name, 
+         ab_job.line_num,
+			line.line_desc,
+         coil.coil_alloy2, 
+         coil.coil_temper, 
+         coil.coil_gauge, 
+         coil.coil_width, 
+         coil.net_wt, 
+         coil.coil_status, 
+         coil.net_wt_balance, 
+         order_item.theoretical_unit_wt, 
+         order_item.material_end_use, 
+         f_get_part_length_per_job(ab_job.ab_job_num) part_length
+from     process_coil
+         join coil on coil.coil_abc_num = process_coil.coil_abc_num
+         join ab_job on ab_job.ab_job_num = process_coil.ab_job_num
+         join customer_order on customer_order.order_abc_num = ab_job.order_abc_num
+         join order_item on ab_job.order_abc_num = order_item.order_abc_num and ab_job.order_item_num = order_item.order_item_num
+         join customer orig_customer on orig_customer.customer_id = customer_order.orig_customer_id
+         join customer enduser on enduser.customer_id = customer_order.enduser_id
+			join line on line.line_num = ab_job.line_num" )
+text(band=header alignment="0" text="Coil ABCO #" border="6" color="0" x="1836" y="6" height="51" width="315" html.valueishtml="0"  name=coil_coil_abc_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Coil Org Num" border="6" color="0" x="2161" y="6" height="51" width="724" html.valueishtml="0"  name=coil_coil_org_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Coil Lot Num" border="6" color="0" x="2900" y="6" height="51" width="417" html.valueishtml="0"  name=coil_lot_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Coil Mid Num" border="6" color="0" x="3332" y="6" height="51" width="417" html.valueishtml="0"  name=coil_coil_mid_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Orig Customer PO" border="6" color="0" x="3763" y="6" height="51" width="812" html.valueishtml="0"  name=customer_order_orig_customer_po_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Coil Alloy" border="6" color="0" x="4868" y="6" height="51" width="249" html.valueishtml="0"  name=coil_coil_alloy2_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Coil Temper" border="6" color="0" x="5131" y="6" height="51" width="285" html.valueishtml="0"  name=coil_coil_temper_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Coil Gauge" border="6" color="0" x="5431" y="6" height="51" width="263" html.valueishtml="0"  name=coil_coil_gauge_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Coil Width" border="6" color="0" x="5709" y="6" height="51" width="245" html.valueishtml="0"  name=coil_coil_width_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Original WT" border="6" color="0" x="5968" y="6" height="51" width="271" html.valueishtml="0"  name=coil_net_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Coil Status" border="6" color="0" x="6254" y="6" height="51" width="263" html.valueishtml="0"  name=coil_coil_status_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Current WT" border="6" color="0" x="6532" y="6" height="51" width="358" html.valueishtml="0"  name=coil_net_wt_balance_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Theoretical WT" border="6" color="0" x="6905" y="6" height="51" width="380" html.valueishtml="0"  name=order_item_theoretical_unit_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Material End Use" border="6" color="0" x="7300" y="6" height="51" width="830" html.valueishtml="0"  name=order_item_material_end_use_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Length" border="6" color="0" x="8144" y="6" height="51" width="274" html.valueishtml="0"  name=part_length_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Customer" border="6" color="0" x="0" y="6" height="51" width="508" html.valueishtml="0"  name=customer_customer_short_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="JOB Num" border="6" color="0" x="523" y="6" height="51" width="267" html.valueishtml="0"  name=ab_job_ab_job_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Job Done Time" border="6" color="0" x="808" y="6" height="51" width="501" html.valueishtml="0"  name=ab_job_job_done_time_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Job Finished Time" border="6" color="0" x="1324" y="6" height="51" width="494" html.valueishtml="0"  name=ab_job_time_date_finished_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Line" border="6" color="0" x="4590" y="6" height="51" width="263" html.valueishtml="0"  name=line_line_desc_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="5" color="33554432" x="1832" y="6" height="61" width="315" format="[general]" html.valueishtml="0"  name=coil_coil_abc_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="5" color="33554432" x="2161" y="6" height="61" width="724" format="[general]" html.valueishtml="0"  name=coil_coil_org_num visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="5" color="33554432" x="2900" y="6" height="61" width="417" format="[general]" html.valueishtml="0"  name=coil_lot_num visible="1" edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=8 alignment="0" tabsequence=32766 border="5" color="33554432" x="3332" y="6" height="61" width="417" format="[general]" html.valueishtml="0"  name=coil_coil_mid_num visible="1" edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=9 alignment="0" tabsequence=32766 border="5" color="33554432" x="3763" y="6" height="61" width="812" format="[general]" html.valueishtml="0"  name=customer_order_orig_customer_po visible="1" edit.limit=36 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=13 alignment="0" tabsequence=32766 border="5" color="33554432" x="4868" y="6" height="61" width="249" format="[general]" html.valueishtml="0"  name=coil_coil_alloy2 visible="1" edit.limit=8 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=14 alignment="0" tabsequence=32766 border="5" color="33554432" x="5131" y="6" height="61" width="285" format="[general]" html.valueishtml="0"  name=coil_coil_temper visible="1" edit.limit=8 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=15 alignment="0" tabsequence=32766 border="5" color="33554432" x="5431" y="6" height="61" width="263" format="[general]" html.valueishtml="0"  name=coil_coil_gauge visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=16 alignment="0" tabsequence=32766 border="5" color="33554432" x="5709" y="6" height="61" width="245" format="[general]" html.valueishtml="0"  name=coil_coil_width visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=17 alignment="0" tabsequence=32766 border="5" color="33554432" x="5968" y="6" height="61" width="271" format="[general]" html.valueishtml="0"  name=coil_net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=18 alignment="0" tabsequence=32766 border="5" color="33554432" x="6254" y="6" height="61" width="263" format="[general]" html.valueishtml="0"  name=coil_coil_status visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=19 alignment="0" tabsequence=32766 border="5" color="33554432" x="6532" y="6" height="61" width="358" format="[general]" html.valueishtml="0"  name=coil_net_wt_balance visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=20 alignment="0" tabsequence=32766 border="5" color="33554432" x="6905" y="6" height="61" width="380" format="[general]" html.valueishtml="0"  name=order_item_theoretical_unit_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=21 alignment="0" tabsequence=32766 border="5" color="33554432" x="7300" y="6" height="61" width="830" format="[general]" html.valueishtml="0"  name=order_item_material_end_use visible="1" edit.limit=255 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="5" color="33554432" x="0" y="6" height="61" width="508" format="[general]" html.valueishtml="0"  name=customer_customer_short_name visible="1" edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="5" color="33554432" x="523" y="6" height="61" width="267" format="[general]" html.valueishtml="0"  name=ab_job_ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="5" color="33554432" x="808" y="6" height="61" width="501" format="[shortdate] [time]" html.valueishtml="0"  name=ab_job_job_done_time visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="5" color="33554432" x="1324" y="6" height="61" width="494" format="[shortdate] [time]" html.valueishtml="0"  name=ab_job_time_date_finished visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=22 alignment="0" tabsequence=32766 border="5" color="33554432" x="8148" y="6" height="61" width="274" format="[general]" html.valueishtml="0"  name=part_length visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=12 alignment="0" tabsequence=32766 border="5" color="33554432" x="4590" y="6" height="61" width="263" format="[general]" html.valueishtml="0"  name=line_line_desc visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

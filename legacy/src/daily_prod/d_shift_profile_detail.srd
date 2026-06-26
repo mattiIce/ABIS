@@ -1,0 +1,51 @@
+$PBExportHeader$d_shift_profile_detail.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=134217738 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=632 color="536870912" )
+table(column=(type=char(32) updatewhereclause=yes name=starting_time_1st dbname="shift_profile.starting_time_1st" )
+ column=(type=char(32) updatewhereclause=yes name=ending_time_1st dbname="shift_profile.ending_time_1st" )
+ column=(type=char(32) updatewhereclause=yes name=starting_time_2nd dbname="shift_profile.starting_time_2nd" )
+ column=(type=char(32) updatewhereclause=yes name=ending_time_2nd dbname="shift_profile.ending_time_2nd" )
+ column=(type=char(32) updatewhereclause=yes name=starting_time_3rd dbname="shift_profile.starting_time_3rd" )
+ column=(type=char(32) updatewhereclause=yes name=ending_time_3rd dbname="shift_profile.ending_time_3rd" )
+ column=(type=decimal(0) updatewhereclause=yes name=id dbname="shift_profile.id" )
+ column=(type=number updatewhereclause=yes name=selected_1st dbname="selected_1st" values="	1/	0" )
+ column=(type=number updatewhereclause=yes name=selected_2nd dbname="selected_2nd" values="	1/	0" )
+ column=(type=number updatewhereclause=yes name=selected_3rd dbname="selected_3rd" values="	1/	0" )
+ retrieve="  SELECT ~"SHIFT_PROFILE~".~"STARTING_TIME_1ST~",   
+         ~"SHIFT_PROFILE~".~"ENDING_TIME_1ST~",   
+         ~"SHIFT_PROFILE~".~"STARTING_TIME_2ND~",   
+         ~"SHIFT_PROFILE~".~"ENDING_TIME_2ND~",   
+         ~"SHIFT_PROFILE~".~"STARTING_TIME_3RD~",   
+         ~"SHIFT_PROFILE~".~"ENDING_TIME_3RD~",   
+         ~"SHIFT_PROFILE~".~"ID~",
+			0 ~"SELECTED_1ST~",
+			0 ~"SELECTED_2ND~",
+			0 ~"SELECTED_3RD~" 
+    FROM ~"SHIFT_PROFILE~"  
+   WHERE ~"SHIFT_PROFILE~".~"ID~" = :al_id    
+" arguments=(("al_id", number)) )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="0" color="33554432" x="2162" y="268" height="60" width="5" format="[general]" html.valueishtml="0"  name=id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="1st Shift Starting Time :" border="0" color="33554432" x="137" y="12" height="56" width="512" html.valueishtml="0"  name=starting_time_1st_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="672" y="8" height="68" width="535" format="[general]" html.valueishtml="0"  name=starting_time_1st visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Ending Time:" border="0" color="33554432" x="183" y="88" height="56" width="471" html.valueishtml="0"  name=ending_time_1st_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="667" y="84" height="68" width="544" format="[general]" html.valueishtml="0"  name=ending_time_1st visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="2nd Shift Starting Time:" border="0" color="33554432" x="137" y="240" height="56" width="507" html.valueishtml="0"  name=starting_time_2nd_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Ending Time:" border="0" color="33554432" x="247" y="320" height="56" width="393" html.valueishtml="0"  name=ending_time_2nd_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="672" y="236" height="68" width="526" format="[general]" html.valueishtml="0"  name=starting_time_2nd visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="667" y="316" height="68" width="530" format="[general]" html.valueishtml="0"  name=ending_time_2nd visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="33554432" x="672" y="468" height="68" width="526" format="[general]" html.valueishtml="0"  name=starting_time_3rd visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="33554432" x="667" y="548" height="68" width="535" format="[general]" html.valueishtml="0"  name=ending_time_3rd visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Ending Time:" border="0" color="33554432" x="242" y="556" height="56" width="393" html.valueishtml="0"  name=ending_time_3rd_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="3rd Shift Starting Time:" border="0" color="33554432" x="142" y="472" height="56" width="498" html.valueishtml="0"  name=starting_time_3rd_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=8 alignment="0" tabsequence=10 border="0" color="33554432" x="27" y="12" height="60" width="73" format="[general]" html.valueishtml="0"  name=selected_1st visible="1~tCASE( ID  WHEN 0 THEN 0 ELSE 1) " checkbox.text="" checkbox.on="1" checkbox.off="0" checkbox.scale=no checkbox.threed=yes  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=9 alignment="0" tabsequence=20 border="0" color="33554432" x="27" y="240" height="60" width="64" format="[general]" html.valueishtml="0"  name=selected_2nd visible="1~tCASE( ID  WHEN 0,1,2,3  THEN 0 ELSE 1) " checkbox.text="" checkbox.on="1" checkbox.off="0" checkbox.scale=no checkbox.threed=yes  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=10 alignment="0" tabsequence=30 border="0" color="33554432" x="32" y="468" height="56" width="64" format="[general]" html.valueishtml="0"  name=selected_3rd visible="1~tCASE( ID  WHEN 0,1,2,3, 4,5,6  THEN 0 ELSE 1) " checkbox.text="" checkbox.on="1" checkbox.off="0" checkbox.scale=no checkbox.threed=yes  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

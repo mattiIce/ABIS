@@ -1,0 +1,71 @@
+$PBExportHeader$d_sales_customer_list.srd
+$PBExportComments$list customer's Full name and Short name of table Customer
+release 9;
+datawindow(units=0 timer_interval=0 color=15793151 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=58 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=64 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=customer_id dbname="customer.customer_id" )
+ column=(type=char(100) updatewhereclause=yes name=customer_street dbname="customer.customer_street" )
+ column=(type=char(18) updatewhereclause=yes name=customer_city dbname="customer.customer_city" )
+ column=(type=char(30) updatewhereclause=yes name=customer_state dbname="customer.customer_state" )
+ column=(type=char(18) updatewhereclause=yes name=customer_zip dbname="customer.customer_zip" )
+ column=(type=char(18) updatewhereclause=yes name=customer_country dbname="customer.customer_country" )
+ column=(type=char(18) updatewhereclause=yes name=customer_phone_number dbname="customer.customer_phone_number" )
+ column=(type=char(18) updatewhereclause=yes name=customer_fax_number dbname="customer.customer_fax_number" )
+ column=(type=datetime updatewhereclause=yes name=customer_create_date dbname="customer.customer_create_date" )
+ column=(type=datetime updatewhereclause=yes name=customer_maint_date dbname="customer.customer_maint_date" )
+ column=(type=char(255) updatewhereclause=yes name=customer_notes dbname="customer.customer_notes" )
+ column=(type=decimal(0) updatewhereclause=yes name=parent_id dbname="customer.parent_id" )
+ column=(type=decimal(0) updatewhereclause=yes name=customer_type dbname="customer.customer_type" )
+ column=(type=char(32) updatewhereclause=yes name=tax_id dbname="customer.tax_id" )
+ column=(type=char(32) updatewhereclause=yes name=tax_exemption_num dbname="customer.tax_exemption_num" )
+ column=(type=decimal(2) updatewhereclause=yes name=tax_rate dbname="customer.tax_rate" )
+ column=(type=char(60) updatewhereclause=yes name=customer_full_name dbname="customer.customer_full_name" )
+ column=(type=char(18) updatewhereclause=yes name=customer_short_name dbname="customer.customer_short_name" )
+ column=(type=char(18) updatewhereclause=yes name=customer_duns_number_string dbname="customer.customer_duns_number_string" )
+ column=(type=char(64) updatewhereclause=yes name=bill_to_street dbname="customer.bill_to_street" )
+ column=(type=char(18) updatewhereclause=yes name=bill_to_city dbname="customer.bill_to_city" )
+ column=(type=char(30) updatewhereclause=yes name=bill_to_state dbname="customer.bill_to_state" )
+ column=(type=char(18) updatewhereclause=yes name=bill_to_zip dbname="customer.bill_to_zip" )
+ column=(type=char(9) updatewhereclause=yes name=customer_external_id dbname="customer.customer_external_id" )
+ retrieve="  SELECT ~"CUSTOMER~".~"CUSTOMER_ID~",   
+         ~"CUSTOMER~".~"CUSTOMER_STREET~",   
+         ~"CUSTOMER~".~"CUSTOMER_CITY~",   
+         ~"CUSTOMER~".~"CUSTOMER_STATE~",   
+         ~"CUSTOMER~".~"CUSTOMER_ZIP~",   
+         ~"CUSTOMER~".~"CUSTOMER_COUNTRY~",   
+         ~"CUSTOMER~".~"CUSTOMER_PHONE_NUMBER~",   
+         ~"CUSTOMER~".~"CUSTOMER_FAX_NUMBER~",   
+         ~"CUSTOMER~".~"CUSTOMER_CREATE_DATE~",   
+         ~"CUSTOMER~".~"CUSTOMER_MAINT_DATE~",   
+         ~"CUSTOMER~".~"CUSTOMER_NOTES~",   
+         ~"CUSTOMER~".~"PARENT_ID~",   
+         ~"CUSTOMER~".~"CUSTOMER_TYPE~",   
+         ~"CUSTOMER~".~"TAX_ID~",   
+         ~"CUSTOMER~".~"TAX_EXEMPTION_NUM~",   
+         ~"CUSTOMER~".~"TAX_RATE~",   
+         ~"CUSTOMER~".~"CUSTOMER_FULL_NAME~",   
+         ~"CUSTOMER~".~"CUSTOMER_SHORT_NAME~",   
+         ~"CUSTOMER~".~"CUSTOMER_DUNS_NUMBER_STRING~",   
+         ~"CUSTOMER~".~"BILL_TO_STREET~",   
+         ~"CUSTOMER~".~"BILL_TO_CITY~",   
+         ~"CUSTOMER~".~"BILL_TO_STATE~",   
+         ~"CUSTOMER~".~"BILL_TO_ZIP~",   
+         ~"CUSTOMER~".~"CUSTOMER_EXTERNAL_ID~"  
+    FROM ~"CUSTOMER~"  
+ORDER BY ~"CUSTOMER~".~"CUSTOMER_FULL_NAME~" ASC   
+" )
+text(band=header alignment="2" text="Customer Full Name" border="6" color="0" x="11" y="6" height="48" width="845" html.valueishtml="0"  name=customer_full_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+text(band=header alignment="2" text="Short Name" border="6" color="0" x="870" y="6" height="48" width="483" html.valueishtml="0"  name=customer_short_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+column(band=detail id=20 alignment="0" tabsequence=32766 border="0" color="0" x="3621" y="0" height="54" width="1664" format="[general]" html.valueishtml="0"  name=bill_to_street visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=19 alignment="0" tabsequence=32766 border="0" color="0" x="5285" y="0" height="54" width="468" format="[general]" html.valueishtml="0"  name=customer_duns_number_string visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=17 alignment="0" tabsequence=32766 border="5" color="0" x="99" y="6" height="54" width="757" format="[general]" html.valueishtml="0"  name=customer_full_name visible="1" edit.limit=60 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=18 alignment="0" tabsequence=32766 border="5" color="0" x="867" y="6" height="54" width="494" format="[general]" html.valueishtml="0"  name=customer_short_name visible="1" edit.limit=18 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

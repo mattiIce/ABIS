@@ -1,0 +1,20 @@
+$PBExportHeader$d_daily_prod_shift_average.srd
+$PBExportComments$average lb per shift per day
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no grid.lines=0 )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=74 color="536870912" )
+table(column=(type=date updatewhereclause=no name=date dbname="Date" )
+ column=(type=char(10) updatewhereclause=no name=shift dbname="Shift" )
+ column=(type=number updatewhereclause=no name=process_wt dbname="process_wt" )
+ column=(type=number updatewhereclause=no name=hrs dbname="hrs" )
+ column=(type=number updatewhereclause=no name=average dbname="average" )
+ )
+column(band=detail id=1 alignment="0" tabsequence=10 border="0" color="0" x="7" y="6" height="61" width="176" format="[general]"  name=date edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="0" x="190" y="0" height="77" width="322" format="[general]"  name=shift edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="0" x="519" y="0" height="77" width="256" format="[general]"  name=process_wt edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="0" x="783" y="0" height="77" width="256" format="[general]"  name=hrs edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=5 alignment="0" tabsequence=0 border="0" color="0" x="1050" y="0" height="77" width="256"  name=average  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="0" text="Average"border="0" color="0" x="1046" y="3" height="77" width="260"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

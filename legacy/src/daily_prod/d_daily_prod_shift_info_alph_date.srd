@@ -1,0 +1,17 @@
+$PBExportHeader$d_daily_prod_shift_info_alph_date.srd
+$PBExportComments$list all dates during date range for a line
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=77 color="536870912" )
+table(column=(type=datetime updatewhereclause=yes name=data_date dbname="compute_0001" )
+ retrieve="  SELECT DISTINCT TO_Date(START_TIME)
+	FROM SHIFT
+   WHERE ( LINE_NUM = :al_line ) AND  
+         (To_date(START_TIME) >= :ad_s) AND
+         (To_date(START_TIME) <= :ad_e)    
+   
+" arguments=(("al_line", number),("ad_s", date),("ad_e", date)) )
+column(band=detail id=1 alignment="0" tabsequence=0 border="0" color="0" x="289" y="16" height="51" width="640"  name=data_date  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

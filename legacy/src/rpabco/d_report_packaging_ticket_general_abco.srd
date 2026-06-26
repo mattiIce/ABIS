@@ -1,0 +1,18 @@
+$PBExportHeader$d_report_packaging_ticket_general_abco.srd
+$PBExportComments$new packaging ticket report for abco customer
+release 9;
+datawindow(units=2 timer_interval=0 color=1090519039 processing=5 HTMLDW=no print.printername="" print.documentname="" print.orientation = 1 print.margin.left = 250 print.margin.right = 250 print.margin.top = 0 print.margin.bottom = 0 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=yes print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=133 color="536870912"  height.autosize=yes)
+table(column=(type=char(10) updatewhereclause=yes name=a dbname="a" )
+ unbound = "yes"arguments=(("al_shipment", number)) )
+report(band=detail dataobject="d_report_packaging_ticket_scrap_abco" x="50" y="50" height="16" width="7491" border="0"  height.autosize=yes criteria="" nest_arguments=(("al_shipment")) trail_footer = yes  name=dw_2 visible="1"  slideup=directlyabove )
+report(band=detail dataobject="d_report_packaging_ticket_rejcoil_abco" x="58" y="66" height="8" width="7475" border="0"  height.autosize=yes criteria="" nest_arguments=(("al_shipment")) trail_footer = yes  name=dw_3 visible="1"  slideup=directlyabove )
+report(band=detail dataobject="d_report_packaging_ticket_sheet_abco" x="50" y="83" height="8" width="7483" border="0"  height.autosize=yes criteria="" nest_arguments=(("al_shipment")) trail_footer = yes  name=dw_1 visible="1"  slideup=directlyabove )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

@@ -1,0 +1,17 @@
+$PBExportHeader$d_report_abco_combi_form_input_detail.srd
+$PBExportComments$new abco form combination of packing list and bill of lading with background and list all detail information
+release 6;
+datawindow(units=0 timer_interval=0 color=1090519039 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 0 print.margin.right = 0 print.margin.top = 0 print.margin.bottom = 0 print.paper.source = 0 print.paper.size = 0 print.prompt=yes print.buttons=no print.preview.buttons=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=448 color="536870912"  height.autosize=yes)
+table(column=(type=decimal(0) updatewhereclause=yes key=yes name=shipment_packing_list dbname="shipment.packing_list" )
+ retrieve="  SELECT ~"SHIPMENT~".~"PACKING_LIST~"   
+    FROM ~"SHIPMENT~"  
+   WHERE ~"SHIPMENT~".~"PACKING_LIST~" = :al_packing_list    
+" update="SHIPMENT" updatewhere=0 updatekeyinplace=no arguments=(("al_packing_list", number)) )
+report(band=detail dataobject="d_report_combi_sheet" x="11" y="0" height="112" width="2823" border="0"  height.autosize=yes criteria="" nest_arguments=(("al_packing_list")) trail_footer = yes  slideup=directlyabove )
+report(band=detail dataobject="d_report_combi_scrap" x="15" y="115" height="112" width="2820" border="0"  height.autosize=yes criteria="" nest_arguments=(("al_packing_list")) trail_footer = yes  slideup=directlyabove )
+report(band=detail dataobject="d_report_combi_wh" x="11" y="227" height="109" width="2820" border="0"  height.autosize=yes criteria="" nest_arguments=(("al_packing_list")) trail_footer = yes  slideup=directlyabove )
+report(band=detail dataobject="d_report_combi_rejcoil" x="11" y="336" height="109" width="2820" border="0"  height.autosize=yes criteria="" nest_arguments=(("al_packing_list")) trail_footer = yes  slideup=directlyabove )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

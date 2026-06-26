@@ -1,0 +1,15 @@
+$PBExportHeader$d_daily_prod_date_info.srd
+$PBExportComments$list date as level 1 of the tree view
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=106 color="536870912" )
+table(column=(type=datetime updatewhereclause=yes name=start_time dbname="SHIFT.START_TIME" )
+ retrieve="  SELECT SHIFT.START_TIME  
+    FROM SHIFT  
+   WHERE TO_Date(SHIFT.START_TIME) = :ad_date    
+" arguments=(("ad_date", date)) )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="0" x="18" y="6" height="48" width="263" format="[shortdate] [time]"  name=start_time edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=detail alignment="0" expression="string(date(start_time), ~"mm/dd/yyyy~")"border="0" color="0" x="336" y="13" height="51" width="508" format="[general]"  name=date_display  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

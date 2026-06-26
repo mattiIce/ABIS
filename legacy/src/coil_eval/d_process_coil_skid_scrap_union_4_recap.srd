@@ -1,0 +1,57 @@
+$PBExportHeader$d_process_coil_skid_scrap_union_4_recap.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=116 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=72 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=process_coil_ab_job_num dbname="ab_job_num" )
+ column=(type=datetime updatewhereclause=yes name=time_date_started dbname="time_date_started" )
+ column=(type=decimal(0) updatewhereclause=yes name=production_sheet_item_prod_item_net_wt dbname="prod_item_net_wt" )
+ column=(type=number updatewhereclause=yes name=production_sheet_item_prod_item_pieces dbname="prod_item_pieces" )
+ retrieve="  SELECT * FROM (
+	SELECT ~"PROCESS_COIL~".~"AB_JOB_NUM~",
+		   ~"AB_JOB~".~"TIME_DATE_STARTED~",
+         ~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_NET_WT~",
+			~"PRODUCTION_SHEET_ITEM~".~"PROD_ITEM_PIECES~"
+    FROM ~"PROCESS_COIL~",
+         ~"PRODUCTION_SHEET_ITEM~",
+         ~"AB_JOB~"
+   WHERE ( ~"PRODUCTION_SHEET_ITEM~".~"COIL_ABC_NUM~" = ~"PROCESS_COIL~".~"COIL_ABC_NUM~" ) and
+         ( ~"PRODUCTION_SHEET_ITEM~".~"AB_JOB_NUM~" = ~"PROCESS_COIL~".~"AB_JOB_NUM~" ) and
+         ( ~"AB_JOB~".~"AB_JOB_NUM~" = ~"PROCESS_COIL~".~"AB_JOB_NUM~" ) and
+			( ~"PROCESS_COIL~".~"COIL_ABC_NUM~" = :al_coil)
+   UNION ALL
+  SELECT ~"PROCESS_COIL~".~"AB_JOB_NUM~",
+	     ~"AB_JOB~".~"TIME_DATE_STARTED~",
+         ~"QUALITY_SCRAP_WORKSHEET~".~"SCRAP_ITEM_NET_WT~",
+         ~"QUALITY_SCRAP_WORKSHEET~".~"SCRAP_ITEM_PIECE~"
+    FROM ~"PROCESS_COIL~",
+         ~"QUALITY_SCRAP_WORKSHEET~",
+         ~"AB_JOB~"
+   WHERE ( ~"PROCESS_COIL~".~"COIL_ABC_NUM~" = ~"QUALITY_SCRAP_WORKSHEET~".~"COIL_ABC_NUM~" ) and
+         ( ~"PROCESS_COIL~".~"AB_JOB_NUM~" = ~"QUALITY_SCRAP_WORKSHEET~".~"AB_JOB_NUM~" ) and
+         ( ~"AB_JOB~".~"AB_JOB_NUM~" = ~"PROCESS_COIL~".~"AB_JOB_NUM~" ) and
+			( ~"PROCESS_COIL~".~"COIL_ABC_NUM~" = :al_coil))
+	ORDER BY ~"TIME_DATE_STARTED~"
+" arguments=(("al_coil", number)) )
+group(level=1 header.height=0 trailer.height=60 by=("process_coil_ab_job_num" ) header.color="536870912" trailer.color="536870912" )
+text(band=header alignment="2" text="Process Coil
+Ab Job Num" border="0" color="33554432" x="9" y="8" height="100" width="283" html.valueishtml="0"  name=process_coil_ab_job_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Production Sheet Item
+Prod Item Pieces" border="0" color="33554432" x="302" y="8" height="100" width="517" html.valueishtml="0"  name=production_sheet_item_prod_item_pieces_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Production Sheet Item
+Prod Item Net Wt" border="0" color="33554432" x="827" y="8" height="100" width="517" html.valueishtml="0"  name=production_sheet_item_prod_item_net_wt_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="33554432" x="9" y="8" height="60" width="283" format="[general]" html.valueishtml="0"  name=process_coil_ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="0" color="33554432" x="302" y="8" height="60" width="517" format="[general]" html.valueishtml="0"  name=production_sheet_item_prod_item_pieces visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=32766 border="0" color="33554432" x="827" y="8" height="60" width="517" format="[general]" html.valueishtml="0"  name=production_sheet_item_prod_item_net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=trailer.1 alignment="1" expression="sum(production_sheet_item_prod_item_pieces for group 1)"border="0" color="33554432" x="302" y="4" height="52" width="517" format="[general]" html.valueishtml="0"  name=compute_pcs visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=trailer.1 alignment="1" expression="sum(production_sheet_item_prod_item_net_wt for group 1)"border="0" color="33554432" x="827" y="4" height="52" width="517" format="[general]" html.valueishtml="0"  name=compute_wt visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=0 border="0" color="33554432" x="1358" y="0" height="56" width="352" html.valueishtml="0"  name=time_date_started visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Time Date Started" border="0" color="0" x="1353" y="4" height="76" width="357" html.valueishtml="0"  name=time_date_started_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

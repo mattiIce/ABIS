@@ -1,0 +1,25 @@
+$PBExportHeader$d_temp.srd
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no grid.lines=0 )
+header(height=115 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=74 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=dt_instance_instance_num dbname="DT_INSTANCE.INSTANCE_NUM" )
+ column=(type=datetime updatewhereclause=yes name=dt_instance_starting_time dbname="DT_INSTANCE.STARTING_TIME" )
+ column=(type=datetime updatewhereclause=yes name=dt_instance_ending_time dbname="DT_INSTANCE.ENDING_TIME" )
+ column=(type=decimal(0) updatewhereclause=yes name=dt_instance_detail_duration dbname="DT_INSTANCE_DETAIL.DURATION" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"DT_INSTANCE~" )  TABLE(NAME=~"DT_INSTANCE_DETAIL~" ) COLUMN(NAME=~"DT_INSTANCE.INSTANCE_NUM~") COLUMN(NAME=~"DT_INSTANCE.STARTING_TIME~") COLUMN(NAME=~"DT_INSTANCE.ENDING_TIME~") COLUMN(NAME=~"DT_INSTANCE_DETAIL.DURATION~")    JOIN (LEFT=~"DT_INSTANCE_DETAIL.INSTANCE_NUM~"    OP =~"=~"RIGHT=~"DT_INSTANCE.INSTANCE_NUM~" )WHERE(    EXP1 =~"DT_INSTANCE.SHIFT_NUM~"   OP =~"=~"    EXP2 =~":shift~" ) ) ARG(NAME = ~"shift~" TYPE = number) " arguments=(("shift", number)) )
+text(band=header alignment="2" text="Dt Instance
+Instance Num"border="0" color="0" x="7" y="6" height="102" width="315"  name=dt_instance_instance_num_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Dt Instance
+Starting Time"border="0" color="0" x="329" y="6" height="102" width="483"  name=dt_instance_starting_time_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Dt Instance
+Ending Time"border="0" color="0" x="819" y="6" height="102" width="483"  name=dt_instance_ending_time_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Dt Instance Detail
+Duration"border="0" color="0" x="1309" y="6" height="102" width="406"  name=dt_instance_detail_duration_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="0" x="7" y="7" height="61" width="315" format="[general]"  name=dt_instance_instance_num edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="0" x="329" y="7" height="61" width="483" format="[shortdate] [time]"  name=dt_instance_starting_time edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="0" x="819" y="7" height="61" width="483" format="[shortdate] [time]"  name=dt_instance_ending_time edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="0" color="0" x="1309" y="7" height="61" width="406" format="[general]"  name=dt_instance_detail_duration edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

@@ -1,0 +1,81 @@
+$PBExportHeader$d_current_job_status.srd
+$PBExportComments$external data list all related information
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 1 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=1043 color="536870912" )
+table(column=(type=char(255) updatewhereclause=yes name=line_line_desc dbname="line.line_desc" )
+ column=(type=char(18) updatewhereclause=yes name=customer_customer_short_name dbname="customer.customer_short_name" )
+ column=(type=decimal(0) updatewhereclause=yes name=ab_job_ab_job_num dbname="ab_job.ab_job_num" )
+ column=(type=char(36) updatewhereclause=yes name=customer_order_orig_customer_po dbname="customer_order.orig_customer_po" )
+ column=(type=char(0) updatewhereclause=yes name=enduser dbname="enduser" )
+ column=(type=char(0) updatewhereclause=yes name=alloy dbname="alloy" )
+ column=(type=char(0) updatewhereclause=yes name=temper dbname="temper" )
+ column=(type=char(0) updatewhereclause=yes name=gauge dbname="gauge" )
+ column=(type=char(0) updatewhereclause=yes name=sheettype dbname="sheettype" )
+ column=(type=char(0) updatewhereclause=yes name=widthlength dbname="widthlength" )
+ retrieve="  SELECT ~"LINE~".~"LINE_DESC~",   
+         ~"CUSTOMER~".~"CUSTOMER_SHORT_NAME~",   
+         ~"AB_JOB~".~"AB_JOB_NUM~",   
+         ~"CUSTOMER_ORDER~".~"ORIG_CUSTOMER_PO~",
+			'' enduser,
+			'' alloy,
+			'' temper,
+			'' gauge,
+			'' sheettype,
+			'' widthlength
+    FROM ~"LINE~",   
+         ~"AB_JOB~",   
+         ~"CUSTOMER_ORDER~",   
+         ~"CUSTOMER~"  
+   WHERE ( ab_job.line_num = line.line_num (+)) and  
+         ( ~"AB_JOB~".~"ORDER_ABC_NUM~" = ~"CUSTOMER_ORDER~".~"ORDER_ABC_NUM~" ) and  
+         ( ~"CUSTOMER~".~"CUSTOMER_ID~" = ~"CUSTOMER_ORDER~".~"ORIG_CUSTOMER_ID~" ) and  
+         ( ( ~"AB_JOB~".~"AB_JOB_NUM~" = :al_job ) )    
+" arguments=(("al_job", number)) )
+rectangle(band=detail x="29" y="6" height="1034" width="2096"  name=r_1 visible="1" brush.hatch="6" brush.color="16777215" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="388" y1="6" x2="388" y2="83"  name=l_6 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="18" y1="0" x2="18" y2="0"  name=l_7 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="1584" y1="6" x2="1584" y2="80"  name=l_8 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="1031" y1="6" x2="1031" y2="1037"  name=l_5 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="33" y1="86" x2="2114" y2="86"  name=l_1 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="Part Specs" border="0" color="0" x="66" y="448" height="58" width="900" html.valueishtml="0"  name=t_7 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+line(band=detail x1="29" y1="173" x2="2114" y2="173"  name=l_2 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="33" y1="259" x2="2114" y2="259"  name=l_4 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="29" y1="346" x2="2114" y2="346"  name=l_3 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="29" y1="432" x2="2114" y2="432"  name=l_30 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="37" y1="518" x2="2114" y2="518"  name=l_9 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="33" y1="605" x2="2114" y2="605"  name=l_10 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="37" y1="688" x2="2114" y2="688"  name=l_11 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="37" y1="774" x2="2114" y2="774"  name=l_12 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="40" y1="861" x2="2114" y2="861"  name=l_13 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+line(band=detail x1="37" y1="947" x2="2114" y2="947"  name=l_14 visible="1" pen.style="0" pen.width="4" pen.color="0"  background.mode="1" background.color="553648127" )
+text(band=detail alignment="0" text="DATE" border="0" color="0" x="66" y="19" height="58" width="227" html.valueishtml="0"  name=t_9 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=detail alignment="0" expression="today()"border="0" color="33554432" x="530" y="19" height="58" width="464" format="MM/DD/YYYY" html.valueishtml="0"  name=date_1 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="AB JOB Number" border="0" color="0" x="1068" y="19" height="58" width="435" html.valueishtml="0"  name=t_14 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="1620" y="22" height="51" width="464" format="[general]" html.valueishtml="0"  name=ab_job_ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="AB Blanking Line Number" border="0" color="0" x="66" y="102" height="58" width="662" html.valueishtml="0"  name=t_10 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="1068" y="102" height="61" width="508" format="[general]" html.valueishtml="0"  name=line_line_desc visible="1" edit.limit=255 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Customer Name" border="0" color="0" x="66" y="189" height="58" width="413" html.valueishtml="0"  name=t_13 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="1068" y="189" height="61" width="1017" format="[general]" html.valueishtml="0"  name=customer_customer_short_name visible="1" edit.limit=18 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Customer Purchase Order Number" border="0" color="0" x="66" y="272" height="58" width="900" html.valueishtml="0"  name=t_6 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="1068" y="275" height="51" width="936" format="[general]" html.valueishtml="0"  name=customer_order_orig_customer_po visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Enduser AND/OR Ship-to Information" border="0" color="0" x="66" y="362" height="58" width="955" html.valueishtml="0"  name=t_27 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=5 alignment="0" tabsequence=32766 border="0" color="33554432" x="1068" y="365" height="54" width="1020" format="[general]" html.valueishtml="0"  name=enduser visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text=" - Alloy" border="0" color="0" x="395" y="534" height="58" width="227" html.valueishtml="0"  name=t_21 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="33554432" x="1068" y="538" height="51" width="483" format="[general]" html.valueishtml="0"  name=alloy visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text=" - Temper" border="0" color="0" x="395" y="621" height="58" width="282" html.valueishtml="0"  name=t_22 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="0" color="33554432" x="1068" y="624" height="54" width="366" format="[general]" html.valueishtml="0"  name=temper visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text=" - Gauge" border="0" color="0" x="395" y="704" height="58" width="245" html.valueishtml="0"  name=t_19 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=8 alignment="0" tabsequence=32766 border="0" color="33554432" x="1068" y="707" height="58" width="377" format="[general]" html.valueishtml="0"  name=gauge visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text=" - Type" border="0" color="0" x="395" y="790" height="58" width="245" html.valueishtml="0"  name=t_8 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=9 alignment="0" tabsequence=32766 border="0" color="33554432" x="1068" y="794" height="51" width="625" format="[general]" html.valueishtml="0"  name=sheettype visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text=" - Width X Length" border="0" color="0" x="395" y="877" height="58" width="443" html.valueishtml="0"  name=t_11 visible="1"  font.face="Arial" font.height="-9" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=10 alignment="0" tabsequence=32766 border="0" color="33554432" x="1068" y="880" height="54" width="1020" format="[general]" html.valueishtml="0"  name=widthlength visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

@@ -1,0 +1,18 @@
+$PBExportHeader$d_sales_cat_part_id.srd
+$PBExportComments$list all part id in catalog
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=163 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=part_num_id dbname="part_num.part_num_id" )
+ column=(type=char(255) update=yes updatewhereclause=yes name=item_desc dbname="part_num.item_desc" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"part_num~" ) COLUMN(NAME=~"part_num.part_num_id~") COLUMN(NAME=~"part_num.item_desc~")WHERE(    EXP1 =~"~~~"PART_NUM~~~".~~~"CUSTOMER_ID~~~"~"   OP =~"=~"    EXP2 =~":al_cust~" ) ) ARG(NAME = ~"al_cust~" TYPE = number) " update="PART_NUM" updatewhere=1 updatekeyinplace=no arguments=(("al_cust", number)) )
+column(band=detail id=1 alignment="1" tabsequence=10 border="0" color="33554432" x="311" y="3" height="61" width="263" format="[general]" html.valueishtml="0"  name=part_num_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=20 border="0" color="33554432" x="311" y="93" height="61" width="1064" format="[general]" html.valueishtml="0"  name=item_desc visible="1" edit.limit=255 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 
