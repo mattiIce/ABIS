@@ -26,6 +26,8 @@ import {
   SketchWrite,
   ShiftWrite,
   JobPatch,
+  SheetSkidWrite,
+  ScrapSkidWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -112,6 +114,22 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
     bol: 'E2E-BOL', customerId: 4001, createdBy: 'e2e', status: 1,
   }));
   assert.equal(updated.status, 1);
+});
+
+// The skids SPA's flow: list each skid type + create a sheet and a scrap skid (typed).
+test('skids flow: list + create sheet & scrap skids (typed)', async () => {
+  const sheet = await client.listSheetSkids(1, 5, undefined, undefined);
+  assert.ok(Array.isArray(sheet.items));
+  const createdSheet = await client.createSheetSkid(new SheetSkidWrite({
+    abJobNum: 1001, sheetSkidDisplayNum: 'E2E-1', sheetNetWt: 100, skidPieces: 50,
+  }));
+  assert.ok(createdSheet.sheetSkidNum > 0);
+  const createdScrap = await client.createScrapSkid(new ScrapSkidWrite({
+    scrapAbJobNum: '1001', scrapAlloy2: '3003', scrapNetWt: 10, scrapType: 1,
+  }));
+  assert.ok(createdScrap.scrapSkidNum > 0);
+  const partials = await client.listPartialSkids(1, 5, undefined, undefined);
+  assert.ok(Array.isArray(partials.items));
 });
 
 // The production-jobs SPA's flow: list, open a job + its contents, patch it (typed).
