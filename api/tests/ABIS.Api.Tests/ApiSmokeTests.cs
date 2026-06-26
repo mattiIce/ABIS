@@ -227,6 +227,34 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task IfMatch_optimistic_concurrency_on_write()
+    {
+        // Create a die, then GET it to obtain its content ETag.
+        var created = await _client.PostAsJsonAsync("/api/dies", new { dieName = "IFMATCH" });
+        var id = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("dieId").GetInt64();
+        var get = await _client.GetAsync($"/api/dies/{id}");
+        var etag = get.Headers.ETag!.ToString();
+        Assert.StartsWith("W/\"", etag);
+
+        // A matching If-Match passes — this also proves the write-side hash matches
+        // the GET response's hash byte-for-byte.
+        var ok = new HttpRequestMessage(HttpMethod.Put, $"/api/dies/{id}")
+        { Content = JsonContent.Create(new { dieName = "IFMATCH", status = 1 }) };
+        ok.Headers.TryAddWithoutValidation("If-Match", etag);
+        Assert.Equal(HttpStatusCode.OK, (await _client.SendAsync(ok)).StatusCode);
+
+        // A stale validator is rejected with 412 (the row changed since `etag`).
+        var stale = new HttpRequestMessage(HttpMethod.Put, $"/api/dies/{id}")
+        { Content = JsonContent.Create(new { dieName = "IFMATCH", status = 2 }) };
+        stale.Headers.TryAddWithoutValidation("If-Match", etag);
+        Assert.Equal(HttpStatusCode.PreconditionFailed, (await _client.SendAsync(stale)).StatusCode);
+
+        // No If-Match → the precondition is optional, so the write proceeds.
+        var noPrecond = await _client.PutAsJsonAsync($"/api/dies/{id}", new { dieName = "IFMATCH", status = 3 });
+        Assert.Equal(HttpStatusCode.OK, noPrecond.StatusCode);
+    }
+
+    [Fact]
     public async Task Create_order_without_po_returns_400()
     {
         // orig_customer_po is NOT NULL; the newly-guarded endpoint must reject the omission.

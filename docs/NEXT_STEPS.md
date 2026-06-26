@@ -92,10 +92,15 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
 - ✅ **Read caching** — done: weak `ETag` on `/api` GETs + `If-None-Match` → `304`
   (`ETagMiddleware`). Also a correlation id (`X-Request-Id`) echoed on responses,
   in ProblemDetails, and in the audit notes.
-- **Write hardening (remaining):** `If-Match` optimistic concurrency (the read
-  ETags are the foundation) and a soft-delete policy. True concurrency needs a
-  rowversion column the recovered schema doesn't have — confirm against the real
-  schema before adding one. The audit-log insert still uses `MAX+1` (append-only).
+- ✅ **`If-Match` optimistic concurrency** — done. The rowversion question was
+  settled: **no write-target table has a usable version/modified column**, and
+  `ORA_ROWSCN` is block-granularity (all tables are `NOROWDEPENDENCIES`). So every
+  PUT/PATCH instead compares the caller's `If-Match` against the row's current
+  **content-hash ETag** (the same weak ETag a GET carries, `ETagMiddleware.ForEntity`)
+  and returns **412** on a stale validator — no schema change, coexists with the
+  legacy PB client.
+- **Write hardening (remaining):** a soft-delete policy. The audit-log insert still
+  uses `MAX+1` (append-only).
 - ✅ **More slices from the recovered schema** — added `temp_test_result`
   (in-progress QA, `GET /api/temp-test-results`) and `process_partial_skid`
   (`GET /api/partial-skids` + `GET /api/jobs/{id}/partial-skids`). Remaining

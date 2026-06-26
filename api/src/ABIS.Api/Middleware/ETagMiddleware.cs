@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace Abis.Api.Middleware;
 
@@ -7,8 +8,9 @@ namespace Abis.Api.Middleware;
 /// weak <c>ETag</c> from its bytes, and — when the caller sends a matching
 /// <c>If-None-Match</c> — short-circuits to <c>304 Not Modified</c> with no body.
 /// Cheap bandwidth savings for the polling shop-floor screens; a no-op for writes,
-/// non-200s, and empty bodies. (Foundation for <c>If-Match</c> optimistic
-/// concurrency once the real schema provides a row version.)
+/// non-200s, and empty bodies. The same content hash powers <c>If-Match</c>
+/// optimistic concurrency on writes (see <see cref="ForEntity"/>) — no row-version
+/// column is needed, which suits the legacy schema (it has none).
 /// </summary>
 public sealed class ETagMiddleware
 {
@@ -70,7 +72,15 @@ public sealed class ETagMiddleware
         content.Position = 0;
         var hash = SHA256.HashData(content);
         content.Position = 0;
-        // Weak validator: semantic equivalence is all we promise.
-        return $"W/\"{Convert.ToHexString(hash, 0, 8)}\"";
+        return Format(hash);
     }
+
+    /// <summary>Computes the same weak ETag a GET of <paramref name="entity"/> would
+    /// carry, by serializing it with the framework's JSON options (so the bytes match
+    /// the GET response body). Used for <c>If-Match</c> optimistic concurrency on writes.</summary>
+    public static string ForEntity(object entity, JsonSerializerOptions options)
+        => Format(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(entity, options)));
+
+    // Weak validator: semantic equivalence is all we promise.
+    private static string Format(byte[] hash) => $"W/\"{Convert.ToHexString(hash, 0, 8)}\"";
 }
