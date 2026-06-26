@@ -165,6 +165,7 @@ The codebase is deliberately uniform. To add a resource:
 | [`PHASE3_PILOT_LOG.md`](PHASE3_PILOT_LOG.md) | Live pilot results + scoring (Path C executed; Path B blocked) |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | As-is system, integration surface, build-readiness |
 | [`INTEGRATIONS.md`](INTEGRATIONS.md) | External integration catalog (EDI, serial/WSC32, OPC) |
+| [`EDGE_SERVICE.md`](EDGE_SERVICE.md) | Shop-floor edge service (serial scales/gauges → HTTP) |
 | [`DATA_MODEL.md`](DATA_MODEL.md) | Full recovered schema (live Oracle, 412 tables) |
 | [`../api/README.md`](../api/README.md) | Run/test/auth, demo UIs, OpenAPI |
 | [`DEPLOY.md`](DEPLOY.md) | Run the API + greenfield UIs on a server (Docker Compose) |

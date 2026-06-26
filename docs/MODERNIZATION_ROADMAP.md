@@ -171,8 +171,12 @@ ERP/MES). It is grounded in the analysis in
 ### Phase 4 — Migrate module-by-module (strangler-fig)
 - [ ] Roll modules over behind the API seam in dependency order, oldest/most
       painful first; keep legacy and new running against one DB until cutover.
-- [ ] Replace serial/OPC integration with a small, well-tested **edge service**
-      on the shop floor exposing those devices to the API.
+- [~] Replace serial/OPC integration with a small, well-tested **edge service**
+      on the shop floor exposing those devices to the API. → **Skeleton built +
+      tested** ([`edge/AbisEdge`](../edge/AbisEdge), [`EDGE_SERVICE.md`](EDGE_SERVICE.md)):
+      serial scale reader (`System.IO.Ports`, the WSC32 replacement) + tested
+      weight parser + mock device + HTTP surface (`/health`, `/reading`).
+      Remaining (needs hardware): per-device formats + the OPC/PLC source.
 - [ ] Decommission each legacy module only after its replacement is proven in
       production.
 
