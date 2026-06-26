@@ -384,7 +384,8 @@ public static class SqliteFixture
             {
                 new { AbJobNum = 1001L, CoilAbcNum = 5001L, ProcessCoilStatus = (int?)1, ProcessDate = (DateTime?)d.AddHours(2), ProcessEndWt = 4000m, ProcessQuantity = 200m },
                 new { AbJobNum = 1001L, CoilAbcNum = 5002L, ProcessCoilStatus = (int?)1, ProcessDate = (DateTime?)d.AddHours(3), ProcessEndWt = 0m, ProcessQuantity = 0m },
-                new { AbJobNum = 1002L, CoilAbcNum = 5003L, ProcessCoilStatus = (int?)0, ProcessDate = (DateTime?)null, ProcessEndWt = 0m, ProcessQuantity = 0m }
+                // Job 1002's coil is rejected (status 3) → drives the invoice rej/reband list for that job.
+                new { AbJobNum = 1002L, CoilAbcNum = 5003L, ProcessCoilStatus = (int?)3, ProcessDate = (DateTime?)d.AddDays(2), ProcessEndWt = 1500m, ProcessQuantity = 60m }
             });
 
         conn.Execute("""

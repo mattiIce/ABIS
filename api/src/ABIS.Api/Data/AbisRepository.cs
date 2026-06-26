@@ -667,6 +667,26 @@ public sealed class AbisRepository : IAbisRepository
         return (await GetSheetSkidAsync(id, ct))!;
     }
 
+    public async Task<IReadOnlyList<InvoiceCoil>> GetInvoiceCoilsAsync(long abJobNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // Faithful to the legacy d_rej_reband_coil_list_for_invoice: rejected (3) and
+        // rebanded (7) coils on a job — the billing-relevant coils. coil ⋈ process_coil.
+        var rows = await conn.QueryAsync<InvoiceCoil>(new CommandDefinition(
+            """
+            SELECT pc.ab_job_num AS AbJobNum, pc.coil_abc_num AS CoilAbcNum,
+                   c.coil_org_num AS CoilOrgNum, c.coil_mid_num AS CoilMidNum, c.lot_num AS LotNum,
+                   c.coil_gauge AS CoilGauge, c.net_wt AS NetWt, c.net_wt_balance AS NetWtBalance,
+                   pc.process_end_wt AS ProcessEndWt, pc.process_quantity AS ProcessQuantity,
+                   pc.process_date AS ProcessDate, c.coil_status AS CoilStatus,
+                   pc.process_coil_status AS ProcessCoilStatus
+            FROM coil c JOIN process_coil pc ON c.coil_abc_num = pc.coil_abc_num
+            WHERE pc.process_coil_status IN (3, 7) AND pc.ab_job_num = :id
+            ORDER BY pc.coil_abc_num DESC
+            """, new { id = abJobNum }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
     public async Task<SheetSkid?> UpdateSheetSkidWarehouseAsync(long sheetSkidNum, SheetSkidWarehousePatch patch, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);

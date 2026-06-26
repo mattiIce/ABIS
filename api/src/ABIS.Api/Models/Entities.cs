@@ -65,6 +65,26 @@ public sealed class ProcessCoil
     public decimal? CoilWidth { get; set; }
 }
 
+/// <summary>A rejected/rebanded coil that affects a job's invoice (the legacy
+/// w_invoice / d_rej_reband_coil_list_for_invoice: <c>coil ⋈ process_coil</c> where
+/// <c>process_coil_status IN (3,7)</c> — 3 = rejected, 7 = rebanded).</summary>
+public sealed class InvoiceCoil
+{
+    public long AbJobNum { get; set; }
+    public long CoilAbcNum { get; set; }
+    public string? CoilOrgNum { get; set; }
+    public string? CoilMidNum { get; set; }
+    public string? LotNum { get; set; }
+    public decimal? CoilGauge { get; set; }
+    public decimal? NetWt { get; set; }
+    public decimal? NetWtBalance { get; set; }
+    public decimal? ProcessEndWt { get; set; }
+    public decimal? ProcessQuantity { get; set; }
+    public DateTime? ProcessDate { get; set; }
+    public int? CoilStatus { get; set; }
+    public int? ProcessCoilStatus { get; set; }
+}
+
 /// <summary>A commercial order header (table <c>customer_order</c>).</summary>
 public sealed class CustomerOrder
 {

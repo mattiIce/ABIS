@@ -6,6 +6,44 @@
     "version": "v1"
   },
   "paths": {
+    "/api/accounting/rej-reband-coils": {
+      "get": {
+        "tags": [
+          "Accounting"
+        ],
+        "summary": "Rejected (3) / rebanded (7) coils for a job's invoice.",
+        "operationId": "GetInvoiceCoils",
+        "parameters": [
+          {
+            "name": "abJobNum",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InvoiceCoil"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/audit-log": {
       "get": {
         "tags": [
@@ -6456,6 +6494,72 @@
           }
         },
         "additionalProperties": { }
+      },
+      "InvoiceCoil": {
+        "type": "object",
+        "properties": {
+          "abJobNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "coilOrgNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilMidNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "lotNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilGauge": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "netWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "netWtBalance": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "processEndWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "processQuantity": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "processDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "coilStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "processCoilStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       },
       "JobPatch": {
         "type": "object",
