@@ -1,0 +1,59 @@
+$PBExportHeader$d_skid_dim_check_per_skid.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=84 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=104 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=sheet_skid_num dbname="sheet_skid_dimension_check.sheet_skid_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=pc_number dbname="sheet_skid_dimension_check.pc_number" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=gauge dbname="sheet_skid_dimension_check.gauge" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=width dbname="sheet_skid_dimension_check.width" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=length_oper dbname="sheet_skid_dimension_check.length_oper" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=length_drive dbname="sheet_skid_dimension_check.length_drive" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=square dbname="sheet_skid_dimension_check.square" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=head_dimension dbname="sheet_skid_dimension_check.head_dimension" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=all_cut_edge dbname="sheet_skid_dimension_check.all_cut_edge" values="OK	1/OK	0" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=in_spec dbname="sheet_skid_dimension_check.in_spec" values="YES	1/YES	0" )
+ column=(type=char(15) update=yes updatewhereclause=yes name=checked_by dbname="sheet_skid_dimension_check.checked_by" )
+ retrieve="SELECT ~"SHEET_SKID_DIMENSION_CHECK~".~"SHEET_SKID_NUM~",   
+    		~"SHEET_SKID_DIMENSION_CHECK~".~"PC_NUMBER~",      
+		~"SHEET_SKID_DIMENSION_CHECK~".~"GAUGE~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"WIDTH~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"LENGTH_OPER~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"LENGTH_DRIVE~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"SQUARE~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"HEAD_DIMENSION~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"ALL_CUT_EDGE~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"IN_SPEC~",   
+         ~"SHEET_SKID_DIMENSION_CHECK~".~"CHECKED_BY~"   
+   FROM ~"SHEET_SKID_DIMENSION_CHECK~"  
+   WHERE ~"SHEET_SKID_DIMENSION_CHECK~".~"SHEET_SKID_NUM~" = :al_skid_id" update="SHEET_SKID_DIMENSION_CHECK" updatewhere=1 updatekeyinplace=no arguments=(("al_skid_id", number)) )
+text(band=header alignment="2" text="PC #" border="6" color="33554432" x="9" y="4" height="72" width="219" html.valueishtml="0"  name=pc_number_t visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="Gauge" border="6" color="33554432" x="238" y="4" height="72" width="256" html.valueishtml="0"  name=gauge_t visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="Width" border="6" color="33554432" x="503" y="4" height="72" width="297" html.valueishtml="0"  name=width_t visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="Len/Oper" border="6" color="33554432" x="809" y="4" height="72" width="338" html.valueishtml="0"  name=length_oper_t visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="Len/Drive" border="6" color="33554432" x="1157" y="4" height="72" width="320" html.valueishtml="0"  name=length_drive_t visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="Square" border="6" color="33554432" x="1486" y="4" height="72" width="297" html.valueishtml="0"  name=square_t visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="Head Dim" border="6" color="33554432" x="1792" y="4" height="72" width="311" html.valueishtml="0"  name=head_dimension_t visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="Edges" border="6" color="33554432" x="2112" y="4" height="72" width="251" html.valueishtml="0"  name=all_cut_edge_t visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="In Spec" border="6" color="33554432" x="2373" y="4" height="72" width="256" html.valueishtml="0"  name=in_spec_t visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="Chk by" border="6" color="33554432" x="2638" y="4" height="72" width="261" html.valueishtml="0"  name=checked_by_t visible="1"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+text(band=header alignment="2" text="Sheet Skid Num" border="6" color="33554432" x="2907" y="4" height="72" width="512" html.valueishtml="0"  name=sheet_skid_num_t visible="0"  font.face="Arial" font.height="-11" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=2 alignment="1" tabsequence=10 border="0" color="33554432" x="9" y="8" height="92" width="219" format="[general]" html.valueishtml="0"  name=pc_number visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=20 border="0" color="33554432" x="238" y="8" height="92" width="256" format="[General]" html.valueishtml="0"  name=gauge visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="1" tabsequence=30 border="0" color="33554432" x="503" y="8" height="92" width="297" format="[General]" html.valueishtml="0"  name=width visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="1" tabsequence=40 border="0" color="33554432" x="809" y="8" height="92" width="338" format="[General]" html.valueishtml="0"  name=length_oper visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="1" tabsequence=50 border="0" color="33554432" x="1157" y="8" height="92" width="320" format="[General]" html.valueishtml="0"  name=length_drive visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=7 alignment="1" tabsequence=60 border="0" color="33554432" x="1486" y="8" height="92" width="297" format="[General]" html.valueishtml="0"  name=square visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=8 alignment="1" tabsequence=70 border="0" color="33554432" x="1792" y="8" height="92" width="311" format="[General]" html.valueishtml="0"  name=head_dimension visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=9 alignment="1" tabsequence=80 border="0" color="33554432" x="2112" y="8" height="92" width="251" format="[General]" html.valueishtml="0"  name=all_cut_edge visible="1" checkbox.text="OK" checkbox.on="1" checkbox.off="0" checkbox.scale=yes checkbox.threed=no  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="0" background.color="536870912~tif(  all_cut_edge = 1, 65280, 255 )" )
+column(band=detail id=10 alignment="1" tabsequence=90 border="0" color="33554432" x="2373" y="8" height="92" width="256" format="[General]" html.valueishtml="0"  name=in_spec visible="1" checkbox.text="YES" checkbox.on="1" checkbox.off="0" checkbox.scale=yes checkbox.threed=no  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="0" background.color="536870912~tif(   in_spec  = 1, 65280, 255 )" )
+column(band=detail id=11 alignment="0" tabsequence=100 border="0" color="33554432" x="2638" y="8" height="92" width="261" format="[general]" html.valueishtml="0"  name=checked_by visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=110 border="0" color="33554432" x="2907" y="8" height="92" width="512" format="[General]" html.valueishtml="0"  name=sheet_skid_num visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="1" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

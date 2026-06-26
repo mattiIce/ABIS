@@ -1,0 +1,2 @@
+$PBExportHeader$a.srq
+PBSELECT( VERSION(400) TABLE(NAME="line_current_status" ) COLUMN(NAME="line_current_status.shift_num")WHERE(    EXP1 ="~"LINE_CURRENT_STATUS~".~"LINE_NUM~""   OP ="="    EXP2 =":line" ) ) 

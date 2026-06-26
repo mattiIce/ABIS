@@ -1,0 +1,2 @@
+$PBExportHeader$q_partial.srq
+PBSELECT( VERSION(400) TABLE(NAME="process_partial_skid" ) COLUMN(NAME="process_partial_skid.sheet_skid_num") COLUMN(NAME="process_partial_skid.partial_skid_pieces")WHERE(    EXP1 ="~"PROCESS_PARTIAL_SKID~".~"AB_JOB_NUM~""   OP ="="    EXP2 ="" ) ) ARG(NAME = "al_job" TYPE = number) 
