@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Pinned to the stable synchronous-client API line (1.4.372); the 1.5.378
+         line is mid-migration to an async/telemetry-context API with many client
+         entry points marked obsolete. -->
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Client" Version="1.4.372.106" />
     <!-- Cross-platform serial-port access (the WSC32 replacement). -->
     <PackageReference Include="System.IO.Ports" Version="8.0.0" />
   </ItemGroup>

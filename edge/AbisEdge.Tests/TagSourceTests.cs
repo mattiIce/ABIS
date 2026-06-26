@@ -1,4 +1,5 @@
 using AbisEdge.Tags;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace AbisEdge.Tests;
@@ -38,12 +39,25 @@ public class TagSourceTests
     }
 
     [Fact]
-    public void OpcUaTagSource_is_a_scaffold_until_the_client_is_wired()
+    public async Task OpcUaTagSource_returns_Bad_readings_when_the_server_is_unreachable()
     {
-        var src = new OpcUaTagSource("opc.tcp://plc.local:4840");
+        // Resilience contract: a failed connect must yield Bad readings (one per tag),
+        // not throw — so the tag pump and /health stay up and the fault shows in /tags.
+        var pki = Path.Combine(Path.GetTempPath(), "abis_opc_pki_" + Guid.NewGuid().ToString("N"));
+        await using var src = new OpcUaTagSource(
+            new OpcUaOptions("opc.tcp://127.0.0.1:1") { DiscoveryTimeoutMs = 3000, PkiRoot = pki },
+            NullLogger<OpcUaTagSource>.Instance);
+
         Assert.StartsWith("opc-ua", src.Name);
-        var ex = Assert.ThrowsAsync<NotSupportedException>(() =>
-            src.ReadAsync(new[] { "ns=2;s=X" }, CancellationToken.None));
-        Assert.Contains("scaffold", ex.Result.Message);
+
+        var tags = new[] { "ns=2;s=X", "ns=2;s=Y" };
+        var readings = await src.ReadAsync(tags, CancellationToken.None);
+
+        Assert.Equal(tags.Length, readings.Count);
+        Assert.Equal(tags, readings.Select(r => r.Name));
+        Assert.All(readings, r => Assert.Equal("Bad", r.Quality));
+        Assert.All(readings, r => Assert.Null(r.Value));
+
+        try { Directory.Delete(pki, true); } catch { /* best effort */ }
     }
 }
