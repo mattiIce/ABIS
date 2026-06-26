@@ -36,12 +36,20 @@ COM port. The web screens (or the API) consume readings over HTTP on the LAN.
   modern, cross-platform replacement for the WSC32 P/Invoke surface). Each line
   is parsed by `WeightParser` (the comma-delimited `ST,GS,+00123.4 LB` continuous
   format, plus the bare `+00123.4 LB` form) into a typed `WeightReading`.
-- **No-hardware mode** — `MockScale` emits a settling weight, so the service runs
-  and is testable on any machine (the default `Edge:Scale:Provider=Mock`).
+- **OPC / PLC tags** — `ITagSource` reads named PLC tags; a background pump polls
+  the configured `Edge:Opc:Tags` into a per-tag cache. `OpcUaTagSource` is the
+  real OPC UA reader (a **scaffold** — the connection/read is the one piece that
+  needs the OPC Foundation library + a live server's address space; see its
+  source + below). `MockTagSource` simulates a PLC so the path runs without one.
+- **No-hardware mode** — `MockScale` + `MockTagSource` let the whole service run
+  and be tested on any machine (the defaults `Edge:Scale:Provider=Mock`,
+  `Edge:Opc:Provider=Mock`).
 - **HTTP surface**
-  - `GET /health` → `{ status, device }`
+  - `GET /health` → `{ status, scale, opc }`
   - `GET /reading` → the latest `WeightReading` (`503` until one arrives)
-- **Resilience** — a background pump reconnects with backoff if a device drops.
+  - `GET /tags` → the latest value of each configured OPC tag
+  - `GET /tags/{name}` → one tag's latest value (`404` until polled)
+- **Resilience** — background pumps reconnect with backoff if a device drops.
 
 ## Configuration (`Edge:Scale:*`, env or appsettings)
 
@@ -51,6 +59,9 @@ COM port. The web screens (or the API) consume readings over HTTP on the LAN.
 | `Port` | e.g. `COM3` | required for `Serial` |
 | `BaudRate` / `Parity` / `DataBits` / `StopBits` | per the indicator's manual | defaults 9600/None/8/One |
 | `Setpoint` / `Unit` | mock only | the simulated weight |
+| `Edge:Opc:Provider` | `Mock` (default) / `OpcUa` | which tag source |
+| `Edge:Opc:Endpoint` | e.g. `opc.tcp://plc.local:4840` | required for `OpcUa` |
+| `Edge:Opc:Tags` | array of node ids | the PLC tags to poll |
 
 ```sh
 # mock (any machine)
@@ -77,10 +88,13 @@ needed (it talks only to devices + the API).
 
 ## Testing
 
-- `WeightParser` is **fully unit-tested** (`edge/AbisEdge.Tests`, 13 tests):
-  continuous + bare formats, sign, units, stable/unstable, and unparseable input.
-- `MockScale` lets the whole service run + be smoke-tested with no hardware
-  (verified: `/health` → `ok`, `/reading` → a parsed `WeightReading`).
+- `WeightParser` + the tag sources are **unit-tested** (`edge/AbisEdge.Tests`,
+  17 tests): scale continuous/bare formats, sign, units, stable/unstable,
+  unparseable input; OPC tag readings per request, simulation, and that the OPC UA
+  source faults clearly until its client is wired.
+- `MockScale` + `MockTagSource` let the whole service run + be smoke-tested with no
+  hardware (verified: `/health` → both sources, `/reading` → a `WeightReading`,
+  `/tags` → the configured tags' simulated values).
 
 ## What still needs real hardware (⛔)
 
@@ -88,6 +102,8 @@ needed (it talks only to devices + the API).
   confirm each device's framing/units against the actual stream and extend
   `WeightParser` if needed. The legacy `da` object's exact parsing is recoverable
   from the PB source if exported.
-- **OPC / PLC.** Line equipment over OPC is the second edge source. It plugs in as
-  another `IScale`-style provider, but needs the **OPC server's address space**
-  (tag names/types) and an OPC client library — both hardware/site-specific.
+- **OPC / PLC.** The `ITagSource` abstraction, the poll pump, the `/tags` surface,
+  and a tested mock are **built**. Finishing `OpcUaTagSource` needs the **OPC
+  Foundation client package** + the **server's address space** (the real node
+  ids/types) — both hardware/site-specific. The source file marks exactly where
+  `session.Read` goes.
