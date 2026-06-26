@@ -889,6 +889,14 @@ public static class ApiEndpoints
            .WithSummary("Warehouse update of a sheet skid (location / ticket / status).")
            .Produces<SheetSkid>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
+        // ---- Accounting / Invoicing -------------------------------------
+        // The rejected/rebanded coils that drive a job's invoice (legacy w_invoice).
+        api.MapGet("/accounting/rej-reband-coils", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetInvoiceCoilsAsync(abJobNum, ct)))
+           .WithName("GetInvoiceCoils").WithTags("Accounting")
+           .WithSummary("Rejected (3) / rebanded (7) coils for a job's invoice.")
+           .Produces<IReadOnlyList<InvoiceCoil>>();
+
         api.MapGet("/scrap-skids", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? sort = null, string? dir = null) =>
             {

@@ -117,6 +117,14 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
   assert.equal(updated.status, 1);
 });
 
+// The accounting/invoicing flow: a job's rejected/rebanded coils that drive its invoice (typed).
+test('accounting flow: invoice rej/reband coils for a job (typed)', async () => {
+  const coils = await client.getInvoiceCoils(1002);
+  assert.ok(Array.isArray(coils) && coils.length > 0);
+  assert.ok(coils.every((c) => c.processCoilStatus === 3 || c.processCoilStatus === 7));
+  assert.equal(coils[0].coilAbcNum, 5003);
+});
+
 // The warehouse SPA's flow: list sheet skids + a warehouse update (location/ticket/status) (typed).
 test('warehouse flow: list sheet skids + warehouse update (typed)', async () => {
   const list = await client.listSheetSkids(1, 5, undefined, undefined);

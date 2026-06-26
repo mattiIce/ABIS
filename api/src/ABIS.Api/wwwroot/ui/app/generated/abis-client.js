@@ -12,6 +12,61 @@ export class AbisClient {
         this.baseUrl = baseUrl ?? "";
     }
     /**
+     * Rejected (3) / rebanded (7) coils for a job's invoice.
+     * @return OK
+     */
+    getInvoiceCoils(abJobNum) {
+        let url_ = this.baseUrl + "/api/accounting/rej-reband-coils?";
+        if (abJobNum === undefined || abJobNum === null)
+            throw new globalThis.Error("The parameter 'abJobNum' must be defined and cannot be null.");
+        else
+            url_ += "abJobNum=" + encodeURIComponent("" + abJobNum) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetInvoiceCoils(_response);
+        });
+    }
+    processGetInvoiceCoils(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(InvoiceCoil.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * List the action/audit log, newest first.
      * @param page (optional)
      * @param pageSize (optional)
@@ -7660,6 +7715,56 @@ export class HttpValidationProblemDetails {
                     data["errors"][key] = this.errors[key];
             }
         }
+        return data;
+    }
+}
+export class InvoiceCoil {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.abJobNum = _data["abJobNum"];
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.coilOrgNum = _data["coilOrgNum"];
+            this.coilMidNum = _data["coilMidNum"];
+            this.lotNum = _data["lotNum"];
+            this.coilGauge = _data["coilGauge"];
+            this.netWt = _data["netWt"];
+            this.netWtBalance = _data["netWtBalance"];
+            this.processEndWt = _data["processEndWt"];
+            this.processQuantity = _data["processQuantity"];
+            this.processDate = _data["processDate"] ? new Date(_data["processDate"].toString()) : undefined;
+            this.coilStatus = _data["coilStatus"];
+            this.processCoilStatus = _data["processCoilStatus"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new InvoiceCoil();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["abJobNum"] = this.abJobNum;
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["coilOrgNum"] = this.coilOrgNum;
+        data["coilMidNum"] = this.coilMidNum;
+        data["lotNum"] = this.lotNum;
+        data["coilGauge"] = this.coilGauge;
+        data["netWt"] = this.netWt;
+        data["netWtBalance"] = this.netWtBalance;
+        data["processEndWt"] = this.processEndWt;
+        data["processQuantity"] = this.processQuantity;
+        data["processDate"] = this.processDate ? this.processDate.toISOString() : undefined;
+        data["coilStatus"] = this.coilStatus;
+        data["processCoilStatus"] = this.processCoilStatus;
         return data;
     }
 }
