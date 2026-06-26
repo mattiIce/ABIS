@@ -65,6 +65,20 @@ public sealed class ProcessCoil
     public decimal? CoilWidth { get; set; }
 }
 
+/// <summary>One line's roll-up for the daily production report (legacy daily_prod):
+/// jobs started in the window, their average material yield, and total processed
+/// weight. Aggregated over <c>line ⋈ ab_job ⋈ process_coil</c>.</summary>
+public sealed class ProductionSummaryRow
+{
+    public long LineNum { get; set; }
+    public string? LineDesc { get; set; }
+    public int JobCount { get; set; }
+    // double (not decimal): SQLite AVG/SUM return REAL; avoids the Int64→numeric
+    // unboxing failure when COALESCE falls back for an idle line.
+    public double? AvgYield { get; set; }
+    public double? ProcessedWt { get; set; }
+}
+
 /// <summary>A rejected/rebanded coil that affects a job's invoice (the legacy
 /// w_invoice / d_rej_reband_coil_list_for_invoice: <c>coil ⋈ process_coil</c> where
 /// <c>process_coil_status IN (3,7)</c> — 3 = rejected, 7 = rebanded).</summary>

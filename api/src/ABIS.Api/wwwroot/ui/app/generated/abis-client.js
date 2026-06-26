@@ -4533,6 +4533,67 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Per-line production summary (job count, avg yield, processed weight) over an optional date range.
+     * @param from (optional)
+     * @param to (optional)
+     * @return OK
+     */
+    getProductionSummary(from, to) {
+        let url_ = this.baseUrl + "/api/reporting/production-summary?";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetProductionSummary(_response);
+        });
+    }
+    processGetProductionSummary(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(ProductionSummaryRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * List shop-floor scan events, newest first (paged, sortable; filter by abJobNum).
      * @param page (optional)
      * @param pageSize (optional)
@@ -8505,6 +8566,40 @@ export class ProductionLine {
         data["lineNum"] = this.lineNum;
         data["lineDesc"] = this.lineDesc;
         data["lineLocation"] = this.lineLocation;
+        return data;
+    }
+}
+export class ProductionSummaryRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.lineNum = _data["lineNum"];
+            this.lineDesc = _data["lineDesc"];
+            this.jobCount = _data["jobCount"];
+            this.avgYield = _data["avgYield"];
+            this.processedWt = _data["processedWt"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProductionSummaryRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["lineNum"] = this.lineNum;
+        data["lineDesc"] = this.lineDesc;
+        data["jobCount"] = this.jobCount;
+        data["avgYield"] = this.avgYield;
+        data["processedWt"] = this.processedWt;
         return data;
     }
 }
