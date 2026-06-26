@@ -42,6 +42,7 @@ File types: `.srw` windows · `.srd` DataWindows (embedded SQL) · `.srm` menus 
 | `maintenance/` | **Maintenance log** — `maint_log` (PK `maint_log_id`); plus the `pm` preventive-maintenance tables (not yet built). Back-checked: names match exactly. |
 | `scan/` | **Scan log** — `scan_log` (PK `scan_id`). Back-checked: exact match to the Oracle DDL. |
 | `receiving/` | **Receiving** — the vendored screens edit the `coil` table; the BOL line-item table `receiving_bol_coil` is unmodeled in greenfield (see BACKCHECK.md). |
+| `security/` | **Security / authorization** (`w_user_managment`, `w_group_managment`, `w_user_detail`) — `security_user/group/application` + the user/group→application grant tables. Per-feature privilege (0=ReadOnly, 1=Write); effective = MAX(direct, group grants). Authorization only — OIDC handles authentication. |
 
 ## How to read the SQL
 

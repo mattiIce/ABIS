@@ -924,3 +924,52 @@ public sealed class TransferableCoil
     public decimal? NetWtBalance { get; set; }
     public string? CoilNotes { get; set; }
 }
+
+// ---- Security / authorization (legacy security.pbl) ----
+// Application-level authorization (NOT authentication — OIDC handles that). A user's
+// effective privilege on a feature is MAX(direct grant, group grants); 0 = ReadOnly,
+// 1 = Write. Tables/columns are authoritative (docs/data-model/oracle_ddl.sql).
+
+/// <summary>An application user (table <c>security_user</c>). <c>LoginId</c> bridges to the
+/// OIDC identity (matched case-insensitively); no password is stored here.</summary>
+public sealed class SecurityUser
+{
+    public long UserId { get; set; }
+    public string? LoginId { get; set; }
+    public string? UserLastName { get; set; }
+    public string? UserFirstName { get; set; }
+    public string? UserMiddleInitial { get; set; }
+    public DateTime? LastLoginTime { get; set; }
+    public DateTime? LastModifiedDate { get; set; }
+    public int? UserStatus { get; set; }
+    public string? UserNotes { get; set; }
+}
+
+/// <summary>A security group / role (table <c>security_group</c>).</summary>
+public sealed class SecurityGroup
+{
+    public long UserGroupId { get; set; }
+    public string? GroupName { get; set; }
+    public string? GroupNotes { get; set; }
+}
+
+/// <summary>A protected feature / screen (table <c>security_application</c>). The
+/// <c>ApplicationName</c> is the key the legacy <c>f_security_door</c> checks.</summary>
+public sealed class SecurityApplication
+{
+    public long ApplicationId { get; set; }
+    public string? ApplicationName { get; set; }
+    public string? ApplicationNotes { get; set; }
+}
+
+/// <summary>One resolved effective permission for a user: the feature plus the
+/// MAX privilege across the user's direct grant and any group grants
+/// (0 = ReadOnly, 1 = Write). <c>ViaGroup</c> is true when the max came from a group.</summary>
+public sealed class EffectivePermission
+{
+    public long ApplicationId { get; set; }
+    public string? ApplicationName { get; set; }
+    public int Privilege { get; set; }
+    public string PrivilegeLabel => Privilege >= 1 ? "Write" : "ReadOnly";
+    public bool ViaGroup { get; set; }
+}

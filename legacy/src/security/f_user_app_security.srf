@@ -1,0 +1,93 @@
+$PBExportHeader$f_user_app_security.srf
+global type f_user_app_security from function_object
+end type
+
+forward prototypes
+global function integer f_user_app_security (string as_function_name, string as_user_name)
+end prototypes
+
+global function integer f_user_app_security (string as_function_name, string as_user_name);//////////////////////////////////////////////////////////////////////////////
+//
+//	Function:  f_user_app_security
+//
+//	Access:    Public
+//
+//	Arguments:	String : as_function_name
+//					String : as_user_name
+//
+//	Returns:   Above user's security level about the fuction above
+//					0			ReadOnly
+//					1			Write
+//					other		No rights
+//              
+//	Description:this function return as_user_name's security level
+//////////////////////////////////////////////////////////////////////////////
+//
+//	Revision History
+//
+//	Version
+//	
+//
+//////////////////////////////////////////////////////////////////////////////
+String ls_login
+Int li_userid, li_group_id, li_return, li_temp
+Long ll_row, ll_i, ll_row2, ll_j
+DataStore lds_group_app, lds_user_group, lds_user_app
+
+ls_login = as_user_name
+li_userid = 0
+
+CONNECT USING SQLCA;
+SELECT user_id INTO :li_userid
+FROM security_user
+WHERE login_id = :ls_login
+USING SQLCA;
+
+IF li_userid < 1 THEN RETURN -2
+
+li_return = -1
+lds_user_app = CREATE datastore  
+lds_user_app.DataObject = "d_user_app"  
+lds_user_app.SetTransObject (SQLCA)  
+lds_user_app.Retrieve(li_userid)
+ll_row = lds_user_app.RowCount()
+IF ll_row > 0 THEN
+	FOR ll_i = 1 TO ll_row 
+		IF lds_user_app.GetItemString(ll_i,"security_application_application_name") = as_function_name THEN 
+			li_return = lds_user_app.GetItemNumber(ll_i, "security_user_application_user_applicati") 
+		END IF
+	NEXT
+END IF
+DESTROY lds_user_app
+
+lds_user_group = CREATE datastore  
+lds_user_group.DataObject = "d_user_group"  
+lds_user_group.SetTransObject (SQLCA)  
+lds_user_group.Retrieve(li_userid)
+ll_row = lds_user_group.RowCount()
+
+IF ll_row < 1 THEN RETURN li_return
+
+lds_group_app = CREATE datastore  
+lds_group_app.DataObject = "d_group_app"  
+lds_group_app.SetTransObject (SQLCA)  
+FOR ll_i = 1 TO ll_row
+	lds_group_app.Retrieve(lds_user_group.GetItemNumber(ll_i, "user_group_id"))
+	ll_row2 = lds_group_app.RowCount()
+	IF ll_row2 > 0 THEN
+		FOR ll_j = 1 TO ll_row2
+			IF lds_group_app.GetItemString(ll_j, "security_application_application_name") = as_function_name THEN 
+				li_temp = lds_group_app.GetItemNumber(ll_j, "security_group_application_group_applica")
+				li_return = MAX(li_return, li_temp)
+			END IF
+		NEXT
+	END IF
+NEXT
+
+DESTROY lds_group_app
+DESTROY lds_user_group
+
+RETURN li_return
+
+end function
+

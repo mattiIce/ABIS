@@ -469,3 +469,36 @@ public sealed class CoilOwnershipTransferWrite
     public string? AuthorizationNote { get; set; }
     public string? Notes { get; set; }
 }
+
+/// <summary>Create or replace a security user (table <c>security_user</c>).
+/// <see cref="LoginId"/> bridges to the OIDC identity. No password is stored.</summary>
+public sealed class SecurityUserWrite
+{
+    public string? LoginId { get; set; }
+    public string? UserLastName { get; set; }
+    public string? UserFirstName { get; set; }
+    public string? UserMiddleInitial { get; set; }
+    public int? UserStatus { get; set; }
+    public string? UserNotes { get; set; }
+}
+
+/// <summary>Create a security group / role (table <c>security_group</c>).</summary>
+public sealed class SecurityGroupWrite
+{
+    public string? GroupName { get; set; }
+    public string? GroupNotes { get; set; }
+}
+
+/// <summary>Create a protected feature (table <c>security_application</c>).</summary>
+public sealed class SecurityApplicationWrite
+{
+    public string? ApplicationName { get; set; }
+    public string? ApplicationNotes { get; set; }
+}
+
+/// <summary>Set a feature grant (privilege 0 = ReadOnly, 1 = Write). Used for both
+/// the user→application and group→application grants (upsert).</summary>
+public sealed class GrantWrite
+{
+    public int? Privilege { get; set; }
+}

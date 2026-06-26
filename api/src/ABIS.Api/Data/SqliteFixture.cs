@@ -61,6 +61,12 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS sales_reminder;
             DROP TABLE IF EXISTS sales_probability;
             DROP TABLE IF EXISTS coil_ownership_transfer;
+            DROP TABLE IF EXISTS security_user;
+            DROP TABLE IF EXISTS security_group;
+            DROP TABLE IF EXISTS security_application;
+            DROP TABLE IF EXISTS security_user_group;
+            DROP TABLE IF EXISTS security_user_application;
+            DROP TABLE IF EXISTS security_group_application;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
@@ -295,6 +301,25 @@ public static class SqliteFixture
                 certificate_num INTEGER PRIMARY KEY, coil_abc_num_orig INTEGER, coil_abc_num_new INTEGER,
                 coil_org_num TEXT, customer_id_orig INTEGER, customer_id_new INTEGER,
                 transfer_datetime TEXT, transfer_performed_by TEXT, authorization_note TEXT, notes TEXT);
+
+            -- Security / authorization (legacy security.pbl). Application-level
+            -- authorization only — OIDC handles authentication. Effective privilege on a
+            -- feature is MAX(direct grant, group grants); 0 = ReadOnly, 1 = Write.
+            CREATE TABLE security_user (
+                user_id INTEGER PRIMARY KEY, login_id TEXT, user_last_name TEXT, user_first_name TEXT,
+                user_middle_initial TEXT, last_login_time TEXT, last_modified_date TEXT, user_status INTEGER, user_notes TEXT);
+            CREATE TABLE security_group (
+                user_group_id INTEGER PRIMARY KEY, group_name TEXT, group_notes TEXT);
+            CREATE TABLE security_application (
+                application_id INTEGER PRIMARY KEY, application_name TEXT, application_notes TEXT);
+            CREATE TABLE security_user_group (
+                user_id INTEGER, user_group_id INTEGER, PRIMARY KEY (user_id, user_group_id));
+            CREATE TABLE security_user_application (
+                user_id INTEGER, application_id INTEGER, user_application_privilege INTEGER,
+                PRIMARY KEY (user_id, application_id));
+            CREATE TABLE security_group_application (
+                application_id INTEGER, user_group_id INTEGER, group_application_privilege INTEGER,
+                PRIMARY KEY (application_id, user_group_id));
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -784,6 +809,52 @@ public static class SqliteFixture
                 new { CertificateNum = 8001L, CoilAbcNumOrig = 5001L, CoilAbcNumNew = (long?)null, CoilOrgNum = "ORG-5001",
                     CustomerIdOrig = 4001L, CustomerIdNew = 4002L, TransferDatetime = d.AddDays(-3).ToString("yyyy-MM-dd HH:mm:ss"),
                     TransferPerformedBy = "jsmith", AuthorizationNote = "Auth #A-204 (toll conversion)", Notes = "Ownership moved per processing agreement." }
+            });
+
+        // ---- Security / authorization ----
+        conn.Execute(
+            "INSERT INTO security_application (application_id, application_name, application_notes) VALUES (:ApplicationId, :ApplicationName, :ApplicationNotes)",
+            new[]
+            {
+                new { ApplicationId = 1L, ApplicationName = "Order Entry", ApplicationNotes = "Create/edit orders" },
+                new { ApplicationId = 2L, ApplicationName = "Coil Inventory", ApplicationNotes = "Coil inventory screen" },
+                new { ApplicationId = 3L, ApplicationName = "User Control", ApplicationNotes = "Manage users/groups" }
+            });
+        conn.Execute(
+            "INSERT INTO security_group (user_group_id, group_name, group_notes) VALUES (:UserGroupId, :GroupName, :GroupNotes)",
+            new[]
+            {
+                new { UserGroupId = 10L, GroupName = "Operators", GroupNotes = "Shop-floor operators" },
+                new { UserGroupId = 11L, GroupName = "Admins", GroupNotes = "System administrators" }
+            });
+        conn.Execute(
+            "INSERT INTO security_user (user_id, login_id, user_last_name, user_first_name, user_status) VALUES (:UserId, :LoginId, :UserLastName, :UserFirstName, :UserStatus)",
+            new[]
+            {
+                new { UserId = 9001L, LoginId = "jsmith", UserLastName = "Smith", UserFirstName = "John", UserStatus = (int?)1 },
+                new { UserId = 9002L, LoginId = "mlee", UserLastName = "Lee", UserFirstName = "Maria", UserStatus = (int?)1 }
+            });
+        conn.Execute(
+            "INSERT INTO security_user_group (user_id, user_group_id) VALUES (:UserId, :UserGroupId)",
+            new[]
+            {
+                new { UserId = 9001L, UserGroupId = 10L }, // jsmith -> Operators
+                new { UserId = 9002L, UserGroupId = 11L }  // mlee   -> Admins
+            });
+        conn.Execute(
+            "INSERT INTO security_group_application (application_id, user_group_id, group_application_privilege) VALUES (:ApplicationId, :UserGroupId, :GroupApplicationPrivilege)",
+            new[]
+            {
+                new { ApplicationId = 1L, UserGroupId = 10L, GroupApplicationPrivilege = 0 }, // Operators: Order Entry ReadOnly
+                new { ApplicationId = 2L, UserGroupId = 10L, GroupApplicationPrivilege = 1 }, // Operators: Coil Inventory Write
+                new { ApplicationId = 3L, UserGroupId = 11L, GroupApplicationPrivilege = 1 }  // Admins: User Control Write
+            });
+        conn.Execute(
+            "INSERT INTO security_user_application (user_id, application_id, user_application_privilege) VALUES (:UserId, :ApplicationId, :UserApplicationPrivilege)",
+            new[]
+            {
+                // jsmith has a DIRECT Write grant on Order Entry; effective = MAX(1 direct, 0 group) = 1.
+                new { UserId = 9001L, ApplicationId = 1L, UserApplicationPrivilege = 1 }
             });
     }
 }

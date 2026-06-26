@@ -1,0 +1,22 @@
+$PBExportHeader$d_group_app.srd
+$PBExportComments$list apps to a paticular group
+release 6;
+datawindow(units=2 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 250 print.margin.right = 250 print.margin.top = 250 print.margin.bottom = 250 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=yes grid.lines=0 )
+header(height=141 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=166 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=application_id dbname="security_group_application.application_id" )
+ column=(type=decimal(0) updatewhereclause=yes name=user_group_id dbname="security_group_application.user_group_id" )
+ column=(type=char(64) updatewhereclause=yes name=security_application_application_name dbname="security_application.application_name" )
+ column=(type=decimal(0) updatewhereclause=yes name=security_group_application_group_applica dbname="security_group_application.group_application_privilege" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"security_group_application~" )  TABLE(NAME=~"security_application~" ) COLUMN(NAME=~"security_group_application.application_id~") COLUMN(NAME=~"security_group_application.user_group_id~") COLUMN(NAME=~"security_application.application_name~") COLUMN(NAME=~"security_group_application.group_application_privilege~")    JOIN (LEFT=~"security_group_application.application_id~"    OP =~"=~"RIGHT=~"security_application.application_id~" )WHERE(    EXP1 =~"~~~"SECURITY_GROUP_APPLICATION~~~".~~~"USER_GROUP_ID~~~"~"   OP =~"=~"    EXP2 =~":al_groupid~" ) ) ARG(NAME = ~"al_groupid~" TYPE = number) " arguments=(("al_groupid", number)) )
+text(band=header alignment="2" text="Application Id"border="0" color="0" x="16" y="8" height="133" width="733"  name=application_id_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="User Group Id"border="0" color="0" x="766" y="8" height="133" width="725"  name=user_group_id_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Security Application Application Name"border="0" color="0" x="1508" y="8" height="133" width="3183"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="0" x="16" y="9" height="158" width="733" format="[general]"  name=application_id edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=32766 border="0" color="0" x="766" y="9" height="158" width="725" format="[general]"  name=user_group_id edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="0" x="1508" y="17" height="133" width="3183" format="[general]"  name=security_application_application_name edit.limit=0 edit.case=any edit.autoselect=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="0" tabsequence=0 border="0" color="0" x="4716" y="17" height="133" width="2133" format="[General]"  name=security_group_application_group_applica  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Security Group Application Group Applica"border="0" color="0" x="4708" y="8" height="133" width="2141"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")

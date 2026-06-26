@@ -1,0 +1,22 @@
+$PBExportHeader$d_user_group_list.srd
+$PBExportComments$list all user groups with a text field shows the current type of an user
+release 6;
+datawindow(units=0 timer_interval=0 color=16777215 processing=1 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no grid.lines=0 )
+header(height=115 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=74 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=security_user_group_user_id dbname="security_user_group.user_id" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=security_user_group_user_group_id dbname="security_user_group.user_group_id" )
+ column=(type=char(32) updatewhereclause=yes name=security_group_group_name dbname="security_group.group_name" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"security_user_group~" )  TABLE(NAME=~"security_group~" ) COLUMN(NAME=~"security_user_group.user_id~") COLUMN(NAME=~"security_user_group.user_group_id~") COLUMN(NAME=~"security_group.group_name~")    JOIN (LEFT=~"security_group.user_group_id~"    OP =~"=~"RIGHT=~"security_user_group.user_group_id~" )WHERE(    EXP1 =~"~~~"SECURITY_USER_GROUP~~~".~~~"USER_ID~~~"~"   OP =~"=~"    EXP2 =~":al_user~" ) ) ARG(NAME = ~"al_user~" TYPE = number) " update="SECURITY_USER_GROUP" updatewhere=1 updatekeyinplace=yes arguments=(("al_user", number)) )
+text(band=header alignment="2" text="Security User Group
+User Id"border="0" color="0" x="7" y="6" height="102" width="464"  name=security_user_group_user_id_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Security User Group
+User Group Id"border="0" color="0" x="479" y="6" height="102" width="464"  name=security_user_group_user_group_id_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Security Group
+Group Name"border="0" color="0" x="951" y="6" height="102" width="724"  name=security_group_group_name_t  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=10 border="0" color="0" x="7" y="7" height="61" width="464" format="[general]"  name=security_user_group_user_id edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=20 border="0" color="0" x="479" y="7" height="61" width="464" format="[general]"  name=security_user_group_user_group_id edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="0" x="951" y="7" height="61" width="724" format="[general]"  name=security_group_group_name edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")
