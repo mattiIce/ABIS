@@ -65,6 +65,16 @@ public interface IAbisRepository
     Task<IReadOnlyList<OpcLog>> GetOpcLogsAsync(CancellationToken ct);
     Task<IReadOnlyList<OpcLogDetail>> GetOpcLogDetailsAsync(long opcLogId, CancellationToken ct);
     Task<IReadOnlyList<string>> GetOpcItemsAsync(CancellationToken ct);
+
+    // ---- Sales / quotes -------------------------------------------------
+    Task<IReadOnlyList<SalesQuoteListRow>> GetSalesQuotesAsync(string? search, CancellationToken ct);
+    Task<SalesQuote?> GetSalesQuoteAsync(long quoteId, long revisionId, CancellationToken ct);
+    Task<IReadOnlyList<SalesContact>> GetSalesContactsAsync(long? customerId, CancellationToken ct);
+    Task<IReadOnlyList<SalesReminder>> GetSalesRemindersAsync(long quoteId, long revisionId, CancellationToken ct);
+    Task<SalesReminder> CreateSalesReminderAsync(long quoteId, long revisionId, SalesReminderWrite body, CancellationToken ct);
+    Task<IReadOnlyList<SalesProbability>> GetSalesProbabilityAsync(long quoteId, long revisionId, CancellationToken ct);
+    Task<SalesProbability> CreateSalesProbabilityAsync(long quoteId, long revisionId, SalesProbabilityWrite body, CancellationToken ct);
+
     Task<IReadOnlyList<ScrapType>> GetScrapTypesAsync(CancellationToken ct);
     Task<IReadOnlyList<ProductType>> GetProductTypesAsync(CancellationToken ct);
     Task<IReadOnlyList<RecoveryCustomer>> GetRecoveryCustomersAsync(CancellationToken ct);

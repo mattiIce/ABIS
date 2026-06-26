@@ -1,0 +1,92 @@
+$PBExportHeader$d_scrap_edit.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=314 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=74 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_return_item_net_wt dbname="return_scrap_item.return_item_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_scrap_item_pieces dbname="return_scrap_item.scrap_item_pieces" )
+ column=(type=char(255) updatewhereclause=yes name=return_scrap_item_return_item_notes dbname="return_scrap_item.return_item_notes" )
+ column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_return_scrap_item_num dbname="return_scrap_item.return_scrap_item_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_coil_abc_num dbname="return_scrap_item.coil_abc_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_ab_job_num dbname="return_scrap_item.ab_job_num" )
+ column=(type=datetime updatewhereclause=yes name=return_scrap_item_return_item_date dbname="return_scrap_item.return_item_date" )
+ column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_scrap_item_type dbname="return_scrap_item.scrap_item_type" )
+ column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_mill dbname="return_scrap_item.mill" )
+ column=(type=decimal(0) updatewhereclause=yes name=scrap_skid_detail_scrap_skid_num dbname="scrap_skid_detail.scrap_skid_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=return_scrap_item_od dbname="return_scrap_item.od" )
+ column=(type=decimal(0) updatewhereclause=yes name=scrap_skid_scrap_net_wt dbname="scrap_skid.scrap_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=scrap_skid_detail_return_scrap_item_num dbname="scrap_skid_detail.return_scrap_item_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=scrap_skid_scrap_skid_num dbname="scrap_skid.scrap_skid_num" )
+ column=(type=number updatewhereclause=yes name=compute_0015 dbname="compute_0015" )
+ retrieve="SELECT ~"RETURN_SCRAP_ITEM~".~"RETURN_ITEM_NET_WT~",   
+         ~"RETURN_SCRAP_ITEM~".~"SCRAP_ITEM_PIECES~",   
+         ~"RETURN_SCRAP_ITEM~".~"RETURN_ITEM_NOTES~",   
+         ~"RETURN_SCRAP_ITEM~".~"RETURN_SCRAP_ITEM_NUM~",   
+         ~"RETURN_SCRAP_ITEM~".~"COIL_ABC_NUM~",   
+         ~"RETURN_SCRAP_ITEM~".~"AB_JOB_NUM~",   
+         ~"RETURN_SCRAP_ITEM~".~"RETURN_ITEM_DATE~",   
+         ~"RETURN_SCRAP_ITEM~".~"SCRAP_ITEM_TYPE~",   
+         ~"RETURN_SCRAP_ITEM~".~"MILL~",   
+         ~"SCRAP_SKID_DETAIL~".~"SCRAP_SKID_NUM~",   
+         ~"RETURN_SCRAP_ITEM~".~"OD~",   
+         ~"SCRAP_SKID~".~"SCRAP_NET_WT~",   
+         ~"SCRAP_SKID_DETAIL~".~"RETURN_SCRAP_ITEM_NUM~",   
+         ~"SCRAP_SKID~".~"SCRAP_SKID_NUM~",   
+         ~"RETURN_SCRAP_ITEM~".~"RETURN_ITEM_NET_WT~"/ 1  
+    FROM ~"RETURN_SCRAP_ITEM~",   
+         ~"SCRAP_SKID_DETAIL~",   
+         ~"SCRAP_SKID~"  
+   WHERE ( ~"RETURN_SCRAP_ITEM~".~"RETURN_SCRAP_ITEM_NUM~" = ~"SCRAP_SKID_DETAIL~".~"RETURN_SCRAP_ITEM_NUM~" ) and  
+         ( ~"SCRAP_SKID_DETAIL~".~"SCRAP_SKID_NUM~" = ~"SCRAP_SKID~".~"SCRAP_SKID_NUM~" ) and  
+         ( ( ~"RETURN_SCRAP_ITEM~".~"COIL_ABC_NUM~" = 5000 ) AND  
+         ( ~"RETURN_SCRAP_ITEM~".~"AB_JOB_NUM~" = 6000 ) ) " )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="33554432" x="7" y="6" height="61" width="274" format="[general]" html.valueishtml="0"  name=return_scrap_item_return_item_net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=32766 border="0" color="33554432" x="289" y="6" height="61" width="285" format="[general]" html.valueishtml="0"  name=return_scrap_item_scrap_item_pieces visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="581" y="6" height="48" width="662" format="[general]" html.valueishtml="0"  name=return_scrap_item_return_item_notes visible="1" edit.limit=255 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="0" color="33554432" x="1251" y="6" height="61" width="541" format="[general]" html.valueishtml="0"  name=return_scrap_item_return_scrap_item_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="1" tabsequence=32766 border="0" color="33554432" x="1799" y="6" height="61" width="421" format="[general]" html.valueishtml="0"  name=return_scrap_item_coil_abc_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="1" tabsequence=32766 border="0" color="33554432" x="2227" y="6" height="61" width="421" format="[general]" html.valueishtml="0"  name=return_scrap_item_ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=7 alignment="0" tabsequence=32766 border="0" color="33554432" x="2655" y="6" height="61" width="483" format="[shortdate] [time]" html.valueishtml="0"  name=return_scrap_item_return_item_date visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=8 alignment="1" tabsequence=32766 border="0" color="33554432" x="3145" y="6" height="61" width="421" format="[general]" html.valueishtml="0"  name=return_scrap_item_scrap_item_type visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=9 alignment="1" tabsequence=32766 border="0" color="33554432" x="3573" y="6" height="61" width="421" format="[general]" html.valueishtml="0"  name=return_scrap_item_mill visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=10 alignment="1" tabsequence=32766 border="0" color="33554432" x="4001" y="6" height="61" width="402" format="[general]" html.valueishtml="0"  name=scrap_skid_detail_scrap_skid_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=11 alignment="1" tabsequence=32766 border="0" color="33554432" x="4411" y="6" height="48" width="421" format="[General]" html.valueishtml="0"  name=return_scrap_item_od visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=12 alignment="1" tabsequence=32766 border="0" color="33554432" x="4838" y="6" height="61" width="304" format="[general]" html.valueishtml="0"  name=scrap_skid_scrap_net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=13 alignment="1" tabsequence=32766 border="0" color="33554432" x="5149" y="6" height="61" width="541" format="[general]" html.valueishtml="0"  name=scrap_skid_detail_return_scrap_item_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=14 alignment="1" tabsequence=32766 border="0" color="33554432" x="5698" y="3" height="61" width="373" format="[general]" html.valueishtml="0"  name=scrap_skid_scrap_skid_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=15 alignment="1" tabsequence=32766 border="0" color="33554432" x="6078" y="6" height="61" width="369" format="[general]" html.valueishtml="0"  name=compute_0015 visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Net Wt" border="6" color="33554432" x="7" y="6" height="74" width="274" html.valueishtml="0"  name=return_scrap_item_return_item_net_wt_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Pieces" border="6" color="33554432" x="289" y="6" height="70" width="285" html.valueishtml="0"  name=return_scrap_item_scrap_item_pieces_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Return Scrap Item
+Return Item Notes" border="6" color="33554432" x="581" y="6" height="74" width="662" html.valueishtml="0"  name=return_scrap_item_return_item_notes_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Return Scrap Item
+Ab Job Num" border="6" color="33554432" x="2227" y="6" height="74" width="421" html.valueishtml="0"  name=return_scrap_item_ab_job_num_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Return Scrap Item
+Return Item Date" border="6" color="33554432" x="2655" y="6" height="74" width="483" html.valueishtml="0"  name=return_scrap_item_return_item_date_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Return Scrap Item
+Scrap Item Type" border="6" color="33554432" x="3145" y="6" height="74" width="421" html.valueishtml="0"  name=return_scrap_item_scrap_item_type_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Return Scrap Item
+Mill" border="6" color="33554432" x="3573" y="6" height="74" width="421" html.valueishtml="0"  name=return_scrap_item_mill_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Scrap Skid Detail
+Scrap Skid Num" border="6" color="33554432" x="4001" y="6" height="74" width="402" html.valueishtml="0"  name=scrap_skid_detail_scrap_skid_num_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Return Scrap Item
+Od" border="6" color="33554432" x="4411" y="6" height="74" width="421" html.valueishtml="0"  name=return_scrap_item_od_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Scrap Skid
+Scrap Net Wt" border="6" color="33554432" x="4838" y="6" height="74" width="304" html.valueishtml="0"  name=scrap_skid_scrap_net_wt_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Scrap Skid Detail
+Return Scrap Item Num" border="6" color="33554432" x="5149" y="6" height="74" width="541" html.valueishtml="0"  name=scrap_skid_detail_return_scrap_item_num_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Scrap Skid
+Scrap Skid Num" border="6" color="33554432" x="5698" y="6" height="74" width="373" html.valueishtml="0"  name=scrap_skid_scrap_skid_num_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="~"return Scrap Item~".~"return Item Net Wt~"/1" border="6" color="33554432" x="6078" y="6" height="74" width="369" html.valueishtml="0"  name=compute_0015_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Return Scrap Item
+Return Scrap Item Num" border="6" color="33554432" x="1251" y="3" height="74" width="541" html.valueishtml="0"  name=return_scrap_item_return_scrap_item_num_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Return Scrap Item
+Coil Abc Num" border="6" color="33554432" x="1799" y="6" height="74" width="421" html.valueishtml="0"  name=return_scrap_item_coil_abc_num_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

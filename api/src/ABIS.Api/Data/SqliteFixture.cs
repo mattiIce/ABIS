@@ -51,6 +51,9 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS edi_log;
             DROP TABLE IF EXISTS edi_type;
             DROP TABLE IF EXISTS customer_edi;
+            DROP TABLE IF EXISTS sales_quote;
+            DROP TABLE IF EXISTS sales_reminder;
+            DROP TABLE IF EXISTS sales_probability;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
@@ -219,6 +222,29 @@ public static class SqliteFixture
             CREATE TABLE opc_log_details (
                 opc_log_id INTEGER, item_name TEXT, device_name TEXT, remote_host TEXT,
                 value TEXT, quality TEXT, time_stamp TEXT, description TEXT);
+
+            -- Sales / quotes (legacy w_sales_main, w_new_quote, w_edit_quote). The
+            -- sales_quote header has a composite key (quote_id + quote_revision_id):
+            -- revisions of the same quote share quote_id. Column names are authoritative
+            -- (legacy d_sales_quote_modify dbnames); only the columns the modern screens
+            -- read are materialized here. sales_reminder / sales_probability hang off a
+            -- quote (the legacy tables have no surrogate key — event_id / probability_id
+            -- are added for the modern write path).
+            CREATE TABLE sales_quote (
+                quote_id INTEGER, quote_revision_id INTEGER, customer_id INTEGER, contact_id INTEGER,
+                enduser_id INTEGER, end_use TEXT, part_shape TEXT, material TEXT, alloy TEXT, temper TEXT,
+                gauge REAL, width REAL, length REAL, line_num INTEGER, line_speed REAL,
+                num_of_coil INTEGER, num_of_skid INTEGER, total_lb_processed REAL, total_rev_per_hr REAL,
+                variable_cost REAL, fixed_cost REAL, reg_process_charge REAL, ros REAL, quote_notes TEXT,
+                approval_sales TEXT, approval_vp TEXT, approval_ceo TEXT, pass_on_quote TEXT,
+                created_date TEXT, valid_date TEXT,
+                PRIMARY KEY (quote_id, quote_revision_id));
+            CREATE TABLE sales_reminder (
+                event_id INTEGER PRIMARY KEY, quote_id INTEGER, quote_revision_id INTEGER,
+                event_date TEXT, event_notes TEXT, event_status TEXT, user_id TEXT);
+            CREATE TABLE sales_probability (
+                probability_id INTEGER PRIMARY KEY, quote_id INTEGER, quote_revision_id INTEGER,
+                review_date TEXT, sales_probability INTEGER, probability_note TEXT);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -632,6 +658,62 @@ public static class SqliteFixture
                 new { OpcLogId = 1L, ItemName = "Line110.Status", DeviceName = "OPCSERVER", RemoteHost = "192.168.10.170", Value = "RUNNING", Quality = "Good", TimeStamp = d.AddMinutes(5).ToString("yyyy-MM-dd HH:mm:ss"), Description = "Line 110 run state" },
                 new { OpcLogId = 1L, ItemName = "Line110.PartCount", DeviceName = "OPCSERVER", RemoteHost = "192.168.10.170", Value = "1042", Quality = "Good", TimeStamp = d.AddMinutes(5).ToString("yyyy-MM-dd HH:mm:ss"), Description = "Pieces this shift" },
                 new { OpcLogId = 2L, ItemName = "Oven3.Temp", DeviceName = "OPCSERVER-2", RemoteHost = "192.168.9.175", Value = "412.5", Quality = "Good", TimeStamp = d.AddHours(8).AddMinutes(2).ToString("yyyy-MM-dd HH:mm:ss"), Description = "Oven 3 temperature (F)" }
+            });
+
+        // ---- Sales / quotes ----
+        // Two quotes for the seeded customers (4001/4002), one with a second revision.
+        conn.Execute(
+            """
+            INSERT INTO sales_quote (quote_id, quote_revision_id, customer_id, contact_id, enduser_id,
+                end_use, part_shape, material, alloy, temper, gauge, width, length, line_num, line_speed,
+                num_of_coil, num_of_skid, total_lb_processed, total_rev_per_hr, variable_cost, fixed_cost,
+                reg_process_charge, ros, quote_notes, approval_sales, approval_vp, approval_ceo,
+                pass_on_quote, created_date, valid_date)
+            VALUES (:QuoteId, :QuoteRevisionId, :CustomerId, :ContactId, :EnduserId,
+                :EndUse, :PartShape, :Material, :Alloy, :Temper, :Gauge, :Width, :Length, :LineNum, :LineSpeed,
+                :NumOfCoil, :NumOfSkid, :TotalLbProcessed, :TotalRevPerHr, :VariableCost, :FixedCost,
+                :RegProcessCharge, :Ros, :QuoteNotes, :ApprovalSales, :ApprovalVp, :ApprovalCeo,
+                :PassOnQuote, :CreatedDate, :ValidDate)
+            """,
+            new[]
+            {
+                new { QuoteId = 7001L, QuoteRevisionId = 1L, CustomerId = 4001L, ContactId = 5601L, EnduserId = 4001L,
+                    EndUse = "Heat shield blanks", PartShape = "Rectangle", Material = "Aluminum", Alloy = "3003", Temper = "H14",
+                    Gauge = 0.040, Width = 24.5, Length = 36.0, LineNum = 110, LineSpeed = 85.0,
+                    NumOfCoil = 6, NumOfSkid = 12, TotalLbProcessed = 48000.0, TotalRevPerHr = 1250.0, VariableCost = 0.62, FixedCost = 0.18,
+                    RegProcessCharge = 0.0950, Ros = 0.22, QuoteNotes = "Standard auto blank program; PVC one side.",
+                    ApprovalSales = "Y", ApprovalVp = "Y", ApprovalCeo = "N", PassOnQuote = "N",
+                    CreatedDate = d.AddDays(-20).ToString("yyyy-MM-dd HH:mm:ss"), ValidDate = d.AddDays(40).ToString("yyyy-MM-dd HH:mm:ss") },
+                new { QuoteId = 7002L, QuoteRevisionId = 1L, CustomerId = 4002L, ContactId = 5603L, EnduserId = 4002L,
+                    EndUse = "Trim coil", PartShape = "Coil", Material = "Aluminum", Alloy = "5052", Temper = "H32",
+                    Gauge = 0.063, Width = 48.0, Length = 0.0, LineNum = 120, LineSpeed = 110.0,
+                    NumOfCoil = 10, NumOfSkid = 0, TotalLbProcessed = 92000.0, TotalRevPerHr = 980.0, VariableCost = 0.55, FixedCost = 0.15,
+                    RegProcessCharge = 0.0725, Ros = 0.18, QuoteNotes = "Slit-to-width, mill finish.",
+                    ApprovalSales = "Y", ApprovalVp = "N", ApprovalCeo = "N", PassOnQuote = "N",
+                    CreatedDate = d.AddDays(-8).ToString("yyyy-MM-dd HH:mm:ss"), ValidDate = d.AddDays(52).ToString("yyyy-MM-dd HH:mm:ss") },
+                new { QuoteId = 7002L, QuoteRevisionId = 2L, CustomerId = 4002L, ContactId = 5603L, EnduserId = 4002L,
+                    EndUse = "Trim coil (revised gauge)", PartShape = "Coil", Material = "Aluminum", Alloy = "5052", Temper = "H32",
+                    Gauge = 0.050, Width = 48.0, Length = 0.0, LineNum = 120, LineSpeed = 115.0,
+                    NumOfCoil = 10, NumOfSkid = 0, TotalLbProcessed = 88000.0, TotalRevPerHr = 1010.0, VariableCost = 0.53, FixedCost = 0.15,
+                    RegProcessCharge = 0.0760, Ros = 0.20, QuoteNotes = "Customer requested lighter gauge; re-quoted.",
+                    ApprovalSales = "Y", ApprovalVp = "Y", ApprovalCeo = "N", PassOnQuote = "N",
+                    CreatedDate = d.AddDays(-2).ToString("yyyy-MM-dd HH:mm:ss"), ValidDate = d.AddDays(58).ToString("yyyy-MM-dd HH:mm:ss") }
+            });
+        conn.Execute(
+            "INSERT INTO sales_reminder (event_id, quote_id, quote_revision_id, event_date, event_notes, event_status, user_id) VALUES (:EventId, :QuoteId, :QuoteRevisionId, :EventDate, :EventNotes, :EventStatus, :UserId)",
+            new[]
+            {
+                new { EventId = 1L, QuoteId = 7001L, QuoteRevisionId = 1L, EventDate = d.AddDays(-15).ToString("yyyy-MM-dd HH:mm:ss"), EventNotes = "Sent quote to Dana; awaiting feedback.", EventStatus = "DONE", UserId = "jsmith" },
+                new { EventId = 2L, QuoteId = 7001L, QuoteRevisionId = 1L, EventDate = d.AddDays(5).ToString("yyyy-MM-dd HH:mm:ss"), EventNotes = "Follow up on heat-shield program decision.", EventStatus = "OPEN", UserId = "jsmith" },
+                new { EventId = 3L, QuoteId = 7002L, QuoteRevisionId = 2L, EventDate = d.AddDays(3).ToString("yyyy-MM-dd HH:mm:ss"), EventNotes = "Confirm revised gauge meets spec.", EventStatus = "OPEN", UserId = "mlee" }
+            });
+        conn.Execute(
+            "INSERT INTO sales_probability (probability_id, quote_id, quote_revision_id, review_date, sales_probability, probability_note) VALUES (:ProbabilityId, :QuoteId, :QuoteRevisionId, :ReviewDate, :SalesProbability, :ProbabilityNote)",
+            new[]
+            {
+                new { ProbabilityId = 1L, QuoteId = 7001L, QuoteRevisionId = 1L, ReviewDate = d.AddDays(-15).ToString("yyyy-MM-dd HH:mm:ss"), SalesProbability = 40, ProbabilityNote = "Early stage; competitor also quoting." },
+                new { ProbabilityId = 2L, QuoteId = 7001L, QuoteRevisionId = 1L, ReviewDate = d.AddDays(-5).ToString("yyyy-MM-dd HH:mm:ss"), SalesProbability = 65, ProbabilityNote = "Positive feedback on pricing." },
+                new { ProbabilityId = 3L, QuoteId = 7002L, QuoteRevisionId = 2L, ReviewDate = d.AddDays(-1).ToString("yyyy-MM-dd HH:mm:ss"), SalesProbability = 75, ProbabilityNote = "Revised gauge accepted; likely PO next week." }
             });
     }
 }

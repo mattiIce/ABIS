@@ -598,3 +598,112 @@ public sealed class CustomerEdi
     public string? EdiVersion { get; set; }
     public string? CustomerEdiDesc { get; set; }
 }
+
+// ---- Sales / quotes (legacy w_sales_main, w_new_quote, w_edit_quote, w_sales_quote_review) ----
+
+/// <summary>One row of the pending-sales / quote list (legacy
+/// <c>d_pending_sales_list</c>): the <c>sales_quote</c> header joined to its customer and
+/// contact, with the most-recent win probability. <see cref="LatestProbability"/> is the
+/// newest <c>sales_probability.sales_probability</c> (percent), or null if never reviewed.</summary>
+public sealed class SalesQuoteListRow
+{
+    public long QuoteId { get; set; }
+    public long QuoteRevisionId { get; set; }
+    public long? CustomerId { get; set; }
+    public string? CustomerShortName { get; set; }
+    public long? ContactId { get; set; }
+    public string? ContactFirstName { get; set; }
+    public string? ContactLastName { get; set; }
+    public string? EndUse { get; set; }
+    public string? PartShape { get; set; }
+    public string? Alloy { get; set; }
+    public string? Temper { get; set; }
+    public decimal? Gauge { get; set; }
+    public decimal? Width { get; set; }
+    public decimal? Length { get; set; }
+    public decimal? TotalLbProcessed { get; set; }
+    public DateTime? CreatedDate { get; set; }
+    public DateTime? ValidDate { get; set; }
+    public int? LatestProbability { get; set; }
+}
+
+/// <summary>A sales quote header (table <c>sales_quote</c>, composite key
+/// <c>quote_id</c> + <c>quote_revision_id</c>) with the customer and contact names joined
+/// in. Column names are authoritative (legacy <c>d_sales_quote_modify</c> dbnames).</summary>
+public sealed class SalesQuote
+{
+    public long QuoteId { get; set; }
+    public long QuoteRevisionId { get; set; }
+    public long? CustomerId { get; set; }
+    public string? CustomerShortName { get; set; }
+    public long? ContactId { get; set; }
+    public string? ContactFirstName { get; set; }
+    public string? ContactLastName { get; set; }
+    public long? EnduserId { get; set; }
+    public string? EndUse { get; set; }
+    public string? PartShape { get; set; }
+    public string? Material { get; set; }
+    public string? Alloy { get; set; }
+    public string? Temper { get; set; }
+    public decimal? Gauge { get; set; }
+    public decimal? Width { get; set; }
+    public decimal? Length { get; set; }
+    public int? LineNum { get; set; }
+    public decimal? LineSpeed { get; set; }
+    public int? NumOfCoil { get; set; }
+    public int? NumOfSkid { get; set; }
+    public decimal? TotalLbProcessed { get; set; }
+    public decimal? TotalRevPerHr { get; set; }
+    public decimal? VariableCost { get; set; }
+    public decimal? FixedCost { get; set; }
+    public decimal? RegProcessCharge { get; set; }
+    public decimal? Ros { get; set; }
+    public string? QuoteNotes { get; set; }
+    public string? ApprovalSales { get; set; }
+    public string? ApprovalVp { get; set; }
+    public string? ApprovalCeo { get; set; }
+    public string? PassOnQuote { get; set; }
+    public DateTime? CreatedDate { get; set; }
+    public DateTime? ValidDate { get; set; }
+}
+
+/// <summary>A customer/sales contact (table <c>customer_contact</c>) — the legacy
+/// <c>d_sales_contact_list</c> address book used by the sales module.</summary>
+public sealed class SalesContact
+{
+    public long ContactId { get; set; }
+    public long? CustomerId { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? Department { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? Phone1 { get; set; }
+    public string? Email1 { get; set; }
+}
+
+/// <summary>A scheduled follow-up / reminder on a quote (table <c>sales_reminder</c>,
+/// legacy <c>d_sales_quote_event_list</c>) — the sales calendar's events.</summary>
+public sealed class SalesReminder
+{
+    public long EventId { get; set; }
+    public long QuoteId { get; set; }
+    public long QuoteRevisionId { get; set; }
+    public DateTime? EventDate { get; set; }
+    public string? EventNotes { get; set; }
+    public string? EventStatus { get; set; }
+    public string? UserId { get; set; }
+}
+
+/// <summary>A point-in-time win-probability review on a quote (table
+/// <c>sales_probability</c>, legacy <c>d_quote_review_probability_list</c>):
+/// the percent likelihood the quote closes, with a dated note.</summary>
+public sealed class SalesProbability
+{
+    public long ProbabilityId { get; set; }
+    public long QuoteId { get; set; }
+    public long QuoteRevisionId { get; set; }
+    public DateTime? ReviewDate { get; set; }
+    public int? SalesProbabilityPercent { get; set; }
+    public string? ProbabilityNote { get; set; }
+}

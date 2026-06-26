@@ -1,0 +1,44 @@
+$PBExportHeader$d_downtime_offline.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=83 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=86 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=shift_num dbname="dt_summary.shift_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=ab_job_num dbname="dt_summary.ab_job_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=id dbname="dt_summary.id" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=count dbname="dt_summary.count" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=duration dbname="dt_summary.duration" )
+ column=(type=number updatewhereclause=yes name=compute_0006 dbname="compute_0006" )
+ column=(type=char(1024) update=yes updatewhereclause=yes name=note dbname="dt_summary.note" )
+ retrieve="  SELECT ~"DT_SUMMARY~".~"SHIFT_NUM~",   
+         ~"DT_SUMMARY~".~"AB_JOB_NUM~",   
+         ~"DT_SUMMARY~".~"ID~",   
+         ~"DT_SUMMARY~".~"COUNT~",   
+         ~"DT_SUMMARY~".~"DURATION~",
+			~"DT_SUMMARY~".~"DURATION~" / 60,   
+         ~"DT_SUMMARY~".~"NOTE~"  
+    FROM ~"DT_SUMMARY~"  
+   WHERE ~"DT_SUMMARY~".~"SHIFT_NUM~" = :al_shift_id    
+" update="DT_SUMMARY" updatewhere=0 updatekeyinplace=no arguments=(("al_shift_id", number)) )
+text(band=header alignment="2" text="Job" border="6" color="33554432" x="7" y="6" height="70" width="282" html.valueishtml="0"  name=ab_job_num_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Cause" border="6" color="33554432" x="296" y="6" height="70" width="519" html.valueishtml="0"  name=id_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Count" border="6" color="33554432" x="823" y="6" height="70" width="263" html.valueishtml="0"  name=count_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="0" text="Minute" border="6" color="33554432" x="1093" y="6" height="70" width="315" html.valueishtml="0"  name=compute_0006_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Duration" border="6" color="33554432" x="2703" y="6" height="70" width="263" html.valueishtml="0"  name=duration_t visible="0"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Shift Num" border="6" color="33554432" x="2973" y="6" height="70" width="263" html.valueishtml="0"  name=shift_num_t visible="0"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+text(band=header alignment="2" text="Note" border="6" color="33554432" x="1415" y="6" height="70" width="1280" html.valueishtml="0"  name=note_t visible="1"  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="134217750" )
+column(band=detail id=2 alignment="1" tabsequence=10 border="0" color="33554432" x="7" y="7" height="61" width="282" format="[general]" html.valueishtml="0"  name=ab_job_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=7 alignment="0" tabsequence=50 border="0" color="33554432" x="1415" y="7" height="61" width="1280" format="[general]" html.valueishtml="0"  name=note visible="1" edit.limit=1024 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="1" tabsequence=60 border="0" color="33554432" x="2703" y="7" height="61" width="263" format="[general]" html.valueishtml="0"  name=duration visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="1" tabsequence=70 border="0" color="33554432" x="2973" y="7" height="61" width="263" format="[general]" html.valueishtml="0"  name=shift_num visible="0" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=20 border="0" color="33554432" x="296" y="7" height="61" width="519" format="[general]" html.valueishtml="0"  name=id visible="1" dddw.name=d_downtime_cause_type dddw.displaycolumn=cause_name dddw.datacolumn=id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.required=yes dddw.imemode=0 dddw.vscrollbar=yes  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="1" tabsequence=30 border="0" color="33554432" x="823" y="7" height="61" width="263" format="[general]" html.valueishtml="0"  name=count visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="0" tabsequence=40 border="0" color="33554432" x="1093" y="7" height="61" width="315" format="[general]" html.valueishtml="0"  name=compute_0006 visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-11" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

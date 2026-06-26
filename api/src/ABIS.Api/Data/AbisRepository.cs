@@ -723,6 +723,143 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
+    // ---- Sales / quotes (legacy w_sales_main, w_new_quote, w_edit_quote) ----
+
+    // The pending-sales / quote list (legacy d_pending_sales_list): sales_quote joined to
+    // its customer and contact, with the most-recent win probability. The latest probability
+    // is a correlated scalar subquery keyed on the max review_date (portable to Oracle and
+    // SQLite — no LIMIT/ROWNUM); MAX wraps the value so it stays single-valued on a date tie.
+    public async Task<IReadOnlyList<SalesQuoteListRow>> GetSalesQuotesAsync(string? search, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var like = string.IsNullOrWhiteSpace(search) ? null : $"%{search.Trim()}%";
+        var rows = await conn.QueryAsync<SalesQuoteListRow>(new CommandDefinition(
+            """
+            SELECT q.quote_id AS QuoteId, q.quote_revision_id AS QuoteRevisionId, q.customer_id AS CustomerId,
+                   c.customer_short_name AS CustomerShortName, q.contact_id AS ContactId,
+                   cc.first_name AS ContactFirstName, cc.last_name AS ContactLastName,
+                   q.end_use AS EndUse, q.part_shape AS PartShape, q.alloy AS Alloy, q.temper AS Temper,
+                   q.gauge AS Gauge, q.width AS Width, q.length AS Length, q.total_lb_processed AS TotalLbProcessed,
+                   q.created_date AS CreatedDate, q.valid_date AS ValidDate,
+                   (SELECT MAX(p.sales_probability) FROM sales_probability p
+                      WHERE p.quote_id = q.quote_id AND p.quote_revision_id = q.quote_revision_id
+                        AND p.review_date = (SELECT MAX(p2.review_date) FROM sales_probability p2
+                                               WHERE p2.quote_id = q.quote_id AND p2.quote_revision_id = q.quote_revision_id)
+                   ) AS LatestProbability
+            FROM sales_quote q
+            LEFT JOIN customer c ON c.customer_id = q.customer_id
+            LEFT JOIN customer_contact cc ON cc.contact_id = q.contact_id
+            WHERE (:like IS NULL
+                   OR c.customer_short_name LIKE :like OR q.end_use LIKE :like OR q.alloy LIKE :like)
+            ORDER BY q.created_date DESC, q.quote_id, q.quote_revision_id
+            """, new { like }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<SalesQuote?> GetSalesQuoteAsync(long quoteId, long revisionId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<SalesQuote>(new CommandDefinition(
+            """
+            SELECT q.quote_id AS QuoteId, q.quote_revision_id AS QuoteRevisionId, q.customer_id AS CustomerId,
+                   c.customer_short_name AS CustomerShortName, q.contact_id AS ContactId,
+                   cc.first_name AS ContactFirstName, cc.last_name AS ContactLastName, q.enduser_id AS EnduserId,
+                   q.end_use AS EndUse, q.part_shape AS PartShape, q.material AS Material, q.alloy AS Alloy, q.temper AS Temper,
+                   q.gauge AS Gauge, q.width AS Width, q.length AS Length, q.line_num AS LineNum, q.line_speed AS LineSpeed,
+                   q.num_of_coil AS NumOfCoil, q.num_of_skid AS NumOfSkid, q.total_lb_processed AS TotalLbProcessed,
+                   q.total_rev_per_hr AS TotalRevPerHr, q.variable_cost AS VariableCost, q.fixed_cost AS FixedCost,
+                   q.reg_process_charge AS RegProcessCharge, q.ros AS Ros, q.quote_notes AS QuoteNotes,
+                   q.approval_sales AS ApprovalSales, q.approval_vp AS ApprovalVp, q.approval_ceo AS ApprovalCeo,
+                   q.pass_on_quote AS PassOnQuote, q.created_date AS CreatedDate, q.valid_date AS ValidDate
+            FROM sales_quote q
+            LEFT JOIN customer c ON c.customer_id = q.customer_id
+            LEFT JOIN customer_contact cc ON cc.contact_id = q.contact_id
+            WHERE q.quote_id = :quote AND q.quote_revision_id = :rev
+            """, new { quote = quoteId, rev = revisionId }, cancellationToken: ct));
+    }
+
+    public async Task<IReadOnlyList<SalesContact>> GetSalesContactsAsync(long? customerId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<SalesContact>(new CommandDefinition(
+            """
+            SELECT contact_id AS ContactId, customer_id AS CustomerId, first_name AS FirstName, last_name AS LastName,
+                   department AS Department, city AS City, state AS State, phone1 AS Phone1, email1 AS Email1
+            FROM customer_contact
+            WHERE (:cust IS NULL OR customer_id = :cust)
+            ORDER BY last_name, first_name
+            """, new { cust = customerId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<SalesReminder>> GetSalesRemindersAsync(long quoteId, long revisionId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<SalesReminder>(new CommandDefinition(
+            """
+            SELECT event_id AS EventId, quote_id AS QuoteId, quote_revision_id AS QuoteRevisionId,
+                   event_date AS EventDate, event_notes AS EventNotes, event_status AS EventStatus, user_id AS UserId
+            FROM sales_reminder
+            WHERE quote_id = :quote AND quote_revision_id = :rev
+            ORDER BY event_date
+            """, new { quote = quoteId, rev = revisionId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<SalesReminder> CreateSalesReminderAsync(long quoteId, long revisionId, SalesReminderWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "sales_reminder", "event_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO sales_reminder (event_id, quote_id, quote_revision_id, event_date, event_notes, event_status, user_id)
+            VALUES (:id, :quote, :rev, :date, :notes, :status, :user)
+            """,
+            new
+            {
+                id, quote = quoteId, rev = revisionId, date = body.EventDate ?? DateTime.UtcNow,
+                notes = body.EventNotes, status = body.EventStatus ?? "OPEN", user = body.UserId
+            },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetSalesRemindersAsync(quoteId, revisionId, ct)).First(r => r.EventId == id);
+    }
+
+    public async Task<IReadOnlyList<SalesProbability>> GetSalesProbabilityAsync(long quoteId, long revisionId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<SalesProbability>(new CommandDefinition(
+            """
+            SELECT probability_id AS ProbabilityId, quote_id AS QuoteId, quote_revision_id AS QuoteRevisionId,
+                   review_date AS ReviewDate, sales_probability AS SalesProbabilityPercent, probability_note AS ProbabilityNote
+            FROM sales_probability
+            WHERE quote_id = :quote AND quote_revision_id = :rev
+            ORDER BY review_date
+            """, new { quote = quoteId, rev = revisionId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<SalesProbability> CreateSalesProbabilityAsync(long quoteId, long revisionId, SalesProbabilityWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "sales_probability", "probability_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO sales_probability (probability_id, quote_id, quote_revision_id, review_date, sales_probability, probability_note)
+            VALUES (:id, :quote, :rev, :date, :pct, :note)
+            """,
+            new
+            {
+                id, quote = quoteId, rev = revisionId, date = body.ReviewDate ?? DateTime.UtcNow,
+                pct = body.SalesProbabilityPercent, note = body.ProbabilityNote
+            },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetSalesProbabilityAsync(quoteId, revisionId, ct)).First(r => r.ProbabilityId == id);
+    }
+
     public async Task<IReadOnlyList<ScrapType>> GetScrapTypesAsync(CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);

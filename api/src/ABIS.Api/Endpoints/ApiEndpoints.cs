@@ -942,6 +942,59 @@ public static class ApiEndpoints
            .WithName("GetOpcItems").WithTags("OpcLog")
            .WithSummary("The distinct OPC item names seen — the real tag catalog (informs Edge:Opc:Tags).").Produces<IReadOnlyList<string>>();
 
+        // ---- Sales / quotes (legacy w_sales_main, w_new_quote, w_edit_quote) ----
+        api.MapGet("/sales/quotes", async (IAbisRepository repo, CancellationToken ct, string? search = null) =>
+                Results.Ok(await repo.GetSalesQuotesAsync(search, ct)))
+           .WithName("GetSalesQuotes").WithTags("Sales")
+           .WithSummary("Pending sales / quote list (customer, contact, latest win probability).")
+           .Produces<IReadOnlyList<SalesQuoteListRow>>();
+
+        api.MapGet("/sales/quotes/{quoteId:long}/{revisionId:long}", async (long quoteId, long revisionId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetSalesQuoteAsync(quoteId, revisionId, ct) is { } q ? Results.Ok(q) : Results.NotFound())
+           .WithName("GetSalesQuote").WithTags("Sales")
+           .WithSummary("A quote header (a specific revision of a quote).")
+           .Produces<SalesQuote>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapGet("/sales/contacts", async (IAbisRepository repo, CancellationToken ct, long? customerId = null) =>
+                Results.Ok(await repo.GetSalesContactsAsync(customerId, ct)))
+           .WithName("GetSalesContacts").WithTags("Sales")
+           .WithSummary("The sales contact address book (optionally filtered to a customer).")
+           .Produces<IReadOnlyList<SalesContact>>();
+
+        api.MapGet("/sales/quotes/{quoteId:long}/{revisionId:long}/events", async (long quoteId, long revisionId, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetSalesRemindersAsync(quoteId, revisionId, ct)))
+           .WithName("GetSalesReminders").WithTags("Sales")
+           .WithSummary("Scheduled follow-ups / reminders for a quote.")
+           .Produces<IReadOnlyList<SalesReminder>>();
+
+        api.MapPost("/sales/quotes/{quoteId:long}/{revisionId:long}/events", async (long quoteId, long revisionId, SalesReminderWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateSalesReminderAsync(quoteId, revisionId, body, ct);
+                return Results.Created($"/api/sales/quotes/{quoteId}/{revisionId}/events/{created.EventId}", created);
+            })
+           .WithName("CreateSalesReminder").WithTags("Sales")
+           .WithSummary("Log a follow-up / reminder against a quote.")
+           .Produces<SalesReminder>(StatusCodes.Status201Created).ProducesValidationProblem();
+
+        api.MapGet("/sales/quotes/{quoteId:long}/{revisionId:long}/probability", async (long quoteId, long revisionId, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetSalesProbabilityAsync(quoteId, revisionId, ct)))
+           .WithName("GetSalesProbability").WithTags("Sales")
+           .WithSummary("Win-probability review history for a quote.")
+           .Produces<IReadOnlyList<SalesProbability>>();
+
+        api.MapPost("/sales/quotes/{quoteId:long}/{revisionId:long}/probability", async (long quoteId, long revisionId, SalesProbabilityWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
+                var created = await repo.CreateSalesProbabilityAsync(quoteId, revisionId, body, ct);
+                return Results.Created($"/api/sales/quotes/{quoteId}/{revisionId}/probability/{created.ProbabilityId}", created);
+            })
+           .WithName("CreateSalesProbability").WithTags("Sales")
+           .WithSummary("Record a win-probability review on a quote.")
+           .Produces<SalesProbability>(StatusCodes.Status201Created).ProducesValidationProblem();
+
         api.MapGet("/scrap-skids", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? sort = null, string? dir = null) =>
             {
@@ -1314,6 +1367,24 @@ public static class ApiEndpoints
     {
         var e = new Dictionary<string, string[]>();
         Max(e, "note", body.Note, 255);
+        return e.Count == 0 ? null : e;
+    }
+
+    private static Dictionary<string, string[]>? Validate(SalesReminderWrite body)
+    {
+        var e = new Dictionary<string, string[]>();
+        Max(e, "eventNotes", body.EventNotes, 1024);
+        Max(e, "eventStatus", body.EventStatus, 16);
+        Max(e, "userId", body.UserId, 32);
+        return e.Count == 0 ? null : e;
+    }
+
+    private static Dictionary<string, string[]>? Validate(SalesProbabilityWrite body)
+    {
+        var e = new Dictionary<string, string[]>();
+        if (body.SalesProbabilityPercent is < 0 or > 100)
+            e["salesProbabilityPercent"] = ["salesProbabilityPercent must be between 0 and 100."];
+        Max(e, "probabilityNote", body.ProbabilityNote, 1024);
         return e.Count == 0 ? null : e;
     }
 }

@@ -307,3 +307,24 @@ public sealed class ScrapSkidWrite
     public string? ScrapNotes { get; set; }
     public int? SkidScrapStatus { get; set; }
 }
+
+/// <summary>Log a follow-up / reminder against a quote (table <c>sales_reminder</c>).
+/// The quote id + revision come from the route; <c>event_id</c> is server-assigned.
+/// <see cref="EventDate"/> defaults to now when omitted.</summary>
+public sealed class SalesReminderWrite
+{
+    public DateTime? EventDate { get; set; }
+    public string? EventNotes { get; set; }
+    public string? EventStatus { get; set; }
+    public string? UserId { get; set; }
+}
+
+/// <summary>Record a win-probability review on a quote (table <c>sales_probability</c>).
+/// The quote id + revision come from the route; <c>probability_id</c> is server-assigned
+/// and <c>review_date</c> defaults to now. <see cref="SalesProbabilityPercent"/> is 0–100.</summary>
+public sealed class SalesProbabilityWrite
+{
+    public DateTime? ReviewDate { get; set; }
+    public int? SalesProbabilityPercent { get; set; }
+    public string? ProbabilityNote { get; set; }
+}

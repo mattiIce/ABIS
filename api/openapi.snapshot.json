@@ -3878,6 +3878,344 @@
         }
       }
     },
+    "/api/sales/quotes": {
+      "get": {
+        "tags": [
+          "Sales"
+        ],
+        "summary": "Pending sales / quote list (customer, contact, latest win probability).",
+        "operationId": "GetSalesQuotes",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SalesQuoteListRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/sales/quotes/{quoteId}/{revisionId}": {
+      "get": {
+        "tags": [
+          "Sales"
+        ],
+        "summary": "A quote header (a specific revision of a quote).",
+        "operationId": "GetSalesQuote",
+        "parameters": [
+          {
+            "name": "quoteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesQuote"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/sales/contacts": {
+      "get": {
+        "tags": [
+          "Sales"
+        ],
+        "summary": "The sales contact address book (optionally filtered to a customer).",
+        "operationId": "GetSalesContacts",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SalesContact"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/sales/quotes/{quoteId}/{revisionId}/events": {
+      "get": {
+        "tags": [
+          "Sales"
+        ],
+        "summary": "Scheduled follow-ups / reminders for a quote.",
+        "operationId": "GetSalesReminders",
+        "parameters": [
+          {
+            "name": "quoteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SalesReminder"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Sales"
+        ],
+        "summary": "Log a follow-up / reminder against a quote.",
+        "operationId": "CreateSalesReminder",
+        "parameters": [
+          {
+            "name": "quoteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesReminderWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesReminder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/sales/quotes/{quoteId}/{revisionId}/probability": {
+      "get": {
+        "tags": [
+          "Sales"
+        ],
+        "summary": "Win-probability review history for a quote.",
+        "operationId": "GetSalesProbability",
+        "parameters": [
+          {
+            "name": "quoteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SalesProbability"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Sales"
+        ],
+        "summary": "Record a win-probability review on a quote.",
+        "operationId": "CreateSalesProbability",
+        "parameters": [
+          {
+            "name": "quoteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesProbabilityWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesProbability"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/scan-logs": {
       "get": {
         "tags": [
@@ -7838,6 +8176,402 @@
             "nullable": true
           },
           "commOnly": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SalesContact": {
+        "type": "object",
+        "properties": {
+          "contactId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "department": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone1": {
+            "type": "string",
+            "nullable": true
+          },
+          "email1": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SalesProbability": {
+        "type": "object",
+        "properties": {
+          "probabilityId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "quoteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "quoteRevisionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reviewDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "salesProbabilityPercent": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "probabilityNote": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SalesProbabilityWrite": {
+        "type": "object",
+        "properties": {
+          "reviewDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "salesProbabilityPercent": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "probabilityNote": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SalesQuote": {
+        "type": "object",
+        "properties": {
+          "quoteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "quoteRevisionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "customerShortName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "contactFirstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactLastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "enduserId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "endUse": {
+            "type": "string",
+            "nullable": true
+          },
+          "partShape": {
+            "type": "string",
+            "nullable": true
+          },
+          "material": {
+            "type": "string",
+            "nullable": true
+          },
+          "alloy": {
+            "type": "string",
+            "nullable": true
+          },
+          "temper": {
+            "type": "string",
+            "nullable": true
+          },
+          "gauge": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "width": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "length": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "lineNum": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "lineSpeed": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "numOfCoil": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "numOfSkid": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "totalLbProcessed": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "totalRevPerHr": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "variableCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "fixedCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "regProcessCharge": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "ros": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "quoteNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvalSales": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvalVp": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvalCeo": {
+            "type": "string",
+            "nullable": true
+          },
+          "passOnQuote": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "validDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SalesQuoteListRow": {
+        "type": "object",
+        "properties": {
+          "quoteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "quoteRevisionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "customerShortName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "contactFirstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactLastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "endUse": {
+            "type": "string",
+            "nullable": true
+          },
+          "partShape": {
+            "type": "string",
+            "nullable": true
+          },
+          "alloy": {
+            "type": "string",
+            "nullable": true
+          },
+          "temper": {
+            "type": "string",
+            "nullable": true
+          },
+          "gauge": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "width": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "length": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "totalLbProcessed": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "validDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "latestProbability": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SalesReminder": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "quoteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "quoteRevisionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "eventDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "eventNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "eventStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SalesReminderWrite": {
+        "type": "object",
+        "properties": {
+          "eventDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "eventNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "eventStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "userId": {
             "type": "string",
             "nullable": true
           }
