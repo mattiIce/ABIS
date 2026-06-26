@@ -18,6 +18,7 @@ import {
   DieWrite,
   DowntimeInstanceWrite,
   ReceivingBolWrite,
+  ReceivingBolCoilWrite,
   CustomerWrite,
   CustomerContactWrite,
   PartWrite,
@@ -627,4 +628,44 @@ test('security flow: grant to missing user → 404 (typed)', async () => {
     () => client.setUserApplicationGrant(888888, 1, new GrantWrite({ privilege: 1 })),
     (e) => e instanceof ApiException && e.status === 404,
   );
+});
+
+// Receiving BOL line items (legacy coil_receiving): the header+lines aggregate, adding
+// coil lines (coil_id auto-assigned 1..n), the NOT-NULL coil_org_num guard, and delete.
+test('receiving flow: BOL coil line items add/list/detail/delete (typed)', async () => {
+  // Seeded BOL 5501 has two coils.
+  const seeded = await client.getReceivingBolCoils(5501);
+  assert.ok(seeded.length >= 2);
+  assert.ok(seeded.every((c) => typeof c.coilOrgNum === 'string'));
+  const detail = await client.getReceivingBolDetail(5501);
+  assert.equal(detail.bol.receivingBolId, 5501);
+  assert.equal(detail.coils.length, seeded.length);
+
+  // Create a fresh BOL, add two coils — coil_id auto-increments within the BOL.
+  const bol = await client.createReceivingBol(new ReceivingBolWrite({ bol: 'E2E-COILBOL', customerId: 4001, createdBy: 'e2e', status: 0 }));
+  const c1 = await client.addReceivingBolCoil(bol.receivingBolId, new ReceivingBolCoilWrite({ coilOrgNum: 'E2E-ORG-1', alloy: '3003', netWeight: 9000 }));
+  const c2 = await client.addReceivingBolCoil(bol.receivingBolId, new ReceivingBolCoilWrite({ coilOrgNum: 'E2E-ORG-2', alloy: '5052', netWeight: 8000 }));
+  assert.equal(c1.coilId, 1);
+  assert.equal(c2.coilId, 2);
+  assert.equal(c2.coilOrgNum, 'E2E-ORG-2');
+
+  let list = await client.getReceivingBolCoils(bol.receivingBolId);
+  assert.equal(list.length, 2);
+
+  // coil_org_num is required (NOT NULL).
+  await assert.rejects(
+    () => client.addReceivingBolCoil(bol.receivingBolId, new ReceivingBolCoilWrite({ alloy: '3003' })),
+    (err) => err?.status === 400 && !!err?.errors?.coilOrgNum,
+  );
+  // Adding to a missing BOL → 404.
+  await assert.rejects(
+    () => client.addReceivingBolCoil(987654, new ReceivingBolCoilWrite({ coilOrgNum: 'X' })),
+    (e) => e instanceof ApiException && e.status === 404,
+  );
+
+  // Delete one line.
+  await client.deleteReceivingBolCoil(bol.receivingBolId, 1);
+  list = await client.getReceivingBolCoils(bol.receivingBolId);
+  assert.equal(list.length, 1);
+  assert.equal(list[0].coilId, 2);
 });

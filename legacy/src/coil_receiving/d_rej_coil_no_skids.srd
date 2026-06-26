@@ -1,0 +1,35 @@
+$PBExportHeader$d_rej_coil_no_skids.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=68 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=68 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=coil_abc_num dbname="process_coil.coil_abc_num" )
+ column=(type=char(32) updatewhereclause=yes name=coil_org_num dbname="coil.coil_org_num" )
+ column=(type=number updatewhereclause=yes name=skid_count dbname="compute_0003" )
+ retrieve="select   process_coil.coil_abc_num, 
+         coil.coil_org_num,
+         count(distinct sheet_skid_detail.sheet_skid_num)
+from     process_coil 
+         join ab_job on ab_job.ab_job_num = process_coil.ab_job_num
+         join coil on coil.coil_abc_num = process_coil.coil_abc_num
+         left outer join production_sheet_item on ab_job.ab_job_num = production_sheet_item.ab_job_num and process_coil.coil_abc_num = production_sheet_item.coil_abc_num
+         left outer join sheet_skid_detail on sheet_skid_detail.prod_item_num = production_sheet_item.prod_item_num       
+         left outer join sheet_skid on sheet_skid.sheet_skid_num = sheet_skid_detail.sheet_skid_num
+where    process_coil.ab_job_num = :al_ab_job_num  
+and      coil.coil_status = 3
+having   count(distinct sheet_skid_detail.sheet_skid_num) <= 0
+group by process_coil.coil_abc_num, 
+         coil.coil_org_num
+order by process_coil.coil_abc_num" arguments=(("al_ab_job_num", number)) )
+text(band=header alignment="0" text="Coil ABC Num" border="0" color="33554432" x="5" y="4" height="56" width="343" html.valueishtml="0"  name=coil_abc_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Cust. Coil Num" border="0" color="33554432" x="402" y="4" height="56" width="489" html.valueishtml="0"  name=coil_org_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="5" y="0" height="56" width="343" format="[general]" html.valueishtml="0"  name=coil_abc_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="402" y="0" height="56" width="489" format="[general]" html.valueishtml="0"  name=coil_org_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

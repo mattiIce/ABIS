@@ -469,6 +469,38 @@ public static class ApiEndpoints
            .WithSummary("Replace a receiving BOL. Supports If-Match.")
            .Produces<ReceivingBol>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status412PreconditionFailed).ProducesValidationProblem();
 
+        // ---- Receiving BOL line items (legacy coil_receiving.pbl) ----
+        api.MapGet("/receiving-bols/{receivingBolId:long}/detail", async (long receivingBolId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetReceivingBolDetailAsync(receivingBolId, ct) is { } d ? Results.Ok(d) : Results.NotFound())
+           .WithName("GetReceivingBolDetail").WithTags("Receiving")
+           .WithSummary("A receiving BOL with its coil line items (header + lines).")
+           .Produces<ReceivingBolDetail>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapGet("/receiving-bols/{receivingBolId:long}/coils", async (long receivingBolId, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetReceivingBolCoilsAsync(receivingBolId, ct)))
+           .WithName("GetReceivingBolCoils").WithTags("Receiving")
+           .WithSummary("The coil line items on a receiving BOL.")
+           .Produces<IReadOnlyList<ReceivingBolCoil>>();
+
+        api.MapPost("/receiving-bols/{receivingBolId:long}/coils", async (long receivingBolId, ReceivingBolCoilWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (string.IsNullOrWhiteSpace(body.CoilOrgNum))
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["coilOrgNum"] = ["coilOrgNum is required."] });
+                var created = await repo.AddReceivingBolCoilAsync(receivingBolId, body, ct);
+                return created is null
+                    ? Results.NotFound(new { message = $"Receiving BOL {receivingBolId} not found." })
+                    : Results.Created($"/api/receiving-bols/{receivingBolId}/coils/{created.CoilId}", created);
+            })
+           .WithName("AddReceivingBolCoil").WithTags("Receiving")
+           .WithSummary("Add a coil line to a receiving BOL (coil_id assigned server-side).")
+           .Produces<ReceivingBolCoil>(StatusCodes.Status201Created).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
+
+        api.MapDelete("/receiving-bols/{receivingBolId:long}/coils/{coilId:int}", async (long receivingBolId, int coilId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.DeleteReceivingBolCoilAsync(receivingBolId, coilId, ct) ? Results.NoContent() : Results.NotFound())
+           .WithName("DeleteReceivingBolCoil").WithTags("Receiving")
+           .WithSummary("Remove a coil line from a receiving BOL.")
+           .Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound);
+
         // ---- EDI (outbound X12 transaction ledger + transmission log) --
         api.MapGet("/edi/transactions", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, long? customerId = null, string? transactionTypeId = null, string? sort = null, string? dir = null) =>

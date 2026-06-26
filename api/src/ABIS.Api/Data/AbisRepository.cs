@@ -1778,6 +1778,78 @@ public sealed class AbisRepository : IAbisRepository
         return n == 0 ? null : await GetReceivingBolAsync(receivingBolId, ct);
     }
 
+    // ---- Receiving BOL line items (legacy coil_receiving.pbl) ----
+
+    private const string ReceivingBolCoilCols = """
+        receiving_bol_id AS ReceivingBolId, coil_id AS CoilId, coil_org_num AS CoilOrgNum, coil_abc_num AS CoilAbcNum,
+        status AS Status, damaged_fault AS DamagedFault, damaged_code AS DamagedCode, temper AS Temper,
+        net_weight AS NetWeight, gross_weight AS GrossWeight, lineal_feed AS LinealFeed, coil_width AS CoilWidth, coil_gauge AS CoilGauge,
+        lot AS Lot, pack_id AS PackId, alloy AS Alloy, part_num AS PartNum, supplier_sales_num AS SupplierSalesNum,
+        purchase_order_num AS PurchaseOrderNum, consumed_coil_num AS ConsumedCoilNum, material_num AS MaterialNum, cash_date AS CashDate
+        """;
+
+    public async Task<IReadOnlyList<ReceivingBolCoil>> GetReceivingBolCoilsAsync(long receivingBolId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<ReceivingBolCoil>(new CommandDefinition(
+            $"SELECT {ReceivingBolCoilCols} FROM receiving_bol_coil WHERE receiving_bol_id = :id ORDER BY coil_id",
+            new { id = receivingBolId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    // The header + line-item aggregate (the legacy w_coil_receiving working set).
+    public async Task<ReceivingBolDetail?> GetReceivingBolDetailAsync(long receivingBolId, CancellationToken ct)
+    {
+        var bol = await GetReceivingBolAsync(receivingBolId, ct);
+        if (bol is null) return null;
+        return new ReceivingBolDetail { Bol = bol, Coils = await GetReceivingBolCoilsAsync(receivingBolId, ct) };
+    }
+
+    // Add a coil line. coil_id is assigned MAX+1 within the BOL (per-BOL sequence, like
+    // order_item_num). Returns null if the BOL doesn't exist.
+    public async Task<ReceivingBolCoil?> AddReceivingBolCoilAsync(long receivingBolId, ReceivingBolCoilWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // Existence check before opening the transaction (a command on a connection with an
+        // active SQLite transaction must be enlisted in it).
+        if (!await ExistsAsync(conn, "receiving_bol", "receiving_bol_id", receivingBolId, ct)) return null;
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var coilId = await conn.ExecuteScalarAsync<int>(new CommandDefinition(
+            "SELECT COALESCE(MAX(coil_id), 0) + 1 FROM receiving_bol_coil WHERE receiving_bol_id = :id",
+            new { id = receivingBolId }, transaction: tx, cancellationToken: ct));
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO receiving_bol_coil (receiving_bol_id, coil_id, coil_org_num, coil_abc_num, status, damaged_fault, damaged_code,
+                temper, net_weight, gross_weight, lineal_feed, coil_width, coil_gauge, lot, pack_id, alloy, part_num,
+                supplier_sales_num, purchase_order_num, consumed_coil_num, material_num, cash_date)
+            VALUES (:id, :coilId, :coil_org_num, :coil_abc_num, :status, :damaged_fault, :damaged_code,
+                :temper, :net_weight, :gross_weight, :lineal_feed, :coil_width, :coil_gauge, :lot, :pack_id, :alloy, :part_num,
+                :supplier_sales_num, :purchase_order_num, :consumed_coil_num, :material_num, :cash_date)
+            """,
+            new
+            {
+                id = receivingBolId, coilId, coil_org_num = body.CoilOrgNum, coil_abc_num = body.CoilAbcNum, status = body.Status,
+                damaged_fault = body.DamagedFault, damaged_code = body.DamagedCode, temper = body.Temper,
+                net_weight = body.NetWeight, gross_weight = body.GrossWeight, lineal_feed = body.LinealFeed,
+                coil_width = body.CoilWidth, coil_gauge = body.CoilGauge, lot = body.Lot, pack_id = body.PackId,
+                alloy = body.Alloy, part_num = body.PartNum, supplier_sales_num = body.SupplierSalesNum,
+                purchase_order_num = body.PurchaseOrderNum, consumed_coil_num = body.ConsumedCoilNum,
+                material_num = body.MaterialNum, cash_date = body.CashDate
+            },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetReceivingBolCoilsAsync(receivingBolId, ct)).First(c => c.CoilId == coilId);
+    }
+
+    public async Task<bool> DeleteReceivingBolCoilAsync(long receivingBolId, int coilId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            "DELETE FROM receiving_bol_coil WHERE receiving_bol_id = :id AND coil_id = :coilId",
+            new { id = receivingBolId, coilId }, cancellationToken: ct));
+        return n > 0;
+    }
+
     public Task<PagedResult<ScanLog>> GetScanLogsAsync(int page, int pageSize, long? abJobNum, string? orderBy, CancellationToken ct) =>
         PageAsync<ScanLog>(ScanLogCols, "scan_log", orderBy ?? "scan_id DESC",
             abJobNum is null ? null : "ab_job_num = :abJobNum",

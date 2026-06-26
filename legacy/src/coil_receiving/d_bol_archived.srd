@@ -1,0 +1,22 @@
+$PBExportHeader$d_bol_archived.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 selected.mouse=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=84 color="536870912" )
+table(column=(type=char(32) updatewhereclause=yes name=bol dbname="receiving_bol.bol" )
+ column=(type=decimal(0) updatewhereclause=yes key=yes name=receiving_bol_id dbname="receiving_bol.receiving_bol_id" )
+ column=(type=datetime updatewhereclause=yes name=received_date dbname="receiving_bol.received_date" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"receiving_bol~" ) COLUMN(NAME=~"receiving_bol.bol~") COLUMN(NAME=~"receiving_bol.receiving_bol_id~") COLUMN(NAME=~"receiving_bol.received_date~")WHERE(    EXP1 =~"~~~"RECEIVING_BOL~~~".~~~"CUSTOMER_ID~~~"~"   OP =~"=~"    EXP2 =~":al_customer_id~" ) ) ORDER(NAME=~"receiving_bol.bol~" ASC=yes ) ARG(NAME = ~"al_customer_id~" TYPE = number) " update="RECEIVING_BOL" updatewhere=0 updatekeyinplace=no arguments=(("al_customer_id", number)) )
+text(band=header alignment="2" text="BOL" border="0" color="33554432" x="9" y="8" height="56" width="658" html.valueishtml="0"  name=bol_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Receiving Bol Id" border="0" color="0" x="677" y="4" height="76" width="5" html.valueishtml="0"  name=receiving_bol_id_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="0" color="33554432" x="9" y="8" height="68" width="658" format="[general]" html.valueishtml="0"  name=bol visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="677" y="0" height="8" width="5" format="[general]" html.valueishtml="0"  name=receiving_bol_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=0 border="0" color="33554432" x="690" y="0" height="16" width="9" html.valueishtml="0"  name=received_date visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Received Date" border="0" color="0" x="690" y="4" height="76" width="5" html.valueishtml="0"  name=received_date_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

@@ -3997,6 +3997,178 @@
         }
       }
     },
+    "/api/receiving-bols/{receivingBolId}/detail": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "summary": "A receiving BOL with its coil line items (header + lines).",
+        "operationId": "GetReceivingBolDetail",
+        "parameters": [
+          {
+            "name": "receivingBolId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceivingBolDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/receiving-bols/{receivingBolId}/coils": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "summary": "The coil line items on a receiving BOL.",
+        "operationId": "GetReceivingBolCoils",
+        "parameters": [
+          {
+            "name": "receivingBolId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReceivingBolCoil"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "summary": "Add a coil line to a receiving BOL (coil_id assigned server-side).",
+        "operationId": "AddReceivingBolCoil",
+        "parameters": [
+          {
+            "name": "receivingBolId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceivingBolCoilWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceivingBolCoil"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/receiving-bols/{receivingBolId}/coils/{coilId}": {
+      "delete": {
+        "tags": [
+          "Receiving"
+        ],
+        "summary": "Remove a coil line from a receiving BOL.",
+        "operationId": "DeleteReceivingBolCoil",
+        "parameters": [
+          {
+            "name": "receivingBolId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "coilId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/reporting/production-summary": {
       "get": {
         "tags": [
@@ -10020,6 +10192,223 @@
           "status": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReceivingBolCoil": {
+        "type": "object",
+        "properties": {
+          "receivingBolId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "coilId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coilOrgNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "damagedFault": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "damagedCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "temper": {
+            "type": "string",
+            "nullable": true
+          },
+          "netWeight": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "grossWeight": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "linealFeed": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coilGauge": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "lot": {
+            "type": "string",
+            "nullable": true
+          },
+          "packId": {
+            "type": "string",
+            "nullable": true
+          },
+          "alloy": {
+            "type": "string",
+            "nullable": true
+          },
+          "partNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierSalesNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "purchaseOrderNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "consumedCoilNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "cashDate": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReceivingBolCoilWrite": {
+        "type": "object",
+        "properties": {
+          "coilOrgNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "damagedFault": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "damagedCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "temper": {
+            "type": "string",
+            "nullable": true
+          },
+          "netWeight": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "grossWeight": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "linealFeed": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coilWidth": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coilGauge": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "lot": {
+            "type": "string",
+            "nullable": true
+          },
+          "packId": {
+            "type": "string",
+            "nullable": true
+          },
+          "alloy": {
+            "type": "string",
+            "nullable": true
+          },
+          "partNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierSalesNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "purchaseOrderNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "consumedCoilNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "cashDate": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReceivingBolDetail": {
+        "required": [
+          "bol"
+        ],
+        "type": "object",
+        "properties": {
+          "bol": {
+            "$ref": "#/components/schemas/ReceivingBol"
+          },
+          "coils": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceivingBolCoil"
+            },
             "nullable": true
           }
         },
