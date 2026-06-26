@@ -53,7 +53,10 @@ All standard `Database__*` / `ApiKeys__*` settings can be overridden as env vars
 - **TLS** — terminate HTTPS at a reverse proxy (nginx/Caddy/Traefik) in front of
   the container; don't expose plain `:8080` off-host.
 - **API keys** — long random values; rotate via `ApiKeys__Keys__1`, …; never
-  commit `.env`.
+  commit `.env`. Keep these for machine clients (the edge service, scripts).
+- **User auth (JWT/OIDC)** — for interactive users, enable JWT bearer by setting
+  `Auth__Jwt__Authority` (your OIDC issuer) + `Auth__Jwt__Audience`; `/api` then
+  accepts a valid token *or* an API key. See `api/README.md` §Authentication.
 - **DB account** — least privilege (the API needs SELECT + INSERT/UPDATE on the
   modeled tables + sequence use; not DBA).
 - **Non-prod first** — point at a staging copy, verify, then production with

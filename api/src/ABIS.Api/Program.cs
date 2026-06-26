@@ -22,15 +22,14 @@ var auditOptions = builder.Configuration.GetSection(Abis.Api.Middleware.AuditOpt
                        .Get<Abis.Api.Middleware.AuditOptions>() ?? new Abis.Api.Middleware.AuditOptions();
 builder.Services.AddSingleton(auditOptions);
 
-// API-key authentication: secure the /api surface. Endpoints just require an
-// authenticated principal, so the scheme can later be swapped for OAuth/OIDC.
+// /api auth: the API key (machine clients, e.g. the edge service) plus optional
+// JWT bearer (interactive users via OIDC). The default policy accepts a valid
+// principal from EITHER scheme. apiKeyOptions is also reused for rate limiting +
+// the Swagger security definition below.
 var apiKeyOptions = builder.Configuration.GetSection(ApiKeyOptions.SectionName).Get<ApiKeyOptions>()
                     ?? new ApiKeyOptions();
 builder.Services.AddSingleton(apiKeyOptions);
-builder.Services
-    .AddAuthentication(ApiKeyAuthenticationHandler.SchemeName)
-    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationHandler.SchemeName, null);
-builder.Services.AddAuthorization();
+builder.AddAbisAuth();
 
 // Rate limiting: a fixed window partitioned per API key (fallback to remote IP),
 // applied to the /api group. Shields the legacy DB from runaway callers; tunable
@@ -76,15 +75,20 @@ builder.Services.AddSwaggerGen(c =>
         In = ParameterLocation.Header,
         Description = $"API key sent in the {apiKeyOptions.HeaderName} header."
     });
+    // /api accepts EITHER the API key OR a JWT bearer (when JWT is configured).
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT bearer token from your OIDC provider (when Auth:Jwt is configured)."
+    });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "ApiKey" }
-            },
-            Array.Empty<string>()
-        }
+        { new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "ApiKey" } }, Array.Empty<string>() },
+        { new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }, Array.Empty<string>() }
     });
 });
 

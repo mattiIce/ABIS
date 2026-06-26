@@ -8166,12 +8166,19 @@
         "description": "API key sent in the X-Api-Key header.",
         "name": "X-Api-Key",
         "in": "header"
+      },
+      "Bearer": {
+        "type": "http",
+        "description": "JWT bearer token from your OIDC provider (when Auth:Jwt is configured).",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   },
   "security": [
     {
-      "ApiKey": [ ]
+      "ApiKey": [ ],
+      "Bearer": [ ]
     }
   ]
 }

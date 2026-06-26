@@ -284,12 +284,28 @@ uses `MAX+1`; it is append-only and best-effort.)*
 
 ## Authentication
 
-All `/api/*` endpoints require an **API key** in the `X-Api-Key` header; `/health`
-and Swagger stay anonymous. Endpoints only require an authenticated principal, so
-the `ApiKey` scheme can later be replaced by OAuth/OIDC without touching them.
+`/api/*` accepts **either** of two schemes (a request is authorized if either
+yields a valid principal); `/health` and Swagger stay anonymous:
+
+- **API key** (`X-Api-Key` header) — for machine clients (the edge service, scripts).
+- **JWT bearer** (`Authorization: Bearer …`) — for interactive users, when JWT is
+  configured. Provider-agnostic: point it at any OIDC issuer.
 
 ```sh
-curl -H "X-Api-Key: dev-local-key" http://localhost:5xxx/api/jobs
+curl -H "X-Api-Key: dev-local-key" http://localhost:5xxx/api/jobs        # API key
+curl -H "Authorization: Bearer <jwt>" http://localhost:5xxx/api/jobs      # JWT
+```
+
+**JWT** is enabled by configuring the `Auth:Jwt` section (off by default → API-key
+only, backward compatible):
+
+```sh
+# OIDC provider (Entra ID / Keycloak / Auth0 / …)
+export Auth__Jwt__Authority="https://login.example.com/realms/abis"
+export Auth__Jwt__Audience="abis-api"
+# …or a symmetric signing key (no OIDC provider)
+export Auth__Jwt__SigningKey="<a-long-random-secret>"
+export Auth__Jwt__Issuer="https://issuer.example"
 ```
 
 Configure via the `ApiKeys` section (keys belong in a secret store / environment,

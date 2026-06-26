@@ -1,0 +1,81 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
+
+namespace Abis.Api.Security;
+
+/// <summary>Optional JWT-bearer auth, bound from the <c>Auth:Jwt</c> section. Use
+/// <see cref="Authority"/> for a standard OIDC provider (Entra ID, Keycloak,
+/// Auth0, …), or <see cref="SigningKey"/> for a symmetric-key setup (also what
+/// the tests use). When neither is set, JWT is disabled and only the API key
+/// gates <c>/api</c> — fully backward compatible.</summary>
+public sealed class JwtAuthOptions
+{
+    public const string SectionName = "Auth:Jwt";
+
+    public string? Authority { get; set; }              // OIDC issuer (uses discovery)
+    public string? Audience { get; set; }
+    public string? Issuer { get; set; }                 // for the symmetric-key path
+    public string? SigningKey { get; set; }             // symmetric key (alternative to Authority)
+    public bool RequireHttpsMetadata { get; set; } = true;
+
+    public bool Enabled => !string.IsNullOrWhiteSpace(Authority) || !string.IsNullOrWhiteSpace(SigningKey);
+}
+
+/// <summary>Wires the <c>/api</c> auth: the API key (for machine clients such as
+/// the edge service) plus optional JWT bearer (for interactive users via your
+/// OIDC provider), with a default policy that accepts <b>either</b> scheme.</summary>
+public static class AuthSetup
+{
+    public static void AddAbisAuth(this WebApplicationBuilder builder)
+    {
+        // ApiKeyOptions is registered by the caller (it's also reused for rate
+        // limiting + the Swagger security definition).
+        var jwt = builder.Configuration.GetSection(JwtAuthOptions.SectionName).Get<JwtAuthOptions>()
+                  ?? new JwtAuthOptions();
+
+        var auth = builder.Services
+            .AddAuthentication(ApiKeyAuthenticationHandler.SchemeName)
+            .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(
+                ApiKeyAuthenticationHandler.SchemeName, null);
+
+        var schemes = new List<string> { ApiKeyAuthenticationHandler.SchemeName };
+        if (jwt.Enabled)
+        {
+            auth.AddJwtBearer(o =>
+            {
+                o.RequireHttpsMetadata = jwt.RequireHttpsMetadata;
+                if (!string.IsNullOrWhiteSpace(jwt.Authority))
+                {
+                    // OIDC: signing keys + issuer come from the provider's discovery doc.
+                    o.Authority = jwt.Authority;
+                    if (!string.IsNullOrWhiteSpace(jwt.Audience)) o.Audience = jwt.Audience;
+                    else o.TokenValidationParameters.ValidateAudience = false;
+                }
+                else
+                {
+                    // Symmetric signing key (no OIDC provider) — also the test path.
+                    o.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = !string.IsNullOrWhiteSpace(jwt.Issuer),
+                        ValidIssuer = jwt.Issuer,
+                        ValidateAudience = !string.IsNullOrWhiteSpace(jwt.Audience),
+                        ValidAudience = jwt.Audience,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey!)),
+                    };
+                }
+            });
+            schemes.Add(JwtBearerDefaults.AuthenticationScheme);
+        }
+
+        // Default policy accepts a valid principal from EITHER scheme.
+        builder.Services.AddAuthorization(options =>
+            options.DefaultPolicy = new AuthorizationPolicyBuilder(schemes.ToArray())
+                .RequireAuthenticatedUser()
+                .Build());
+    }
+}
