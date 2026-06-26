@@ -1,0 +1,56 @@
+$PBExportHeader$d_reinforcement.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=79741120 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=1117 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_item_num dbname="reinforcement.order_item_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_abc_num dbname="reinforcement.order_abc_num" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=re_width dbname="reinforcement.re_width" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=re_width_plus dbname="reinforcement.re_width_plus" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=re_width_minus dbname="reinforcement.re_width_minus" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=re_length dbname="reinforcement.re_length" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=re_length_plus dbname="reinforcement.re_length_plus" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=re_length_minus dbname="reinforcement.re_length_minus" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=re_die1 dbname="reinforcement.re_die1" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_part_num_id dbname="order_item.part_num_id" )
+ retrieve="  SELECT ~"REINFORCEMENT~".~"ORDER_ITEM_NUM~",   
+         ~"REINFORCEMENT~".~"ORDER_ABC_NUM~",   
+         ~"REINFORCEMENT~".~"RE_WIDTH~",   
+         ~"REINFORCEMENT~".~"RE_WIDTH_PLUS~",   
+         ~"REINFORCEMENT~".~"RE_WIDTH_MINUS~",   
+         ~"REINFORCEMENT~".~"RE_LENGTH~",   
+         ~"REINFORCEMENT~".~"RE_LENGTH_PLUS~",   
+         ~"REINFORCEMENT~".~"RE_LENGTH_MINUS~",   
+         ~"REINFORCEMENT~".~"RE_DIE1~",   
+         ~"ORDER_ITEM~".~"PART_NUM_ID~"  
+    FROM ~"REINFORCEMENT~",   
+         ~"ORDER_ITEM~"  
+   WHERE ( ~"REINFORCEMENT~".~"ORDER_ITEM_NUM~" = ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~" ) and  
+         ( ~"REINFORCEMENT~".~"ORDER_ABC_NUM~" = ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" ) and  
+         ( ~"REINFORCEMENT~".~"ORDER_ITEM_NUM~" = :al_item ) AND  
+         ( ~"REINFORCEMENT~".~"ORDER_ABC_NUM~" = :al_order )    
+" update="REINFORCEMENT" updatewhere=1 updatekeyinplace=yes arguments=(("al_item", number),("al_order", number)) )
+text(band=detail alignment="1" text=" Length:" border="0" color="0" x="216" y="605" height="48" width="197" html.valueishtml="0"  name=ch_length_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text=" Plus:" border="0" color="0" x="260" y="672" height="51" width="157" html.valueishtml="0"  name=ch_length_plus_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text=" Minus:" border="0" color="0" x="208" y="746" height="48" width="201" html.valueishtml="0"  name=ch_length_minus_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text=" Width:" border="0" color="0" x="252" y="829" height="48" width="157" html.valueishtml="0"  name=ch_width_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text=" Plus:" border="0" color="0" x="260" y="896" height="51" width="157" html.valueishtml="0"  name=ch_width_plus_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text=" Minus:" border="0" color="0" x="208" y="970" height="48" width="201" html.valueishtml="0"  name=ch_width_minus_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text=" Die:" border="0" color="0" x="4" y="1053" height="51" width="102" html.valueishtml="0"  name=ch_die_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="0" x="1020" y="26" height="74" width="7" format="[General]" html.valueishtml="0"  name=order_item_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="0" x="896" y="99" height="77" width="7" format="[General]" html.valueishtml="0"  name=order_abc_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+bitmap(band=detail filename="reinforcement.jpg" x="7" y="10" height="557" width="1236" border="6"  name=p_1 visible="1" )
+column(band=detail id=9 alignment="0" tabsequence=10 border="5" color="0" x="113" y="1040" height="67" width="1137" format="[general]" html.valueishtml="0"  name=re_die1 visible="1" dddw.name=d_die_list_per_reinforcement dddw.displaycolumn=show_t dddw.datacolumn=die_die_id dddw.percentwidth=140 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=yes dddw.case=any dddw.imemode=0 dddw.vscrollbar=yes  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=6 alignment="0" tabsequence=20 border="0" color="0" x="435" y="592" height="67" width="497" format="[General]" html.valueishtml="0" protect="0~tif( isNull( order_item_part_num_id ), 0, 1 )"  name=re_length visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="16777215~tif( isNull( order_item_part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+column(band=detail id=7 alignment="0" tabsequence=30 border="0" color="0" x="435" y="669" height="64" width="497" format="[General]" html.valueishtml="0" protect="0~tif( isNull( order_item_part_num_id ), 0, 1 )"  name=re_length_plus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="16777215~tif( isNull( order_item_part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+column(band=detail id=8 alignment="0" tabsequence=40 border="0" color="0" x="435" y="739" height="61" width="497" format="[General]" html.valueishtml="0" protect="0~tif( isNull( order_item_part_num_id ), 0, 1 )"  name=re_length_minus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="16777215~tif( isNull( order_item_part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+column(band=detail id=3 alignment="0" tabsequence=50 border="0" color="0" x="435" y="813" height="64" width="497" format="[General]" html.valueishtml="0" protect="0~tif( isNull( order_item_part_num_id ), 0, 1 )"  name=re_width visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="16777215~tif( isNull( order_item_part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+column(band=detail id=4 alignment="0" tabsequence=60 border="0" color="0" x="435" y="890" height="64" width="497" format="[General]" html.valueishtml="0" protect="0~tif( isNull( order_item_part_num_id ), 0, 1 )"  name=re_width_plus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="16777215~tif( isNull( order_item_part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+column(band=detail id=5 alignment="0" tabsequence=70 border="0" color="0" x="435" y="957" height="77" width="497" format="[General]" html.valueishtml="0" protect="0~tif( isNull( order_item_part_num_id ), 0, 1 )"  name=re_width_minus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="16777215~tif( isNull( order_item_part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

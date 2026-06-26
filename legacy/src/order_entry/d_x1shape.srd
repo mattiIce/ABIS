@@ -1,0 +1,55 @@
+$PBExportHeader$d_x1shape.srd
+$PBExportComments$X shape's specification
+release 9;
+datawindow(units=0 timer_interval=0 color=79741120 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=3 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=854 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_item_num dbname="x1_shape.order_item_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_abc_num dbname="x1_shape.order_abc_num" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=x_1 dbname="x1_shape.x_1" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=x_2 dbname="x1_shape.x_2" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=x_3 dbname="x1_shape.x_3" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=x_4 dbname="x1_shape.x_4" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=x_5 dbname="x1_shape.x_5" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=x_6 dbname="x1_shape.x_6" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=x_die dbname="x1_shape.x_die" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_part_num_id dbname="order_item.part_num_id" )
+ retrieve="  SELECT ~"X1_SHAPE~".~"ORDER_ITEM_NUM~",   
+         ~"X1_SHAPE~".~"ORDER_ABC_NUM~",   
+         ~"X1_SHAPE~".~"X_1~",   
+         ~"X1_SHAPE~".~"X_2~",   
+         ~"X1_SHAPE~".~"X_3~",   
+         ~"X1_SHAPE~".~"X_4~",   
+         ~"X1_SHAPE~".~"X_5~",   
+         ~"X1_SHAPE~".~"X_6~",   
+         ~"X1_SHAPE~".~"X_DIE~",   
+         ~"ORDER_ITEM~".~"PART_NUM_ID~"  
+    FROM ~"X1_SHAPE~",   
+         ~"ORDER_ITEM~"  
+   WHERE ( ~"X1_SHAPE~".~"ORDER_ITEM_NUM~" = ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~" ) and  
+         ( ~"X1_SHAPE~".~"ORDER_ABC_NUM~" = ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" ) and  
+         ( ( ~"X1_SHAPE~".~"ORDER_ITEM_NUM~" = :ai_item_num ) AND  
+         ( ~"X1_SHAPE~".~"ORDER_ABC_NUM~" = :al_order_num ) )    
+" update="X1_SHAPE" updatewhere=1 updatekeyinplace=yes arguments=(("ai_item_num", number),("al_order_num", number)) )
+text(band=detail alignment="0" text="UnIdentified (Other) Shape" border="0" color="0" x="37" y="22" height="77" width="859" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="Die:" border="0" color="0" x="11" y="762" height="51" width="91" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=9 alignment="0" tabsequence=10 border="5" color="0" x="106" y="762" height="51" width="1013" format="[general]" html.valueishtml="0"  name=x_die visible="1" dddw.name=d_die_list_per_x1 dddw.displaycolumn=show_t dddw.datacolumn=die_die_id dddw.percentwidth=140 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=yes dddw.case=any dddw.imemode=0 dddw.vscrollbar=yes  font.face="Arial" font.height="-7" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+column(band=detail id=8 alignment="1" tabsequence=70 border="5" color="0" x="574" y="662" height="51" width="300" format="[general]" html.valueishtml="0" protect="0~tif( isNull( order_item_part_num_id ), 0, 1 )"  name=x_6 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="1090519039~tif( isNull( order_item_part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+text(band=detail alignment="1" text="Minus:" border="0" color="0" x="293" y="662" height="51" width="238" html.valueishtml="0"  name=x_6_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=7 alignment="1" tabsequence=60 border="5" color="0" x="574" y="570" height="51" width="300" format="[general]" html.valueishtml="0" protect="0~tif( isNull( order_item_part_num_id ), 0, 1 )"  name=x_5 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="1090519039~tif( isNull( order_item_part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+text(band=detail alignment="1" text="Plus:" border="0" color="0" x="293" y="570" height="51" width="238" html.valueishtml="0"  name=x_5_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="1" tabsequence=50 border="5" color="0" x="574" y="477" height="51" width="300" format="[general]" html.valueishtml="0" protect="0~tif( isNull( order_item_part_num_id ), 0, 1 )"  name=x_2 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="1090519039~tif( isNull( order_item_part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+text(band=detail alignment="1" text="Length:" border="0" color="0" x="307" y="477" height="51" width="219" html.valueishtml="0"  name=x_2_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="1" tabsequence=40 border="5" color="0" x="574" y="387" height="51" width="300" format="[general]" html.valueishtml="0" protect="0~tif( isNull( order_item_part_num_id ), 0, 1 )"  name=x_4 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="1090519039~tif( isNull( order_item_part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+text(band=detail alignment="1" text="Minus:" border="0" color="0" x="289" y="387" height="51" width="238" html.valueishtml="0"  name=x_4_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=5 alignment="1" tabsequence=30 border="5" color="0" x="574" y="294" height="51" width="300" format="[general]" html.valueishtml="0" protect="0~tif( isNull( order_item_part_num_id ), 0, 1 )"  name=x_3 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="1090519039~tif( isNull( order_item_part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+text(band=detail alignment="1" text="Plus:" border="0" color="0" x="289" y="294" height="51" width="238" html.valueishtml="0"  name=x_3_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=20 border="5" color="0" x="574" y="202" height="51" width="300" format="[general]" html.valueishtml="0" protect="0~tif( isNull( order_item_part_num_id ), 0, 1 )"  name=x_1 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="0" background.color="1090519039~tif( isNull( order_item_part_num_id ), rgb(255,255,255), rgb(175,175,175) )" )
+text(band=detail alignment="1" text="Width:" border="0" color="0" x="351" y="202" height="51" width="179" html.valueishtml="0"  name=x_1_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

@@ -175,13 +175,14 @@ public sealed class CustomerOrder
     public string? ScrapHandingType { get; set; }
 }
 
-/// <summary>An order line item (table <c>order_item</c>). PK <c>order_item_num</c> is inferred from <c>ab_job.order_item_num</c> — confirm against the real schema.</summary>
+/// <summary>An order line item (table <c>order_item</c>). The composite PK
+/// <c>(order_abc_num, order_item_num)</c> is confirmed against the real legacy
+/// DataWindows (both carry <c>key=yes</c> in <c>d_order_item_detail</c>).</summary>
 public sealed class OrderItem
 {
     public long OrderItemNum { get; set; }
-    /// <summary>Owning order. INFERRED FK (order entry requires an order↔item link;
-    /// ab_job carries both order_abc_num and order_item_num). Confirm against the
-    /// real schema in Phase 1.</summary>
+    /// <summary>Owning order — part of the composite PK (confirmed real
+    /// <c>order_item.order_abc_num</c> in the legacy back-check).</summary>
     public long? OrderAbcNum { get; set; }
     public string? EnduserPartNum { get; set; }
     public string? Alloy2 { get; set; }
@@ -203,6 +204,12 @@ public sealed class OrderItem
 /// <summary>A mechanical/QA test result (table <c>pst_test_result</c>).</summary>
 public sealed class TestResult
 {
+    // The real pst_test_result PK is composite (coil_abc_num, position, created_date,
+    // source_id) — coil_abc_num ties a posted result to its coil; source_id identifies
+    // the capture source. Both are authoritative (docs/data-model/oracle_ddl.sql) and were
+    // restored to the read model during the legacy back-check.
+    public long? CoilAbcNum { get; set; }
+    public long? SourceId { get; set; }
     public DateTime? CreatedDate { get; set; }
     public int? TestType { get; set; }
     public string? Position { get; set; }
@@ -221,6 +228,9 @@ public sealed class TestResult
 /// <c>elongation</c>/<c>n</c>/<c>r</c> here vs the <c>*_val</c> columns there.</summary>
 public sealed class TempTestResult
 {
+    // coil_org_num ties an in-progress result back to its coil by org number (the legacy
+    // write path populates it); restored during the legacy back-check.
+    public string? CoilOrgNum { get; set; }
     public DateTime? CreatedDate { get; set; }
     public int? TestType { get; set; }
     public string? Position { get; set; }

@@ -1,0 +1,21 @@
+$PBExportHeader$d_pn_customer_short_display.srd
+$PBExportComments$Display customer Short name in part number window
+release 9;
+datawindow(units=0 timer_interval=0 color=15793151 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=58 color="536870912" )
+summary(height=3 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=67 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=customer_id dbname="customer.customer_id" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=customer_short_name dbname="customer.customer_short_name" )
+ retrieve="PBSELECT( VERSION(400) DISTINCT ()TABLE(NAME=~"customer~" )  TABLE(NAME=~"part_num~" ) COLUMN(NAME=~"customer.customer_id~") COLUMN(NAME=~"customer.customer_short_name~")WHERE(    EXP1 =~"~~~"CUSTOMER~~~".~~~"CUSTOMER_TYPE~~~"~"   OP =~"=~"    EXP2 =~"1~"    LOGIC =~"and~" ) WHERE(    EXP1 =~"~~~"CUSTOMER~~~".~~~"CUSTOMER_ID~~~"~"   OP =~"in~"    EXP2 =~"~~~"PART_NUM~~~".~~~"CUSTOMER_ID~~~"~" ) ) ORDER(NAME=~"customer.customer_id~" ASC=yes ) "  sort="customer_short_name A " )
+text(band=header alignment="2" text=" Id" border="6" color="0" x="7" y="6" height="51" width="91" html.valueishtml="0"  name=customer_id_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+text(band=header alignment="2" text="Customer  Name" border="6" color="0" x="106" y="6" height="51" width="435" html.valueishtml="0"  name=customer_short_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="79741120" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="6" color="0~tIF (IsSelected(), RGB(255,0,0), RGB(0, 0,0))" x="7" y="3" height="61" width="91" format="[general]" html.valueishtml="0"  name=customer_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.autohscroll=yes edit.imemode=0 edit.displayonly=yes  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="6" color="0~tIF (IsSelected(), RGB(255,0,0), RGB(0, 0, 0))" x="106" y="3" height="61" width="435" format="[general]" html.valueishtml="0"  name=customer_short_name visible="1" edit.limit=18 edit.case=any edit.autoselect=no edit.autohscroll=yes edit.imemode=0 edit.displayonly=yes  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

@@ -1,0 +1,65 @@
+$PBExportHeader$d_trapezoid_data_oe.srd
+$PBExportComments$Trapezoid's specification w/o picture
+release 9;
+datawindow(units=0 timer_interval=0 color=65280 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 107 print.margin.right = 107 print.margin.top = 97 print.margin.bottom = 97 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=3 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=586 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_item_num dbname="trapezoid.order_item_num" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=order_abc_num dbname="trapezoid.order_abc_num" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=tr_long_length dbname="trapezoid.tr_long_length" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=tr_long_plus dbname="trapezoid.tr_long_plus" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=tr_long_minus dbname="trapezoid.tr_long_minus" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=tr_short_length dbname="trapezoid.tr_short_length" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=tr_short_plus dbname="trapezoid.tr_short_plus" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=tr_short_minus dbname="trapezoid.tr_short_minus" )
+ column=(type=decimal(5) update=yes updatewhereclause=yes name=tr_width dbname="trapezoid.tr_width" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=tr_width_plus dbname="trapezoid.tr_width_plus" )
+ column=(type=decimal(6) update=yes updatewhereclause=yes name=tr_width_minus dbname="trapezoid.tr_width_minus" )
+ column=(type=char(18) update=yes updatewhereclause=yes name=tr_die1 dbname="trapezoid.tr_die1" )
+ column=(type=decimal(0) updatewhereclause=yes name=order_item_part_num_id dbname="order_item.part_num_id" )
+ retrieve="  SELECT ~"TRAPEZOID~".~"ORDER_ITEM_NUM~",   
+         ~"TRAPEZOID~".~"ORDER_ABC_NUM~",   
+         ~"TRAPEZOID~".~"TR_LONG_LENGTH~",   
+         ~"TRAPEZOID~".~"TR_LONG_PLUS~",   
+         ~"TRAPEZOID~".~"TR_LONG_MINUS~",   
+         ~"TRAPEZOID~".~"TR_SHORT_LENGTH~",   
+         ~"TRAPEZOID~".~"TR_SHORT_PLUS~",   
+         ~"TRAPEZOID~".~"TR_SHORT_MINUS~",   
+         ~"TRAPEZOID~".~"TR_WIDTH~",   
+         ~"TRAPEZOID~".~"TR_WIDTH_PLUS~",   
+         ~"TRAPEZOID~".~"TR_WIDTH_MINUS~",   
+         ~"TRAPEZOID~".~"TR_DIE1~",   
+         ~"ORDER_ITEM~".~"PART_NUM_ID~"  
+    FROM ~"TRAPEZOID~",   
+         ~"ORDER_ITEM~"  
+   WHERE ( ~"TRAPEZOID~".~"ORDER_ITEM_NUM~" = ~"ORDER_ITEM~".~"ORDER_ITEM_NUM~" ) and  
+         ( ~"TRAPEZOID~".~"ORDER_ABC_NUM~" = ~"ORDER_ITEM~".~"ORDER_ABC_NUM~" ) and  
+  			( ~"TRAPEZOID~".~"ORDER_ABC_NUM~" = :al_order)    
+" update="TRAPEZOID" updatewhere=1 updatekeyinplace=yes arguments=(("al_order", number)) )
+column(band=detail id=3 alignment="1" tabsequence=32766 border="5" color="0" x="1456" y="3" height="51" width="300" format="[general]" html.valueishtml="0"  name=tr_long_length visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+column(band=detail id=6 alignment="1" tabsequence=32766 border="5" color="0" x="1456" y="195" height="51" width="300" format="[general]" html.valueishtml="0"  name=tr_short_length visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+column(band=detail id=9 alignment="1" tabsequence=32766 border="5" color="0" x="1456" y="387" height="51" width="300" format="[general]" html.valueishtml="0"  name=tr_width visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+text(band=detail alignment="1" text="Long Length:" border="0" color="0" x="1115" y="3" height="51" width="322" html.valueishtml="0"  name=tr_long_length_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text="Short Length:" border="0" color="0" x="1126" y="195" height="51" width="311" html.valueishtml="0"  name=tr_short_length_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=detail alignment="1" text=" Width:" border="0" color="0" x="1276" y="387" height="51" width="161" html.valueishtml="0"  name=tr_width_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=11 alignment="1" tabsequence=32766 border="5" color="0" x="1456" y="515" height="54" width="300" format="[general]" html.valueishtml="0"  name=tr_width_minus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+text(band=detail alignment="1" text="Minus:" border="0" color="0" x="1251" y="518" height="51" width="187" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=10 alignment="1" tabsequence=32766 border="5" color="0" x="1456" y="451" height="51" width="300" format="[general]" html.valueishtml="0"  name=tr_width_plus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+text(band=detail alignment="1" text="Plus:" border="0" color="0" x="1298" y="451" height="51" width="139" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=8 alignment="1" tabsequence=32766 border="5" color="0" x="1456" y="323" height="51" width="300" format="[general]" html.valueishtml="0"  name=tr_short_minus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+text(band=detail alignment="1" text="Minus:" border="0" color="0" x="1251" y="323" height="51" width="187" html.valueishtml="0"  name=t_3 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=7 alignment="1" tabsequence=32766 border="5" color="0" x="1456" y="259" height="51" width="300" format="[general]" html.valueishtml="0"  name=tr_short_plus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+text(band=detail alignment="1" text="Plus:" border="0" color="0" x="1298" y="259" height="51" width="139" html.valueishtml="0"  name=t_4 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=5 alignment="1" tabsequence=32766 border="5" color="0" x="1456" y="131" height="51" width="300" format="[general]" html.valueishtml="0"  name=tr_long_minus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+text(band=detail alignment="1" text="Minus:" border="0" color="0" x="1251" y="131" height="51" width="187" html.valueishtml="0"  name=tr_long_minus_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="5" color="0" x="1456" y="67" height="51" width="300" format="[general]" html.valueishtml="0"  name=tr_long_plus visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+text(band=detail alignment="1" text="Plus:" border="0" color="0" x="1298" y="67" height="51" width="139" html.valueishtml="0"  name=tr_long_plus_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=12 alignment="0" tabsequence=32766 border="0" color="0" x="1755" y="0" height="51" width="399" format="[general]" html.valueishtml="0"  name=tr_die1 visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+column(band=detail id=13 alignment="0" tabsequence=0 border="0" color="0" x="154" y="362" height="51" width="947" format="[General]" html.valueishtml="0"  name=order_item_part_num_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1090519039" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

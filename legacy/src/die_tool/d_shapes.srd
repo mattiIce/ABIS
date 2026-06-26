@@ -1,0 +1,37 @@
+$PBExportHeader$d_shapes.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=67108864 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=76 color="536870912" )
+table(column=(type=number updatewhereclause=yes name=shape_num dbname="compute_0001" )
+ column=(type=char(15) updatewhereclause=yes name=shape dbname="compute_0002" )
+ retrieve="select 1, 'Chevron' from dual
+union
+select 2, 'Circle' from dual
+union
+select 3, 'Fender' from dual
+union
+select 4, 'Left_trapezoid' from dual
+union
+select 5, 'Liftgate' from dual
+union
+select 6, 'Parallelogram' from dual
+union
+select 7, 'Rectangle' from dual
+union
+select 8, 'Reinforcement' from dual
+union
+select 9, 'Right_trapezoid' from dual
+union
+select 10, 'Trapezoid' from dual
+union
+select 11, 'X1_shape' from dual" )
+text(band=header alignment="0" text="Shapes:" border="0" color="0" x="0" y="12" height="48" width="187" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="5" color="0" x="5" y="12" height="56" width="622" format="[general]" html.valueishtml="0"  name=shape visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

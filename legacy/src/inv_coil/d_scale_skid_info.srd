@@ -1,0 +1,24 @@
+$PBExportHeader$d_scale_skid_info.srd
+$PBExportComments$list skid info for scale application
+release 9;
+datawindow(units=0 timer_interval=0 color=1073741824 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=109 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=production_sheet_item_prod_item_num dbname="production_sheet_item.prod_item_num" )
+ column=(type=decimal(0) updatewhereclause=yes name=production_sheet_item_prod_item_net_wt dbname="production_sheet_item.prod_item_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_skid_sheet_net_wt dbname="sheet_skid.sheet_net_wt" )
+ column=(type=decimal(0) updatewhereclause=yes name=sheet_skid_skid_pieces dbname="sheet_skid.skid_pieces" )
+ column=(type=decimal(0) updatewhereclause=yes name=production_sheet_item_prod_item_pieces dbname="production_sheet_item.prod_item_pieces" )
+ retrieve="PBSELECT( VERSION(400) TABLE(NAME=~"production_sheet_item~" )  TABLE(NAME=~"sheet_skid_detail~" )  TABLE(NAME=~"sheet_skid~" ) COLUMN(NAME=~"production_sheet_item.prod_item_num~") COLUMN(NAME=~"production_sheet_item.prod_item_net_wt~") COLUMN(NAME=~"sheet_skid.sheet_net_wt~") COLUMN(NAME=~"sheet_skid.skid_pieces~") COLUMN(NAME=~"production_sheet_item.prod_item_pieces~")    JOIN (LEFT=~"sheet_skid_detail.prod_item_num~"    OP =~"=~"RIGHT=~"production_sheet_item.prod_item_num~" )    JOIN (LEFT=~"sheet_skid.sheet_skid_num~"    OP =~"=~"RIGHT=~"sheet_skid_detail.sheet_skid_num~" )WHERE(    EXP1 =~"~~~"SHEET_SKID~~~".~~~"SHEET_SKID_NUM~~~"~"   OP =~"=~"    EXP2 =~":al_skid~" ) ) ARG(NAME = ~"al_skid~" TYPE = number) " arguments=(("al_skid", number)) )
+column(band=detail id=1 alignment="1" tabsequence=32766 border="0" color="33554432" x="26" y="6" height="61" width="794" format="[general]" html.valueishtml="0"  name=production_sheet_item_prod_item_num visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="1" tabsequence=32766 border="0" color="33554432" x="848" y="16" height="61" width="1042" format="[general]" html.valueishtml="0"  name=production_sheet_item_prod_item_net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="1" tabsequence=32766 border="0" color="33554432" x="1946" y="26" height="61" width="1046" format="[general]" html.valueishtml="0"  name=sheet_skid_sheet_net_wt visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=4 alignment="1" tabsequence=0 border="0" color="33554432" x="3050" y="26" height="51" width="947" html.valueishtml="0"  name=sheet_skid_skid_pieces visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=5 alignment="1" tabsequence=0 border="0" color="33554432" x="4027" y="29" height="51" width="947" html.valueishtml="0"  name=production_sheet_item_prod_item_pieces visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

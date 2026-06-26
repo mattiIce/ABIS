@@ -1,0 +1,8 @@
+$PBExportHeader$s_part_num_info.srs
+$PBExportComments$part number info
+global type s_part_num_info from structure
+	long		part_num_id
+	string		part_type
+	long		customer_id
+end type
+

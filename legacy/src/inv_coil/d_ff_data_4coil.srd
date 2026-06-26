@@ -1,0 +1,130 @@
+$PBExportHeader$d_ff_data_4coil.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=67108864 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+header(height=1213 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=67 color="536870912" )
+detail(height=70 color="536870912" )
+table(column=(type=decimal(0) updatewhereclause=yes name=coil_abc_num dbname="coil_quality.coil_abc_num" )
+ column=(type=char(32) updatewhereclause=yes name=coil_org_num dbname="coil_quality.coil_org_num" )
+ column=(type=char(20) updatewhereclause=yes name=part_num dbname="coil_quality.part_num" )
+ column=(type=char(10) updatewhereclause=yes name=material_grade dbname="coil_quality.material_grade" )
+ column=(type=char(1) updatewhereclause=yes name=pre_treatment_flag dbname="coil_quality.pre_treatment_flag" values="No Coating	-/Pretreat	T/" )
+ column=(type=char(5) updatewhereclause=yes name=cash_date_julian5 dbname="coil_quality.cash_date_julian5" )
+ column=(type=datetime updatewhereclause=yes name=cash_date dbname="coil_quality.cash_date" )
+ column=(type=datetime updatewhereclause=yes name=cm_date dbname="coil_quality.cm_date" )
+ column=(type=char(5) updatewhereclause=yes name=mill_id dbname="coil_quality.mill_id" )
+ column=(type=number updatewhereclause=yes name=gross_coil_length dbname="gross_coil_length" )
+ column=(type=number updatewhereclause=yes name=net_coil_length dbname="net_coil_length" )
+ column=(type=decimal(3) updatewhereclause=yes name=coil_width dbname="coil_quality.coil_width" )
+ column=(type=char(6) updatewhereclause=yes name=coil_width_uom dbname="coil_quality.coil_width_uom" )
+ column=(type=decimal(0) updatewhereclause=yes name=coil_weight dbname="coil_quality.coil_weight" )
+ column=(type=char(6) updatewhereclause=yes name=coil_weight_uom dbname="coil_quality.coil_weight_uom" )
+ column=(type=decimal(4) updatewhereclause=yes name=material_thikness dbname="coil_quality.material_thikness" )
+ column=(type=char(6) updatewhereclause=yes name=material_thikness_uom dbname="coil_quality.material_thikness_uom" )
+ column=(type=decimal(0) updatewhereclause=yes name=cash_line_id dbname="coil_quality.cash_line_id" )
+ column=(type=char(1) updatewhereclause=yes name=payoff_direction dbname="coil_quality.payoff_direction" values="Overpay	8/Underpay	9/" )
+ column=(type=char(1) updatewhereclause=yes name=sampling_required dbname="coil_quality.sampling_required" )
+ column=(type=char(2) updatewhereclause=yes name=revision_level dbname="coil_quality.revision_level" )
+ column=(type=char(12) updatewhereclause=yes name=pcc_number dbname="coil_quality.pcc_number" )
+ column=(type=number updatewhereclause=yes name=starting_position dbname="starting_position" )
+ column=(type=number updatewhereclause=yes name=ending_position dbname="ending_position" )
+ column=(type=char(1) updatewhereclause=yes name=flaw_code dbname="flaw_code" )
+ column=(type=char(100) updatewhereclause=yes name=flaw_codes_reason dbname="flaw_codes.reason" )
+ column=(type=char(1) updatewhereclause=yes name=coil_quality_flaw_mapping_handling_code dbname="coil_quality_flaw_mapping.handling_code" )
+ column=(type=char(100) updatewhereclause=yes name=handling_codes_handling_code_name dbname="handling_codes.handling_code_name" )
+ retrieve="select coil_quality.coil_abc_num coil_abc_num,
+       coil_quality.coil_org_num coil_org_num,
+       coil_quality.part_num part_num,
+       coil_quality.material_grade material_grade,
+       coil_quality.pre_treatment_flag pre_treatment_flag,
+       coil_quality.cash_date_julian5 cash_date_julian5,
+       coil_quality.cash_date cash_date,
+       coil_quality.cm_date cm_date,
+       coil_quality.mill_id mill_id,
+       coil_quality.gross_coil_length / 12 gross_coil_length,
+       coil_quality.net_coil_length / 12 net_coil_length,
+       coil_quality.coil_width coil_width,
+       coil_quality.coil_width_uom coil_width_uom,
+       coil_quality.coil_weight coil_weight,
+       coil_quality.coil_weight_uom coil_weight_uom,
+       coil_quality.material_thikness material_thikness,
+       coil_quality.material_thikness_uom material_thikness_uom,
+       coil_quality.cash_line_id cash_line_id,
+       coil_quality.payoff_direction payoff_direction,
+       coil_quality.sampling_required sampling_required,
+		 coil_quality.revision_level revision_level,
+       coil_quality.pcc_number pcc_number,
+       (coil_quality_flaw_mapping.starting_position / 12) starting_position, /* Feet */
+       (coil_quality_flaw_mapping.ending_position / 12) ending_position, /* Feet */
+       coil_quality_flaw_mapping.flaw_code,
+		 flaw_codes.reason,
+		 coil_quality_flaw_mapping.handling_code,
+		 handling_codes.handling_code_name
+from   dbo.coil_quality coil_quality
+       left outer join dbo.coil_quality_flaw_mapping coil_quality_flaw_mapping on coil_quality_flaw_mapping.coil_abc_num = coil_quality.coil_abc_num
+		 left outer join dbo.flaw_codes flaw_codes on flaw_codes.flaw_code = coil_quality_flaw_mapping.flaw_code
+		 left outer join dbo.handling_codes handling_codes on handling_codes.handling_code = coil_quality_flaw_mapping.handling_code
+where  coil_quality.coil_abc_num = :al_coil_abc_num
+order by
+       coil_quality.coil_abc_num,
+       coil_quality_flaw_mapping.starting_position,
+       coil_quality_flaw_mapping.ending_position" arguments=(("al_coil_abc_num", number)) )
+compute(band=header alignment="0" expression="~"Revision Level: ~" + revision_level "border="0" color="134217857" x="0" y="0" height="51" width="461" format="[GENERAL]" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="F   L   A   W        D   A   T   A" border="0" color="0" x="1057" y="960" height="51" width="903" html.valueishtml="0"  name=t_3 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+text(band=header alignment="1" text="End Pos
+Feet
+From OD" border="6" color="33554432" x="241" y="1050" height="154" width="216" html.valueishtml="0"  name=ending_position_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="1" text="Start Pos
+Feet
+From OD" border="6" color="33554432" x="11" y="1050" height="154" width="216" html.valueishtml="0"  name=starting_position_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Flaw Reason" border="6" color="33554432" x="472" y="1050" height="154" width="881" html.valueishtml="0"  name=flaw_codes_reason_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="Feed Forward Data" border="0" color="33554432" x="856" y="83" height="106" width="947" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-16" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="C   O   I   L      D   A   T   A" border="0" color="0" x="878" y="208" height="58" width="903" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+compute(band=header alignment="2" expression="~"Run Date/Time: ~" + String(Today(), ~"mm/dd/yyyy hh:mm~")"border="0" color="33554432" x="848" y="0" height="51" width="958" format="[GENERAL]" html.valueishtml="0"  name=compute_2 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Flaw Handling" border="6" color="33554432" x="1371" y="1050" height="154" width="1536" html.valueishtml="0"  name=t_4 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Sampling Required" border="0" color="33554432" x="1660" y="861" height="51" width="464" html.valueishtml="0"  name=sampling_required_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Payoff Direction" border="0" color="33554432" x="1660" y="790" height="51" width="384" html.valueishtml="0"  name=payoff_direction_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Material Thickness (Inches)" border="0" color="33554432" x="1660" y="650" height="51" width="625" html.valueishtml="0"  name=material_thikness_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Coil Weight (Lbs)" border="0" color="33554432" x="1660" y="576" height="51" width="410" html.valueishtml="0"  name=coil_weight_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Coil Width (Inches)" border="0" color="33554432" x="1660" y="502" height="51" width="450" html.valueishtml="0"  name=coil_width_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Net Coil Length (Feet)" border="0" color="33554432" x="1660" y="429" height="51" width="541" html.valueishtml="0"  name=net_coil_length_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=11 alignment="0" tabsequence=32766 border="0" color="33554432" x="2315" y="429" height="51" width="274" format="###,###,##0" html.valueishtml="0"  name=net_coil_length visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=12 alignment="0" tabsequence=32766 border="0" color="33554432" x="2315" y="502" height="51" width="252" format="###,##0.00" html.valueishtml="0"  name=coil_width visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=14 alignment="0" tabsequence=32766 border="0" color="33554432" x="2315" y="576" height="51" width="271" format="###,###,##0" html.valueishtml="0"  name=coil_weight visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=16 alignment="0" tabsequence=32766 border="0" color="33554432" x="2315" y="650" height="51" width="212" format="###,##0.00" html.valueishtml="0"  name=material_thikness visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=19 alignment="0" tabsequence=32766 border="0" color="33554432" x="2315" y="790" height="51" width="256" format="[general]" html.valueishtml="0"  name=payoff_direction visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=20 alignment="0" tabsequence=32766 border="0" color="33554432" x="2315" y="861" height="51" width="406" format="[general]" html.valueishtml="0"  name=sampling_required visible="1" dddw.name=d_dddw_sample_requirement_codes dddw.displaycolumn=sample_requirement_name dddw.datacolumn=sample_requirement_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Cash Line" border="0" color="33554432" x="1660" y="720" height="51" width="304" html.valueishtml="0"  name=cash_line_id_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=18 alignment="0" tabsequence=32766 border="0" color="33554432" x="2315" y="720" height="51" width="413" format="[general]" html.valueishtml="0"  name=cash_line_id visible="1" dddw.name=d_dddw_line_codes dddw.displaycolumn=line_name dddw.datacolumn=line_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Gross Coil Length (Feet)" border="0" color="33554432" x="1660" y="355" height="51" width="592" html.valueishtml="0"  name=gross_coil_length_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=10 alignment="0" tabsequence=32766 border="0" color="33554432" x="2315" y="355" height="51" width="274" format="###,###,##0" html.valueishtml="0"  name=gross_coil_length visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Mill" border="0" color="33554432" x="245" y="861" height="51" width="179" html.valueishtml="0"  name=mill_id_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="CM Date" border="0" color="33554432" x="245" y="790" height="51" width="263" html.valueishtml="0"  name=cm_date_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Material Grade" border="0" color="33554432" x="245" y="576" height="51" width="410" html.valueishtml="0"  name=material_grade_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Part Number" border="0" color="33554432" x="245" y="502" height="51" width="325" html.valueishtml="0"  name=part_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Coil Org Num" border="0" color="33554432" x="245" y="429" height="51" width="325" html.valueishtml="0"  name=coil_org_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Pre Treatment Flag" border="0" color="33554432" x="245" y="650" height="51" width="450" html.valueishtml="0"  name=pre_treatment_flag_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Cash Date" border="0" color="33554432" x="245" y="720" height="51" width="263" html.valueishtml="0"  name=t_7 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Coil Abc Num" border="0" color="33554432" x="245" y="355" height="51" width="325" html.valueishtml="0"  name=coil_abc_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="Master Coil #" border="0" color="33554432" x="245" y="285" height="51" width="395" html.valueishtml="0"  name=t_5 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=9 alignment="0" tabsequence=32766 border="0" color="33554432" x="739" y="861" height="51" width="432" format="[general]" html.valueishtml="0"  name=mill_id visible="1" dddw.name=d_dddw_mill_id_codes dddw.displaycolumn=mill_name dddw.datacolumn=mill_id dddw.percentwidth=0 dddw.lines=0 dddw.limit=0 dddw.allowedit=no dddw.useasborder=no dddw.case=any dddw.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=8 alignment="0" tabsequence=32766 border="0" color="33554432" x="739" y="790" height="51" width="263" format="mm/dd/yyyy" html.valueishtml="0"  name=cm_date visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=7 alignment="0" tabsequence=32766 border="0" color="33554432" x="739" y="720" height="51" width="263" format="mm/dd/yyyy" html.valueishtml="0"  name=cash_date visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=5 alignment="0" tabsequence=32766 border="0" color="33554432" x="739" y="650" height="51" width="435" format="[general]" html.valueishtml="0"  name=pre_treatment_flag visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="739" y="576" height="51" width="230" format="[general]" html.valueishtml="0"  name=material_grade visible="1" edit.limit=10 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="739" y="502" height="51" width="461" format="[general]" html.valueishtml="0"  name=part_num visible="1" edit.limit=20 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="739" y="429" height="51" width="325" format="[general]" html.valueishtml="0"  name=coil_org_num visible="1" edit.limit=32 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="739" y="355" height="51" width="325" format="[general]" html.valueishtml="0"  name=coil_abc_num visible="1" edit.limit=0 edit.case=any edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=header id=22 alignment="0" tabsequence=32766 border="0" color="33554432" x="739" y="285" height="51" width="424" format="[general]" html.valueishtml="0"  name=pcc_number visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=24 alignment="1" tabsequence=32766 border="0" color="33554432" x="241" y="9" height="51" width="216" format="###,###,##0" html.valueishtml="0"  name=ending_position visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=23 alignment="1" tabsequence=32766 border="0" color="33554432" x="11" y="9" height="51" width="216" format="###,###,##0" html.valueishtml="0"  name=starting_position visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=26 alignment="0" tabsequence=32766 border="0" color="33554432" x="472" y="9" height="51" width="881" format="[general]" html.valueishtml="0"  name=flaw_codes_reason visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=28 alignment="0" tabsequence=32766 border="0" color="33554432" x="1371" y="0" height="51" width="1536" format="[general]" html.valueishtml="0"  name=handling_codes_handling_code_name visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=footer alignment="2" expression="~"Page ~" + String( page() ) + ~" of ~" + String( pageCount() )"border="0" color="33554432" x="574" y="7" height="51" width="845" format="[GENERAL]" html.valueishtml="0"  name=compute_3 visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 

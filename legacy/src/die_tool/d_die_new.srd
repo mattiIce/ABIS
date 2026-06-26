@@ -1,0 +1,67 @@
+$PBExportHeader$d_die_new.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=67108864 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no )
+summary(height=4 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=732 color="536870912" )
+table(column=(type=decimal(0) update=yes updatewhereclause=yes key=yes name=die_id dbname="die.die_id" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=die_name dbname="die.die_name" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=owner dbname="die.owner" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=status dbname="die.status" values="Obsolete	0/Active	1/Gone	2/" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=tool_num dbname="die.tool_num" )
+ column=(type=char(64) update=yes updatewhereclause=yes name=part_name dbname="die.part_name" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=gross_weight dbname="die.gross_weight" )
+ column=(type=char(32) update=yes updatewhereclause=yes name=location dbname="die.location" values="BLDG #1	BLDG #1/BLDG #2	BLDG #2/BLDG #3	BLDG #3/" )
+ column=(type=char(64) update=yes updatewhereclause=yes name=description dbname="die.description" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=num_of_parts_per_hit dbname="die.num_of_parts_per_hit" values="1	1/2	2/3	3/" )
+ column=(type=char(1) update=yes updatewhereclause=yes name=engineered_scrap_y_n dbname="engineered_scrap_y_n" values="Y	Y/N	N/" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=angle_change_minutes dbname="angle_change_minutes" )
+ column=(type=decimal(0) update=yes updatewhereclause=yes name=average_die_change_minutes dbname="average_die_change_minutes" )
+ retrieve="  SELECT ~"DIE~".~"DIE_ID~",   
+         ~"DIE~".~"DIE_NAME~",   
+         ~"DIE~".~"OWNER~",   
+         ~"DIE~".~"STATUS~",   
+         ~"DIE~".~"TOOL_NUM~",   
+         ~"DIE~".~"PART_NAME~",   
+         ~"DIE~".~"GROSS_WEIGHT~",   
+         ~"DIE~".~"LOCATION~",   
+         ~"DIE~".~"DESCRIPTION~",
+			die.num_of_parts_per_hit num_of_parts_per_hit, /* Alex Gerlants. 12/19/2017. Die_2_New_Columns */
+			die.engineered_scrap_y_n engineered_scrap_y_n, /* Alex Gerlants. 12/19/2017. Die_2_New_Columns */
+			die.angle_change_minutes, /* 1945_Add_Angle Change Minutes_2Die_Table */
+			die.average_die_change_minutes /* Alex_Gerlants_07/10/2023_9999_Work_Center */
+    FROM die
+   WHERE ~"DIE~".~"DIE_ID~" = :al_id    
+" update="die" updatewhere=0 updatekeyinplace=no arguments=(("al_id", number)) )
+text(band=detail alignment="1" text="Die Name:" border="0" color="33554432" x="1143" y="44" height="52" width="311" html.valueishtml="0"  name=die_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Status:" border="0" color="33554432" x="1472" y="124" height="56" width="315" html.valueishtml="0"  name=status_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Gross Weight:" border="0" color="33554432" x="1440" y="216" height="56" width="361" html.valueishtml="0"  name=gross_weight_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=1 alignment="2" tabsequence=32766 border="5" color="33554432" x="507" y="44" height="52" width="274" format="[general]" html.valueishtml="0"  name=die_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=3 alignment="0" tabsequence=20 border="5" color="33554432" x="507" y="128" height="56" width="640" format="[general]" html.valueishtml="0"  name=owner pointer="IBeam!" visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=5 alignment="0" tabsequence=40 border="5" color="33554432" x="503" y="216" height="56" width="640" format="[general]" html.valueishtml="0"  name=tool_num pointer="IBeam!" visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=8 alignment="0" tabsequence=70 border="5" color="33554432" x="503" y="400" height="60" width="640" format="[general]" html.valueishtml="0"  name=location visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.useasborder=yes ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=detail alignment="1" text="Die Id:" border="0" color="33554432" x="174" y="44" height="52" width="315" html.valueishtml="0"  name=die_id_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Owner:" border="0" color="33554432" x="174" y="124" height="56" width="311" html.valueishtml="0"  name=owner_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Tool Num:" border="0" color="33554432" x="165" y="216" height="56" width="320" html.valueishtml="0"  name=tool_num_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Part Name:" border="0" color="33554432" x="165" y="308" height="56" width="320" html.valueishtml="0"  name=part_name_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Location:" border="0" color="33554432" x="165" y="400" height="60" width="320" html.valueishtml="0"  name=location_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="Description:" border="0" color="33554432" x="165" y="492" height="52" width="320" html.valueishtml="0"  name=description_t visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="1" text="# Of Parts Per Hit:" border="0" color="33554432" x="37" y="668" height="48" width="448" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=detail alignment="0" text="Engineered Scrap?" border="0" color="33554432" x="27" y="576" height="52" width="457" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=11 alignment="0" tabsequence=100 border="5" color="33554432" x="498" y="576" height="52" width="146" format="[general]" html.valueishtml="0"  name=engineered_scrap_y_n pointer="Arrow!" visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.useasborder=yes ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=detail alignment="1" text="Angle Change Minutes:" border="0" color="33554432" x="1463" y="576" height="56" width="590" html.valueishtml="0"  name=t_3 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=2 alignment="0" tabsequence=10 border="5" color="33554432" x="1486" y="44" height="52" width="745" format="[general]" html.valueishtml="0"  name=die_name pointer="IBeam!" visible="1" edit.limit=32 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=4 alignment="0" tabsequence=30 border="5" color="33554432" x="1815" y="124" height="56" width="416" format="[General]" html.valueishtml="0"  name=status visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.useasborder=yes ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=7 alignment="0" tabsequence=60 border="5" color="33554432" x="1842" y="216" height="56" width="389" format="[General]" html.valueishtml="0"  name=gross_weight pointer="IBeam!" visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=6 alignment="0" tabsequence=50 border="5" color="33554432" x="507" y="308" height="56" width="1723" format="[general]" html.valueishtml="0"  name=part_name pointer="IBeam!" visible="1" edit.limit=64 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=9 alignment="0" tabsequence=80 border="5" color="33554432" x="503" y="492" height="52" width="1728" format="[general]" html.valueishtml="0"  name=description pointer="IBeam!" visible="1" edit.limit=64 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=10 alignment="0" tabsequence=90 border="5" color="33554432" x="498" y="668" height="48" width="146" format="[general]" html.valueishtml="0"  name=num_of_parts_per_hit pointer="Arrow!" visible="1" ddlb.limit=0 ddlb.allowedit=no ddlb.case=any ddlb.useasborder=yes ddlb.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=detail alignment="1" text="Average Die Change Minutes:" border="0" color="33554432" x="1312" y="668" height="56" width="741" html.valueishtml="0"  name=t_4 visible="1"  font.face="Arial" font.height="-8" font.weight="700"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=12 alignment="1" tabsequence=110 border="0" color="33554432" x="2085" y="576" height="56" width="146" format="[general]" html.valueishtml="0"  name=angle_change_minutes pointer="IBeam!" visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=13 alignment="1" tabsequence=120 border="0" color="33554432" x="2085" y="668" height="56" width="146" format="[general]" html.valueishtml="0"  name=average_die_change_minutes pointer="IBeam!" visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+ 
