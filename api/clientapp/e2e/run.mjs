@@ -22,6 +22,7 @@ import {
   CustomerContactWrite,
   PartWrite,
   CarrierWrite,
+  ScanLogWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -108,6 +109,18 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
     bol: 'E2E-BOL', customerId: 4001, createdBy: 'e2e', status: 1,
   }));
   assert.equal(updated.status, 1);
+});
+
+// The scan SPA's flow: record a scan (append-only), then read it + list by job (typed).
+test('scan flow: record a scan, get, list by job (typed)', async () => {
+  const created = await client.createScanLog(new ScanLogWrite({
+    abJobNum: 1001, scanStation: 'E2E-ST', note: 'e2e scan',
+  }));
+  assert.ok(created.scanId > 0);
+  const got = await client.getScanLog(created.scanId);
+  assert.equal(got.note, 'e2e scan');
+  const page = await client.listScanLogs(1, 50, 1001, 'scanDatetime', 'desc');
+  assert.ok(page.items.some((s) => s.scanId === created.scanId));
 });
 
 // The carriers SPA's flow: create a carrier, then load + replace it (typed).
