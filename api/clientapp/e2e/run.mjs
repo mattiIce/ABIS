@@ -24,6 +24,7 @@ import {
   CarrierWrite,
   ScanLogWrite,
   SketchWrite,
+  ShiftWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -110,6 +111,20 @@ test('receiving flow: create, get, update receiving BOL (typed)', async () => {
     bol: 'E2E-BOL', customerId: 4001, createdBy: 'e2e', status: 1,
   }));
   assert.equal(updated.status, 1);
+});
+
+// The shifts SPA's flow: create a shift, then load + replace it (typed).
+test('shifts flow: create, get, update shift (typed)', async () => {
+  const created = await client.createShift(new ShiftWrite({
+    startTime: new Date(), lineNum: 110, operatorInitial: 'E2E', dtTotal: 0.5, shiftDataStatus: 1,
+  }));
+  assert.ok(created.shiftNum > 0);
+  const got = await client.getShift(created.shiftNum);
+  assert.equal(got.lineNum, 110);
+  const updated = await client.updateShift(created.shiftNum, new ShiftWrite({
+    startTime: new Date(), lineNum: 110, operatorInitial: 'E2E', dtTotal: 1.25, shiftDataStatus: 2,
+  }));
+  assert.equal(updated.shiftDataStatus, 2);
 });
 
 // The sketches SPA's flow: create a sketch, then load + replace it (typed).
