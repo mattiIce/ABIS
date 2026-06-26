@@ -786,6 +786,38 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {DieCols} FROM die WHERE die_id = :id", new { id = dieId }, cancellationToken: ct));
     }
 
+    public async Task<Die> CreateDieAsync(DieWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "die", "die_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO die (die_id, die_name, status, tool_num, part_name, gross_weight, location, description)
+            VALUES (:id, :name, :status, :tool, :part, :weight, :loc, :desc)
+            """,
+            new { id, name = body.DieName, status = body.Status, tool = body.ToolNum, part = body.PartName,
+                  weight = body.GrossWeight, loc = body.Location, desc = body.Description },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetDieAsync(id, ct))!;
+    }
+
+    public async Task<Die?> UpdateDieAsync(long dieId, DieWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE die SET die_name = :name, status = :status, tool_num = :tool, part_name = :part,
+                   gross_weight = :weight, location = :loc, description = :desc
+            WHERE die_id = :id
+            """,
+            new { name = body.DieName, status = body.Status, tool = body.ToolNum, part = body.PartName,
+                  weight = body.GrossWeight, loc = body.Location, desc = body.Description, id = dieId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetDieAsync(dieId, ct);
+    }
+
     public Task<PagedResult<Shipment>> GetShipmentsAsync(int page, int pageSize, long? customerId, string? orderBy, CancellationToken ct) =>
         PageAsync<Shipment>(ShipmentCols, "shipment", orderBy ?? "packing_list",
             customerId is null ? null : "customer_id = :customerId",
@@ -796,6 +828,66 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         return await conn.QuerySingleOrDefaultAsync<Shipment>(new CommandDefinition(
             $"SELECT {ShipmentCols} FROM shipment WHERE packing_list = :id", new { id = packingList }, cancellationToken: ct));
+    }
+
+    public async Task<Shipment> CreateShipmentAsync(ShipmentWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        // packing_list (PK) comes from PACKING_LIST_NUM_SEQ (table override); bill_of_lading
+        // is also NOT NULL and drawn from its OWN sequence (BILL_OF_LADING_SEQ), passed
+        // explicitly so the table-keyed override isn't applied to it.
+        var packingList = await NextIdAsync(conn, tx, "shipment", "packing_list", ct);
+        var billOfLading = await NextIdAsync(conn, tx, "shipment", "bill_of_lading", ct, sequence: "bill_of_lading_seq");
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO shipment (packing_list, bill_of_lading, carrier_id, customer_id, des_sh_cust_id, vehicle_id,
+                vehicle_status, shipment_status, shipment_scheduled_date_time, shipment_notes)
+            VALUES (:id, :bol, :carrier, :cust, :desCust, :vehicle, :vStatus, :sStatus, :sched, :notes)
+            """,
+            new { id = packingList, bol = billOfLading, carrier = body.CarrierId, cust = body.CustomerId,
+                  desCust = body.DesShCustId, vehicle = body.VehicleId, vStatus = body.VehicleStatus,
+                  sStatus = body.ShipmentStatus, sched = body.ShipmentScheduledDateTime, notes = body.ShipmentNotes },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetShipmentAsync(packingList, ct))!;
+    }
+
+    public async Task<Shipment?> UpdateShipmentAsync(long packingList, ShipmentWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // packing_list and bill_of_lading are server-assigned keys — matched/kept, never replaced.
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE shipment SET carrier_id = :carrier, customer_id = :cust, des_sh_cust_id = :desCust,
+                   vehicle_id = :vehicle, vehicle_status = :vStatus, shipment_status = :sStatus,
+                   shipment_scheduled_date_time = :sched, shipment_notes = :notes
+            WHERE packing_list = :id
+            """,
+            new { carrier = body.CarrierId, cust = body.CustomerId, desCust = body.DesShCustId, vehicle = body.VehicleId,
+                  vStatus = body.VehicleStatus, sStatus = body.ShipmentStatus, sched = body.ShipmentScheduledDateTime,
+                  notes = body.ShipmentNotes, id = packingList },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetShipmentAsync(packingList, ct);
+    }
+
+    public async Task<Shipment?> PatchShipmentAsync(long packingList, ShipmentStatusPatch patch, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE shipment SET
+                shipment_status = COALESCE(:sStatus, shipment_status),
+                vehicle_status = COALESCE(:vStatus, vehicle_status),
+                date_sent = COALESCE(:sent, date_sent),
+                shipment_actualed_date_time = COALESCE(:actual, shipment_actualed_date_time),
+                shipment_notes = COALESCE(:notes, shipment_notes)
+            WHERE packing_list = :id
+            """,
+            new { sStatus = patch.ShipmentStatus, vStatus = patch.VehicleStatus, sent = patch.DateSent,
+                  actual = patch.ShipmentActualedDateTime, notes = patch.ShipmentNotes, id = packingList },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetShipmentAsync(packingList, ct);
     }
 
     public Task<PagedResult<ReceivingBol>> GetReceivingBolsAsync(int page, int pageSize, long? customerId, int? status, string? orderBy, CancellationToken ct)
@@ -815,6 +907,39 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {ReceivingBolCols} FROM receiving_bol WHERE receiving_bol_id = :id", new { id = receivingBolId }, cancellationToken: ct));
     }
 
+    public async Task<ReceivingBol> CreateReceivingBolAsync(ReceivingBolWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "receiving_bol", "receiving_bol_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO receiving_bol (receiving_bol_id, bol, customer_id, created_by, created_date, received_date, status)
+            VALUES (:id, :bol, :cust, :by, :created, :received, :status)
+            """,
+            new { id, bol = body.Bol, cust = body.CustomerId, by = body.CreatedBy,
+                  created = (DateTime?)DateTime.UtcNow, received = body.ReceivedDate, status = body.Status },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetReceivingBolAsync(id, ct))!;
+    }
+
+    public async Task<ReceivingBol?> UpdateReceivingBolAsync(long receivingBolId, ReceivingBolWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // created_date is set once on insert and not changed here.
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE receiving_bol SET bol = :bol, customer_id = :cust, created_by = :by,
+                   received_date = :received, status = :status
+            WHERE receiving_bol_id = :id
+            """,
+            new { bol = body.Bol, cust = body.CustomerId, by = body.CreatedBy, received = body.ReceivedDate,
+                  status = body.Status, id = receivingBolId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetReceivingBolAsync(receivingBolId, ct);
+    }
+
     public Task<PagedResult<ScanLog>> GetScanLogsAsync(int page, int pageSize, long? abJobNum, string? orderBy, CancellationToken ct) =>
         PageAsync<ScanLog>(ScanLogCols, "scan_log", orderBy ?? "scan_id DESC",
             abJobNum is null ? null : "ab_job_num = :abJobNum",
@@ -825,6 +950,23 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         return await conn.QuerySingleOrDefaultAsync<ScanLog>(new CommandDefinition(
             $"SELECT {ScanLogCols} FROM scan_log WHERE scan_id = :id", new { id = scanId }, cancellationToken: ct));
+    }
+
+    public async Task<ScanLog> CreateScanLogAsync(ScanLogWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        // scan_log is append-only (no update path); scan_datetime is stamped server-side.
+        var id = await NextIdAsync(conn, tx, "scan_log", "scan_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO scan_log (scan_id, scan_datetime, ab_job_num, scan_station, note)
+            VALUES (:id, :dt, :job, :station, :note)
+            """,
+            new { id, dt = (DateTime?)DateTime.UtcNow, job = body.AbJobNum, station = body.ScanStation, note = body.Note },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetScanLogAsync(id, ct))!;
     }
 
     public async Task<IReadOnlyList<ScanLog>> GetJobScansAsync(long abJobNum, CancellationToken ct)
@@ -850,6 +992,52 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         return await conn.QuerySingleOrDefaultAsync<MaintLog>(new CommandDefinition(
             $"SELECT {MaintLogCols} FROM maint_log WHERE maint_log_id = :id", new { id = maintLogId }, cancellationToken: ct));
+    }
+
+    public async Task<MaintLog> CreateMaintLogAsync(MaintLogWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        // maint_log has no Oracle sequence (Database:MaxIdTables) — id is MAX+1.
+        // entereddatetime is NOT NULL and stamped server-side on create.
+        var id = await NextIdAsync(conn, tx, "maint_log", "maint_log_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO maint_log (maint_log_id, maint_log_status, groupdepartment_id, systemequipment, subsystemequipment,
+                itemdevice, probdatetime, prob_details, actions, author, reportedby, entereddatetime, assignedto,
+                completeddatetime, completedby, laborhours, prob_cost)
+            VALUES (:id, :status, :dept, :sys, :subsys, :item, :prob, :details, :actions, :author, :reportedBy, :entered,
+                :assigned, :completed, :completedBy, :labor, :cost)
+            """,
+            new { id, status = body.MaintLogStatus, dept = body.GroupDepartmentId, sys = body.SystemEquipment,
+                  subsys = body.SubsystemEquipment, item = body.ItemDevice, prob = body.ProbDateTime, details = body.ProbDetails,
+                  actions = body.Actions, author = body.Author, reportedBy = body.ReportedBy, entered = (DateTime?)DateTime.UtcNow,
+                  assigned = body.AssignedTo, completed = body.CompletedDateTime, completedBy = body.CompletedBy,
+                  labor = body.LaborHours, cost = body.ProbCost },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetMaintLogAsync(id, ct))!;
+    }
+
+    public async Task<MaintLog?> UpdateMaintLogAsync(long maintLogId, MaintLogWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // entereddatetime is set once on insert and not changed here.
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE maint_log SET maint_log_status = :status, groupdepartment_id = :dept, systemequipment = :sys,
+                   subsystemequipment = :subsys, itemdevice = :item, probdatetime = :prob, prob_details = :details,
+                   actions = :actions, author = :author, reportedby = :reportedBy, assignedto = :assigned,
+                   completeddatetime = :completed, completedby = :completedBy, laborhours = :labor, prob_cost = :cost
+            WHERE maint_log_id = :id
+            """,
+            new { status = body.MaintLogStatus, dept = body.GroupDepartmentId, sys = body.SystemEquipment,
+                  subsys = body.SubsystemEquipment, item = body.ItemDevice, prob = body.ProbDateTime, details = body.ProbDetails,
+                  actions = body.Actions, author = body.Author, reportedBy = body.ReportedBy, assigned = body.AssignedTo,
+                  completed = body.CompletedDateTime, completedBy = body.CompletedBy, labor = body.LaborHours,
+                  cost = body.ProbCost, id = maintLogId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetMaintLogAsync(maintLogId, ct);
     }
 
     public Task<PagedResult<Carrier>> GetCarriersAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct) =>
@@ -908,6 +1096,38 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {ShiftCols} FROM shift WHERE shift_num = :id", new { id = shiftNum }, cancellationToken: ct));
     }
 
+    public async Task<Shift> CreateShiftAsync(ShiftWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "shift", "shift_num", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO shift (shift_num, start_time, end_time, line_num, schedule_type, dt_total, operator_initial, shift_data_status, note)
+            VALUES (:id, :start, :end, :line, :sched, :dt, :op, :status, :note)
+            """,
+            new { id, start = body.StartTime, end = body.EndTime, line = body.LineNum, sched = body.ScheduleType,
+                  dt = body.DtTotal, op = body.OperatorInitial, status = body.ShiftDataStatus, note = body.Note },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetShiftAsync(id, ct))!;
+    }
+
+    public async Task<Shift?> UpdateShiftAsync(long shiftNum, ShiftWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE shift SET start_time = :start, end_time = :end, line_num = :line, schedule_type = :sched,
+                   dt_total = :dt, operator_initial = :op, shift_data_status = :status, note = :note
+            WHERE shift_num = :id
+            """,
+            new { start = body.StartTime, end = body.EndTime, line = body.LineNum, sched = body.ScheduleType,
+                  dt = body.DtTotal, op = body.OperatorInitial, status = body.ShiftDataStatus, note = body.Note, id = shiftNum },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetShiftAsync(shiftNum, ct);
+    }
+
     public Task<PagedResult<DowntimeInstance>> GetDowntimeInstancesAsync(int page, int pageSize, long? abJobNum, long? shiftNum, string? orderBy, CancellationToken ct)
     {
         var p = new DynamicParameters();
@@ -923,6 +1143,38 @@ public sealed class AbisRepository : IAbisRepository
         await using var conn = await OpenAsync(ct);
         return await conn.QuerySingleOrDefaultAsync<DowntimeInstance>(new CommandDefinition(
             $"SELECT {DowntimeCols} FROM dt_instance WHERE instance_num = :id", new { id = instanceNum }, cancellationToken: ct));
+    }
+
+    public async Task<DowntimeInstance> CreateDowntimeInstanceAsync(DowntimeInstanceWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "dt_instance", "instance_num", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO dt_instance (instance_num, ab_job_num, line_num, starting_time, ending_time, note, shift_num)
+            VALUES (:id, :job, :line, :start, :end, :note, :shift)
+            """,
+            new { id, job = body.AbJobNum, line = body.LineNum, start = body.StartingTime, end = body.EndingTime,
+                  note = body.Note, shift = body.ShiftNum },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetDowntimeInstanceAsync(id, ct))!;
+    }
+
+    public async Task<DowntimeInstance?> UpdateDowntimeInstanceAsync(long instanceNum, DowntimeInstanceWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE dt_instance SET ab_job_num = :job, line_num = :line, starting_time = :start,
+                   ending_time = :end, note = :note, shift_num = :shift
+            WHERE instance_num = :id
+            """,
+            new { job = body.AbJobNum, line = body.LineNum, start = body.StartingTime, end = body.EndingTime,
+                  note = body.Note, shift = body.ShiftNum, id = instanceNum },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetDowntimeInstanceAsync(instanceNum, ct);
     }
 
     public async Task<IReadOnlyList<CustomerContact>> GetCustomerContactsAsync(long customerId, CancellationToken ct)
@@ -941,6 +1193,42 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {ContactCols} FROM customer_contact WHERE contact_id = :id", new { id = contactId }, cancellationToken: ct));
     }
 
+    public async Task<CustomerContact> CreateCustomerContactAsync(long customerId, CustomerContactWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        // customer_contact's sequence is CUSTOMER_CONTACT_ID_SEQ — it does NOT follow
+        // the {idColumn}_seq convention (id column is contact_id), so a per-table
+        // override is configured (Database:Sequences). The owning customer comes from the route.
+        var id = await NextIdAsync(conn, tx, "customer_contact", "contact_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO customer_contact (contact_id, customer_id, first_name, last_name, department, city, state, phone1, email1)
+            VALUES (:id, :cust, :first, :last, :dept, :city, :state, :phone, :email)
+            """,
+            new { id, cust = customerId, first = body.FirstName, last = body.LastName, dept = body.Department,
+                  city = body.City, state = body.State, phone = body.Phone1, email = body.Email1 },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetCustomerContactAsync(id, ct))!;
+    }
+
+    public async Task<CustomerContact?> UpdateCustomerContactAsync(long contactId, CustomerContactWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        // customer_id is the owning FK (set on create from the route), so it's not changed here.
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE customer_contact SET first_name = :first, last_name = :last, department = :dept,
+                   city = :city, state = :state, phone1 = :phone, email1 = :email
+            WHERE contact_id = :id
+            """,
+            new { first = body.FirstName, last = body.LastName, dept = body.Department, city = body.City,
+                  state = body.State, phone = body.Phone1, email = body.Email1, id = contactId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetCustomerContactAsync(contactId, ct);
+    }
+
     public Task<PagedResult<Sketch>> GetSketchesAsync(int page, int pageSize, int? status, string? orderBy, CancellationToken ct) =>
         PageAsync<Sketch>(SketchCols, "sketch", orderBy ?? "sketch_id",
             status is null ? null : "sketch_status = :status",
@@ -953,6 +1241,37 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {SketchCols} FROM sketch WHERE sketch_id = :id", new { id = sketchId }, cancellationToken: ct));
     }
 
+    public async Task<Sketch> CreateSketchAsync(SketchWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "sketch", "sketch_id", ct);
+        // The binary sketch_view (LONG RAW image) is never written through this API.
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO sketch (sketch_id, sketch_name, sketch_notes, sketch_sys_note, sketch_status)
+            VALUES (:id, :name, :notes, :sysNote, :status)
+            """,
+            new { id, name = body.SketchName, notes = body.SketchNotes, sysNote = body.SketchSysNote, status = body.SketchStatus },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetSketchAsync(id, ct))!;
+    }
+
+    public async Task<Sketch?> UpdateSketchAsync(long sketchId, SketchWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE sketch SET sketch_name = :name, sketch_notes = :notes,
+                   sketch_sys_note = :sysNote, sketch_status = :status
+            WHERE sketch_id = :id
+            """,
+            new { name = body.SketchName, notes = body.SketchNotes, sysNote = body.SketchSysNote, status = body.SketchStatus, id = sketchId },
+            cancellationToken: ct));
+        return n == 0 ? null : await GetSketchAsync(sketchId, ct);
+    }
+
     public async Task<IReadOnlyList<string>> GetAlloysAsync(CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
@@ -962,12 +1281,66 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
+    public async Task<IReadOnlyList<ProductionLine>> GetLinesAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<ProductionLine>(new CommandDefinition(
+            "SELECT line_num AS LineNum, line_desc AS LineDesc, line_location AS LineLocation FROM line ORDER BY line_num",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<GroupDepartment>> GetGroupDepartmentsAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<GroupDepartment>(new CommandDefinition(
+            "SELECT groupdepartment_id AS GroupDepartmentId, groupdepartment AS GroupDepartmentName, depttype AS DeptType FROM groupdepartment ORDER BY groupdepartment_id",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<DowntimeCause>> GetDowntimeCausesAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<DowntimeCause>(new CommandDefinition(
+            "SELECT id AS Id, cause_name AS CauseName, note AS Note FROM dt_cause ORDER BY id",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<TransportationMethod>> GetTransportationMethodsAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<TransportationMethod>(new CommandDefinition(
+            "SELECT trans_method_code AS TransMethodCode, trans_desc AS TransDesc FROM transportation_method ORDER BY trans_method_code",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<EquipmentType>> GetEquipmentTypesAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<EquipmentType>(new CommandDefinition(
+            "SELECT equipment_type_code AS EquipmentTypeCode, equipment_type_desc AS EquipmentTypeDesc, equipment_type_note AS EquipmentTypeNote FROM equipment_type ORDER BY equipment_type_code",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<CustomerType>> GetCustomerTypesAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<CustomerType>(new CommandDefinition(
+            "SELECT customer_type AS CustomerTypeCode, customer_type_description AS CustomerTypeDescription FROM customer_type ORDER BY customer_type",
+            cancellationToken: ct));
+        return rows.AsList();
+    }
+
     /// <summary>Next id for an insert, run inside the caller's transaction. The
     /// dialect-specific SQL (MAX+1 on SQLite, a sequence NEXTVAL on Oracle) comes
     /// from the connection factory. Table/column are internal constants.</summary>
-    private Task<long> NextIdAsync(DbConnection conn, DbTransaction tx, string table, string idColumn, CancellationToken ct) =>
+    private Task<long> NextIdAsync(DbConnection conn, DbTransaction tx, string table, string idColumn, CancellationToken ct, string? sequence = null) =>
         conn.ExecuteScalarAsync<long>(new CommandDefinition(
-            _factory.NextIdQuery(table, idColumn), transaction: tx, cancellationToken: ct));
+            _factory.NextIdQuery(table, idColumn, sequence), transaction: tx, cancellationToken: ct));
 
     /// <summary>Next line number for an order_item: MAX(order_item_num)+1 scoped to
     /// the order. order_item has a composite key and no sequence — the line number

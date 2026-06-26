@@ -704,6 +704,253 @@ public sealed class RepositoryTests : IDisposable
         Assert.Null(await _repo.UpdateCarrierAsync(999999, new CarrierWrite { CarrierFullName = "X" }, CancellationToken.None));
     }
 
+    // ---- writes: dies, sketches, customer contacts ---------------------
+
+    [Fact]
+    public async Task CreateDie_assigns_id_and_persists()
+    {
+        var created = await _repo.CreateDieAsync(
+            new DieWrite { DieName = "DIE-GAMMA", Status = 1, ToolNum = "T-300", PartName = "PLATE-C", GrossWeight = 990.0m, Location = "RACK-3" },
+            CancellationToken.None);
+        Assert.Equal(2003, created.DieId);    // MAX(2002) + 1
+        Assert.Equal("DIE-GAMMA", created.DieName);
+        Assert.Equal("PLATE-C", (await _repo.GetDieAsync(2003, CancellationToken.None))!.PartName);
+    }
+
+    [Fact]
+    public async Task UpdateDie_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateDieAsync(2001,
+            new DieWrite { DieName = "DIE-ALPHA", Status = 0, Location = "RACK-9" }, CancellationToken.None);
+        Assert.Equal(0, updated!.Status);
+        Assert.Equal("RACK-9", updated.Location);
+        Assert.Null(await _repo.UpdateDieAsync(999999, new DieWrite { DieName = "X" }, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CreateSketch_assigns_id_and_persists()
+    {
+        var created = await _repo.CreateSketchAsync(
+            new SketchWrite { SketchName = "GEAR-D rev1", SketchNotes = "Gear blank", SketchStatus = 1 }, CancellationToken.None);
+        Assert.Equal(4, created.SketchId);    // MAX(3) + 1
+        Assert.Equal("GEAR-D rev1", created.SketchName);
+        Assert.Equal("Gear blank", (await _repo.GetSketchAsync(4, CancellationToken.None))!.SketchNotes);
+    }
+
+    [Fact]
+    public async Task UpdateSketch_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateSketchAsync(1,
+            new SketchWrite { SketchName = "BRKT-A rev2", SketchStatus = 0 }, CancellationToken.None);
+        Assert.Equal("BRKT-A rev2", updated!.SketchName);
+        Assert.Equal(0, updated.SketchStatus);
+        Assert.Null(await _repo.UpdateSketchAsync(999999, new SketchWrite { SketchName = "X" }, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CreateCustomerContact_assigns_id_sets_owner_and_persists()
+    {
+        var created = await _repo.CreateCustomerContactAsync(4002,
+            new CustomerContactWrite { FirstName = "Pat", LastName = "Nguyen", Department = "Logistics", City = "Toledo", State = "OH" },
+            CancellationToken.None);
+        Assert.Equal(5604, created.ContactId);    // MAX(5603) + 1
+        Assert.Equal(4002, created.CustomerId);   // owner comes from the route
+        Assert.Equal("Nguyen", created.LastName);
+        // The new contact appears under its owning customer.
+        Assert.Contains(await _repo.GetCustomerContactsAsync(4002, CancellationToken.None), c => c.ContactId == 5604);
+    }
+
+    [Fact]
+    public async Task UpdateCustomerContact_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateCustomerContactAsync(5601,
+            new CustomerContactWrite { FirstName = "Dana", LastName = "Reed-Smith", Department = "Sourcing" }, CancellationToken.None);
+        Assert.Equal("Reed-Smith", updated!.LastName);
+        Assert.Equal("Sourcing", updated.Department);
+        Assert.Null(await _repo.UpdateCustomerContactAsync(999999, new CustomerContactWrite { LastName = "X" }, CancellationToken.None));
+    }
+
+    // ---- writes: shipping / receiving / tracking -----------------------
+
+    [Fact]
+    public async Task CreateShipment_assigns_packing_list_and_bill_of_lading_and_persists()
+    {
+        var created = await _repo.CreateShipmentAsync(
+            new ShipmentWrite { CarrierId = 1201, CustomerId = 4001, VehicleId = "TRK-900", ShipmentStatus = 0, ShipmentNotes = "ZZ_WRITE_TEST" },
+            CancellationToken.None);
+        Assert.Equal(8803, created.PackingList);       // MAX(8802) + 1
+        Assert.Equal(135003, created.BillOfLading);    // MAX(135002) + 1, own sequence/series
+        Assert.Equal("ZZ_WRITE_TEST", (await _repo.GetShipmentAsync(8803, CancellationToken.None))!.ShipmentNotes);
+    }
+
+    [Fact]
+    public async Task UpdateShipment_changes_keeps_keys_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateShipmentAsync(8801,
+            new ShipmentWrite { CarrierId = 1202, CustomerId = 4001, ShipmentStatus = 2, ShipmentNotes = "Rerouted" }, CancellationToken.None);
+        Assert.Equal("Rerouted", updated!.ShipmentNotes);
+        Assert.Equal(135001, updated.BillOfLading);    // key preserved, not replaced
+        Assert.Null(await _repo.UpdateShipmentAsync(999999, new ShipmentWrite(), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task PatchShipment_updates_dispatch_fields_only()
+    {
+        var sent = new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Unspecified);
+        var patched = await _repo.PatchShipmentAsync(8802,
+            new ShipmentStatusPatch { ShipmentStatus = 1, DateSent = sent }, CancellationToken.None);
+        Assert.Equal(1, patched!.ShipmentStatus);
+        Assert.Equal(sent, patched.DateSent);
+        Assert.Equal("Scheduled", patched.ShipmentNotes);   // omitted -> unchanged
+        Assert.Null(await _repo.PatchShipmentAsync(999999, new ShipmentStatusPatch { ShipmentStatus = 1 }, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CreateReceivingBol_assigns_id_and_persists()
+    {
+        var created = await _repo.CreateReceivingBolAsync(
+            new ReceivingBolWrite { Bol = "BOL-IN-900", CustomerId = 4001, CreatedBy = "recv9", Status = 0 }, CancellationToken.None);
+        Assert.Equal(5503, created.ReceivingBolId);    // MAX(5502) + 1
+        Assert.Equal("BOL-IN-900", created.Bol);
+        Assert.NotNull(created.CreatedDate);           // stamped server-side
+    }
+
+    [Fact]
+    public async Task UpdateReceivingBol_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateReceivingBolAsync(5501,
+            new ReceivingBolWrite { Bol = "BOL-IN-001", CustomerId = 4001, Status = 2 }, CancellationToken.None);
+        Assert.Equal(2, updated!.Status);
+        Assert.Null(await _repo.UpdateReceivingBolAsync(999999, new ReceivingBolWrite { Bol = "X", CustomerId = 4001 }, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CreateScanLog_assigns_id_stamps_time_and_persists()
+    {
+        var created = await _repo.CreateScanLogAsync(
+            new ScanLogWrite { AbJobNum = 1001, ScanStation = "PACK-9", Note = "ZZ_WRITE_TEST scan" }, CancellationToken.None);
+        Assert.Equal(4, created.ScanId);    // MAX(3) + 1
+        Assert.Equal("PACK-9", created.ScanStation);
+        Assert.NotNull(created.ScanDatetime);
+    }
+
+    // ---- writes: maintenance / shifts / downtime -----------------------
+
+    [Fact]
+    public async Task CreateMaintLog_assigns_id_via_maxplus1_and_persists()
+    {
+        var prob = new DateTime(2026, 3, 1, 10, 0, 0, DateTimeKind.Unspecified);
+        var created = await _repo.CreateMaintLogAsync(
+            new MaintLogWrite { MaintLogStatus = "OPEN", ProbDateTime = prob, ProbDetails = "ZZ_WRITE_TEST fault", Author = "tech9", GroupDepartmentId = 10 },
+            CancellationToken.None);
+        Assert.Equal(3003, created.MaintLogId);    // MAX(3002) + 1 (no sequence)
+        Assert.Equal("tech9", created.Author);
+        Assert.NotNull(created.EnteredDateTime);   // NOT NULL, stamped server-side
+    }
+
+    [Fact]
+    public async Task UpdateMaintLog_changes_and_unknown_returns_null()
+    {
+        var prob = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
+        var updated = await _repo.UpdateMaintLogAsync(3001,
+            new MaintLogWrite { MaintLogStatus = "CLOSED", ProbDateTime = prob, ProbDetails = "Bearing noise", Author = "tech1", CompletedBy = "tech2" },
+            CancellationToken.None);
+        Assert.Equal("CLOSED", updated!.MaintLogStatus);
+        Assert.Equal("tech2", updated.CompletedBy);
+        Assert.Null(await _repo.UpdateMaintLogAsync(999999, new MaintLogWrite { ProbDateTime = prob, ProbDetails = "x", Author = "y" }, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CreateShift_assigns_id_and_persists()
+    {
+        var start = new DateTime(2026, 4, 1, 6, 0, 0, DateTimeKind.Unspecified);
+        var created = await _repo.CreateShiftAsync(
+            new ShiftWrite { StartTime = start, EndTime = start.AddHours(8), LineNum = 110, OperatorInitial = "ZZ", ShiftDataStatus = 0, Note = "ZZ_WRITE_TEST" },
+            CancellationToken.None);
+        Assert.Equal(7703, created.ShiftNum);    // MAX(7702) + 1
+        Assert.Equal("ZZ", created.OperatorInitial);
+    }
+
+    [Fact]
+    public async Task UpdateShift_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateShiftAsync(7701,
+            new ShiftWrite { LineNum = 110, ShiftDataStatus = 2, Note = "Day shift edited" }, CancellationToken.None);
+        Assert.Equal("Day shift edited", updated!.Note);
+        Assert.Null(await _repo.UpdateShiftAsync(999999, new ShiftWrite(), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CreateDowntimeInstance_assigns_id_and_persists()
+    {
+        var start = new DateTime(2026, 4, 1, 7, 0, 0, DateTimeKind.Unspecified);
+        var created = await _repo.CreateDowntimeInstanceAsync(
+            new DowntimeInstanceWrite { AbJobNum = 1001, LineNum = 110, StartingTime = start, EndingTime = start.AddMinutes(15), Note = "ZZ_WRITE_TEST", ShiftNum = 7701 },
+            CancellationToken.None);
+        Assert.Equal(9104, created.InstanceNum);    // MAX(9103) + 1
+        Assert.Equal("ZZ_WRITE_TEST", created.Note);
+    }
+
+    [Fact]
+    public async Task UpdateDowntimeInstance_changes_and_unknown_returns_null()
+    {
+        var updated = await _repo.UpdateDowntimeInstanceAsync(9101,
+            new DowntimeInstanceWrite { AbJobNum = 1001, LineNum = 110, Note = "Coil change (edited)", ShiftNum = 7701 }, CancellationToken.None);
+        Assert.Equal("Coil change (edited)", updated!.Note);
+        Assert.Null(await _repo.UpdateDowntimeInstanceAsync(999999, new DowntimeInstanceWrite(), CancellationToken.None));
+    }
+
+    // ---- reads: lookups ------------------------------------------------
+
+    [Fact]
+    public async Task GetLines_returns_seeded_lines()
+    {
+        var lines = await _repo.GetLinesAsync(CancellationToken.None);
+        Assert.Equal(2, lines.Count);
+        Assert.Equal(110, lines[0].LineNum);
+        Assert.Equal("Cut-to-length 1", lines[0].LineDesc);
+    }
+
+    [Fact]
+    public async Task GetGroupDepartments_returns_seeded_departments()
+    {
+        var depts = await _repo.GetGroupDepartmentsAsync(CancellationToken.None);
+        Assert.Equal(2, depts.Count);
+        Assert.Equal("Maintenance", depts[0].GroupDepartmentName);
+    }
+
+    [Fact]
+    public async Task GetDowntimeCauses_returns_seeded_causes()
+    {
+        var causes = await _repo.GetDowntimeCausesAsync(CancellationToken.None);
+        Assert.Equal(2, causes.Count);
+        Assert.Contains(causes, c => c.CauseName == "Coil change");
+    }
+
+    [Fact]
+    public async Task GetTransportationMethods_returns_seeded_methods()
+    {
+        var methods = await _repo.GetTransportationMethodsAsync(CancellationToken.None);
+        Assert.Equal(2, methods.Count);
+        Assert.Contains(methods, m => m.TransMethodCode == "LTL" && m.TransDesc == "Less than truckload");
+    }
+
+    [Fact]
+    public async Task GetEquipmentTypes_returns_seeded_types()
+    {
+        var types = await _repo.GetEquipmentTypesAsync(CancellationToken.None);
+        Assert.Equal(2, types.Count);
+        Assert.Contains(types, t => t.EquipmentTypeCode == "VAN");
+    }
+
+    [Fact]
+    public async Task GetCustomerTypes_returns_seeded_types()
+    {
+        var types = await _repo.GetCustomerTypesAsync(CancellationToken.None);
+        Assert.Equal(2, types.Count);
+        Assert.Contains(types, t => t.CustomerTypeCode == "OEM" && t.CustomerTypeDescription == "Original equipment manufacturer");
+    }
+
     public void Dispose()
     {
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* best effort */ }
