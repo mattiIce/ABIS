@@ -5,7 +5,7 @@
 // partial edit can't blank them. Through the NSwag-generated, compiler-checked client.
 //
 // Compiled by `tsc` to wwwroot/ui/app/receiving.js; served at /ui/receiving.html.
-import { AbisClient, ReceivingBolWrite } from './generated/abis-client.js';
+import { AbisClient, ReceivingBolWrite, ReceivingBolCoilWrite } from './generated/abis-client.js';
 
 import { initAuth, authFetch } from './auth.js';
 
@@ -75,7 +75,47 @@ async function loadBol(id: number): Promise<void> {
     setV('#rBol', b.bol); setV('#rCustomer', b.customerId);
     setV('#rCreatedBy', b.createdBy); $<HTMLInputElement>('#rReceived').value = dateOnly(b.receivedDate);
     setV('#rStatus', b.status);
+    $('#coilsSection').classList.remove('disabled');
+    await loadCoils();
   } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  finally { setBusy(false); }
+}
+
+async function loadCoils(): Promise<void> {
+  if (editingId == null) return;
+  const coils = await client().getReceivingBolCoils(editingId);
+  $('#tCoils').innerHTML = (coils ?? []).map((c) => `<tr>
+    <td>${esc(c.coilId)}</td><td>${esc(c.coilOrgNum)}</td><td>${esc(c.alloy)}</td><td>${esc(c.temper)}</td>
+    <td>${esc(c.netWeight)}</td><td>${esc(c.grossWeight)}</td><td>${esc(c.coilGauge)}</td><td>${esc(c.coilWidth)}</td>
+    <td>${esc(c.status)}</td><td><button class="sec rmCoil" data-c="${c.coilId}" type="button">remove</button></td></tr>`).join('')
+    || '<tr><td colspan="10" class="muted">No coils on this BOL.</td></tr>';
+  document.querySelectorAll<HTMLButtonElement>('#tCoils .rmCoil').forEach((b) =>
+    b.addEventListener('click', () => void deleteCoil(Number(b.dataset.c))));
+}
+
+async function addCoil(): Promise<void> {
+  if (editingId == null) { setErr('Load or save a BOL first.'); return; }
+  if (!v('#cOrg')) { setErr('Org num is required for a coil line.'); return; }
+  setBusy(true);
+  try {
+    await client().addReceivingBolCoil(editingId, new ReceivingBolCoilWrite({
+      coilOrgNum: v('#cOrg'), alloy: v('#cAlloy') || undefined, temper: v('#cTemper') || undefined,
+      netWeight: v('#cNet') ? Number(v('#cNet')) : undefined, grossWeight: v('#cGross') ? Number(v('#cGross')) : undefined,
+      coilGauge: v('#cGauge') ? Number(v('#cGauge')) : undefined, coilWidth: v('#cWidth') ? Number(v('#cWidth')) : undefined,
+      lot: v('#cLot') || undefined, status: 2,
+    }));
+    $('#coilOk').textContent = '✓ Coil added.';
+    ['#cOrg', '#cAlloy', '#cTemper', '#cNet', '#cGross', '#cGauge', '#cWidth', '#cLot'].forEach((i) => setV(i, ''));
+    await loadCoils();
+  } catch (e) { setErr(`Add coil failed: ${(e as Error).message}`); }
+  finally { setBusy(false); }
+}
+
+async function deleteCoil(coilId: number): Promise<void> {
+  if (editingId == null) return;
+  setBusy(true);
+  try { await client().deleteReceivingBolCoil(editingId, coilId); await loadCoils(); $('#coilOk').textContent = '✓ Coil removed.'; }
+  catch (e) { setErr(`Remove coil failed: ${(e as Error).message}`); }
   finally { setBusy(false); }
 }
 
@@ -84,6 +124,8 @@ function newBol(): void {
   $('#formTitle').textContent = 'New receiving BOL';
   ['#rBol', '#rCustomer', '#rCreatedBy', '#rStatus'].forEach((id) => setV(id, ''));
   $<HTMLInputElement>('#rReceived').value = '';
+  $('#coilsSection').classList.add('disabled');
+  $('#tCoils').innerHTML = '';
   setOk(''); setErr('');
 }
 
@@ -99,7 +141,11 @@ async function save(): Promise<void> {
   try {
     if (editingId == null) {
       const created = await client().createReceivingBol(body);
-      setOk(`✓ Created BOL #${created.receivingBolId}.`);
+      setOk(`✓ Created BOL #${created.receivingBolId}. Add its coils below.`);
+      editingId = created.receivingBolId ?? null;          // switch to edit mode so coils can be added
+      $('#formTitle').textContent = `Edit receiving BOL #${editingId}`;
+      $('#coilsSection').classList.remove('disabled');
+      await loadCoils();
     } else {
       await client().updateReceivingBol(editingId, body);
       setOk(`✓ Saved BOL #${editingId}.`);
@@ -114,6 +160,7 @@ async function init(): Promise<void> {
   $<HTMLFormElement>('#searchForm').addEventListener('submit', (e) => { e.preventDefault(); void search(); });
   $('#btnNew').addEventListener('click', newBol);
   $('#btnSave').addEventListener('click', save);
+  $('#btnAddCoil').addEventListener('click', addCoil);
   newBol();
   await search();
 }

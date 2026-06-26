@@ -1,0 +1,7 @@
+$PBExportHeader$s_coil_list_by_bol_created.srs
+global type s_coil_list_by_bol_created from structure
+	string		bol
+	boolean		all_coil_checked
+	datawindow		coil_list_by_bol_created
+end type
+

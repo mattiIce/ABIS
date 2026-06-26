@@ -179,6 +179,17 @@ public static class SqliteFixture
                 receiving_bol_id INTEGER PRIMARY KEY, bol TEXT, customer_id INTEGER,
                 created_by TEXT, created_date TEXT, received_date TEXT, status INTEGER);
 
+            -- Receiving BOL line items (legacy coil_receiving.pbl). coil_id is a 1..n
+            -- sequence within the BOL; coil_org_num is NOT NULL. cash_date is a string in
+            -- the real schema (VARCHAR2(24)). Column names authoritative (oracle_ddl.sql).
+            CREATE TABLE receiving_bol_coil (
+                receiving_bol_id INTEGER, coil_id INTEGER, coil_org_num TEXT, coil_abc_num INTEGER,
+                status INTEGER, damaged_fault INTEGER, damaged_code INTEGER, temper TEXT,
+                net_weight INTEGER, gross_weight INTEGER, lineal_feed REAL, coil_width REAL, coil_gauge REAL,
+                lot TEXT, pack_id TEXT, alloy TEXT, part_num TEXT, supplier_sales_num TEXT,
+                purchase_order_num TEXT, consumed_coil_num TEXT, material_num TEXT, cash_date TEXT,
+                PRIMARY KEY (receiving_bol_id, coil_id));
+
             CREATE TABLE scan_log (
                 scan_id INTEGER PRIMARY KEY, scan_datetime TEXT, ab_job_num INTEGER,
                 scan_station TEXT, note TEXT);
@@ -392,6 +403,18 @@ public static class SqliteFixture
             {
                 new { ReceivingBolId = 5501L, Bol = "BOL-IN-001", CustomerId = (long?)4001L, CreatedBy = "recv1", CreatedDate = (DateTime?)d, ReceivedDate = (DateTime?)d.AddHours(2), Status = (int?)1 },
                 new { ReceivingBolId = 5502L, Bol = "BOL-IN-002", CustomerId = (long?)4002L, CreatedBy = "recv2", CreatedDate = (DateTime?)d.AddDays(1), ReceivedDate = (DateTime?)null, Status = (int?)0 }
+            });
+
+        conn.Execute(
+            """
+            INSERT INTO receiving_bol_coil (receiving_bol_id, coil_id, coil_org_num, status, temper, net_weight, gross_weight,
+                coil_width, coil_gauge, lot, alloy)
+            VALUES (:ReceivingBolId, :CoilId, :CoilOrgNum, :Status, :Temper, :NetWeight, :GrossWeight, :CoilWidth, :CoilGauge, :Lot, :Alloy)
+            """,
+            new[]
+            {
+                new { ReceivingBolId = 5501L, CoilId = 1, CoilOrgNum = "ORG-IN-1", Status = (int?)2, Temper = "H14", NetWeight = (int?)12000, GrossWeight = (int?)12100, CoilWidth = (decimal?)48.5m, CoilGauge = (decimal?)0.125m, Lot = "LOTA", Alloy = "3003" },
+                new { ReceivingBolId = 5501L, CoilId = 2, CoilOrgNum = "ORG-IN-2", Status = (int?)2, Temper = "H14", NetWeight = (int?)11500, GrossWeight = (int?)11600, CoilWidth = (decimal?)48.5m, CoilGauge = (decimal?)0.125m, Lot = "LOTB", Alloy = "3003" }
             });
 
         conn.Execute("""

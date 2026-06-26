@@ -973,3 +973,42 @@ public sealed class EffectivePermission
     public string PrivilegeLabel => Privilege >= 1 ? "Write" : "ReadOnly";
     public bool ViaGroup { get; set; }
 }
+
+// ---- Receiving BOL line items (legacy coil_receiving.pbl) ----
+
+/// <summary>One coil line on a receiving BOL (table <c>receiving_bol_coil</c>, composite
+/// PK <c>receiving_bol_id</c> + <c>coil_id</c>). <c>coil_id</c> is a 1..n sequence within the
+/// BOL; <c>coil_org_num</c> is NOT NULL. Column names authoritative (oracle_ddl.sql).</summary>
+public sealed class ReceivingBolCoil
+{
+    public long ReceivingBolId { get; set; }
+    public int CoilId { get; set; }
+    public string? CoilOrgNum { get; set; }
+    public long? CoilAbcNum { get; set; }
+    public int? Status { get; set; }
+    public int? DamagedFault { get; set; }
+    public int? DamagedCode { get; set; }
+    public string? Temper { get; set; }
+    public int? NetWeight { get; set; }
+    public int? GrossWeight { get; set; }
+    public decimal? LinealFeed { get; set; }
+    public decimal? CoilWidth { get; set; }
+    public decimal? CoilGauge { get; set; }
+    public string? Lot { get; set; }
+    public string? PackId { get; set; }
+    public string? Alloy { get; set; }
+    public string? PartNum { get; set; }
+    public string? SupplierSalesNum { get; set; }
+    public string? PurchaseOrderNum { get; set; }
+    public string? ConsumedCoilNum { get; set; }
+    public string? MaterialNum { get; set; }
+    public string? CashDate { get; set; }
+}
+
+/// <summary>A receiving BOL with its coil line items (the header+lines aggregate the
+/// legacy w_coil_receiving screen works on).</summary>
+public sealed class ReceivingBolDetail
+{
+    public required ReceivingBol Bol { get; set; }
+    public IReadOnlyList<ReceivingBolCoil> Coils { get; set; } = [];
+}

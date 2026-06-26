@@ -5126,6 +5126,225 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * A receiving BOL with its coil line items (header + lines).
+     * @return OK
+     */
+    getReceivingBolDetail(receivingBolId) {
+        let url_ = this.baseUrl + "/api/receiving-bols/{receivingBolId}/detail";
+        if (receivingBolId === undefined || receivingBolId === null)
+            throw new globalThis.Error("The parameter 'receivingBolId' must be defined.");
+        url_ = url_.replace("{receivingBolId}", encodeURIComponent("" + receivingBolId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetReceivingBolDetail(_response);
+        });
+    }
+    processGetReceivingBolDetail(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = ReceivingBolDetail.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * The coil line items on a receiving BOL.
+     * @return OK
+     */
+    getReceivingBolCoils(receivingBolId) {
+        let url_ = this.baseUrl + "/api/receiving-bols/{receivingBolId}/coils";
+        if (receivingBolId === undefined || receivingBolId === null)
+            throw new globalThis.Error("The parameter 'receivingBolId' must be defined.");
+        url_ = url_.replace("{receivingBolId}", encodeURIComponent("" + receivingBolId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetReceivingBolCoils(_response);
+        });
+    }
+    processGetReceivingBolCoils(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(ReceivingBolCoil.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Add a coil line to a receiving BOL (coil_id assigned server-side).
+     * @return Created
+     */
+    addReceivingBolCoil(receivingBolId, body) {
+        let url_ = this.baseUrl + "/api/receiving-bols/{receivingBolId}/coils";
+        if (receivingBolId === undefined || receivingBolId === null)
+            throw new globalThis.Error("The parameter 'receivingBolId' must be defined.");
+        url_ = url_.replace("{receivingBolId}", encodeURIComponent("" + receivingBolId));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processAddReceivingBolCoil(_response);
+        });
+    }
+    processAddReceivingBolCoil(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = ReceivingBolCoil.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Remove a coil line from a receiving BOL.
+     * @return No Content
+     */
+    deleteReceivingBolCoil(receivingBolId, coilId) {
+        let url_ = this.baseUrl + "/api/receiving-bols/{receivingBolId}/coils/{coilId}";
+        if (receivingBolId === undefined || receivingBolId === null)
+            throw new globalThis.Error("The parameter 'receivingBolId' must be defined.");
+        url_ = url_.replace("{receivingBolId}", encodeURIComponent("" + receivingBolId));
+        if (coilId === undefined || coilId === null)
+            throw new globalThis.Error("The parameter 'coilId' must be defined.");
+        url_ = url_.replace("{coilId}", encodeURIComponent("" + coilId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "DELETE",
+            headers: {}
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processDeleteReceivingBolCoil(_response);
+        });
+    }
+    processDeleteReceivingBolCoil(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+                return;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * Per-line production summary (job count, avg yield, processed weight) over an optional date range.
      * @param from (optional)
      * @param to (optional)
@@ -11126,6 +11345,177 @@ export class ReceivingBol {
         data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : undefined;
         data["receivedDate"] = this.receivedDate ? this.receivedDate.toISOString() : undefined;
         data["status"] = this.status;
+        return data;
+    }
+}
+export class ReceivingBolCoil {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.receivingBolId = _data["receivingBolId"];
+            this.coilId = _data["coilId"];
+            this.coilOrgNum = _data["coilOrgNum"];
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.status = _data["status"];
+            this.damagedFault = _data["damagedFault"];
+            this.damagedCode = _data["damagedCode"];
+            this.temper = _data["temper"];
+            this.netWeight = _data["netWeight"];
+            this.grossWeight = _data["grossWeight"];
+            this.linealFeed = _data["linealFeed"];
+            this.coilWidth = _data["coilWidth"];
+            this.coilGauge = _data["coilGauge"];
+            this.lot = _data["lot"];
+            this.packId = _data["packId"];
+            this.alloy = _data["alloy"];
+            this.partNum = _data["partNum"];
+            this.supplierSalesNum = _data["supplierSalesNum"];
+            this.purchaseOrderNum = _data["purchaseOrderNum"];
+            this.consumedCoilNum = _data["consumedCoilNum"];
+            this.materialNum = _data["materialNum"];
+            this.cashDate = _data["cashDate"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReceivingBolCoil();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["receivingBolId"] = this.receivingBolId;
+        data["coilId"] = this.coilId;
+        data["coilOrgNum"] = this.coilOrgNum;
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["status"] = this.status;
+        data["damagedFault"] = this.damagedFault;
+        data["damagedCode"] = this.damagedCode;
+        data["temper"] = this.temper;
+        data["netWeight"] = this.netWeight;
+        data["grossWeight"] = this.grossWeight;
+        data["linealFeed"] = this.linealFeed;
+        data["coilWidth"] = this.coilWidth;
+        data["coilGauge"] = this.coilGauge;
+        data["lot"] = this.lot;
+        data["packId"] = this.packId;
+        data["alloy"] = this.alloy;
+        data["partNum"] = this.partNum;
+        data["supplierSalesNum"] = this.supplierSalesNum;
+        data["purchaseOrderNum"] = this.purchaseOrderNum;
+        data["consumedCoilNum"] = this.consumedCoilNum;
+        data["materialNum"] = this.materialNum;
+        data["cashDate"] = this.cashDate;
+        return data;
+    }
+}
+export class ReceivingBolCoilWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.coilOrgNum = _data["coilOrgNum"];
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.status = _data["status"];
+            this.damagedFault = _data["damagedFault"];
+            this.damagedCode = _data["damagedCode"];
+            this.temper = _data["temper"];
+            this.netWeight = _data["netWeight"];
+            this.grossWeight = _data["grossWeight"];
+            this.linealFeed = _data["linealFeed"];
+            this.coilWidth = _data["coilWidth"];
+            this.coilGauge = _data["coilGauge"];
+            this.lot = _data["lot"];
+            this.packId = _data["packId"];
+            this.alloy = _data["alloy"];
+            this.partNum = _data["partNum"];
+            this.supplierSalesNum = _data["supplierSalesNum"];
+            this.purchaseOrderNum = _data["purchaseOrderNum"];
+            this.consumedCoilNum = _data["consumedCoilNum"];
+            this.materialNum = _data["materialNum"];
+            this.cashDate = _data["cashDate"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReceivingBolCoilWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["coilOrgNum"] = this.coilOrgNum;
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["status"] = this.status;
+        data["damagedFault"] = this.damagedFault;
+        data["damagedCode"] = this.damagedCode;
+        data["temper"] = this.temper;
+        data["netWeight"] = this.netWeight;
+        data["grossWeight"] = this.grossWeight;
+        data["linealFeed"] = this.linealFeed;
+        data["coilWidth"] = this.coilWidth;
+        data["coilGauge"] = this.coilGauge;
+        data["lot"] = this.lot;
+        data["packId"] = this.packId;
+        data["alloy"] = this.alloy;
+        data["partNum"] = this.partNum;
+        data["supplierSalesNum"] = this.supplierSalesNum;
+        data["purchaseOrderNum"] = this.purchaseOrderNum;
+        data["consumedCoilNum"] = this.consumedCoilNum;
+        data["materialNum"] = this.materialNum;
+        data["cashDate"] = this.cashDate;
+        return data;
+    }
+}
+export class ReceivingBolDetail {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+        if (!data) {
+            this.bol = new ReceivingBol();
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.bol = _data["bol"] ? ReceivingBol.fromJS(_data["bol"]) : new ReceivingBol();
+            if (Array.isArray(_data["coils"])) {
+                this.coils = [];
+                for (let item of _data["coils"])
+                    this.coils.push(ReceivingBolCoil.fromJS(item));
+            }
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReceivingBolDetail();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["bol"] = this.bol ? this.bol.toJSON() : undefined;
+        if (Array.isArray(this.coils)) {
+            data["coils"] = [];
+            for (let item of this.coils)
+                data["coils"].push(item ? item.toJSON() : undefined);
+        }
         return data;
     }
 }

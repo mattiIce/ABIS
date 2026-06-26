@@ -132,6 +132,10 @@ public interface IAbisRepository
     Task<ReceivingBol?> GetReceivingBolAsync(long receivingBolId, CancellationToken ct);
     Task<ReceivingBol> CreateReceivingBolAsync(ReceivingBolWrite body, CancellationToken ct);
     Task<ReceivingBol?> UpdateReceivingBolAsync(long receivingBolId, ReceivingBolWrite body, CancellationToken ct);
+    Task<IReadOnlyList<ReceivingBolCoil>> GetReceivingBolCoilsAsync(long receivingBolId, CancellationToken ct);
+    Task<ReceivingBolDetail?> GetReceivingBolDetailAsync(long receivingBolId, CancellationToken ct);
+    Task<ReceivingBolCoil?> AddReceivingBolCoilAsync(long receivingBolId, ReceivingBolCoilWrite body, CancellationToken ct);
+    Task<bool> DeleteReceivingBolCoilAsync(long receivingBolId, int coilId, CancellationToken ct);
     Task<PagedResult<EdiTransaction>> GetEdiTransactionsAsync(int page, int pageSize, long? customerId, string? transactionTypeId, string? orderBy, CancellationToken ct);
     Task<EdiTransaction?> GetEdiTransactionAsync(long ediFileId, CancellationToken ct);
     Task<PagedResult<EdiLogEntry>> GetEdiLogAsync(int page, int pageSize, long? customerId, string? orderBy, CancellationToken ct);

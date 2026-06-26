@@ -1,0 +1,94 @@
+$PBExportHeader$f_insert_coil_track.srf
+global type f_insert_coil_track from function_object
+end type
+
+forward prototypes
+global function integer f_insert_coil_track (str_all_data_types astr_all_data_types, ref n_tr_abc01 atr)
+end prototypes
+
+global function integer f_insert_coil_track (str_all_data_types astr_all_data_types, ref n_tr_abc01 atr);//Alex Gerlants. 12/07/2018. Coil_Inventory_Report_863. Begin
+/*
+Function:	f_insert_coil_track
+				Insert into table coil_track
+Returns:		integer
+Arguments:	value			astr_all_data_types
+				reference	n_tr_abc01 <== In case of DB error, the calling function will use it to display error message
+*/
+Long			ll_coil_abc_num, ll_coil_pre_weight, ll_coil_cur_weight
+Long			ll_inserted_row
+Integer		li_coil_pre_status, li_coil_cur_status, li_rtn = 1, li_rowcount
+String		ls_coil_modified_by, ls_coil_pre_location, ls_coil_cur_location
+String		ls_scrap_870_date, ls_coil_track_date
+DateTime		ldt_coil_track_date, ldt_scrap_870_date, ldt_null
+DataStore	lds_coil_track
+
+ll_coil_abc_num = astr_all_data_types.long_var[1]
+ll_coil_pre_weight = astr_all_data_types.long_var[2]
+ll_coil_cur_weight = astr_all_data_types.long_var[3]
+
+li_coil_pre_status = astr_all_data_types.integer_var[1]
+li_coil_cur_status = astr_all_data_types.integer_var[2]
+
+ls_coil_modified_by = astr_all_data_types.string_var[1]
+ls_coil_pre_location = astr_all_data_types.string_var[2]
+ls_coil_cur_location = astr_all_data_types.string_var[3]
+
+ldt_coil_track_date = astr_all_data_types.datetime_var[1]
+
+lds_coil_track = Create DataStore
+lds_coil_track.DataObject = "d_coil_track"
+lds_coil_track.SetTransObject(atr)
+
+ls_coil_track_date = String(ldt_coil_track_date, "mm/dd/yyyy hh:mm:ss")
+
+ldt_scrap_870_date = astr_all_data_types.datetime_var[2]
+
+ls_scrap_870_date = String(ldt_scrap_870_date, "mm/dd/yyyy hh:mm:ss")
+
+If ls_scrap_870_date = "01/01/1980 00:00:00" Then
+	SetNull(ldt_null)
+	ldt_scrap_870_date = ldt_null
+End If
+
+//Check if row exists
+select	count(*)
+into		:li_rowcount
+from		coil_track
+where		coil_abc_num = :ll_coil_abc_num
+and		coil_track_date = :ldt_coil_track_date
+using		atr;
+
+If atr.sqlcode = 0 Then //OK
+	If li_rowcount <= 0 Then //Row does not exist
+	
+		ll_inserted_row = lds_coil_track.InsertRow(0)
+		
+		If ll_inserted_row > 0 Then
+			lds_coil_track.Object.coil_abc_num[ll_inserted_row] = ll_coil_abc_num
+			lds_coil_track.Object.coil_track_date[ll_inserted_row] = ldt_coil_track_date
+			lds_coil_track.Object.coil_pre_status[ll_inserted_row] = li_coil_pre_status
+			lds_coil_track.Object.coil_cur_status[ll_inserted_row] = li_coil_cur_status
+			lds_coil_track.Object.coil_pre_netwt[ll_inserted_row] = ll_coil_pre_weight
+			lds_coil_track.Object.coil_cur_netwt[ll_inserted_row] = ll_coil_cur_weight
+			lds_coil_track.Object.coil_modified_by[ll_inserted_row] = ls_coil_modified_by
+			lds_coil_track.Object.coil_pre_location[ll_inserted_row] = ls_coil_pre_location
+			lds_coil_track.Object.coil_cur_location[ll_inserted_row] = ls_coil_cur_location
+			lds_coil_track.Object.scrap_870_date[ll_inserted_row] = ldt_scrap_870_date
+			
+			li_rtn = lds_coil_track.Update()
+			
+			If li_rtn = 1 Then //OK
+				//We'll commit in the calling routine
+			Else //DB error. li_rtn = -1
+				//
+			End If
+		End If
+	End If
+Else //DB error
+	li_rtn = -1
+End If
+
+Return li_rtn
+//Alex Gerlants. 12/07/2018. Coil_Inventory_Report_863. End
+end function
+

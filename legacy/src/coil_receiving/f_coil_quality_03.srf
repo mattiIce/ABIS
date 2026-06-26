@@ -1,0 +1,245 @@
+$PBExportHeader$f_coil_quality_03.srf
+global type f_coil_quality_03 from function_object
+end type
+
+forward prototypes
+global function integer f_coil_quality_03 (string as_barcode_string, long al_coil_abc_num, ref datawindow adw_coil_quality, ref datawindow adw_coil_quality_flaw_mapping, ref string as_error_message)
+end prototypes
+
+global function integer f_coil_quality_03 (string as_barcode_string, long al_coil_abc_num, ref datawindow adw_coil_quality, ref datawindow adw_coil_quality_flaw_mapping, ref string as_error_message);//Alex Gerlants. Coil Quality. 02/06/2018.Begin
+/*
+Function:	f_coil_quality_03
+Returns;		integer	 1 if OK
+							-1 if errors
+Arguments:	value			string		as_barcode_string
+				value			long			al_coil_abc_num
+				reference	datawindow	adw_coil_quality
+				reference	datawindow	adw_coil_quality_flaw_mapping
+				reference	string		as_error_message
+*/
+
+String	ls_barcode_string
+String	ls_coil_org_number, ls_coil_org_number_arg, ls_part_num = "", ls_material_grade
+String	ls_pre_treatment_flag, ls_cash_date_julian5, ls_mill_id
+String	ls_gross_coil_length_dm, ls_net_coil_length_dm, ls_cash_date, ls_cm_date
+String	ls_coil_width_mm, ls_coil_weight_kg, ls_material_thikness_mm, ls_cash_line_id, ls_payoff_direction
+
+String	ls_sampling_code, ls_sampling_required, ls_placeholder1, ls_placeholder2
+String	ls_starting_pos, ls_ending_pos, ls_flaw_code
+String	ls_less_than_68_err_string, ls_good_coil_string
+
+DateTime	ldt_date, ldt_cash_date, ldt_cm_date
+Long		ll_edi_file_id
+Long		ll_net_coil_length_inches, ll_coil_width_inches, ll_coil_weight_lbs, ll_gross_coil_length_inches, ll_gross_coil_length
+Long		ll_length, ll_length_diff_dm
+Long		ll_inserted_row
+
+Long		ll_pos, ll_i, ll_less_than_68_count, ll_good_coil_count
+Long		ll_coil_abc_num
+
+Integer	li_cash_line_id, li_coil_processed_count
+Decimal	ldc_material_thickness_inches, ldc_starting_pos, ldc_ending_pos, ldc_coil_width_inches
+Date		ld_date_out
+Boolean	lb_error
+Integer	li_year, li_month, li_day
+Integer	li_rtn = 1
+Blob		lbl_barcode_string
+String	ls_revision_level, ls_pcc_number
+
+//At this point, as_barcode_string is validated in wf_coil_quality
+ls_barcode_string = as_barcode_string
+
+ls_revision_level = Trim(Left(ls_barcode_string, 2))
+ls_pcc_number = Trim(Mid(ls_barcode_string, 3, 12))
+ls_material_grade = Trim(Mid(ls_barcode_string, 15, 5))
+ls_pre_treatment_flag = Mid(ls_barcode_string, 20, 1)
+ls_cash_date_julian5 = Mid(ls_barcode_string, 21, 5)
+ls_mill_id = Trim(Mid(ls_barcode_string, 26, 5))
+ls_coil_org_number = Trim(Mid(ls_barcode_string, 31, 10))
+ls_gross_coil_length_dm = Trim(Mid(ls_barcode_string, 41, 6))
+ls_net_coil_length_dm = Trim(Mid(ls_barcode_string, 47, 6))
+ls_coil_width_mm = Trim(Mid(ls_barcode_string, 53, 4))
+ls_coil_weight_kg = Trim(Mid(ls_barcode_string, 57, 5))
+ls_material_thikness_mm =Trim( Mid(ls_barcode_string, 62, 5))
+ls_cash_line_id = Trim(Mid(ls_barcode_string, 67, 3))
+ls_sampling_code = Mid(ls_barcode_string, 70, 1)
+
+ls_payoff_direction = Mid(ls_barcode_string, 71, 1)
+
+//Convert the new code to the original code. Thus it can be correctly translated on d_ff_data_4coil
+Choose Case Upper(ls_payoff_direction)
+	Case "O"
+		ls_payoff_direction = "8"
+	Case "U"
+		ls_payoff_direction = "9"
+	Case Else
+		ls_payoff_direction = ""
+End Choose
+
+//Separator - 1 character: 72
+
+If Len(ls_barcode_string) > 72 Then
+	ll_pos = 73
+	
+	Do While ll_pos <= Len(ls_barcode_string)
+		
+		ls_starting_pos = Mid(ls_barcode_string, ll_pos, 6)
+		If IsNull(ls_starting_pos) Then ls_starting_pos = ""
+		ll_pos = ll_pos + 6
+		
+		ls_ending_pos = Mid(ls_barcode_string, ll_pos, 6)
+		If IsNull(ls_ending_pos) Then ls_ending_pos = ""
+		ll_pos = ll_pos + 6
+		
+		//Starting, Ending positions validation begin
+		If IsNumber(ls_starting_pos) And IsNumber(ls_ending_pos) Then
+			If Dec(ls_starting_pos) > Dec(ls_ending_pos) Then
+				as_error_message = as_error_message + "~n~rCoil " + ls_coil_org_number + ". Flaw start " + ls_starting_pos + " greater than end " + ls_ending_pos + "."
+				Return -1
+			End If
+			
+			If Dec(ls_starting_pos) > Long(ls_gross_coil_length_dm) Or Dec(ls_ending_pos) > Long(ls_gross_coil_length_dm) Then
+				If Dec(ls_starting_pos) > Long(ls_gross_coil_length_dm) Then
+					as_error_message = as_error_message + "~n~rCoil " + ls_coil_org_number + ". Flaw start " + ls_starting_pos + " greater than gross coil length " + ls_gross_coil_length_dm + "."
+				Else
+					as_error_message = as_error_message + "~n~rCoil " + ls_coil_org_number + ". Flaw end " + ls_ending_pos + " greater than gross coil length " + ls_gross_coil_length_dm + "."
+				End If
+				Return -1
+			End If
+		Else //Not numeric
+			as_error_message = as_error_message + "~n~rCoil " + ls_coil_org_number + ". Flaw start " + ls_starting_pos + " and/or end " + ls_ending_pos + " not numeric."
+			Return -1
+		End If
+		//Starting, Ending positions validation End
+			
+		ls_flaw_code = Mid(ls_barcode_string, ll_pos, 1)
+		If IsNull(ls_flaw_code) Then ls_flaw_code = ""
+		ll_pos = ll_pos + 2 //ls_flaw_code is 1 character + 1 character for separator $
+		
+		ll_inserted_row = adw_coil_quality_flaw_mapping.InsertRow(0)
+		
+		If ll_inserted_row > 0 Then
+			adw_coil_quality_flaw_mapping.Object.coil_abc_num[ll_inserted_row] = al_coil_abc_num
+			adw_coil_quality_flaw_mapping.Object.coil_org_num[ll_inserted_row] = ls_coil_org_number
+			
+			//The data in the QR code is in the order it was ran off the CASH line which is from ID to OD. 
+			//The data must be interpreted and flipped to map the flaws starting from the OD.
+			//Thus starting position from ID becomes ending position from OD;
+			//and ending point from ID becomes starting point from OD.
+			
+			//ll_length_diff_dm is combined cropped length at the beginning and end of coil
+			ll_length_diff_dm = Long(ls_gross_coil_length_dm) - Long(ls_net_coil_length_dm) //I don't need this
+			
+			If Long(ls_ending_pos) >= Long(ls_gross_coil_length_dm) Then
+				ldc_starting_pos = 0
+			Else
+				ldc_starting_pos = Dec(String((Long(ls_gross_coil_length_dm) * 3.93701) - (Long(ls_ending_pos) * 3.93701), "###,##0.0000")) //Convert decimeters into inches, and flip starting and ending positions
+			End If
+			
+			adw_coil_quality_flaw_mapping.Object.starting_position[ll_inserted_row] = ldc_starting_pos
+
+			If Long(ls_starting_pos) >= Long(ls_gross_coil_length_dm) Then
+				ldc_ending_pos = 0
+			Else
+				ldc_ending_pos = Dec(String((Long(ls_gross_coil_length_dm) * 3.93701) - (Long(ls_starting_pos) * 3.93701), "###,##0.0000")) //Convert decimeters into inches, and flip starting and ending positions
+			End If
+			
+			adw_coil_quality_flaw_mapping.Object.ending_position[ll_inserted_row] = ldc_ending_pos
+
+			adw_coil_quality_flaw_mapping.Object.flaw_code[ll_inserted_row] = ls_flaw_code
+			adw_coil_quality_flaw_mapping.Object.starting_position_uom[ll_inserted_row] = "inches"
+			adw_coil_quality_flaw_mapping.Object.ending_position_uom[ll_inserted_row] = "inches"
+		End If
+	Loop
+End If
+
+If IsNumber(ls_cash_date_julian5) Then
+	lb_error = f_convert_julian5_to_mmddyyyy(Long(ls_cash_date_julian5), ld_date_out, li_year, li_month, li_day)
+	
+	If Not lb_error Then //OK
+		If Upper(ls_pre_treatment_flag) = "T" Then
+			ldt_cash_date = DateTime(ld_date_out, Time("00:00:00"))
+			SetNull(ldt_cm_date)
+		Else
+			ldt_cm_date = DateTime(ld_date_out, Time("00:00:00"))
+			SetNull(ldt_cash_date)
+		End If
+	Else //Error
+		SetNull(ldt_cash_date)
+		SetNull(ldt_cm_date)
+	End If
+Else //Error: ls_cash_date_julian5 is not number
+	SetNull(ldt_cash_date)
+	SetNull(ldt_cm_date)
+End If
+
+If IsNumber(ls_net_coil_length_dm) Then
+	ll_net_coil_length_inches = Long(ls_net_coil_length_dm) * 3.93701 //Convert decimeters into inches
+Else //Error: ls_net_coil_length_dm is not number
+	SetNull(ll_net_coil_length_inches)
+End If
+
+If IsNumber(ls_coil_width_mm) Then
+	ldc_coil_width_inches = long(ls_coil_width_mm) / 25.4 //Convert millimeters into inches
+Else //Error: ls_coil_width_mm is not number
+	SetNull(ldc_coil_width_inches)
+End If
+
+If IsNumber(ls_coil_weight_kg) Then
+	ll_coil_weight_lbs = Long(ls_coil_weight_kg) * 2.20462 //Convert kilograms into pounds
+Else //Error: ls_coil_weight_kg is not number
+	SetNull(ll_coil_weight_lbs)
+End If
+
+If IsNumber(ls_material_thikness_mm) Then
+	ldc_material_thickness_inches = Dec(ls_material_thikness_mm) / 25.4 //Convert millimeters into inches
+Else //Error: ls_material_thikness_mm is not number
+	SetNull(ldc_material_thickness_inches)
+End If
+
+If IsNumber(ls_gross_coil_length_dm) Then
+	ll_gross_coil_length_inches = Long(ls_gross_coil_length_dm) * 3.93701 //Convert decimeters into inches
+Else //Error: ls_gross_coil_length_dm is not number
+	SetNull(ll_gross_coil_length_inches)
+End If
+
+If IsNumber(ls_cash_line_id) Then
+	li_cash_line_id = Integer(ls_cash_line_id)
+Else //Error: ls_cash_line_id is not number
+	SetNull(li_cash_line_id)
+End If
+
+ll_inserted_row = adw_coil_quality.InsertRow(0)
+
+If ll_inserted_row > 0 Then
+	adw_coil_quality.Object.coil_abc_num[ll_inserted_row] = al_coil_abc_num
+	adw_coil_quality.Object.coil_org_num[ll_inserted_row] = Trim(ls_coil_org_number)
+	adw_coil_quality.Object.part_num[ll_inserted_row] = ls_part_num
+	adw_coil_quality.Object.material_grade[ll_inserted_row] = ls_material_grade
+	adw_coil_quality.Object.pre_treatment_flag[ll_inserted_row] = ls_pre_treatment_flag
+	adw_coil_quality.Object.cash_date_julian5[ll_inserted_row] = ls_cash_date_julian5
+	adw_coil_quality.Object.cash_date[ll_inserted_row] = ldt_cash_date
+	adw_coil_quality.Object.cm_date[ll_inserted_row] = ldt_cm_date
+	adw_coil_quality.Object.mill_id[ll_inserted_row] = ls_mill_id
+	adw_coil_quality.Object.gross_coil_length[ll_inserted_row] = ll_gross_coil_length_inches
+	adw_coil_quality.Object.gross_coil_length_uom[ll_inserted_row] = 'inches'
+	adw_coil_quality.Object.net_coil_length[ll_inserted_row] = ll_net_coil_length_inches
+	adw_coil_quality.Object.net_coil_length_uom[ll_inserted_row] = 'inches'
+	adw_coil_quality.Object.coil_width[ll_inserted_row] = ldc_coil_width_inches
+	adw_coil_quality.Object.coil_width_uom[ll_inserted_row] = 'inches'
+	adw_coil_quality.Object.coil_weight[ll_inserted_row] = ll_coil_weight_lbs
+	adw_coil_quality.Object.coil_weight_uom[ll_inserted_row] = 'pounds'
+	adw_coil_quality.Object.material_thikness[ll_inserted_row] = ldc_material_thickness_inches
+	adw_coil_quality.Object.material_thikness_uom[ll_inserted_row] = 'inches'
+	adw_coil_quality.Object.cash_line_id[ll_inserted_row] = li_cash_line_id
+	adw_coil_quality.Object.payoff_direction[ll_inserted_row] = ls_payoff_direction
+	adw_coil_quality.Object.sampling_required[ll_inserted_row] = ls_sampling_code
+
+	adw_coil_quality.Object.revision_level[ll_inserted_row] = ls_revision_level
+	adw_coil_quality.Object.pcc_number[ll_inserted_row] = ls_pcc_number
+End If
+
+Return li_rtn
+//Alex Gerlants. Coil Quality. 02/06/2018.End
+end function
+

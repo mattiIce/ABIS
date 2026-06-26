@@ -502,3 +502,30 @@ public sealed class GrantWrite
 {
     public int? Privilege { get; set; }
 }
+
+/// <summary>Add a coil line to a receiving BOL (table <c>receiving_bol_coil</c>). The
+/// <c>receiving_bol_id</c> comes from the route and <c>coil_id</c> is assigned server-side
+/// (1..n within the BOL). <see cref="CoilOrgNum"/> is required (NOT NULL).</summary>
+public sealed class ReceivingBolCoilWrite
+{
+    public string? CoilOrgNum { get; set; }
+    public long? CoilAbcNum { get; set; }
+    public int? Status { get; set; }
+    public int? DamagedFault { get; set; }
+    public int? DamagedCode { get; set; }
+    public string? Temper { get; set; }
+    public int? NetWeight { get; set; }
+    public int? GrossWeight { get; set; }
+    public decimal? LinealFeed { get; set; }
+    public decimal? CoilWidth { get; set; }
+    public decimal? CoilGauge { get; set; }
+    public string? Lot { get; set; }
+    public string? PackId { get; set; }
+    public string? Alloy { get; set; }
+    public string? PartNum { get; set; }
+    public string? SupplierSalesNum { get; set; }
+    public string? PurchaseOrderNum { get; set; }
+    public string? ConsumedCoilNum { get; set; }
+    public string? MaterialNum { get; set; }
+    public string? CashDate { get; set; }
+}

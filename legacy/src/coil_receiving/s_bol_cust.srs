@@ -1,0 +1,6 @@
+$PBExportHeader$s_bol_cust.srs
+global type s_bol_cust from structure
+	string		bol
+	long		cust
+end type
+
