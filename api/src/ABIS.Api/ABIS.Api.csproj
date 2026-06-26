@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.8" />
     <!-- Production driver. Selected at runtime via Database:Provider=Oracle.
          Not exercised by the test suite (no Oracle instance in CI). -->
