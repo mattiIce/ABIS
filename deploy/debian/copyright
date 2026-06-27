@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: ABIS
+
+Files: *
+Copyright: ABIS / mattiIce
+License: proprietary
+ Internal software. All rights reserved. Distributed only to authorized
+ operators of the ABIS system.

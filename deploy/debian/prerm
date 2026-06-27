@@ -1,0 +1,18 @@
+#!/bin/sh
+# prerm — stop the service before the package is removed. On upgrade, leave it
+# running; the new postinst restarts it.
+set -e
+
+SERVICE_NAME="abis"
+
+case "$1" in
+  remove|deconfigure)
+    if [ -d /run/systemd/system ]; then
+      systemctl stop "${SERVICE_NAME}.service" >/dev/null 2>&1 || true
+    fi
+    ;;
+  upgrade|failed-upgrade)
+    ;;
+esac
+
+exit 0

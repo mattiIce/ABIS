@@ -1,0 +1,51 @@
+#!/bin/sh
+# postrm — clean up after removal. `remove` drops the live nginx site and
+# disables the unit (keeping /etc/abis config + any cert for a reinstall);
+# `purge` additionally deletes config, the cert, and the service user.
+set -e
+
+SERVICE_NAME="abis"
+CONFIG_DIR="/etc/abis"
+STATE_FILE="${CONFIG_DIR}/install.state"
+NGINX_AVAIL="/etc/nginx/sites-available/${SERVICE_NAME}"
+NGINX_ENABLED="/etc/nginx/sites-enabled/${SERVICE_NAME}"
+
+reload_nginx_if_ok() {
+  if command -v nginx >/dev/null 2>&1 && nginx -t >/dev/null 2>&1; then
+    [ -d /run/systemd/system ] && systemctl reload nginx >/dev/null 2>&1 || true
+  fi
+}
+
+case "$1" in
+  remove)
+    if [ -d /run/systemd/system ]; then
+      systemctl disable "${SERVICE_NAME}.service" >/dev/null 2>&1 || true
+      systemctl daemon-reload >/dev/null 2>&1 || true
+    fi
+    # Remove the live site only; keep /etc/abis config + any cert for a reinstall.
+    rm -f "$NGINX_ENABLED"
+    reload_nginx_if_ok
+    ;;
+  purge)
+    # Best-effort: delete the Let's Encrypt cert for the stored server name.
+    if [ -f "$STATE_FILE" ]; then
+      SERVER_NAME="$(sed -n 's/^ABIS_SERVER_NAME="\{0,1\}\([^"]*\)"\{0,1\}.*/\1/p' "$STATE_FILE" | head -n1)"
+      if [ -n "$SERVER_NAME" ] && command -v certbot >/dev/null 2>&1; then
+        certbot delete --cert-name "$SERVER_NAME" --non-interactive >/dev/null 2>&1 || true
+      fi
+    fi
+    rm -f "$NGINX_ENABLED" "$NGINX_AVAIL"
+    reload_nginx_if_ok
+    rm -rf "$CONFIG_DIR"
+    if id -u "$SERVICE_NAME" >/dev/null 2>&1; then
+      if command -v deluser >/dev/null 2>&1; then
+        deluser --system "$SERVICE_NAME" >/dev/null 2>&1 || true
+      else
+        userdel "$SERVICE_NAME" >/dev/null 2>&1 || true
+      fi
+    fi
+    if [ -d /run/systemd/system ]; then systemctl daemon-reload >/dev/null 2>&1 || true; fi
+    ;;
+esac
+
+exit 0
