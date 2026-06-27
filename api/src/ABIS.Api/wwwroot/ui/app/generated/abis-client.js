@@ -5406,6 +5406,255 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Per-line efficiency: jobs, processed weight, avg yield, and downtime (events + minutes).
+     * @param from (optional)
+     * @param to (optional)
+     * @return OK
+     */
+    getLineEfficiency(from, to) {
+        let url_ = this.baseUrl + "/api/reporting/line-efficiency?";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetLineEfficiency(_response);
+        });
+    }
+    processGetLineEfficiency(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(LineEfficiencyRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Production rolled up by month (YYYY-MM): jobs touched + processed weight.
+     * @param from (optional)
+     * @param to (optional)
+     * @return OK
+     */
+    getMonthlyProduction(from, to) {
+        let url_ = this.baseUrl + "/api/reporting/monthly-production?";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetMonthlyProduction(_response);
+        });
+    }
+    processGetMonthlyProduction(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(MonthlyProductionRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Downtime events over a window (optionally one line), with computed duration minutes.
+     * @param from (optional)
+     * @param to (optional)
+     * @param lineNum (optional)
+     * @return OK
+     */
+    getProductionDowntime(from, to, lineNum) {
+        let url_ = this.baseUrl + "/api/reporting/downtime?";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        if (lineNum === null)
+            throw new globalThis.Error("The parameter 'lineNum' cannot be null.");
+        else if (lineNum !== undefined)
+            url_ += "lineNum=" + encodeURIComponent("" + lineNum) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetProductionDowntime(_response);
+        });
+    }
+    processGetProductionDowntime(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(ProductionDowntimeRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Per-line on-time delivery (jobs finished on/before due date) over an optional window.
+     * @param from (optional)
+     * @param to (optional)
+     * @return OK
+     */
+    getOnTimeDelivery(from, to) {
+        let url_ = this.baseUrl + "/api/reporting/on-time?";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetOnTimeDelivery(_response);
+        });
+    }
+    processGetOnTimeDelivery(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(OnTimeRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * Pending sales / quote list (customer, contact, latest win probability).
      * @param search (optional)
      * @return OK
@@ -10134,6 +10383,44 @@ export class JobWrite {
         return data;
     }
 }
+export class LineEfficiencyRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.lineNum = _data["lineNum"];
+            this.lineDesc = _data["lineDesc"];
+            this.jobCount = _data["jobCount"];
+            this.processedWt = _data["processedWt"];
+            this.avgYield = _data["avgYield"];
+            this.downtimeEvents = _data["downtimeEvents"];
+            this.downtimeMinutes = _data["downtimeMinutes"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new LineEfficiencyRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["lineNum"] = this.lineNum;
+        data["lineDesc"] = this.lineDesc;
+        data["jobCount"] = this.jobCount;
+        data["processedWt"] = this.processedWt;
+        data["avgYield"] = this.avgYield;
+        data["downtimeEvents"] = this.downtimeEvents;
+        data["downtimeMinutes"] = this.downtimeMinutes;
+        return data;
+    }
+}
 export class MaintLog {
     constructor(data) {
         if (data) {
@@ -10285,6 +10572,72 @@ export class MaintLogWrite {
         data["completedBy"] = this.completedBy;
         data["laborHours"] = this.laborHours;
         data["probCost"] = this.probCost;
+        return data;
+    }
+}
+export class MonthlyProductionRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.month = _data["month"];
+            this.jobCount = _data["jobCount"];
+            this.processedWt = _data["processedWt"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new MonthlyProductionRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["month"] = this.month;
+        data["jobCount"] = this.jobCount;
+        data["processedWt"] = this.processedWt;
+        return data;
+    }
+}
+export class OnTimeRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.lineNum = _data["lineNum"];
+            this.lineDesc = _data["lineDesc"];
+            this.finishedJobs = _data["finishedJobs"];
+            this.onTime = _data["onTime"];
+            this.late = _data["late"];
+            this.onTimePct = _data["onTimePct"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new OnTimeRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["lineNum"] = this.lineNum;
+        data["lineDesc"] = this.lineDesc;
+        data["finishedJobs"] = this.finishedJobs;
+        data["onTime"] = this.onTime;
+        data["late"] = this.late;
+        data["onTimePct"] = this.onTimePct;
         return data;
     }
 }
@@ -11243,6 +11596,46 @@ export class ProductType {
         data = typeof data === 'object' ? data : {};
         data["productTypeId"] = this.productTypeId;
         data["productTypeName"] = this.productTypeName;
+        return data;
+    }
+}
+export class ProductionDowntimeRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.instanceNum = _data["instanceNum"];
+            this.lineNum = _data["lineNum"];
+            this.lineDesc = _data["lineDesc"];
+            this.abJobNum = _data["abJobNum"];
+            this.startingTime = _data["startingTime"] ? new Date(_data["startingTime"].toString()) : undefined;
+            this.endingTime = _data["endingTime"] ? new Date(_data["endingTime"].toString()) : undefined;
+            this.note = _data["note"];
+            this.durationMinutes = _data["durationMinutes"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProductionDowntimeRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["instanceNum"] = this.instanceNum;
+        data["lineNum"] = this.lineNum;
+        data["lineDesc"] = this.lineDesc;
+        data["abJobNum"] = this.abJobNum;
+        data["startingTime"] = this.startingTime ? this.startingTime.toISOString() : undefined;
+        data["endingTime"] = this.endingTime ? this.endingTime.toISOString() : undefined;
+        data["note"] = this.note;
+        data["durationMinutes"] = this.durationMinutes;
         return data;
     }
 }

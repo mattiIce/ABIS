@@ -669,3 +669,46 @@ test('receiving flow: BOL coil line items add/list/detail/delete (typed)', async
   assert.equal(list.length, 1);
   assert.equal(list[0].coilId, 2);
 });
+
+// Production reporting (legacy daily_prod / silverdome3 w_report_production_*): the
+// new report aggregations over the seeded jobs/coils/downtime/lines.
+test('reporting flow: line efficiency carries downtime (typed)', async () => {
+  const rows = await client.getLineEfficiency(undefined, undefined);
+  assert.ok(rows.length > 0);
+  const l110 = rows.find((r) => r.lineNum === 110);
+  assert.ok(l110, 'line 110 present');
+  assert.ok(l110.jobCount >= 2);
+  // Seeded downtime: line 110 has two events (20 + 5 min) = 25 min.
+  assert.equal(l110.downtimeEvents, 2);
+  assert.equal(Math.round(l110.downtimeMinutes), 25);
+});
+
+test('reporting flow: monthly production buckets by YYYY-MM (typed)', async () => {
+  const rows = await client.getMonthlyProduction(undefined, undefined);
+  assert.ok(rows.length > 0);
+  assert.ok(rows.every((r) => /^\d{4}-\d{2}$/.test(r.month)));
+  assert.ok(rows.every((r) => typeof r.processedWt === 'number'));
+});
+
+test('reporting flow: downtime events carry computed duration (typed)', async () => {
+  const rows = await client.getProductionDowntime(undefined, undefined, undefined);
+  assert.ok(rows.length >= 3);
+  // Closed events have a non-negative numeric duration; open events (no end) are null.
+  assert.ok(rows.every((r) => r.durationMinutes == null || (typeof r.durationMinutes === 'number' && r.durationMinutes >= 0)));
+  const line110 = await client.getProductionDowntime(undefined, undefined, 110);
+  assert.ok(line110.length >= 2);
+  assert.ok(line110.every((r) => r.lineNum === 110));
+  // The seeded line-110 events are closed → their durations sum to ~25 min.
+  assert.ok(line110.filter((r) => r.durationMinutes != null).length >= 2);
+});
+
+test('reporting flow: on-time delivery (typed)', async () => {
+  const rows = await client.getOnTimeDelivery(undefined, undefined);
+  // Seeded: only job 1003 (line 120) is finished, due d+5 finished d+3 → on time.
+  const l120 = rows.find((r) => r.lineNum === 120);
+  assert.ok(l120, 'line 120 has a finished job');
+  assert.equal(l120.finishedJobs, 1);
+  assert.equal(l120.onTime, 1);
+  assert.equal(l120.late, 0);
+  assert.equal(l120.onTimePct, 100);
+});

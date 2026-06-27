@@ -937,6 +937,30 @@ public static class ApiEndpoints
            .WithSummary("Per-line production summary (job count, avg yield, processed weight) over an optional date range.")
            .Produces<IReadOnlyList<ProductionSummaryRow>>();
 
+        api.MapGet("/reporting/line-efficiency", async (DateTime? from, DateTime? to, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetLineEfficiencyAsync(from, to, ct)))
+           .WithName("GetLineEfficiency").WithTags("Reporting")
+           .WithSummary("Per-line efficiency: jobs, processed weight, avg yield, and downtime (events + minutes).")
+           .Produces<IReadOnlyList<LineEfficiencyRow>>();
+
+        api.MapGet("/reporting/monthly-production", async (DateTime? from, DateTime? to, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetMonthlyProductionAsync(from, to, ct)))
+           .WithName("GetMonthlyProduction").WithTags("Reporting")
+           .WithSummary("Production rolled up by month (YYYY-MM): jobs touched + processed weight.")
+           .Produces<IReadOnlyList<MonthlyProductionRow>>();
+
+        api.MapGet("/reporting/downtime", async (DateTime? from, DateTime? to, IAbisRepository repo, CancellationToken ct, long? lineNum = null) =>
+                Results.Ok(await repo.GetProductionDowntimeAsync(from, to, lineNum, ct)))
+           .WithName("GetProductionDowntime").WithTags("Reporting")
+           .WithSummary("Downtime events over a window (optionally one line), with computed duration minutes.")
+           .Produces<IReadOnlyList<ProductionDowntimeRow>>();
+
+        api.MapGet("/reporting/on-time", async (DateTime? from, DateTime? to, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetOnTimeDeliveryAsync(from, to, ct)))
+           .WithName("GetOnTimeDelivery").WithTags("Reporting")
+           .WithSummary("Per-line on-time delivery (jobs finished on/before due date) over an optional window.")
+           .Produces<IReadOnlyList<OnTimeRow>>();
+
         // ---- Quality / Recovery (customer-defect setup) -----------------
         api.MapGet("/quality/scrap-types", async (IAbisRepository repo, CancellationToken ct) =>
                 Results.Ok(await repo.GetScrapTypesAsync(ct)))

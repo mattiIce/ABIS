@@ -792,6 +792,115 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
+    // Per-line efficiency: the production roll-up plus downtime (events + minutes). Downtime
+    // duration is computed in C# (portable — no DB date math) and merged by line.
+    public async Task<IReadOnlyList<LineEfficiencyRow>> GetLineEfficiencyAsync(DateTime? from, DateTime? to, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var p = new DynamicParameters();
+        var jobFilter = "";
+        if (from is not null) { jobFilter += " AND j.time_date_started >= :dfrom"; p.Add("dfrom", from, DbType.DateTime); }
+        if (to is not null) { jobFilter += " AND j.time_date_started < :dto"; p.Add("dto", to, DbType.DateTime); }
+        var rows = (await conn.QueryAsync<LineEfficiencyRow>(new CommandDefinition(
+            $"""
+            SELECT l.line_num AS LineNum, l.line_desc AS LineDesc,
+                   COUNT(j.ab_job_num) AS JobCount, AVG(j.material_yield) AS AvgYield,
+                   COALESCE(SUM((SELECT SUM(pc.process_end_wt) FROM process_coil pc WHERE pc.ab_job_num = j.ab_job_num)), 0.0) AS ProcessedWt
+            FROM line l
+            LEFT JOIN ab_job j ON j.line_num = l.line_num{jobFilter}
+            GROUP BY l.line_num, l.line_desc
+            ORDER BY l.line_num
+            """, p, cancellationToken: ct))).AsList();
+
+        // Merge downtime per line (compute minutes in C#).
+        var dt = await GetProductionDowntimeAsync(from, to, null, ct);
+        foreach (var r in rows)
+        {
+            var forLine = dt.Where(x => x.LineNum == r.LineNum).ToList();
+            r.DowntimeEvents = forLine.Count;
+            r.DowntimeMinutes = Math.Round(forLine.Sum(x => x.DurationMinutes ?? 0), 1);
+        }
+        return rows;
+    }
+
+    // Production rolled up by month (YYYY-MM). The month bucket is formed in C# from
+    // process_date so no DB-specific date-format function is needed (Oracle + SQLite).
+    public async Task<IReadOnlyList<MonthlyProductionRow>> GetMonthlyProductionAsync(DateTime? from, DateTime? to, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var p = new DynamicParameters();
+        var where = new List<string> { "pc.process_date IS NOT NULL" };
+        if (from is not null) { where.Add("pc.process_date >= :dfrom"); p.Add("dfrom", from, DbType.DateTime); }
+        if (to is not null) { where.Add("pc.process_date < :dto"); p.Add("dto", to, DbType.DateTime); }
+        var raw = await conn.QueryAsync<MonthRawRow>(new CommandDefinition(
+            $"""
+            SELECT pc.process_date AS ProcessDate, pc.ab_job_num AS AbJobNum, pc.process_end_wt AS Wt
+            FROM process_coil pc WHERE {string.Join(" AND ", where)}
+            """, p, cancellationToken: ct));
+        return raw
+            .Where(x => x.ProcessDate.HasValue)
+            .GroupBy(x => x.ProcessDate!.Value.ToString("yyyy-MM"))
+            .OrderBy(g => g.Key)
+            .Select(g => new MonthlyProductionRow
+            {
+                Month = g.Key,
+                JobCount = g.Select(x => x.AbJobNum).Distinct().Count(),
+                ProcessedWt = Math.Round(g.Sum(x => x.Wt ?? 0), 2),
+            })
+            .ToList();
+    }
+
+    private sealed class MonthRawRow
+    {
+        public DateTime? ProcessDate { get; set; }
+        public long AbJobNum { get; set; }
+        public double? Wt { get; set; }
+    }
+
+    // Downtime events over a window (optionally one line), joined to the line description.
+    public async Task<IReadOnlyList<ProductionDowntimeRow>> GetProductionDowntimeAsync(DateTime? from, DateTime? to, long? lineNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var p = new DynamicParameters();
+        var where = new List<string>();
+        if (from is not null) { where.Add("i.starting_time >= :dfrom"); p.Add("dfrom", from, DbType.DateTime); }
+        if (to is not null) { where.Add("i.starting_time < :dto"); p.Add("dto", to, DbType.DateTime); }
+        if (lineNum is not null) { where.Add("i.line_num = :line"); p.Add("line", lineNum); }
+        var clause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
+        var rows = await conn.QueryAsync<ProductionDowntimeRow>(new CommandDefinition(
+            $"""
+            SELECT i.instance_num AS InstanceNum, i.line_num AS LineNum, l.line_desc AS LineDesc,
+                   i.ab_job_num AS AbJobNum, i.starting_time AS StartingTime, i.ending_time AS EndingTime, i.note AS Note
+            FROM dt_instance i LEFT JOIN line l ON l.line_num = i.line_num
+            {clause}
+            ORDER BY i.line_num, i.starting_time
+            """, p, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    // Per-line on-time delivery: of jobs finished in the window, how many shipped on/before
+    // the due date. Pure column comparison (portable — no date functions).
+    public async Task<IReadOnlyList<OnTimeRow>> GetOnTimeDeliveryAsync(DateTime? from, DateTime? to, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var p = new DynamicParameters();
+        var filter = "j.time_date_finished IS NOT NULL";
+        if (from is not null) { filter += " AND j.time_date_finished >= :dfrom"; p.Add("dfrom", from, DbType.DateTime); }
+        if (to is not null) { filter += " AND j.time_date_finished < :dto"; p.Add("dto", to, DbType.DateTime); }
+        var rows = await conn.QueryAsync<OnTimeRow>(new CommandDefinition(
+            $"""
+            SELECT l.line_num AS LineNum, l.line_desc AS LineDesc,
+                   COUNT(j.ab_job_num) AS FinishedJobs,
+                   SUM(CASE WHEN j.time_date_finished <= j.due_date THEN 1 ELSE 0 END) AS OnTime,
+                   SUM(CASE WHEN j.time_date_finished > j.due_date THEN 1 ELSE 0 END) AS Late
+            FROM line l
+            JOIN ab_job j ON j.line_num = l.line_num AND {filter}
+            GROUP BY l.line_num, l.line_desc
+            ORDER BY l.line_num
+            """, p, cancellationToken: ct));
+        return rows.AsList();
+    }
+
     public async Task<IReadOnlyList<OpcLog>> GetOpcLogsAsync(CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
