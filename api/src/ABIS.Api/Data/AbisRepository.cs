@@ -2362,6 +2362,63 @@ public sealed class AbisRepository : IAbisRepository
         return (await GetJobFolderNotesAsync(abJobNum, ct)).Last(n => n.UserId == userId);
     }
 
+    // ---- Stacker line board / error log (legacy stacker_110) ----
+
+    public async Task<IReadOnlyList<StackerBoardRow>> GetStackerBoardAsync(long? lineNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<StackerBoardRow>(new CommandDefinition(
+            """
+            SELECT j.ab_job_num AS AbJobNum, j.line_num AS LineNum, j.job_status AS JobStatus, j.order_abc_num AS OrderAbcNum,
+                   (SELECT COUNT(*) FROM process_coil pc WHERE pc.ab_job_num = j.ab_job_num) AS CoilCount,
+                   (SELECT COUNT(*) FROM sheet_skid ss WHERE ss.ab_job_num = j.ab_job_num) AS SkidCount
+            FROM ab_job j
+            WHERE (:line IS NULL OR j.line_num = :line)
+            ORDER BY j.ab_job_num DESC
+            """, new { line = lineNum }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<LineErrorRow>> GetLineErrorsAsync(long? lineNum, DateTime? from, DateTime? to, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var p = new DynamicParameters();
+        p.Add("line", lineNum);
+        var where = new List<string> { "(:line IS NULL OR e.line_id = :line)" };
+        if (from is not null) { where.Add("e.evt_time >= :dfrom"); p.Add("dfrom", from, DbType.DateTime); }
+        if (to is not null) { where.Add("e.evt_time < :dto"); p.Add("dto", to, DbType.DateTime); }
+        var rows = await conn.QueryAsync<LineErrorRow>(new CommandDefinition(
+            $"""
+            SELECT e.error_evt_id AS ErrorEvtId, e.evt_time AS EvtTime, e.error_type_id AS ErrorTypeId, t.error_type AS ErrorType,
+                   e.error_user AS ErrorUser, e.error_comment AS ErrorComment, e.line_id AS LineId,
+                   e.coil_abc_num AS CoilAbcNum, e.ab_job_num AS AbJobNum, e.title AS Title, e.message AS Message
+            FROM error_evt e LEFT JOIN error_type t ON t.error_type_id = e.error_type_id
+            WHERE {string.Join(" AND ", where)}
+            ORDER BY e.evt_time DESC
+            """, p, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<LineErrorRow> CreateLineErrorAsync(LineErrorWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "error_evt", "error_evt_id", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO error_evt (error_evt_id, evt_time, error_type_id, error_user, error_comment, line_id, coil_abc_num, ab_job_num, title, message)
+            VALUES (:id, :ts, :type, :usr, :comment, :line, :coil, :job, :title, :msg)
+            """,
+            new
+            {
+                id, ts = (DateTime?)DateTime.UtcNow, type = body.ErrorTypeId, usr = body.ErrorUser, comment = body.ErrorComment,
+                line = body.LineId, coil = body.CoilAbcNum, job = body.AbJobNum, title = body.Title, msg = body.Message
+            },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetLineErrorsAsync(body.LineId, null, null, ct)).First(e => e.ErrorEvtId == id);
+    }
+
     public Task<PagedResult<ScanLog>> GetScanLogsAsync(int page, int pageSize, long? abJobNum, string? orderBy, CancellationToken ct) =>
         PageAsync<ScanLog>(ScanLogCols, "scan_log", orderBy ?? "scan_id DESC",
             abJobNum is null ? null : "ab_job_num = :abJobNum",

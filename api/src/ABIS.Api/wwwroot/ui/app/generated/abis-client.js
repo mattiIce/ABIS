@@ -9425,6 +9425,183 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * A line's stacker board: jobs on the line with coil/skid counts (read-only monitor).
+     * @param lineNum (optional)
+     * @return OK
+     */
+    getStackerBoard(lineNum) {
+        let url_ = this.baseUrl + "/api/stacker/board?";
+        if (lineNum === null)
+            throw new globalThis.Error("The parameter 'lineNum' cannot be null.");
+        else if (lineNum !== undefined)
+            url_ += "lineNum=" + encodeURIComponent("" + lineNum) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetStackerBoard(_response);
+        });
+    }
+    processGetStackerBoard(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(StackerBoardRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * The line/stacker error log (error_evt ⋈ error_type), newest first.
+     * @param lineNum (optional)
+     * @param from (optional)
+     * @param to (optional)
+     * @return OK
+     */
+    getLineErrors(lineNum, from, to) {
+        let url_ = this.baseUrl + "/api/stacker/line-errors?";
+        if (lineNum === null)
+            throw new globalThis.Error("The parameter 'lineNum' cannot be null.");
+        else if (lineNum !== undefined)
+            url_ += "lineNum=" + encodeURIComponent("" + lineNum) + "&";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetLineErrors(_response);
+        });
+    }
+    processGetLineErrors(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(LineErrorRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Log a line/stacker error event.
+     * @return Created
+     */
+    createLineError(body) {
+        let url_ = this.baseUrl + "/api/stacker/line-errors";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateLineError(_response);
+        });
+    }
+    processCreateLineError(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = LineErrorRow.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * List posted mechanical test results (paged, filterable, sortable).
      * @param page (optional)
      * @param pageSize (optional)
@@ -12079,6 +12256,92 @@ export class LineEfficiencyRow {
         data["avgYield"] = this.avgYield;
         data["downtimeEvents"] = this.downtimeEvents;
         data["downtimeMinutes"] = this.downtimeMinutes;
+        return data;
+    }
+}
+export class LineErrorRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.errorEvtId = _data["errorEvtId"];
+            this.evtTime = _data["evtTime"] ? new Date(_data["evtTime"].toString()) : undefined;
+            this.errorTypeId = _data["errorTypeId"];
+            this.errorType = _data["errorType"];
+            this.errorUser = _data["errorUser"];
+            this.errorComment = _data["errorComment"];
+            this.lineId = _data["lineId"];
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.abJobNum = _data["abJobNum"];
+            this.title = _data["title"];
+            this.message = _data["message"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new LineErrorRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["errorEvtId"] = this.errorEvtId;
+        data["evtTime"] = this.evtTime ? this.evtTime.toISOString() : undefined;
+        data["errorTypeId"] = this.errorTypeId;
+        data["errorType"] = this.errorType;
+        data["errorUser"] = this.errorUser;
+        data["errorComment"] = this.errorComment;
+        data["lineId"] = this.lineId;
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["abJobNum"] = this.abJobNum;
+        data["title"] = this.title;
+        data["message"] = this.message;
+        return data;
+    }
+}
+export class LineErrorWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.errorTypeId = _data["errorTypeId"];
+            this.errorUser = _data["errorUser"];
+            this.errorComment = _data["errorComment"];
+            this.lineId = _data["lineId"];
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.abJobNum = _data["abJobNum"];
+            this.title = _data["title"];
+            this.message = _data["message"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new LineErrorWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["errorTypeId"] = this.errorTypeId;
+        data["errorUser"] = this.errorUser;
+        data["errorComment"] = this.errorComment;
+        data["lineId"] = this.lineId;
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["abJobNum"] = this.abJobNum;
+        data["title"] = this.title;
+        data["message"] = this.message;
         return data;
     }
 }
@@ -15394,6 +15657,42 @@ export class SkidInventoryRow {
         data["skidSheetStatus"] = this.skidSheetStatus;
         data["skidCount"] = this.skidCount;
         data["totalNetWt"] = this.totalNetWt;
+        return data;
+    }
+}
+export class StackerBoardRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.abJobNum = _data["abJobNum"];
+            this.lineNum = _data["lineNum"];
+            this.jobStatus = _data["jobStatus"];
+            this.orderAbcNum = _data["orderAbcNum"];
+            this.coilCount = _data["coilCount"];
+            this.skidCount = _data["skidCount"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new StackerBoardRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["abJobNum"] = this.abJobNum;
+        data["lineNum"] = this.lineNum;
+        data["jobStatus"] = this.jobStatus;
+        data["orderAbcNum"] = this.orderAbcNum;
+        data["coilCount"] = this.coilCount;
+        data["skidCount"] = this.skidCount;
         return data;
     }
 }

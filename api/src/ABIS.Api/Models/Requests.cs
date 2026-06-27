@@ -571,3 +571,17 @@ public sealed class JobFolderNoteWrite
     public long? UserId { get; set; }
     public string? Notes { get; set; }
 }
+
+/// <summary>Log a line/stacker error event (table <c>error_evt</c>). <c>evt_time</c> is
+/// server-set; <see cref="ErrorTypeId"/> and <see cref="ErrorUser"/> are required (NOT NULL).</summary>
+public sealed class LineErrorWrite
+{
+    public int? ErrorTypeId { get; set; }
+    public string? ErrorUser { get; set; }
+    public string? ErrorComment { get; set; }
+    public long? LineId { get; set; }
+    public long? CoilAbcNum { get; set; }
+    public long? AbJobNum { get; set; }
+    public string? Title { get; set; }
+    public string? Message { get; set; }
+}
