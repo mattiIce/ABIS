@@ -154,6 +154,13 @@ public interface IAbisRepository
     Task<ReceivingBolCoil?> AddReceivingBolCoilAsync(long receivingBolId, ReceivingBolCoilWrite body, CancellationToken ct);
     Task<bool> DeleteReceivingBolCoilAsync(long receivingBolId, int coilId, CancellationToken ct);
     Task<MintResult?> MintBolCoilsAsync(long receivingBolId, CancellationToken ct);
+
+    // ---- Coil evaluation / QC -------------------------------------------
+    Task<IReadOnlyList<QcCoilRow>> GetQcCoilsAsync(long abJobNum, CancellationToken ct);
+    Task<IReadOnlyList<SheetSkidDimensionCheck>> GetDimensionChecksAsync(long sheetSkidNum, CancellationToken ct);
+    Task<SheetSkidDimensionCheck> CreateDimensionCheckAsync(long sheetSkidNum, DimensionCheckWrite body, CancellationToken ct);
+    Task<IReadOnlyList<EvalScrap>> GetEvalScrapAsync(long abJobNum, CancellationToken ct);
+    Task<EvalScrap> UpsertEvalScrapAsync(EvalScrapWrite body, CancellationToken ct);
     Task<PagedResult<EdiTransaction>> GetEdiTransactionsAsync(int page, int pageSize, long? customerId, string? transactionTypeId, string? orderBy, CancellationToken ct);
     Task<EdiTransaction?> GetEdiTransactionAsync(long ediFileId, CancellationToken ct);
     Task<PagedResult<EdiLogEntry>> GetEdiLogAsync(int page, int pageSize, long? customerId, string? orderBy, CancellationToken ct);

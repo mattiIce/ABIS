@@ -1221,3 +1221,55 @@ public sealed class Edi861Result
     public string Status { get; set; } = "deferred";
     public string? Note { get; set; }
 }
+
+// ---- Coil evaluation / QC (legacy coil_eval: w_qc_sheet) ----
+
+/// <summary>A coil to evaluate on a job (coil ⋈ process_coil) — the QC coil picker.</summary>
+public sealed class QcCoilRow
+{
+    public long AbJobNum { get; set; }
+    public long CoilAbcNum { get; set; }
+    public string? CoilOrgNum { get; set; }
+    public string? CoilAlloy2 { get; set; }
+    public string? CoilTemper { get; set; }
+    public int? ProcessCoilStatus { get; set; }
+    public decimal? ProcessEndWt { get; set; }
+}
+
+/// <summary>A dimensional QC check on a sheet-skid piece (table
+/// <c>sheet_skid_dimension_check</c>, PK <c>dimension_check_num</c>). <c>InSpec</c> is the
+/// pass/fail flag. Column names authoritative (oracle_ddl.sql).</summary>
+public sealed class SheetSkidDimensionCheck
+{
+    public long DimensionCheckNum { get; set; }
+    public long SheetSkidNum { get; set; }
+    public int? PcNumber { get; set; }
+    public decimal? Gauge { get; set; }
+    public decimal? Width { get; set; }
+    public decimal? LengthOper { get; set; }
+    public decimal? LengthDrive { get; set; }
+    public decimal? Square { get; set; }
+    public decimal? HeadDimension { get; set; }
+    public int? AllCutEdge { get; set; }
+    public int? InSpec { get; set; }
+    public string? CheckedBy { get; set; }
+    public string? Note { get; set; }
+}
+
+/// <summary>A scrap item found during coil evaluation (table
+/// <c>quality_coil_eval_scrap</c>, composite PK coil/job/type/od/mill), joined to the
+/// scrap-type catalog. <c>ScrapItemOd</c>/<c>ScrapItemMill</c> are the OD/mill flags.</summary>
+public sealed class EvalScrap
+{
+    public long CoilAbcNum { get; set; }
+    public long AbJobNum { get; set; }
+    public int ScrapItemType { get; set; }
+    public string? ScrapCode { get; set; }
+    public string? ScrapDefect { get; set; }
+    public int? ScrapItemPiece { get; set; }
+    public int? ScrapItemNetWt { get; set; }
+    public string? ScrapItemNote { get; set; }
+    public int ScrapItemOd { get; set; }
+    public int ScrapItemMill { get; set; }
+    public string? DataSource { get; set; }
+}

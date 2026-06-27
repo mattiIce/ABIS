@@ -529,3 +529,36 @@ public sealed class ReceivingBolCoilWrite
     public string? MaterialNum { get; set; }
     public string? CashDate { get; set; }
 }
+
+/// <summary>Record a dimensional QC check on a sheet-skid piece (table
+/// <c>sheet_skid_dimension_check</c>). The skid comes from the route;
+/// <c>dimension_check_num</c> is server-assigned. <see cref="InSpec"/> defaults to 1 (pass).</summary>
+public sealed class DimensionCheckWrite
+{
+    public int? PcNumber { get; set; }
+    public decimal? Gauge { get; set; }
+    public decimal? Width { get; set; }
+    public decimal? LengthOper { get; set; }
+    public decimal? LengthDrive { get; set; }
+    public decimal? Square { get; set; }
+    public decimal? HeadDimension { get; set; }
+    public int? AllCutEdge { get; set; }
+    public int? InSpec { get; set; }
+    public string? CheckedBy { get; set; }
+    public string? Note { get; set; }
+}
+
+/// <summary>Record a scrap item found during coil evaluation (table
+/// <c>quality_coil_eval_scrap</c>). Upserts on the composite key; <see cref="ScrapItemOd"/>
+/// and <see cref="ScrapItemMill"/> default to 0.</summary>
+public sealed class EvalScrapWrite
+{
+    public long? CoilAbcNum { get; set; }
+    public long? AbJobNum { get; set; }
+    public int? ScrapItemType { get; set; }
+    public int? ScrapItemPiece { get; set; }
+    public int? ScrapItemNetWt { get; set; }
+    public string? ScrapItemNote { get; set; }
+    public int? ScrapItemOd { get; set; }
+    public int? ScrapItemMill { get; set; }
+}

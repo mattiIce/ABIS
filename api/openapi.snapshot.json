@@ -334,6 +334,207 @@
         }
       }
     },
+    "/api/coil-eval/coils": {
+      "get": {
+        "tags": [
+          "CoilEval"
+        ],
+        "summary": "Coils on a job to evaluate (coil ⋈ process_coil).",
+        "operationId": "GetQcCoils",
+        "parameters": [
+          {
+            "name": "abJobNum",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QcCoilRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/coil-eval/skids/{sheetSkidNum}/dimension-checks": {
+      "get": {
+        "tags": [
+          "CoilEval"
+        ],
+        "summary": "Dimensional QC checks recorded on a sheet skid.",
+        "operationId": "GetDimensionChecks",
+        "parameters": [
+          {
+            "name": "sheetSkidNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SheetSkidDimensionCheck"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CoilEval"
+        ],
+        "summary": "Record a dimensional QC check on a sheet-skid piece (in-spec pass/fail).",
+        "operationId": "CreateDimensionCheck",
+        "parameters": [
+          {
+            "name": "sheetSkidNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DimensionCheckWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SheetSkidDimensionCheck"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/coil-eval/jobs/{abJobNum}/eval-scrap": {
+      "get": {
+        "tags": [
+          "CoilEval"
+        ],
+        "summary": "Scrap items found during evaluation for a job (joined to the scrap-type catalog).",
+        "operationId": "GetEvalScrap",
+        "parameters": [
+          {
+            "name": "abJobNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EvalScrap"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/coil-eval/eval-scrap": {
+      "post": {
+        "tags": [
+          "CoilEval"
+        ],
+        "summary": "Record (upsert) a scrap item found during coil evaluation.",
+        "operationId": "UpsertEvalScrap",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvalScrapWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvalScrap"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/coil-ownership/transfers": {
       "get": {
         "tags": [
@@ -8764,6 +8965,65 @@
         },
         "additionalProperties": false
       },
+      "DimensionCheckWrite": {
+        "type": "object",
+        "properties": {
+          "pcNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "gauge": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "width": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "lengthOper": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "lengthDrive": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "square": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "headDimension": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "allCutEdge": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "inSpec": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "checkedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "DowntimeCause": {
         "type": "object",
         "properties": {
@@ -9159,6 +9419,103 @@
           },
           "equipmentTypeNote": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EvalScrap": {
+        "type": "object",
+        "properties": {
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "abJobNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "scrapItemType": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scrapCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "scrapDefect": {
+            "type": "string",
+            "nullable": true
+          },
+          "scrapItemPiece": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "scrapItemNetWt": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "scrapItemNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "scrapItemOd": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scrapItemMill": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dataSource": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EvalScrapWrite": {
+        "type": "object",
+        "properties": {
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "abJobNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "scrapItemType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "scrapItemPiece": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "scrapItemNetWt": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "scrapItemNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "scrapItemOd": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "scrapItemMill": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },
@@ -11292,6 +11649,42 @@
         },
         "additionalProperties": false
       },
+      "QcCoilRow": {
+        "type": "object",
+        "properties": {
+          "abJobNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "coilOrgNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilAlloy2": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilTemper": {
+            "type": "string",
+            "nullable": true
+          },
+          "processCoilStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "processEndWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ReceivingBol": {
         "type": "object",
         "properties": {
@@ -12509,6 +12902,73 @@
             "nullable": true
           },
           "skidFromIfWhed": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SheetSkidDimensionCheck": {
+        "type": "object",
+        "properties": {
+          "dimensionCheckNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sheetSkidNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pcNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "gauge": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "width": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "lengthOper": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "lengthDrive": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "square": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "headDimension": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "allCutEdge": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "inSpec": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "checkedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
             "type": "string",
             "nullable": true
           }
