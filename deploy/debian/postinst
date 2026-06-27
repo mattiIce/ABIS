@@ -1,0 +1,48 @@
+#!/bin/sh
+# postinst — create the service user, register the unit, and either (re)start the
+# service (if already configured) or guide the admin to run abis-configure.
+set -e
+
+SERVICE_NAME="abis"
+CONFIG_DIR="/etc/abis"
+ENV_FILE="${CONFIG_DIR}/abis.env"
+
+case "$1" in
+  configure)
+    # Dedicated non-login system user the service runs as.
+    if ! id -u "$SERVICE_NAME" >/dev/null 2>&1; then
+      if command -v adduser >/dev/null 2>&1; then
+        adduser --system --group --no-create-home --home /nonexistent \
+                --shell /usr/sbin/nologin "$SERVICE_NAME" >/dev/null 2>&1 || true
+      else
+        useradd --system --user-group --no-create-home --home-dir /nonexistent \
+                --shell /usr/sbin/nologin "$SERVICE_NAME" >/dev/null 2>&1 || true
+      fi
+    fi
+
+    # Register the unit (the package ships it at /lib/systemd/system).
+    if [ -d /run/systemd/system ]; then
+      systemctl daemon-reload >/dev/null 2>&1 || true
+      systemctl enable "${SERVICE_NAME}.service" >/dev/null 2>&1 || true
+    fi
+
+    # Start only when already configured (a non-empty connection string). On a
+    # fresh install there is no config yet, so guide the admin rather than
+    # leaving a crash-looping service.
+    if [ -f "$ENV_FILE" ] && grep -Eq '^Database__ConnectionString="[^"]+"' "$ENV_FILE"; then
+      if [ -d /run/systemd/system ]; then
+        systemctl restart "${SERVICE_NAME}.service" >/dev/null 2>&1 || true
+      fi
+    else
+      echo ""
+      echo "ABIS is installed. Configure it before first start:"
+      echo "  sudo abis-configure        # Oracle connection, API key, optional nginx + TLS"
+      echo "  # or edit ${ENV_FILE} then: sudo systemctl enable --now ${SERVICE_NAME}"
+      echo ""
+    fi
+    ;;
+  abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+esac
+
+exit 0

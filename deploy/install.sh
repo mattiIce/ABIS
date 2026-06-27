@@ -11,6 +11,9 @@
 #   sudo ./install.sh --unattended \       # no prompts (CI / config mgmt)
 #        --answers /path/abis.answers
 #   sudo ABIS_DB_CONNECTION='...' ABIS_API_KEY='...' ./install.sh --unattended
+#   sudo ./install.sh --configure-only     # .deb installs already laid the files
+#                                          # down; do only config + service + TLS
+#                                          # (invoked by `abis-configure`)
 #
 # Config inputs (env var / answers-file key — answers file is sourced, so quote
 # values with spaces, e.g. ABIS_DB_CONNECTION="Data Source=..."):
@@ -55,6 +58,10 @@ SRC_NGINX_PENDING="${SCRIPT_DIR}/nginx/abis-pending.conf"
 # --- defaults / args ---------------------------------------------------------
 UNATTENDED=0
 ANSWERS_FILE=""
+# --configure-only: the app files + systemd unit are already on disk (installed
+# by the .deb package); do ONLY config + service start + nginx/TLS. abis-configure
+# (from the .deb) calls this. See build-deb.sh / deploy/debian/.
+CONFIGURE_ONLY=0
 
 die()  { echo "error: $*" >&2; exit 1; }
 info() { echo "==> $*"; }
@@ -62,21 +69,25 @@ warn() { echo "warning: $*" >&2; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --unattended)   UNATTENDED=1; shift ;;
-    --answers)      ANSWERS_FILE="${2:-}"; shift 2 ;;
-    --answers=*)    ANSWERS_FILE="${1#*=}"; shift ;;
-    -h|--help)      grep '^#' "$0" | grep -v '^#!' | sed 's/^# \{0,1\}//'; exit 0 ;;
-    *)              die "unknown argument: $1 (try --help)" ;;
+    --unattended)      UNATTENDED=1; shift ;;
+    --answers)         ANSWERS_FILE="${2:-}"; shift 2 ;;
+    --answers=*)       ANSWERS_FILE="${1#*=}"; shift ;;
+    --configure-only)  CONFIGURE_ONLY=1; shift ;;
+    -h|--help)         grep '^#' "$0" | grep -v '^#!' | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *)                 die "unknown argument: $1 (try --help)" ;;
   esac
 done
 
 # --- preflight ---------------------------------------------------------------
 [[ "$(id -u)" -eq 0 ]] || die "must run as root (use sudo)."
 command -v systemctl >/dev/null 2>&1 || die "systemd (systemctl) not found; this installer targets systemd hosts."
-# Check existence, not the +x bit: some extraction tools drop modes, and we
-# chmod the apphost ourselves after copying it into place.
-[[ -f "${SRC_APP_DIR}/ABIS.Api" ]] || die "release payload missing: ${SRC_APP_DIR}/ABIS.Api not found. Run this from the extracted tarball."
-[[ -f "$SRC_UNIT" ]] || die "unit template missing: ${SRC_UNIT}."
+if [[ "$CONFIGURE_ONLY" -eq 0 ]]; then
+  # Tarball mode: the app payload + unit ship alongside this script.
+  # Check existence, not the +x bit: some extraction tools drop modes, and we
+  # chmod the apphost ourselves after copying it into place.
+  [[ -f "${SRC_APP_DIR}/ABIS.Api" ]] || die "release payload missing: ${SRC_APP_DIR}/ABIS.Api not found. Run this from the extracted tarball."
+  [[ -f "$SRC_UNIT" ]] || die "unit template missing: ${SRC_UNIT}."
+fi
 
 if [[ -n "$ANSWERS_FILE" ]]; then
   [[ -f "$ANSWERS_FILE" ]] || die "answers file not found: ${ANSWERS_FILE}"
@@ -260,13 +271,16 @@ if ! id -u "$SERVICE_USER" >/dev/null 2>&1; then
 fi
 
 # --- lay down application files ----------------------------------------------
-info "installing application to ${APP_DIR}"
-mkdir -p "$APP_DIR"
-# Clean swap of binaries so removed files don't linger across upgrades.
-rm -rf "${APP_DIR:?}/"*
-cp -R "${SRC_APP_DIR}/." "$APP_DIR/"
-chmod +x "${APP_DIR}/ABIS.Api"
-chown -R "${SERVICE_USER}:${SERVICE_USER}" "$INSTALL_ROOT"
+# Skipped in --configure-only: the .deb already installed the binaries via dpkg.
+if [[ "$CONFIGURE_ONLY" -eq 0 ]]; then
+  info "installing application to ${APP_DIR}"
+  mkdir -p "$APP_DIR"
+  # Clean swap of binaries so removed files don't linger across upgrades.
+  rm -rf "${APP_DIR:?}/"*
+  cp -R "${SRC_APP_DIR}/." "$APP_DIR/"
+  chmod +x "${APP_DIR}/ABIS.Api"
+  chown -R "${SERVICE_USER}:${SERVICE_USER}" "$INSTALL_ROOT"
+fi
 
 # --- write config (root-owned, group-readable by the service user) -----------
 info "writing config to ${ENV_FILE}"
@@ -287,9 +301,13 @@ chown "root:${SERVICE_USER}" "$ENV_FILE"
 chmod 0640 "$ENV_FILE"
 
 # --- install + start the unit ------------------------------------------------
-info "installing systemd unit ${UNIT_DEST}"
-install -m 0644 "$SRC_UNIT" "$UNIT_DEST"
-systemctl daemon-reload
+# In --configure-only the unit ships with the .deb (at /lib/systemd/system) and
+# was already daemon-reloaded by the package's postinst; just (re)start it here.
+if [[ "$CONFIGURE_ONLY" -eq 0 ]]; then
+  info "installing systemd unit ${UNIT_DEST}"
+  install -m 0644 "$SRC_UNIT" "$UNIT_DEST"
+  systemctl daemon-reload
+fi
 systemctl enable "$SERVICE_NAME" >/dev/null 2>&1 || true
 info "starting ${SERVICE_NAME}"
 systemctl restart "$SERVICE_NAME"

@@ -1,0 +1,18 @@
+Package: abis
+Version: @VERSION@
+Architecture: @ARCH@
+Maintainer: mattiIce <noreply@users.noreply.github.com>
+Section: web
+Priority: optional
+Depends: adduser, tzdata, libc6, libstdc++6, libicu74 | libicu72 | libicu71 | libicu70 | libicu67 | libicu66
+Recommends: nginx, certbot, python3-certbot-nginx
+Homepage: https://github.com/mattiIce/ABIS
+Description: ABIS API and web UIs (native systemd service)
+ Modernized order/coil/job system: an ASP.NET Core API plus the greenfield web
+ screens it serves, running as a hardened systemd service next to the plant
+ Oracle database. The .NET runtime is bundled (self-contained), so no runtime
+ needs to be installed separately.
+ .
+ After install, run `sudo abis-configure` to set the Oracle connection string,
+ the API key, and an optional nginx + TLS (Let's Encrypt) front, then start the
+ service. See /usr/share/doc/abis/.

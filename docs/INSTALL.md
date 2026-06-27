@@ -34,7 +34,24 @@ bash build-release.sh                       # -> dist/abis-<version>-linux-x64.t
 tar -xzf dist/abis-*-linux-x64.tar.gz -C /tmp && cd /tmp/abis-*-linux-x64
 ```
 
-## Install
+## Install via `.deb` (apt)
+
+If you prefer package-manager semantics (clean upgrades + removal), grab the
+`abis_<version>_amd64.deb` from the Releases page (or build it on a Debian/Ubuntu
+host with `bash build-deb.sh`):
+
+```sh
+sudo apt install ./abis_<version>_amd64.deb   # installs the service (stopped)
+sudo abis-configure                           # set DB connection, API key, optional nginx+TLS, then start
+```
+
+`apt install` lays down the binaries + systemd unit and creates the `abis` user
+but does **not** start the service (it has no config yet). `abis-configure` is the
+same flow as the installer below (it also accepts `--unattended --answers …`).
+Upgrades via `apt install ./<newer>.deb` restart the running service; `apt purge
+abis` removes config, the cert, and the user.
+
+## Install via the tarball
 
 ### Interactive
 
@@ -90,9 +107,14 @@ sudo ABIS_DB_CONNECTION='Data Source=...;User Id=APP;Password=...;' \
 | `/opt/abis/app/` | self-contained app binaries (replaced on upgrade) |
 | `/etc/abis/abis.env` | service config (root-owned `0640`) — connection string, API key |
 | `/etc/abis/install.state` | nginx/TLS settings for upgrades (root-owned `0600`) |
-| `/etc/systemd/system/abis.service` | the systemd unit (`Type=notify`, hardened) |
+| `…/abis.service` | the systemd unit (`Type=notify`, hardened) |
 | `/etc/nginx/sites-available/abis` | the reverse-proxy site (when a server name is set) |
 | system user `abis` | non-login account the service runs as |
+
+> The tarball installs the unit to `/etc/systemd/system/abis.service`; the `.deb`
+> ships it at `/lib/systemd/system/abis.service` and puts the nginx templates +
+> `abis-configure` under `/usr/share/abis/` and `/usr/sbin/`. Both run the same
+> service.
 
 ## Manage the service
 
@@ -119,9 +141,18 @@ sudo ./install.sh                # idempotent; reuses /etc/abis/* settings
 
 ## Uninstall
 
+Tarball install:
+
 ```sh
 sudo ./uninstall.sh              # remove service + /opt/abis + nginx site; keep config & cert
 sudo ./uninstall.sh --purge      # also remove /etc/abis, the abis user, and the cert
+```
+
+`.deb` install:
+
+```sh
+sudo apt remove abis             # remove service + binaries + nginx site; keep config & cert
+sudo apt purge abis              # also remove /etc/abis, the abis user, and the cert
 ```
 
 nginx/certbot packages are left installed (they may serve other sites).

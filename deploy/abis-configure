@@ -1,0 +1,12 @@
+#!/bin/sh
+# abis-configure — configure and (re)start the ABIS service after `apt install`.
+#
+# Sets the Oracle connection string, API key, port, and an optional nginx + TLS
+# front, then starts the service. The .deb already laid down the binaries and the
+# systemd unit, so this wraps the shared installer in --configure-only mode.
+#
+#   sudo abis-configure                       # interactive
+#   sudo abis-configure --unattended --answers /path/abis.answers
+#   sudo ABIS_DB_CONNECTION='...' abis-configure --unattended
+#
+exec /usr/share/abis/install.sh --configure-only "$@"

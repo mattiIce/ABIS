@@ -95,18 +95,22 @@ prompts. The answer file is sourced shell (`KEY="value"`), template at
 | `deploy/abis.service` | [`deploy/abis.service`](../deploy/abis.service) | ✅ Phase 2 | `Type=notify` unit + sandbox hardening |
 | nginx site templates | [`deploy/nginx/abis.conf`](../deploy/nginx/abis.conf), [`abis-tls.conf`](../deploy/nginx/abis-tls.conf), [`abis-pending.conf`](../deploy/nginx/abis-pending.conf) | ✅ Phase 3 | HTTP base (certbot upgrades) + provided-cert variant + TLS-pending 503 fallback; wired into `install.sh`/`uninstall.sh` with `certbot --nginx` |
 | Docs | [`docs/INSTALL.md`](INSTALL.md) + README/DEPLOY links | ✅ Phase 4 | native quick start; `DEPLOY.md` kept as the Docker alternative |
-| CI release job | [`.github/workflows/release.yml`](../.github/workflows/release.yml) | ✅ Phase 4 | tag `v*` → test → `build-release.sh` → tarball + SHA256SUMS on a GitHub Release |
+| CI release job | [`.github/workflows/release.yml`](../.github/workflows/release.yml) | ✅ Phase 4 | tag `v*` → test → `build-release.sh` + `build-deb.sh` → tarball + `.deb` + SHA256SUMS on a GitHub Release |
+| `.deb` package | [`build-deb.sh`](../build-deb.sh), [`deploy/debian/`](../deploy/debian/), [`deploy/abis-configure`](../deploy/abis-configure) | ✅ Phase 4 | `apt install`/`purge` semantics; `abis-configure` reuses `install.sh --configure-only` |
 
 ## Distribution
 
-`build-release.sh` produces `abis-x.y.z-linux-x64.tar.gz`. Primary route is a
-**CI release job**: on a version tag, CI runs `build-release.sh` and attaches the
-tarball to a **GitHub Release**; the admin downloads it, untars, and runs
-`sudo ./install.sh`. (`build-release.sh` stays runnable from a local clone too —
-needs the .NET SDK on the box — for offline/air-gapped builds.)
+`build-release.sh` produces `abis-x.y.z-linux-x64.tar.gz` and `build-deb.sh`
+produces `abis_x.y.z_amd64.deb`. Primary route is a **CI release job**: on a
+version tag, CI runs both and attaches the tarball, the `.deb`, and `SHA256SUMS`
+to a **GitHub Release**. Both scripts stay runnable from a local clone (need the
+.NET SDK; the `.deb` also needs `dpkg-deb`) for offline/air-gapped builds.
 
-A `.deb` (for `apt install` + clean upgrade semantics) is a natural follow-on,
-but more packaging machinery than v1 needs.
+The **`.deb`** (`build-deb.sh` + [`deploy/debian/`](../deploy/debian/)) gives
+`apt install` / clean-upgrade / `apt purge` semantics. It ships the binaries,
+unit, nginx templates, and an `abis-configure` helper that reuses
+`install.sh --configure-only` for the runtime config (no duplicated nginx/TLS
+logic). `/etc/abis` (secrets) is created at configure time, not shipped.
 
 ## Phasing
 
@@ -124,8 +128,9 @@ but more packaging machinery than v1 needs.
   site (and the cert on `--purge`).
 - **Phase 4 ✅** — [`docs/INSTALL.md`](INSTALL.md) (linked from README + DEPLOY);
   CI release job [`release.yml`](../.github/workflows/release.yml) (tag `v*` →
-  test → `build-release.sh` → tarball + `SHA256SUMS` on a GitHub Release). A
-  `.deb` remains an optional future follow-on.
+  test → `build-release.sh` + `build-deb.sh` → tarball + `.deb` + `SHA256SUMS` on
+  a GitHub Release); and the `.deb` package itself (`build-deb.sh` +
+  [`deploy/debian/`](../deploy/debian/) + `abis-configure`).
 
 ## Parallel plan: edge service installer
 

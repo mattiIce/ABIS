@@ -31,8 +31,14 @@ docs/**/*.json  text
 *.sh    text eol=lf
 
 # Other Linux deploy assets that must stay LF: the systemd unit, the sourced
-# answers file, and the nginx site templates (CRLF would corrupt values / unit /
-# nginx parsing on the target host).
+# answers file, the nginx site templates, the .deb maintainer scripts, and the
+# extensionless abis-configure helper (CRLF would corrupt parsing / a #! line on
+# the target host).
 deploy/abis.service        text eol=lf
 deploy/*.answers.example    text eol=lf
 deploy/nginx/*.conf         text eol=lf
+deploy/abis-configure       text eol=lf
+deploy/debian/postinst      text eol=lf
+deploy/debian/prerm         text eol=lf
+deploy/debian/postrm        text eol=lf
+deploy/debian/control       text eol=lf
