@@ -46,13 +46,16 @@ Kestrel binds **loopback only**; nginx is the sole public listener.
    - HTTP port (default `8080`, loopback)
    - Public server name (for the nginx `server_name` + cert)
    - Admin email for Let's Encrypt registration/expiry notices
-3. **Files** — copy the self-contained publish to `/opt/abis`; write
-   `appsettings.Production.json` (`0600`, owned by the service user) with the
-   answers. `Database__Seed=false` always.
+3. **Files** — copy the self-contained publish to `/opt/abis/app`; write config
+   to a systemd **`EnvironmentFile`** at `/etc/abis/abis.env` (`0640`,
+   `root:abis`) with the answers as `Database__*` / `ApiKeys__*` / `ASPNETCORE_*`
+   env vars. `Database__Seed=false` always. (Config lives outside the swappable
+   `app/` dir so upgrades replace binaries without touching settings/secrets.)
 4. **Service identity** — non-login `abis` system user; `/opt/abis` owned by it.
-5. **systemd unit** — `abis.service`, `Restart=on-failure`, `EnvironmentFile`
-   for `ASPNETCORE_*`, hardening (`NoNewPrivileges`, `ProtectSystem=strict`,
-   `PrivateTmp`). `systemctl enable --now abis`.
+5. **systemd unit** — `abis.service`, `Type=notify` (pairs with `UseSystemd()`),
+   `Restart=on-failure`, `EnvironmentFile=/etc/abis/abis.env`, hardening
+   (`NoNewPrivileges`, `ProtectSystem=strict`, `PrivateTmp`, …).
+   `systemctl enable --now abis`.
 6. **nginx + TLS** — write `/etc/nginx/sites-available/abis` (proxy to
    `127.0.0.1:<port>`, forwarded headers), symlink into `sites-enabled`,
    `nginx -t`, reload. Then obtain the cert via `certbot --nginx` (Let's Encrypt)
@@ -72,23 +75,24 @@ Kestrel binds **loopback only**; nginx is the sole public listener.
 
 `install.sh --unattended --answers /path/abis.answers` (or all values via
 `ABIS_*` env vars). Required values absent in unattended mode → fail fast, no
-prompts. Answer file is a simple `KEY=value` list mirroring the prompts
-(`ABIS_DB_CONNECTION`, `ABIS_API_KEY`, `ABIS_PORT`, `ABIS_SERVER_NAME`,
-`ABIS_SERVER_NAME`, `ABIS_LETSENCRYPT_EMAIL`). Enables repeatable rebuilds and
-config mgmt.
+prompts. The answer file is sourced shell (`KEY="value"`), template at
+[`deploy/abis.answers.example`](../deploy/abis.answers.example):
+`ABIS_DB_CONNECTION` (required), `ABIS_API_KEY` (auto-generated if omitted),
+`ABIS_PORT`, `ABIS_DB_PROVIDER`. The nginx/TLS inputs (`ABIS_SERVER_NAME`,
+`ABIS_LETSENCRYPT_EMAIL`) join in Phase 3.
 
-## Repo changes required (not built yet)
+## Repo changes (status)
 
-| Change | Where | Notes |
-|---|---|---|
-| `builder.Host.UseSystemd()` | [`Program.cs`](../api/src/ABIS.Api/Program.cs) | via `Microsoft.Extensions.Hosting.Systemd`; no-op off-systemd, so Docker/console paths untouched |
-| `app.UseForwardedHeaders(...)` | [`Program.cs`](../api/src/ABIS.Api/Program.cs) | trust the nginx proxy so scheme/host are correct (redirects, OIDC) |
-| Self-contained publish profile | `api/src/ABIS.Api/Properties/PublishProfiles/` | `linux-x64`, `SelfContained=true`, single-file optional |
-| `deploy/install.sh`, `deploy/uninstall.sh` | new `deploy/` | the installer above |
-| `deploy/abis.service` | new | systemd unit template |
-| `deploy/nginx/abis.conf` | new | TLS + reverse-proxy site template |
-| `build-release.sh` | new | `dotnet publish` → `abis-<version>-linux-x64.tar.gz` (publish + installer + templates) |
-| Docs | new `docs/INSTALL.md`; link from README | native quick start; keep `DEPLOY.md` as Docker alternative |
+| Change | Where | Status | Notes |
+|---|---|---|---|
+| `builder.Host.UseSystemd()` | [`Program.cs`](../api/src/ABIS.Api/Program.cs) | ✅ Phase 1 | via `Microsoft.Extensions.Hosting.Systemd`; no-op off-systemd, so Docker/console paths untouched |
+| `app.UseForwardedHeaders(...)` | [`Program.cs`](../api/src/ABIS.Api/Program.cs) | ✅ Phase 1 | trust the nginx proxy so scheme/host are correct (redirects, OIDC) |
+| Self-contained publish profile | [`…/PublishProfiles/linux-x64.pubxml`](../api/src/ABIS.Api/Properties/PublishProfiles/linux-x64.pubxml) | ✅ Phase 1 | `linux-x64`, `SelfContained=true` |
+| `build-release.sh` | [`build-release.sh`](../build-release.sh) | ✅ Phase 1 | `dotnet publish` → `abis-<version>-linux-x64.tar.gz` (publish + deploy assets) |
+| `deploy/install.sh`, `deploy/uninstall.sh` | [`deploy/`](../deploy/) | ✅ Phase 2 | interactive + unattended; idempotent upgrade; health-gated start |
+| `deploy/abis.service` | [`deploy/abis.service`](../deploy/abis.service) | ✅ Phase 2 | `Type=notify` unit + sandbox hardening |
+| `deploy/nginx/abis.conf` | new | ⏳ Phase 3 | TLS + reverse-proxy site template; `certbot --nginx` |
+| Docs | new `docs/INSTALL.md`; link from README | ⏳ Phase 4 | native quick start; keep `DEPLOY.md` as Docker alternative |
 
 ## Distribution
 
@@ -103,11 +107,13 @@ but more packaging machinery than v1 needs.
 
 ## Phasing
 
-- **Phase 1** — `UseSystemd()` + forwarded headers + publish profile +
-  `build-release.sh`. Prove a manual install runs end-to-end against non-prod
-  Oracle (`192.168.1.230:1521/abc11`).
-- **Phase 2** — `install.sh`/`uninstall.sh`: prompts, unattended mode,
-  health-gated start, idempotent upgrade.
+- **Phase 1 ✅** — `UseSystemd()` + forwarded headers + publish profile +
+  `build-release.sh` ([#76](https://github.com/mattiIce/ABIS/pull/76)). Final
+  manual smoke test against non-prod Oracle (`192.168.1.230:1521/abc11`) happens
+  on the Ubuntu box.
+- **Phase 2 ✅** — `install.sh`/`uninstall.sh` + `abis.service`: prompts,
+  unattended mode, health-gated start, idempotent upgrade. Binds loopback only
+  (nginx fronts it in Phase 3).
 - **Phase 3** — nginx site template + `certbot --nginx` (Let's Encrypt) wired
   into the installer, with the admin-provided-cert fallback for internal-only
   hosts.

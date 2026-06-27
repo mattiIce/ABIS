@@ -1,0 +1,40 @@
+[Unit]
+Description=ABIS API (modernized order/coil/job system + web UIs)
+Documentation=https://github.com/mattiIce/ABIS/blob/main/docs/INSTALL_PLAN.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Type=notify pairs with builder.Host.UseSystemd(): the app signals READY=1 once
+# Kestrel is listening, so `systemctl start` blocks until it is actually up.
+Type=notify
+User=abis
+Group=abis
+WorkingDirectory=/opt/abis/app
+ExecStart=/opt/abis/app/ABIS.Api
+EnvironmentFile=/etc/abis/abis.env
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=60
+# Clean SIGINT shutdown (ASP.NET Core treats it as a graceful stop).
+KillSignal=SIGINT
+SyslogIdentifier=abis
+
+# --- Hardening -------------------------------------------------------------
+# The app is read-only at runtime (binaries in /opt/abis, config in /etc/abis,
+# no on-disk state), so a strict sandbox costs nothing and shrinks blast radius.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+# HTTP (in/out) + Oracle TCP need AF_INET/AF_INET6; AF_UNIX is the sd_notify socket.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target
