@@ -1038,6 +1038,55 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
+    // ---- QA / scrap reporting (legacy silverdome3 w_report_qa, w_report_scrap) ----
+
+    public async Task<IReadOnlyList<QaMechanicalRow>> GetQaMechanicalAsync(DateTime? from, DateTime? to, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var p = new DynamicParameters();
+        var where = new List<string>();
+        if (from is not null) { where.Add("created_date >= :dfrom"); p.Add("dfrom", from, DbType.DateTime); }
+        if (to is not null) { where.Add("created_date < :dto"); p.Add("dto", to, DbType.DateTime); }
+        var clause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
+        var rows = await conn.QueryAsync<QaMechanicalRow>(new CommandDefinition(
+            $"""
+            SELECT test_type AS TestType, COUNT(*) AS ResultCount,
+                   AVG(yts_val) AS AvgYts, AVG(uts_val) AS AvgUts, AVG(elong_val) AS AvgElong
+            FROM pst_test_result {clause}
+            GROUP BY test_type
+            ORDER BY test_type
+            """, p, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<ScrapSummaryRow>> GetScrapSummaryAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<ScrapSummaryRow>(new CommandDefinition(
+            """
+            SELECT s.scrap_type AS ScrapType, t.scrap_code AS ScrapCode, t.scrap_defect AS ScrapDefect,
+                   COUNT(s.scrap_skid_num) AS SkidCount, COALESCE(SUM(s.scrap_net_wt), 0.0) AS TotalNetWt
+            FROM scrap_skid s LEFT JOIN scrap_type t ON t.scrap_type_id = s.scrap_type
+            GROUP BY s.scrap_type, t.scrap_code, t.scrap_defect
+            ORDER BY s.scrap_type
+            """, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<ScrapByJobRow>> GetScrapByJobAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<ScrapByJobRow>(new CommandDefinition(
+            """
+            SELECT scrap_ab_job_num AS ScrapAbJobNum, COUNT(scrap_skid_num) AS SkidCount,
+                   COALESCE(SUM(scrap_net_wt), 0.0) AS TotalNetWt
+            FROM scrap_skid
+            GROUP BY scrap_ab_job_num
+            ORDER BY scrap_ab_job_num
+            """, cancellationToken: ct));
+        return rows.AsList();
+    }
+
     public async Task<IReadOnlyList<OpcLog>> GetOpcLogsAsync(CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);

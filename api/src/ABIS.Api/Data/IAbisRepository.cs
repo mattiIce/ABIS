@@ -113,6 +113,9 @@ public interface IAbisRepository
     Task<IReadOnlyList<OnHoldCoilRow>> GetOnHoldCoilsAsync(CancellationToken ct);
     Task<IReadOnlyList<SkidInventoryRow>> GetSkidInventoryAsync(CancellationToken ct);
     Task<IReadOnlyList<UnmatchedCoilRow>> GetUnmatchedCoilsAsync(CancellationToken ct);
+    Task<IReadOnlyList<QaMechanicalRow>> GetQaMechanicalAsync(DateTime? from, DateTime? to, CancellationToken ct);
+    Task<IReadOnlyList<ScrapSummaryRow>> GetScrapSummaryAsync(CancellationToken ct);
+    Task<IReadOnlyList<ScrapByJobRow>> GetScrapByJobAsync(CancellationToken ct);
     Task<PagedResult<ScrapSkid>> GetScrapSkidsAsync(int page, int pageSize, string? orderBy, CancellationToken ct);
     Task<ScrapSkid?> GetScrapSkidAsync(long scrapSkidNum, CancellationToken ct);
     Task<ScrapSkid> CreateScrapSkidAsync(ScrapSkidWrite body, CancellationToken ct);

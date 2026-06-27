@@ -1161,3 +1161,35 @@ public sealed class UnmatchedCoilRow
     public long? CustomerId { get; set; }
     public decimal? NetWtBalance { get; set; }
 }
+
+// ---- QA / scrap reporting (legacy silverdome3 w_report_qa, w_report_scrap) ----
+
+/// <summary>Mechanical test results rolled up by test type: count + average YTS/UTS/elong
+/// (legacy w_report_qa). Averages are double? (SQLite AVG returns REAL).</summary>
+public sealed class QaMechanicalRow
+{
+    public int? TestType { get; set; }
+    public int ResultCount { get; set; }
+    public double? AvgYts { get; set; }
+    public double? AvgUts { get; set; }
+    public double? AvgElong { get; set; }
+}
+
+/// <summary>Scrap rolled up by scrap type (legacy w_report_scrap): the catalog code/defect
+/// joined in, with skid count + total net weight.</summary>
+public sealed class ScrapSummaryRow
+{
+    public int? ScrapType { get; set; }
+    public string? ScrapCode { get; set; }
+    public string? ScrapDefect { get; set; }
+    public int SkidCount { get; set; }
+    public double? TotalNetWt { get; set; }
+}
+
+/// <summary>Scrap rolled up by job: skid count + total net weight.</summary>
+public sealed class ScrapByJobRow
+{
+    public string? ScrapAbJobNum { get; set; }
+    public int SkidCount { get; set; }
+    public double? TotalNetWt { get; set; }
+}

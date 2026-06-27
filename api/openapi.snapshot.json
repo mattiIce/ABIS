@@ -4656,6 +4656,105 @@
         }
       }
     },
+    "/api/reporting/qa-mechanical": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "Mechanical test results by test type: count + average YTS/UTS/elongation.",
+        "operationId": "GetQaMechanical",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QaMechanicalRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/reporting/scrap-summary": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "Scrap by type (code/defect) with skid count + total net weight.",
+        "operationId": "GetScrapSummary",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScrapSummaryRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/reporting/scrap-by-job": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "Scrap by job: skid count + total net weight.",
+        "operationId": "GetScrapByJob",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScrapByJobRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/sales/quotes": {
       "get": {
         "tags": [
@@ -10935,6 +11034,36 @@
         },
         "additionalProperties": false
       },
+      "QaMechanicalRow": {
+        "type": "object",
+        "properties": {
+          "testType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "resultCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "avgYts": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "avgUts": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "avgElong": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ReceivingBol": {
         "type": "object",
         "properties": {
@@ -11760,6 +11889,25 @@
         },
         "additionalProperties": false
       },
+      "ScrapByJobRow": {
+        "type": "object",
+        "properties": {
+          "scrapAbJobNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "skidCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalNetWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ScrapSkid": {
         "type": "object",
         "properties": {
@@ -11892,6 +12040,34 @@
           "skidScrapStatus": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScrapSummaryRow": {
+        "type": "object",
+        "properties": {
+          "scrapType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "scrapCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "scrapDefect": {
+            "type": "string",
+            "nullable": true
+          },
+          "skidCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalNetWt": {
+            "type": "number",
+            "format": "double",
             "nullable": true
           }
         },

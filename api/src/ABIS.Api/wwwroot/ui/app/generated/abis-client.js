@@ -6083,6 +6083,169 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Mechanical test results by test type: count + average YTS/UTS/elongation.
+     * @param from (optional)
+     * @param to (optional)
+     * @return OK
+     */
+    getQaMechanical(from, to) {
+        let url_ = this.baseUrl + "/api/reporting/qa-mechanical?";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetQaMechanical(_response);
+        });
+    }
+    processGetQaMechanical(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(QaMechanicalRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Scrap by type (code/defect) with skid count + total net weight.
+     * @return OK
+     */
+    getScrapSummary() {
+        let url_ = this.baseUrl + "/api/reporting/scrap-summary";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetScrapSummary(_response);
+        });
+    }
+    processGetScrapSummary(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(ScrapSummaryRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Scrap by job: skid count + total net weight.
+     * @return OK
+     */
+    getScrapByJob() {
+        let url_ = this.baseUrl + "/api/reporting/scrap-by-job";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetScrapByJob(_response);
+        });
+    }
+    processGetScrapByJob(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(ScrapByJobRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * Pending sales / quote list (customer, contact, latest win probability).
      * @param search (optional)
      * @return OK
@@ -12351,6 +12514,40 @@ export class ProductionSummaryRow {
         return data;
     }
 }
+export class QaMechanicalRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.testType = _data["testType"];
+            this.resultCount = _data["resultCount"];
+            this.avgYts = _data["avgYts"];
+            this.avgUts = _data["avgUts"];
+            this.avgElong = _data["avgElong"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new QaMechanicalRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["testType"] = this.testType;
+        data["resultCount"] = this.resultCount;
+        data["avgYts"] = this.avgYts;
+        data["avgUts"] = this.avgUts;
+        data["avgElong"] = this.avgElong;
+        return data;
+    }
+}
 export class ReceivingBol {
     constructor(data) {
         if (data) {
@@ -13104,6 +13301,36 @@ export class ScanLogWrite {
         return data;
     }
 }
+export class ScrapByJobRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.scrapAbJobNum = _data["scrapAbJobNum"];
+            this.skidCount = _data["skidCount"];
+            this.totalNetWt = _data["totalNetWt"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ScrapByJobRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["scrapAbJobNum"] = this.scrapAbJobNum;
+        data["skidCount"] = this.skidCount;
+        data["totalNetWt"] = this.totalNetWt;
+        return data;
+    }
+}
 export class ScrapSkid {
     constructor(data) {
         if (data) {
@@ -13231,6 +13458,40 @@ export class ScrapSkidWrite {
         data["scrapLocation"] = this.scrapLocation;
         data["scrapNotes"] = this.scrapNotes;
         data["skidScrapStatus"] = this.skidScrapStatus;
+        return data;
+    }
+}
+export class ScrapSummaryRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.scrapType = _data["scrapType"];
+            this.scrapCode = _data["scrapCode"];
+            this.scrapDefect = _data["scrapDefect"];
+            this.skidCount = _data["skidCount"];
+            this.totalNetWt = _data["totalNetWt"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ScrapSummaryRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["scrapType"] = this.scrapType;
+        data["scrapCode"] = this.scrapCode;
+        data["scrapDefect"] = this.scrapDefect;
+        data["skidCount"] = this.skidCount;
+        data["totalNetWt"] = this.totalNetWt;
         return data;
     }
 }
