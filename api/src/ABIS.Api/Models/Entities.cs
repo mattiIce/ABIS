@@ -1066,3 +1066,52 @@ public sealed class OnTimeRow
     public int Late { get; set; }
     public double OnTimePct => FinishedJobs == 0 ? 0 : Math.Round(100.0 * OnTime / FinishedJobs, 1);
 }
+
+// ---- Customer / shipment reporting (legacy silverdome3 w_report_customer_*, w_report_open_shipments) ----
+
+/// <summary>Per-customer shipment roll-up: total / shipped / open + last ship date.</summary>
+public sealed class CustomerShipmentRow
+{
+    public long? CustomerId { get; set; }
+    public string? CustomerShortName { get; set; }
+    public int Shipments { get; set; }
+    public int Shipped { get; set; }
+    public int Open { get; set; }
+    public DateTime? LastSent { get; set; }
+}
+
+/// <summary>An open (not-yet-sent) shipment (legacy w_report_open_shipments).</summary>
+public sealed class OpenShipmentRow
+{
+    public long PackingList { get; set; }
+    public long? CustomerId { get; set; }
+    public string? CustomerShortName { get; set; }
+    public long? CarrierId { get; set; }
+    public int? ShipmentStatus { get; set; }
+    public DateTime? ShipmentScheduledDateTime { get; set; }
+    public string? VehicleId { get; set; }
+    public string? ShipmentNotes { get; set; }
+}
+
+/// <summary>A customer order with its PO references (legacy w_report_customer_po_status):
+/// the order, customer, customer/enduser PO, sales order, and create date.</summary>
+public sealed class CustomerOrderReportRow
+{
+    public long OrderAbcNum { get; set; }
+    public long? CustomerId { get; set; }
+    public string? CustomerShortName { get; set; }
+    public string? OrigCustomerPo { get; set; }
+    public string? EnduserPo { get; set; }
+    public string? SalesOrder { get; set; }
+    public DateTime? CreatedDate { get; set; }
+}
+
+/// <summary>Per-customer finished sheet-skid counts (legacy w_report_customer_skid_count):
+/// skids + total net weight, via sheet_skid ⋈ ab_job ⋈ customer_order ⋈ customer.</summary>
+public sealed class CustomerSkidCountRow
+{
+    public long? CustomerId { get; set; }
+    public string? CustomerShortName { get; set; }
+    public int SkidCount { get; set; }
+    public double? TotalNetWt { get; set; }
+}

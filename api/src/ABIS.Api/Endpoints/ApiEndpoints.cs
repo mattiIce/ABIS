@@ -961,6 +961,30 @@ public static class ApiEndpoints
            .WithSummary("Per-line on-time delivery (jobs finished on/before due date) over an optional window.")
            .Produces<IReadOnlyList<OnTimeRow>>();
 
+        api.MapGet("/reporting/customer-shipments", async (DateTime? from, DateTime? to, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetCustomerShipmentsAsync(from, to, ct)))
+           .WithName("GetCustomerShipments").WithTags("Reporting")
+           .WithSummary("Per-customer shipment roll-up (total / shipped / open + last ship date).")
+           .Produces<IReadOnlyList<CustomerShipmentRow>>();
+
+        api.MapGet("/reporting/open-shipments", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetOpenShipmentsAsync(ct)))
+           .WithName("GetOpenShipments").WithTags("Reporting")
+           .WithSummary("Open (not-yet-sent) shipments with customer, carrier, and scheduled date.")
+           .Produces<IReadOnlyList<OpenShipmentRow>>();
+
+        api.MapGet("/reporting/customer-orders", async (IAbisRepository repo, CancellationToken ct, long? customerId = null) =>
+                Results.Ok(await repo.GetCustomerOrdersReportAsync(customerId, ct)))
+           .WithName("GetCustomerOrdersReport").WithTags("Reporting")
+           .WithSummary("Customer orders with PO / sales-order references (optionally one customer).")
+           .Produces<IReadOnlyList<CustomerOrderReportRow>>();
+
+        api.MapGet("/reporting/customer-skid-count", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetCustomerSkidCountsAsync(ct)))
+           .WithName("GetCustomerSkidCount").WithTags("Reporting")
+           .WithSummary("Per-customer finished sheet-skid counts + total net weight.")
+           .Produces<IReadOnlyList<CustomerSkidCountRow>>();
+
         // ---- Quality / Recovery (customer-defect setup) -----------------
         api.MapGet("/quality/scrap-types", async (IAbisRepository repo, CancellationToken ct) =>
                 Results.Ok(await repo.GetScrapTypesAsync(ct)))

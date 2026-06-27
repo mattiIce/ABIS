@@ -5655,6 +5655,225 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Per-customer shipment roll-up (total / shipped / open + last ship date).
+     * @param from (optional)
+     * @param to (optional)
+     * @return OK
+     */
+    getCustomerShipments(from, to) {
+        let url_ = this.baseUrl + "/api/reporting/customer-shipments?";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetCustomerShipments(_response);
+        });
+    }
+    processGetCustomerShipments(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(CustomerShipmentRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Open (not-yet-sent) shipments with customer, carrier, and scheduled date.
+     * @return OK
+     */
+    getOpenShipments() {
+        let url_ = this.baseUrl + "/api/reporting/open-shipments";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetOpenShipments(_response);
+        });
+    }
+    processGetOpenShipments(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(OpenShipmentRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Customer orders with PO / sales-order references (optionally one customer).
+     * @param customerId (optional)
+     * @return OK
+     */
+    getCustomerOrdersReport(customerId) {
+        let url_ = this.baseUrl + "/api/reporting/customer-orders?";
+        if (customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' cannot be null.");
+        else if (customerId !== undefined)
+            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetCustomerOrdersReport(_response);
+        });
+    }
+    processGetCustomerOrdersReport(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(CustomerOrderReportRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Per-customer finished sheet-skid counts + total net weight.
+     * @return OK
+     */
+    getCustomerSkidCount() {
+        let url_ = this.baseUrl + "/api/reporting/customer-skid-count";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetCustomerSkidCount(_response);
+        });
+    }
+    processGetCustomerSkidCount(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(CustomerSkidCountRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * Pending sales / quote list (customer, contact, latest win probability).
      * @param search (optional)
      * @return OK
@@ -9427,6 +9646,44 @@ export class CustomerOrderPagedResult {
         return data;
     }
 }
+export class CustomerOrderReportRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.orderAbcNum = _data["orderAbcNum"];
+            this.customerId = _data["customerId"];
+            this.customerShortName = _data["customerShortName"];
+            this.origCustomerPo = _data["origCustomerPo"];
+            this.enduserPo = _data["enduserPo"];
+            this.salesOrder = _data["salesOrder"];
+            this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : undefined;
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustomerOrderReportRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["orderAbcNum"] = this.orderAbcNum;
+        data["customerId"] = this.customerId;
+        data["customerShortName"] = this.customerShortName;
+        data["origCustomerPo"] = this.origCustomerPo;
+        data["enduserPo"] = this.enduserPo;
+        data["salesOrder"] = this.salesOrder;
+        data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : undefined;
+        return data;
+    }
+}
 export class CustomerOrderWrite {
     constructor(data) {
         if (data) {
@@ -9522,6 +9779,74 @@ export class CustomerPagedResult {
         data["pageSize"] = this.pageSize;
         data["totalCount"] = this.totalCount;
         data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+export class CustomerShipmentRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.customerId = _data["customerId"];
+            this.customerShortName = _data["customerShortName"];
+            this.shipments = _data["shipments"];
+            this.shipped = _data["shipped"];
+            this.open = _data["open"];
+            this.lastSent = _data["lastSent"] ? new Date(_data["lastSent"].toString()) : undefined;
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustomerShipmentRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["customerId"] = this.customerId;
+        data["customerShortName"] = this.customerShortName;
+        data["shipments"] = this.shipments;
+        data["shipped"] = this.shipped;
+        data["open"] = this.open;
+        data["lastSent"] = this.lastSent ? this.lastSent.toISOString() : undefined;
+        return data;
+    }
+}
+export class CustomerSkidCountRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.customerId = _data["customerId"];
+            this.customerShortName = _data["customerShortName"];
+            this.skidCount = _data["skidCount"];
+            this.totalNetWt = _data["totalNetWt"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustomerSkidCountRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["customerId"] = this.customerId;
+        data["customerShortName"] = this.customerShortName;
+        data["skidCount"] = this.skidCount;
+        data["totalNetWt"] = this.totalNetWt;
         return data;
     }
 }
@@ -10708,6 +11033,46 @@ export class OpcLogDetail {
         data["quality"] = this.quality;
         data["timeStamp"] = this.timeStamp ? this.timeStamp.toISOString() : undefined;
         data["description"] = this.description;
+        return data;
+    }
+}
+export class OpenShipmentRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.packingList = _data["packingList"];
+            this.customerId = _data["customerId"];
+            this.customerShortName = _data["customerShortName"];
+            this.carrierId = _data["carrierId"];
+            this.shipmentStatus = _data["shipmentStatus"];
+            this.shipmentScheduledDateTime = _data["shipmentScheduledDateTime"] ? new Date(_data["shipmentScheduledDateTime"].toString()) : undefined;
+            this.vehicleId = _data["vehicleId"];
+            this.shipmentNotes = _data["shipmentNotes"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new OpenShipmentRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["packingList"] = this.packingList;
+        data["customerId"] = this.customerId;
+        data["customerShortName"] = this.customerShortName;
+        data["carrierId"] = this.carrierId;
+        data["shipmentStatus"] = this.shipmentStatus;
+        data["shipmentScheduledDateTime"] = this.shipmentScheduledDateTime ? this.shipmentScheduledDateTime.toISOString() : undefined;
+        data["vehicleId"] = this.vehicleId;
+        data["shipmentNotes"] = this.shipmentNotes;
         return data;
     }
 }
