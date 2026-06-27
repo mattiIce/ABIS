@@ -39,6 +39,7 @@ import {
   GrantWrite,
   DimensionCheckWrite,
   EvalScrapWrite,
+  JobFolderNoteWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -895,4 +896,32 @@ test('coil-eval flow: QC coils, dimension checks, eval scrap (typed)', async () 
     () => client.upsertEvalScrap(new EvalScrapWrite({ scrapItemNetWt: 10 })),
     (err) => err?.status === 400,
   );
+});
+
+// Production folder (legacy prod-folder w_production_folder): the job packet summary +
+// e-folder notes (with author name) and adding a note.
+test('prod-folder flow: folder summary + e-folder notes (typed)', async () => {
+  const f = await client.getProductionFolder(1001);
+  assert.equal(f.abJobNum, 1001);
+  assert.ok(f.coilCount >= 1 && f.skidCount >= 1 && f.noteCount >= 2);
+  assert.ok(typeof f.customerShortName === 'string');
+
+  const notes = await client.getJobFolderNotes(1001);
+  assert.ok(notes.length >= 2);
+  assert.ok(notes.every((n) => typeof n.userName === 'string' && n.userName.length > 0));
+
+  const added = await client.addJobFolderNote(1001, new JobFolderNoteWrite({ userId: 9001, notes: 'E2E folder note' }));
+  assert.equal(added.notes, 'E2E folder note');
+  assert.equal(added.userId, 9001);
+  const after = await client.getJobFolderNotes(1001);
+  assert.equal(after.length, notes.length + 1);
+
+  // userId required when no authenticated user.
+  await assert.rejects(
+    () => client.addJobFolderNote(1001, new JobFolderNoteWrite({ notes: 'no user' })),
+    (err) => err?.status === 400,
+  );
+
+  const missing = await client.getProductionFolder(999999).catch((e) => e);
+  assert.ok(missing instanceof ApiException && missing.status === 404);
 });

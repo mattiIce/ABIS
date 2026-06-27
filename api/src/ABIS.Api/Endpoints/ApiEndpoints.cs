@@ -567,6 +567,34 @@ public static class ApiEndpoints
            .WithSummary("Record (upsert) a scrap item found during coil evaluation.")
            .Produces<EvalScrap>().ProducesValidationProblem();
 
+        // ---- Production folder (legacy prod-folder w_production_folder) ----
+        api.MapGet("/prod-folder/jobs/{abJobNum:long}", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetProductionFolderAsync(abJobNum, ct) is { } f ? Results.Ok(f) : Results.NotFound())
+           .WithName("GetProductionFolder").WithTags("ProdFolder")
+           .WithSummary("A job's production-folder summary (header + coil/skid/note counts).")
+           .Produces<ProductionFolder>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapGet("/prod-folder/jobs/{abJobNum:long}/notes", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetJobFolderNotesAsync(abJobNum, ct)))
+           .WithName("GetJobFolderNotes").WithTags("ProdFolder")
+           .WithSummary("The e-folder notes on a job (with author name).")
+           .Produces<IReadOnlyList<JobFolderNote>>();
+
+        api.MapPost("/prod-folder/jobs/{abJobNum:long}/notes", async (long abJobNum, JobFolderNoteWrite body, HttpContext ctx, IAbisRepository repo, CancellationToken ct) =>
+            {
+                // The author: the resolved OIDC user, else the body's userId (dev API).
+                long? userId = body.UserId;
+                if (userId is null && ResolveLogin(ctx) is { } login)
+                    userId = (await repo.GetSecurityUserByLoginAsync(login, ct))?.UserId;
+                if (userId is null or <= 0)
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["userId"] = ["userId is required (or authenticate as a known user)."] });
+                var created = await repo.AddJobFolderNoteAsync(abJobNum, userId.Value, body.Notes, ct);
+                return Results.Created($"/api/prod-folder/jobs/{abJobNum}/notes", created);
+            })
+           .WithName("AddJobFolderNote").WithTags("ProdFolder")
+           .WithSummary("Add a note to a job's e-folder (author from the OIDC user or body userId).")
+           .Produces<JobFolderNote>(StatusCodes.Status201Created).ProducesValidationProblem();
+
         // ---- EDI (outbound X12 transaction ledger + transmission log) --
         api.MapGet("/edi/transactions", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, long? customerId = null, string? transactionTypeId = null, string? sort = null, string? dir = null) =>

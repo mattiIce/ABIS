@@ -4929,6 +4929,170 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * A job's production-folder summary (header + coil/skid/note counts).
+     * @return OK
+     */
+    getProductionFolder(abJobNum) {
+        let url_ = this.baseUrl + "/api/prod-folder/jobs/{abJobNum}";
+        if (abJobNum === undefined || abJobNum === null)
+            throw new globalThis.Error("The parameter 'abJobNum' must be defined.");
+        url_ = url_.replace("{abJobNum}", encodeURIComponent("" + abJobNum));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetProductionFolder(_response);
+        });
+    }
+    processGetProductionFolder(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = ProductionFolder.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * The e-folder notes on a job (with author name).
+     * @return OK
+     */
+    getJobFolderNotes(abJobNum) {
+        let url_ = this.baseUrl + "/api/prod-folder/jobs/{abJobNum}/notes";
+        if (abJobNum === undefined || abJobNum === null)
+            throw new globalThis.Error("The parameter 'abJobNum' must be defined.");
+        url_ = url_.replace("{abJobNum}", encodeURIComponent("" + abJobNum));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetJobFolderNotes(_response);
+        });
+    }
+    processGetJobFolderNotes(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(JobFolderNote.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Add a note to a job's e-folder (author from the OIDC user or body userId).
+     * @return Created
+     */
+    addJobFolderNote(abJobNum, body) {
+        let url_ = this.baseUrl + "/api/prod-folder/jobs/{abJobNum}/notes";
+        if (abJobNum === undefined || abJobNum === null)
+            throw new globalThis.Error("The parameter 'abJobNum' must be defined.");
+        url_ = url_.replace("{abJobNum}", encodeURIComponent("" + abJobNum));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processAddJobFolderNote(_response);
+        });
+    }
+    processAddJobFolderNote(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = JobFolderNote.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * The scrap/defect type catalog.
      * @return OK
      */
@@ -11742,6 +11906,68 @@ export class InvoiceCoil {
         return data;
     }
 }
+export class JobFolderNote {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.abJobNum = _data["abJobNum"];
+            this.userId = _data["userId"];
+            this.userName = _data["userName"];
+            this.timestamp = _data["timestamp"] ? new Date(_data["timestamp"].toString()) : undefined;
+            this.notes = _data["notes"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new JobFolderNote();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["abJobNum"] = this.abJobNum;
+        data["userId"] = this.userId;
+        data["userName"] = this.userName;
+        data["timestamp"] = this.timestamp ? this.timestamp.toISOString() : undefined;
+        data["notes"] = this.notes;
+        return data;
+    }
+}
+export class JobFolderNoteWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.notes = _data["notes"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new JobFolderNoteWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["notes"] = this.notes;
+        return data;
+    }
+}
 export class JobPatch {
     constructor(data) {
         if (data) {
@@ -13191,6 +13417,48 @@ export class ProductionDowntimeRow {
         data["endingTime"] = this.endingTime ? this.endingTime.toISOString() : undefined;
         data["note"] = this.note;
         data["durationMinutes"] = this.durationMinutes;
+        return data;
+    }
+}
+export class ProductionFolder {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.abJobNum = _data["abJobNum"];
+            this.jobStatus = _data["jobStatus"];
+            this.lineNum = _data["lineNum"];
+            this.orderAbcNum = _data["orderAbcNum"];
+            this.origCustomerPo = _data["origCustomerPo"];
+            this.customerShortName = _data["customerShortName"];
+            this.coilCount = _data["coilCount"];
+            this.skidCount = _data["skidCount"];
+            this.noteCount = _data["noteCount"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProductionFolder();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["abJobNum"] = this.abJobNum;
+        data["jobStatus"] = this.jobStatus;
+        data["lineNum"] = this.lineNum;
+        data["orderAbcNum"] = this.orderAbcNum;
+        data["origCustomerPo"] = this.origCustomerPo;
+        data["customerShortName"] = this.customerShortName;
+        data["coilCount"] = this.coilCount;
+        data["skidCount"] = this.skidCount;
+        data["noteCount"] = this.noteCount;
         return data;
     }
 }

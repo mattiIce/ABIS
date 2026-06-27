@@ -3856,6 +3856,135 @@
         }
       }
     },
+    "/api/prod-folder/jobs/{abJobNum}": {
+      "get": {
+        "tags": [
+          "ProdFolder"
+        ],
+        "summary": "A job's production-folder summary (header + coil/skid/note counts).",
+        "operationId": "GetProductionFolder",
+        "parameters": [
+          {
+            "name": "abJobNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductionFolder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/prod-folder/jobs/{abJobNum}/notes": {
+      "get": {
+        "tags": [
+          "ProdFolder"
+        ],
+        "summary": "The e-folder notes on a job (with author name).",
+        "operationId": "GetJobFolderNotes",
+        "parameters": [
+          {
+            "name": "abJobNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JobFolderNote"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ProdFolder"
+        ],
+        "summary": "Add a note to a job's e-folder (author from the OIDC user or body userId).",
+        "operationId": "AddJobFolderNote",
+        "parameters": [
+          {
+            "name": "abJobNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobFolderNoteWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobFolderNote"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/quality/scrap-types": {
       "get": {
         "tags": [
@@ -9670,6 +9799,48 @@
         },
         "additionalProperties": false
       },
+      "JobFolderNote": {
+        "type": "object",
+        "properties": {
+          "abJobNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "JobFolderNoteWrite": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "JobPatch": {
         "type": "object",
         "properties": {
@@ -11569,6 +11740,51 @@
             "format": "double",
             "nullable": true,
             "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductionFolder": {
+        "type": "object",
+        "properties": {
+          "abJobNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "jobStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "lineNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "orderAbcNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "origCustomerPo": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerShortName": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skidCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "noteCount": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false

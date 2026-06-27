@@ -2318,6 +2318,50 @@ public sealed class AbisRepository : IAbisRepository
             .First(s => s.CoilAbcNum == key.coil && s.ScrapItemType == key.type && s.ScrapItemOd == key.od && s.ScrapItemMill == key.mill);
     }
 
+    // ---- Production folder (legacy prod-folder w_production_folder) ----
+
+    public async Task<ProductionFolder?> GetProductionFolderAsync(long abJobNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<ProductionFolder>(new CommandDefinition(
+            """
+            SELECT j.ab_job_num AS AbJobNum, j.job_status AS JobStatus, j.line_num AS LineNum,
+                   j.order_abc_num AS OrderAbcNum, o.orig_customer_po AS OrigCustomerPo, c.customer_short_name AS CustomerShortName,
+                   (SELECT COUNT(*) FROM process_coil pc WHERE pc.ab_job_num = j.ab_job_num) AS CoilCount,
+                   (SELECT COUNT(*) FROM sheet_skid ss WHERE ss.ab_job_num = j.ab_job_num) AS SkidCount,
+                   (SELECT COUNT(*) FROM job_efolder_notes n WHERE n.ab_job_num = j.ab_job_num) AS NoteCount
+            FROM ab_job j
+            LEFT JOIN customer_order o ON o.order_abc_num = j.order_abc_num
+            LEFT JOIN customer c ON c.customer_id = o.orig_customer_id
+            WHERE j.ab_job_num = :id
+            """, new { id = abJobNum }, cancellationToken: ct));
+    }
+
+    public async Task<IReadOnlyList<JobFolderNote>> GetJobFolderNotesAsync(long abJobNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<JobFolderNote>(new CommandDefinition(
+            """
+            SELECT n.ab_job_num AS AbJobNum, n.user_id AS UserId,
+                   (u.user_first_name || ' ' || u.user_last_name) AS UserName,
+                   n.timestamp AS Timestamp, n.notes AS Notes
+            FROM job_efolder_notes n LEFT JOIN security_user u ON u.user_id = n.user_id
+            WHERE n.ab_job_num = :id
+            ORDER BY n.timestamp
+            """, new { id = abJobNum }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<JobFolderNote> AddJobFolderNoteAsync(long abJobNum, long userId, string? notes, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var ts = DateTime.UtcNow;
+        await conn.ExecuteAsync(new CommandDefinition(
+            "INSERT INTO job_efolder_notes (ab_job_num, user_id, timestamp, notes) VALUES (:job, :uid, :ts, :notes)",
+            new { job = abJobNum, uid = userId, ts = ts.ToString("yyyy-MM-dd HH:mm:ss"), notes }, cancellationToken: ct));
+        return (await GetJobFolderNotesAsync(abJobNum, ct)).Last(n => n.UserId == userId);
+    }
+
     public Task<PagedResult<ScanLog>> GetScanLogsAsync(int page, int pageSize, long? abJobNum, string? orderBy, CancellationToken ct) =>
         PageAsync<ScanLog>(ScanLogCols, "scan_log", orderBy ?? "scan_id DESC",
             abJobNum is null ? null : "ab_job_num = :abJobNum",

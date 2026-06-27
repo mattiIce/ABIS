@@ -28,7 +28,7 @@ File types: `.srw` windows · `.srd` DataWindows (embedded SQL) · `.srm` menus 
 | `inv_skid/`, `skid_entry/` | Skid inventory / entry |
 | `coil_eval/` | **Coil evaluation / QC** (`w_qc_sheet`) — `sheet_skid_dimension_check` (dimensional QC per skid piece) + `quality_coil_eval_scrap` (scrap found during eval). Built greenfield. |
 | `stacker_110/` | Line #110 stacker |
-| `prod-folder/` | Production folder |
+| `prod-folder/` | **Production folder** (`w_production_folder`) — the job documentation packet (printable tickets assembled from ab_job/coil/customer_order) + `job_efolder_notes` (per-job notes, PK ab_job_num+user_id+timestamp). Built greenfield (summary + notes). |
 | `da_offline/` | **DAS offline** variant of `da/` (operate a job without a live DB connection) — superseded by the always-connected web DAS console |
 | `opc_log/` | **OPC log** (`w_opc_log`) — `opc_log` + `opc_log_details` (host → device → item, value, quality) + `opc_action_log`. The `item_name`/`remote_host` structure is the real OPC tag layout for the edge. |
 | `edi/` | **EDI** (`w_edi` monitor, `w_edi_863` cert EDI, `w_define_schedule`, `w_display_edi_file`, `w_distributed_test`) — the X12 send/receive ledger: `outbound_edi_transaction`, `edi_log`, `edi_type`, `customer_edi`. The 13 `.srf` functions are the X12 segment build/parse helpers. |

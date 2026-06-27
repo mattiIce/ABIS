@@ -161,6 +161,11 @@ public interface IAbisRepository
     Task<SheetSkidDimensionCheck> CreateDimensionCheckAsync(long sheetSkidNum, DimensionCheckWrite body, CancellationToken ct);
     Task<IReadOnlyList<EvalScrap>> GetEvalScrapAsync(long abJobNum, CancellationToken ct);
     Task<EvalScrap> UpsertEvalScrapAsync(EvalScrapWrite body, CancellationToken ct);
+
+    // ---- Production folder -----------------------------------------------
+    Task<ProductionFolder?> GetProductionFolderAsync(long abJobNum, CancellationToken ct);
+    Task<IReadOnlyList<JobFolderNote>> GetJobFolderNotesAsync(long abJobNum, CancellationToken ct);
+    Task<JobFolderNote> AddJobFolderNoteAsync(long abJobNum, long userId, string? notes, CancellationToken ct);
     Task<PagedResult<EdiTransaction>> GetEdiTransactionsAsync(int page, int pageSize, long? customerId, string? transactionTypeId, string? orderBy, CancellationToken ct);
     Task<EdiTransaction?> GetEdiTransactionAsync(long ediFileId, CancellationToken ct);
     Task<PagedResult<EdiLogEntry>> GetEdiLogAsync(int page, int pageSize, long? customerId, string? orderBy, CancellationToken ct);
