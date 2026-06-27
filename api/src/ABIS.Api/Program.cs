@@ -4,10 +4,28 @@ using Abis.Api.Endpoints;
 using Abis.Api.Middleware;
 using Abis.Api.Security;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Native Linux service: integrate with systemd (Type=notify readiness, journald
+// log formatting). This is a no-op when the process is not started by systemd, so
+// the Docker container and `dotnet run` console paths are unchanged. See
+// docs/INSTALL_PLAN.md.
+builder.Host.UseSystemd();
+
+// Behind the nginx reverse proxy (the native install terminates TLS at nginx and
+// proxies to Kestrel on loopback), honour X-Forwarded-Proto/-For so the app sees
+// the real client scheme + IP — needed for correct OIDC/redirect URLs and for the
+// per-IP rate-limit fallback. nginx runs on the same host, so the default loopback
+// trust covers it; ForwardLimit=1 since there is exactly one proxy hop.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+});
 
 // Configuration: bind the Database section and register the data layer.
 var dbOptions = builder.Configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
@@ -126,7 +144,11 @@ if (dbOptions.Seed && dbOptions.Dialect == SqlDialect.Sqlite)
     app.Logger.LogInformation("Seeded SQLite fixture at {ConnectionString}", dbOptions.ConnectionString);
 }
 
-// First: assign/propagate a correlation id available to everything downstream.
+// Very first: apply X-Forwarded-* from the nginx proxy so every downstream
+// component (rate limiter, auth, URL generation) sees the real scheme + client IP.
+app.UseForwardedHeaders();
+
+// Then: assign/propagate a correlation id available to everything downstream.
 app.UseMiddleware<RequestIdMiddleware>();
 
 // Outermost audit: observe the final status (incl. exception-handler output) and audit it.

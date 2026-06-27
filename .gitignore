@@ -4,6 +4,9 @@
 [Oo]ut/
 *.user
 
+# Release tarballs (build-release.sh output)
+dist/
+
 # Local dev SQLite fixtures (the API seeds these at runtime)
 *.db
 *.db-shm
