@@ -1,4 +1,8 @@
-# ABIS — Deploying the API + web UIs on a server
+# ABIS — Deploying the API + web UIs on a server (Docker)
+
+> **Not using Docker?** [`INSTALL.md`](INSTALL.md) installs the same app as a
+> native systemd service with nginx + HTTPS via a one-command installer — the
+> Docker-free path for an Ubuntu host. This page is the container route.
 
 The Path-C stack is **one self-contained container**: the ASP.NET Core API plus
 the greenfield web screens it serves (`/ui/order-entry.html`,
