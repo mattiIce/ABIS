@@ -4538,6 +4538,124 @@
         }
       }
     },
+    "/api/reporting/coil-inventory": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "Coil inventory by alloy: count + total net/balance weight (optional status filter).",
+        "operationId": "GetCoilInventory",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CoilInventoryRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/reporting/coil-on-hold": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "On-hold coils (coil_status = 3) with location, owner, and balance weight.",
+        "operationId": "GetOnHoldCoils",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OnHoldCoilRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/reporting/skid-inventory": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "Finished sheet-skid inventory by status: count + total net weight.",
+        "operationId": "GetSkidInventory",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkidInventoryRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/reporting/unmatched-coils": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "Coils not referenced by any process_coil — orphan / unmatched inventory.",
+        "operationId": "GetUnmatchedCoils",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UnmatchedCoilRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/sales/quotes": {
       "get": {
         "tags": [
@@ -7232,6 +7350,30 @@
         },
         "additionalProperties": false
       },
+      "CoilInventoryRow": {
+        "type": "object",
+        "properties": {
+          "coilAlloy2": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalNetWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "totalBalance": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CoilOwnershipTransfer": {
         "type": "object",
         "properties": {
@@ -9181,6 +9323,51 @@
           "processedWt": {
             "type": "number",
             "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OnHoldCoilRow": {
+        "type": "object",
+        "properties": {
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "coilOrgNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilAlloy2": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilTemper": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "coilLocation": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "netWtBalance": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coilNotes": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -12395,6 +12582,26 @@
         },
         "additionalProperties": false
       },
+      "SkidInventoryRow": {
+        "type": "object",
+        "properties": {
+          "skidSheetStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "skidCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalNetWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "TempTestResult": {
         "type": "object",
         "properties": {
@@ -12659,6 +12866,43 @@
           },
           "transDesc": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UnmatchedCoilRow": {
+        "type": "object",
+        "properties": {
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "coilOrgNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilAlloy2": {
+            "type": "string",
+            "nullable": true
+          },
+          "coilStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "coilLocation": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "netWtBalance": {
+            "type": "number",
+            "format": "double",
             "nullable": true
           }
         },

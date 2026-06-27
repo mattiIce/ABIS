@@ -739,3 +739,23 @@ test('reporting flow: customer orders + skid counts (typed)', async () => {
   assert.ok(Array.isArray(skids));
   assert.ok(skids.every((r) => typeof r.skidCount === 'number'));
 });
+
+// Inventory reporting (legacy silverdome3 w_report_inv_*).
+test('reporting flow: inventory — coil by alloy, on-hold, skid, unmatched (typed)', async () => {
+  const byAlloy = await client.getCoilInventory(undefined);
+  assert.ok(byAlloy.some((r) => r.coilAlloy2 === '3003' && r.coilCount >= 2));
+  assert.ok(byAlloy.every((r) => typeof r.totalBalance === 'number'));
+
+  // Seeded: coil 5004 is on hold (status 3).
+  const onHold = await client.getOnHoldCoils();
+  assert.ok(onHold.some((r) => r.coilAbcNum === 5004));
+  assert.ok(onHold.every((r) => r.coilStatus === 3));
+
+  const skids = await client.getSkidInventory();
+  assert.ok(skids.length >= 1 && skids.every((r) => typeof r.skidCount === 'number'));
+
+  // Coil 5004 is on no job (not in process_coil); processed coils are excluded.
+  const unmatched = await client.getUnmatchedCoils();
+  assert.ok(unmatched.some((r) => r.coilAbcNum === 5004));
+  assert.ok(unmatched.every((r) => r.coilAbcNum !== 5001));
+});

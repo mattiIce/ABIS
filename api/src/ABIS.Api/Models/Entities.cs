@@ -1115,3 +1115,49 @@ public sealed class CustomerSkidCountRow
     public int SkidCount { get; set; }
     public double? TotalNetWt { get; set; }
 }
+
+// ---- Inventory reporting (legacy silverdome3 w_report_inv_*, w_report_production_inventory_*) ----
+
+/// <summary>Coil inventory rolled up by alloy: count + total net and balance weight.</summary>
+public sealed class CoilInventoryRow
+{
+    public string? CoilAlloy2 { get; set; }
+    public int CoilCount { get; set; }
+    public double? TotalNetWt { get; set; }
+    public double? TotalBalance { get; set; }
+}
+
+/// <summary>An on-hold coil (coil_status = 3) — the legacy on-hold inventory report.</summary>
+public sealed class OnHoldCoilRow
+{
+    public long CoilAbcNum { get; set; }
+    public string? CoilOrgNum { get; set; }
+    public string? CoilAlloy2 { get; set; }
+    public string? CoilTemper { get; set; }
+    public int? CoilStatus { get; set; }
+    public string? CoilLocation { get; set; }
+    public long? CustomerId { get; set; }
+    public decimal? NetWtBalance { get; set; }
+    public string? CoilNotes { get; set; }
+}
+
+/// <summary>Finished sheet-skid inventory rolled up by status: count + total net weight.</summary>
+public sealed class SkidInventoryRow
+{
+    public int? SkidSheetStatus { get; set; }
+    public int SkidCount { get; set; }
+    public double? TotalNetWt { get; set; }
+}
+
+/// <summary>A coil with no process_coil reference — unmatched / orphan inventory
+/// (legacy w_report_unmatched_coils).</summary>
+public sealed class UnmatchedCoilRow
+{
+    public long CoilAbcNum { get; set; }
+    public string? CoilOrgNum { get; set; }
+    public string? CoilAlloy2 { get; set; }
+    public int? CoilStatus { get; set; }
+    public string? CoilLocation { get; set; }
+    public long? CustomerId { get; set; }
+    public decimal? NetWtBalance { get; set; }
+}

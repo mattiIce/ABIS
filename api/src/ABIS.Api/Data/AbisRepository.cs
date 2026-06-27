@@ -976,6 +976,68 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
+    // ---- Inventory reporting (legacy silverdome3 w_report_inv_*) ----
+
+    // Coil inventory rolled up by alloy (count + net + balance weight). Optional status
+    // filter (e.g. only active inventory).
+    public async Task<IReadOnlyList<CoilInventoryRow>> GetCoilInventoryAsync(int? status, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<CoilInventoryRow>(new CommandDefinition(
+            """
+            SELECT coil_alloy2 AS CoilAlloy2, COUNT(coil_abc_num) AS CoilCount,
+                   COALESCE(SUM(net_wt), 0.0) AS TotalNetWt, COALESCE(SUM(net_wt_balance), 0.0) AS TotalBalance
+            FROM coil
+            WHERE (:status IS NULL OR coil_status = :status)
+            GROUP BY coil_alloy2
+            ORDER BY coil_alloy2
+            """, new { status }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<OnHoldCoilRow>> GetOnHoldCoilsAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<OnHoldCoilRow>(new CommandDefinition(
+            """
+            SELECT coil_abc_num AS CoilAbcNum, coil_org_num AS CoilOrgNum, coil_alloy2 AS CoilAlloy2, coil_temper AS CoilTemper,
+                   coil_status AS CoilStatus, coil_location AS CoilLocation, customer_id AS CustomerId,
+                   net_wt_balance AS NetWtBalance, coil_notes AS CoilNotes
+            FROM coil WHERE coil_status = 3
+            ORDER BY coil_abc_num
+            """, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<SkidInventoryRow>> GetSkidInventoryAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<SkidInventoryRow>(new CommandDefinition(
+            """
+            SELECT skid_sheet_status AS SkidSheetStatus, COUNT(sheet_skid_num) AS SkidCount,
+                   COALESCE(SUM(sheet_net_wt), 0.0) AS TotalNetWt
+            FROM sheet_skid
+            GROUP BY skid_sheet_status
+            ORDER BY skid_sheet_status
+            """, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    // Coils not referenced by any process_coil row — orphan / unmatched inventory.
+    public async Task<IReadOnlyList<UnmatchedCoilRow>> GetUnmatchedCoilsAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<UnmatchedCoilRow>(new CommandDefinition(
+            """
+            SELECT coil_abc_num AS CoilAbcNum, coil_org_num AS CoilOrgNum, coil_alloy2 AS CoilAlloy2,
+                   coil_status AS CoilStatus, coil_location AS CoilLocation, customer_id AS CustomerId, net_wt_balance AS NetWtBalance
+            FROM coil
+            WHERE coil_abc_num NOT IN (SELECT pc.coil_abc_num FROM process_coil pc WHERE pc.coil_abc_num IS NOT NULL)
+            ORDER BY coil_abc_num
+            """, cancellationToken: ct));
+        return rows.AsList();
+    }
+
     public async Task<IReadOnlyList<OpcLog>> GetOpcLogsAsync(CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);

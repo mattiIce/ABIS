@@ -121,6 +121,46 @@ const REPORTS: Record<string, { note: string; load: (from?: Date, to?: Date) => 
       { h: 'Total net wt', num: true, f: (r) => num(r.totalNetWt), raw: (r) => r.totalNetWt },
     ],
   },
+  'coil-inventory': {
+    note: 'Coil inventory by alloy: count + total net / balance weight.',
+    load: () => client().getCoilInventory(undefined),
+    cols: [
+      { h: 'Alloy', f: (r) => esc(r.coilAlloy2) },
+      { h: 'Coils', num: true, f: (r) => num(r.coilCount), raw: (r) => r.coilCount },
+      { h: 'Total net wt', num: true, f: (r) => num(r.totalNetWt), raw: (r) => r.totalNetWt },
+      { h: 'Total balance', num: true, f: (r) => num(r.totalBalance), raw: (r) => r.totalBalance },
+    ],
+  },
+  'coil-on-hold': {
+    note: 'On-hold coils (coil_status = 3) with location, owner, and balance weight.',
+    load: () => client().getOnHoldCoils(),
+    cols: [
+      { h: 'Coil#', f: (r) => esc(r.coilAbcNum) }, { h: 'Org num', f: (r) => esc(r.coilOrgNum) },
+      { h: 'Alloy', f: (r) => esc(r.coilAlloy2) }, { h: 'Temper', f: (r) => esc(r.coilTemper) },
+      { h: 'Location', f: (r) => esc(r.coilLocation) }, { h: 'Customer', f: (r) => esc(r.customerId) },
+      { h: 'Balance wt', num: true, f: (r) => num(r.netWtBalance), raw: (r) => r.netWtBalance },
+      { h: 'Notes', f: (r) => esc(r.coilNotes) },
+    ],
+  },
+  'skid-inventory': {
+    note: 'Finished sheet-skid inventory by status: count + total net weight.',
+    load: () => client().getSkidInventory(),
+    cols: [
+      { h: 'Status', f: (r) => esc(r.skidSheetStatus) },
+      { h: 'Skids', num: true, f: (r) => num(r.skidCount), raw: (r) => r.skidCount },
+      { h: 'Total net wt', num: true, f: (r) => num(r.totalNetWt), raw: (r) => r.totalNetWt },
+    ],
+  },
+  'unmatched-coils': {
+    note: 'Coils not referenced by any process_coil — orphan / unmatched inventory.',
+    load: () => client().getUnmatchedCoils(),
+    cols: [
+      { h: 'Coil#', f: (r) => esc(r.coilAbcNum) }, { h: 'Org num', f: (r) => esc(r.coilOrgNum) },
+      { h: 'Alloy', f: (r) => esc(r.coilAlloy2) }, { h: 'Status', f: (r) => esc(r.coilStatus) },
+      { h: 'Location', f: (r) => esc(r.coilLocation) }, { h: 'Customer', f: (r) => esc(r.customerId) },
+      { h: 'Balance wt', num: true, f: (r) => num(r.netWtBalance), raw: (r) => r.netWtBalance },
+    ],
+  },
 };
 
 let current: any[] = [];

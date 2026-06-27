@@ -985,6 +985,30 @@ public static class ApiEndpoints
            .WithSummary("Per-customer finished sheet-skid counts + total net weight.")
            .Produces<IReadOnlyList<CustomerSkidCountRow>>();
 
+        api.MapGet("/reporting/coil-inventory", async (IAbisRepository repo, CancellationToken ct, int? status = null) =>
+                Results.Ok(await repo.GetCoilInventoryAsync(status, ct)))
+           .WithName("GetCoilInventory").WithTags("Reporting")
+           .WithSummary("Coil inventory by alloy: count + total net/balance weight (optional status filter).")
+           .Produces<IReadOnlyList<CoilInventoryRow>>();
+
+        api.MapGet("/reporting/coil-on-hold", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetOnHoldCoilsAsync(ct)))
+           .WithName("GetOnHoldCoils").WithTags("Reporting")
+           .WithSummary("On-hold coils (coil_status = 3) with location, owner, and balance weight.")
+           .Produces<IReadOnlyList<OnHoldCoilRow>>();
+
+        api.MapGet("/reporting/skid-inventory", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetSkidInventoryAsync(ct)))
+           .WithName("GetSkidInventory").WithTags("Reporting")
+           .WithSummary("Finished sheet-skid inventory by status: count + total net weight.")
+           .Produces<IReadOnlyList<SkidInventoryRow>>();
+
+        api.MapGet("/reporting/unmatched-coils", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetUnmatchedCoilsAsync(ct)))
+           .WithName("GetUnmatchedCoils").WithTags("Reporting")
+           .WithSummary("Coils not referenced by any process_coil — orphan / unmatched inventory.")
+           .Produces<IReadOnlyList<UnmatchedCoilRow>>();
+
         // ---- Quality / Recovery (customer-defect setup) -----------------
         api.MapGet("/quality/scrap-types", async (IAbisRepository repo, CancellationToken ct) =>
                 Results.Ok(await repo.GetScrapTypesAsync(ct)))

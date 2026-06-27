@@ -5874,6 +5874,215 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Coil inventory by alloy: count + total net/balance weight (optional status filter).
+     * @param status (optional)
+     * @return OK
+     */
+    getCoilInventory(status) {
+        let url_ = this.baseUrl + "/api/reporting/coil-inventory?";
+        if (status === null)
+            throw new globalThis.Error("The parameter 'status' cannot be null.");
+        else if (status !== undefined)
+            url_ += "status=" + encodeURIComponent("" + status) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetCoilInventory(_response);
+        });
+    }
+    processGetCoilInventory(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(CoilInventoryRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * On-hold coils (coil_status = 3) with location, owner, and balance weight.
+     * @return OK
+     */
+    getOnHoldCoils() {
+        let url_ = this.baseUrl + "/api/reporting/coil-on-hold";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetOnHoldCoils(_response);
+        });
+    }
+    processGetOnHoldCoils(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(OnHoldCoilRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Finished sheet-skid inventory by status: count + total net weight.
+     * @return OK
+     */
+    getSkidInventory() {
+        let url_ = this.baseUrl + "/api/reporting/skid-inventory";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetSkidInventory(_response);
+        });
+    }
+    processGetSkidInventory(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(SkidInventoryRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Coils not referenced by any process_coil — orphan / unmatched inventory.
+     * @return OK
+     */
+    getUnmatchedCoils() {
+        let url_ = this.baseUrl + "/api/reporting/unmatched-coils";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetUnmatchedCoils(_response);
+        });
+    }
+    processGetUnmatchedCoils(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(UnmatchedCoilRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * Pending sales / quote list (customer, contact, latest win probability).
      * @param search (optional)
      * @return OK
@@ -9010,6 +9219,38 @@ export class CoilInventoryGroup {
         return data;
     }
 }
+export class CoilInventoryRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.coilAlloy2 = _data["coilAlloy2"];
+            this.coilCount = _data["coilCount"];
+            this.totalNetWt = _data["totalNetWt"];
+            this.totalBalance = _data["totalBalance"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CoilInventoryRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["coilAlloy2"] = this.coilAlloy2;
+        data["coilCount"] = this.coilCount;
+        data["totalNetWt"] = this.totalNetWt;
+        data["totalBalance"] = this.totalBalance;
+        return data;
+    }
+}
 export class CoilOwnershipTransfer {
     constructor(data) {
         if (data) {
@@ -10927,6 +11168,48 @@ export class MonthlyProductionRow {
         data["month"] = this.month;
         data["jobCount"] = this.jobCount;
         data["processedWt"] = this.processedWt;
+        return data;
+    }
+}
+export class OnHoldCoilRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.coilOrgNum = _data["coilOrgNum"];
+            this.coilAlloy2 = _data["coilAlloy2"];
+            this.coilTemper = _data["coilTemper"];
+            this.coilStatus = _data["coilStatus"];
+            this.coilLocation = _data["coilLocation"];
+            this.customerId = _data["customerId"];
+            this.netWtBalance = _data["netWtBalance"];
+            this.coilNotes = _data["coilNotes"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new OnHoldCoilRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["coilOrgNum"] = this.coilOrgNum;
+        data["coilAlloy2"] = this.coilAlloy2;
+        data["coilTemper"] = this.coilTemper;
+        data["coilStatus"] = this.coilStatus;
+        data["coilLocation"] = this.coilLocation;
+        data["customerId"] = this.customerId;
+        data["netWtBalance"] = this.netWtBalance;
+        data["coilNotes"] = this.coilNotes;
         return data;
     }
 }
@@ -13723,6 +14006,36 @@ export class SketchWrite {
         return data;
     }
 }
+export class SkidInventoryRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.skidSheetStatus = _data["skidSheetStatus"];
+            this.skidCount = _data["skidCount"];
+            this.totalNetWt = _data["totalNetWt"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new SkidInventoryRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["skidSheetStatus"] = this.skidSheetStatus;
+        data["skidCount"] = this.skidCount;
+        data["totalNetWt"] = this.totalNetWt;
+        return data;
+    }
+}
 export class TempTestResult {
     constructor(data) {
         if (data) {
@@ -13974,6 +14287,44 @@ export class TransportationMethod {
         data = typeof data === 'object' ? data : {};
         data["transMethodCode"] = this.transMethodCode;
         data["transDesc"] = this.transDesc;
+        return data;
+    }
+}
+export class UnmatchedCoilRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.coilOrgNum = _data["coilOrgNum"];
+            this.coilAlloy2 = _data["coilAlloy2"];
+            this.coilStatus = _data["coilStatus"];
+            this.coilLocation = _data["coilLocation"];
+            this.customerId = _data["customerId"];
+            this.netWtBalance = _data["netWtBalance"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnmatchedCoilRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["coilOrgNum"] = this.coilOrgNum;
+        data["coilAlloy2"] = this.coilAlloy2;
+        data["coilStatus"] = this.coilStatus;
+        data["coilLocation"] = this.coilLocation;
+        data["customerId"] = this.customerId;
+        data["netWtBalance"] = this.netWtBalance;
         return data;
     }
 }
