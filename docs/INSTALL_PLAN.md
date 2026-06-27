@@ -78,8 +78,9 @@ Kestrel binds **loopback only**; nginx is the sole public listener.
 prompts. The answer file is sourced shell (`KEY="value"`), template at
 [`deploy/abis.answers.example`](../deploy/abis.answers.example):
 `ABIS_DB_CONNECTION` (required), `ABIS_API_KEY` (auto-generated if omitted),
-`ABIS_PORT`, `ABIS_DB_PROVIDER`. The nginx/TLS inputs (`ABIS_SERVER_NAME`,
-`ABIS_LETSENCRYPT_EMAIL`) join in Phase 3.
+`ABIS_PORT`, `ABIS_DB_PROVIDER`, and the nginx/TLS inputs `ABIS_SERVER_NAME`
+(blank = loopback only), `ABIS_TLS_MODE` (`letsencrypt`/`provided`/`none`),
+`ABIS_LETSENCRYPT_EMAIL`, `ABIS_TLS_CERT`, `ABIS_TLS_KEY`.
 
 ## Repo changes (status)
 
@@ -91,7 +92,7 @@ prompts. The answer file is sourced shell (`KEY="value"`), template at
 | `build-release.sh` | [`build-release.sh`](../build-release.sh) | ✅ Phase 1 | `dotnet publish` → `abis-<version>-linux-x64.tar.gz` (publish + deploy assets) |
 | `deploy/install.sh`, `deploy/uninstall.sh` | [`deploy/`](../deploy/) | ✅ Phase 2 | interactive + unattended; idempotent upgrade; health-gated start |
 | `deploy/abis.service` | [`deploy/abis.service`](../deploy/abis.service) | ✅ Phase 2 | `Type=notify` unit + sandbox hardening |
-| `deploy/nginx/abis.conf` | new | ⏳ Phase 3 | TLS + reverse-proxy site template; `certbot --nginx` |
+| nginx site templates | [`deploy/nginx/abis.conf`](../deploy/nginx/abis.conf), [`abis-tls.conf`](../deploy/nginx/abis-tls.conf) | ✅ Phase 3 | HTTP base (certbot upgrades) + provided-cert TLS variant; wired into `install.sh`/`uninstall.sh` with `certbot --nginx` |
 | Docs | new `docs/INSTALL.md`; link from README | ⏳ Phase 4 | native quick start; keep `DEPLOY.md` as Docker alternative |
 
 ## Distribution
@@ -114,9 +115,11 @@ but more packaging machinery than v1 needs.
 - **Phase 2 ✅** — `install.sh`/`uninstall.sh` + `abis.service`: prompts,
   unattended mode, health-gated start, idempotent upgrade. Binds loopback only
   (nginx fronts it in Phase 3).
-- **Phase 3** — nginx site template + `certbot --nginx` (Let's Encrypt) wired
-  into the installer, with the admin-provided-cert fallback for internal-only
-  hosts.
+- **Phase 3 ✅** — nginx site templates + `certbot --nginx` (Let's Encrypt) wired
+  into `install.sh` (driven by `ABIS_SERVER_NAME`/`ABIS_TLS_MODE`), with the
+  `provided`-cert variant for internal CA / DNS-01 and a `none` mode. Settings
+  persist to `/etc/abis/install.state` for upgrades; `uninstall.sh` removes the
+  site (and the cert on `--purge`).
 - **Phase 4** — `docs/INSTALL.md`; CI release job (tag → `build-release.sh` →
   tarball attached to a GitHub Release); optional `.deb`.
 
