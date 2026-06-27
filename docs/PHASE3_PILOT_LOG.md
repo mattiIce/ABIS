@@ -1,4 +1,9 @@
-# ABIS — Phase 3 Pilot Log (the bake-off, in progress)
+# ABIS — Phase 3 Pilot Log (the bake-off — concluded)
+
+> **Outcome:** Path C (greenfield) was chosen and Path B (PowerServer) dropped
+> (2026-06-26); the greenfield rebuild then went well beyond the pilot to cover
+> **every** business module. The Path B columns below stayed unscored by design.
+> Current state: [`NEXT_STEPS.md`](NEXT_STEPS.md).
 
 The execution + scoring record for the [Phase 3 plan](PHASE3_PILOT_PLAN.md): we
 pilot **Path B (Appeon PowerServer)** and **Path C (greenfield on the Phase-2

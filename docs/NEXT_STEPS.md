@@ -6,20 +6,20 @@ and [`PHASE3_PILOT_PLAN.md`](PHASE3_PILOT_PLAN.md).
 
 ## Where things stand (done)
 
-- **Phase 1 – Discovery:** extractors (`tools/`) + docs (architecture, data model,
-  inventory, roadmap, pilot plan).
-- **Phase 2 – API seam (`api/`):** ASP.NET Core 8 + Dapper. Read/write across the
-  core entities; **allowlisted sorting on every list**; API-key auth; audit
-  middleware → `opc_action_log`; liveness + **DB-readiness** health probes; CORS;
-  ProblemDetails; Swagger; Dockerfile; **fully-typed OpenAPI contract + generated
-  TypeScript client**. **82 tests, CI green.**
-- **Phase 3 – Pilots:** plan + **three end-to-end vertical slices** with demo UIs
-  (`order_entry` → `/ui/index.html`, `inv_coil` → `/ui/coils.html`,
-  QA test results → `/ui/qa.html`).
-
-Foundation (Phases 1–3) is PR #1 (branch `claude/lucid-wozniak-wfmcz8`); the
-seam-hardening increment — sorting, the readiness probe, and the QA slice —
-continues on branch `claude/sharp-newton-rcnobw`.
+- **Phase 1 – Discovery:** extractors (`tools/`) + docs (architecture, full data
+  model, inventory, roadmap). The remaining-area PB source is exported and vendored
+  under [`../legacy/src/`](../legacy/src/README.md).
+- **Phase 2 – API seam (`api/`):** ASP.NET Core 8 + Dapper, ~160 endpoints over 31
+  tags; allowlisted sorting; API-key **and** OIDC/JWT auth; audit → `opc_action_log`;
+  liveness + DB-readiness probes; rate limiting; ETag/If-Match; CORS; Swagger;
+  Dockerfile; **typed OpenAPI contract + generated TS/Python clients**. **167 xUnit
+  tests + 58 typed e2e, CI green.** Oracle data path validated live.
+- **Phase 3/4 – Greenfield modules (feature-complete):** every business library in
+  `lion.pbt`'s LibList is rebuilt as a typed web module (~34 screens) on the API,
+  each from the vendored real source and cross-checked against the Oracle columns
+  ([`data-model/BACKCHECK.md`](data-model/BACKCHECK.md)). Thin modules first built
+  from docs were widened to full schemas; security authorization enforcement and
+  receiving coil-minting are in. **Remaining is production rollout, not features.**
 
 ## Environment notes (read first in a fresh session)
 
@@ -32,10 +32,11 @@ curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0 --inst
 export PATH="$HOME/.dotnet:$PATH"
 
 cd api
-dotnet test                                   # 103 tests (repository + HTTP)
+dotnet test                                   # 167 tests (repository + HTTP)
 dotnet run --project src/ABIS.Api             # Dev profile: seeds SQLite, no DB needed
 # API key for /api/*: dev-local-key  (header X-Api-Key)
-# Demo UIs: http://localhost:5xxx/ui/index.html , /ui/coils.html , /ui/qa.html
+# Web modules: http://localhost:5xxx/ui/order-entry.html , /ui/reporting.html , /ui/security.html , … (~34 pages)
+# Typed e2e against a running API: ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e   (58 tests)
 ```
 
 Seeded fixture ids (handy for manual testing): jobs `1001–1003`, coils
@@ -44,77 +45,40 @@ sheet skids `3001–3003`, scrap skids `8001–8002`.
 
 ## Next steps, prioritized
 
-### Blocked on environment (highest leverage — need the user)
-1. ~~**Get DB access (connection string) or a DDL dump.**~~ **Done** — a live
-   non-prod Oracle 11g (`abc11`) connection was provided. This unblocked:
-   - ✅ **Oracle data path validated** — read *and* write/update paths exercised
-     live; three live-only bug classes found and fixed (see
-     [`ORACLE_VALIDATION.md`](ORACLE_VALIDATION.md)). A secret-gated `oracle-smoke`
-     CI job is still available via the `ORACLE_CONNECTION_STRING` secret.
-   - ✅ **Real schema recovered** — `DATA_MODEL.md` regenerated from the live
-     `DBO` dictionary (412 tables); the `order_item` composite key confirmed (#10).
-   - ⏳ Point the Phase-3 pilots at real data (Phase 3 — still ahead).
-2. **Locate/regenerate the 7 missing PFE/PFD libraries** (`PFE_ABC.PBL`,
-   `pfemain.pbl`, …) so the legacy app builds — prerequisite for the PowerServer
-   pilot. See [`ARCHITECTURE.md`](ARCHITECTURE.md) §build-readiness.
-3. **Run the Phase-3 pilots** (needs the Windows PB IDE + PowerServer license):
-   Path B on `quotation`, Path C greenfield on `order_entry`/`inv_coil` using the
-   API + demo UIs as the starting point. Score with the rubric in the pilot plan.
+The greenfield build is feature-complete; remaining work is **production rollout**.
 
-### Doable now without a DB (to keep momentum)
-- ✅ **List sorting** across the paged grids — done: allowlisted `sort`/`dir` per
-  resource with a PK tie-breaker (`Data/Sort.cs`); invalid input → 400.
-- ✅ **QA / test-results slice** — done (standalone): `position` + `from`/`to`
-  date-range filters, sorting, and a demo page (`/ui/qa.html`); `temp_test_result`
-  added later (see below). The coil/job linkage is still **not** in the extract —
-  left unfabricated.
-- ✅ **Readiness probe** — done: `GET /health/ready` runs `SELECT 1` (503 when the
-  DB is unreachable); liveness stays at `GET /health`.
-- ✅ **Production hardening** — done: fixed-window **rate limiting** on `/api`
-  (per-API-key partition, `429` + `Retry-After`, tunable via `RateLimiting`) and
-  baseline **security headers** (`nosniff`, `DENY`, `no-referrer`) on every response.
-- ✅ **Typed contract + client codegen** — done: every endpoint declares response
-  types via `.Produces<T>()` / `.ProducesValidationProblem()` (+ a group-wide
-  `401`), so the OpenAPI doc carries real schemas. CI generates a typed
-  TypeScript client with NSwag and uploads it as the `ts-client` artifact.
-- ✅ **Demo UI on the generated client** — done: `clientapp/` is a TypeScript demo
-  that imports the generated client, compiled by `tsc` to ES modules under
-  `/ui/app/`; `/ui/typed.html` drives the coil screen and a typed create-order
-  write. CI compiles it **and** runs an e2e (`clientapp/e2e/run.mjs`) against a
-  live API, so a contract break fails the build.
-- ✅ **Multi-language codegen** — done: CI also emits a **Python** client
-  (`openapi-generator`, `python-client` artifact) from the same contract. Next:
-  migrate a real legacy module onto a generated client.
-- ✅ **ID generation hardened** — done: ids come from the connection factory's
-  dialect-specific next-id SQL — `MAX+1` on SQLite (dev), a sequence `NEXTVAL` on
-  Oracle (concurrency-safe), names via the `{table}_seq` convention with per-table
-  overrides (`Database:Sequences`). Real sequence names still need DB confirmation.
-- ✅ **Read caching** — done: weak `ETag` on `/api` GETs + `If-None-Match` → `304`
-  (`ETagMiddleware`). Also a correlation id (`X-Request-Id`) echoed on responses,
-  in ProblemDetails, and in the audit notes.
-- ✅ **`If-Match` optimistic concurrency** — done. The rowversion question was
-  settled: **no write-target table has a usable version/modified column**, and
-  `ORA_ROWSCN` is block-granularity (all tables are `NOROWDEPENDENCIES`). So every
-  PUT/PATCH instead compares the caller's `If-Match` against the row's current
-  **content-hash ETag** (the same weak ETag a GET carries, `ETagMiddleware.ForEntity`)
-  and returns **412** on a stale validator — no schema change, coexists with the
-  legacy PB client.
-- **Write hardening (remaining):** a soft-delete policy. The audit-log insert still
-  uses `MAX+1` (append-only).
-- ✅ **More slices from the recovered schema** — added `temp_test_result`
-  (in-progress QA, `GET /api/temp-test-results`) and `process_partial_skid`
-  (`GET /api/partial-skids` + `GET /api/jobs/{id}/partial-skids`). Remaining
-  extracted tables are either too thin to model faithfully
-  (`inbound_shipment`/`shipment`/`die`/`return_scrap_item`, 1–2 cols) or
-  out-of-API-scope (`abis_ini`, `security_application`).
-- ✅ **Contract & onboarding polish** — done: per-operation OpenAPI
-  `.WithSummary(...)` (flows into generated-client doc comments); a committed
-  `api/openapi.snapshot.json` with a CI drift-check; a root `CONTRIBUTING.md`; and
-  the Oracle-validation runbook + gated CI job above.
-- **Expand the recovered data model** by exporting *more* DataWindows to text and
-  re-running `tools/extract_schema.py` — **needs the PB IDE** (can't export new
-  `.srd` here). Bigger modules (`quotation`, `daily_prod`, shipping/EDI) unlock
-  once their tables/columns are recovered; don't fabricate columns before then.
+### 1. Oracle non-prod validation sweep  *(highest leverage)*
+The original `order_entry` pilot ran live, but the modules built since have only been
+exercised on the SQLite fixture + e2e (plus the gated `oracle-smoke` job). Point the API
+at non-prod Oracle (`abc11`) and exercise the newer read/write paths to flush any
+live-only issues — the recurring traps are ORA-01745 (reserved-word binds), ORA-00932
+(CHAR-null COALESCE), and Int64→numeric unboxing (all coded against, none CI-proven on
+the new SQL). See [`ORACLE_VALIDATION.md`](ORACLE_VALIDATION.md).
+
+### 2. OIDC rollout
+Register the provider (browser `Auth:Oidc` + API `Auth:Jwt`, see
+[`../api/README.md`](../api/README.md)); map the OIDC login → `security_user.login_id`;
+then broaden the per-feature **enforcement** (`RequireFeatureAsync`, already on the
+security-admin writes) to other mutating routes per a rollout policy.
+
+### 3. Wire the 861 EDI
+`POST /api/receiving-bols/{id}/generate-861` is a documented stub; wire it to the
+per-customer Oracle functions (`f_edi_*_861`) gated on `customer.create_861_at_receiving`.
+
+### 4. Edge / OPC
+The edge service skeleton ([`EDGE_SERVICE.md`](EDGE_SERVICE.md)) needs the Softing DA→UA
+bridge + per-device serial formats (needs shop-floor hardware).
+
+### 5. Per-module production cutover (Phase 4)
+Roll modules over against the live DB in dependency order (read-only first), legacy + new
+on one DB until each is proven, then decommission. See [`PHASE4_CUTOVER_PLAN.md`](PHASE4_CUTOVER_PLAN.md).
+
+### Housekeeping
+- `SqliteFixture` drop-list idempotency: dev-only re-seed across schema changes can hit
+  "table already exists" (CI is always fresh) — make the drop block cover every created table.
+- Low-value reference lookups not yet modeled (alloy heat-treatment, metal density,
+  yield strength) — add if a screen needs them.
+
 
 ## Recipe: add a new module slice
 
@@ -151,7 +115,8 @@ The codebase is deliberately uniform. To add a resource:
   (conflated with menu items) and excluded from headline numbers.
 - **Oracle parameter binding:** keep each `:param` used once and let Dapper add
   params in SQL order; avoid passing unreferenced params (use conditional
-  `DynamicParameters`). The whole Oracle path is **untested** — verify on a real DB.
+  `DynamicParameters`). The Oracle path was validated live for the original modules;
+  re-verify newer modules' write paths on a real DB (see prioritized step 1).
 - **Auth in tests:** the test factory sets `ApiKeys__Keys__0=test-key` and the
   client sends `X-Api-Key`. `/health`, `/health/ready`, `/`, `/swagger`, and
   `/ui/*` are anonymous.

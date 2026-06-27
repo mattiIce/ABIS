@@ -25,16 +25,24 @@ ERP/MES). It is grounded in the analysis in
 
 - ✅ The app was **migrated onto a current, supported Appeon PowerBuilder**
   (Aug 2025) — see `lion_mig.log`. The end-of-life risk is already addressed.
-- ✅ **Discovery done** (this effort): reproducible extractors, a **full data
-  model recovered from the live Oracle schema (412 tables)**, an object
-  inventory, and this roadmap.
-- ✅ **Phase 2 seam started**: a read-first ASP.NET Core API over the core
-  entities, with tests and CI — see [`../api/`](../api/README.md).
+- ✅ **Discovery done**: reproducible extractors, a **full data model recovered
+  from the live Oracle schema (412 tables)**, an object inventory, and this roadmap.
 - ✅ **Buildable as committed**: the 7 previously-missing PFE/PFD libraries were
-  located and committed — all 50 libraries in `lion.pbt`'s LibList are now present.
-- ❌ **No API / service tier.** The client talks straight to the DB; there is no
-  seam to integrate against yet.
-- ❌ **No tests, CI, or text-based source control** for the bulk of the code.
+  located and committed — all 50 libraries in `lion.pbt`'s LibList are present.
+- ✅ **Phase 2 seam — complete**: an ASP.NET Core 8 + Dapper API over the database
+  (Oracle prod, seeded SQLite for dev/CI), ~160 endpoints, a fully-typed OpenAPI
+  contract + generated TS/Python clients, auth, audit, rate-limit, health probes,
+  Docker — with **167 xUnit tests + 58 typed e2e tests**, CI green. See
+  [`../api/`](../api/README.md).
+- ✅ **Oracle path validated** end-to-end (read + write) against the live non-prod DB
+  — see [`ORACLE_VALIDATION.md`](ORACLE_VALIDATION.md).
+- ✅ **Phase 3/4 greenfield build — far along**: every business library in
+  `lion.pbt`'s LibList is rebuilt as a typed web module on the API (~34 screens),
+  each from the **real** vendored PB source ([`../legacy/src/`](../legacy/src/README.md))
+  and cross-checked against the Oracle columns ([`data-model/BACKCHECK.md`](data-model/BACKCHECK.md)).
+- ◻ **Remaining = production rollout**: Oracle cutover per module, OIDC rollout +
+  broadening per-feature enforcement, the per-customer 861 EDI Oracle wiring, and
+  the edge/OPC hardware bridge. See [`NEXT_STEPS.md`](NEXT_STEPS.md).
 
 ## Strategic options considered
 
@@ -79,12 +87,13 @@ ERP/MES). It is grounded in the analysis in
       from the tree (not referenced by `lion.pbt`'s LibList; recoverable from git
       history if ever needed).
 
-### Phase 1 — Recover the full picture  *(needs PB IDE for export)*
-- [ ] **Export every PB object to text** from the IDE (`.srw`, `.srd`, `.sru`,
-      `.srf`, `.srs`, `.srm`) and commit it, so git diffs become meaningful and
-      the extractors can see the *whole* app, not just ~40 DataWindows.
-      **← remaining blocker: needs the Windows PowerBuilder IDE (can't be done
-      in this environment).**
+### Phase 1 — Recover the full picture
+- [x] **Export the area PB objects to text** and vendor them. → Done for every
+      remaining-area `.pbl` in `lion.pbt`'s LibList: exported from the IDE and
+      vendored under [`../legacy/src/`](../legacy/src/README.md) (29 area folders:
+      windows/DataWindows/functions), so each greenfield module is built against the
+      **real** tables/columns/SQL. The `silverdome*`/`aaaa` core libraries (~1.1 GB,
+      mostly framework + binaries) are read in place from the export, not vendored.
 - [x] **Introspect the real database** and replace the partial `DATA_MODEL.md`
       with full tables/PKs/FKs/indexes. → Done: [`DATA_MODEL.md`](DATA_MODEL.md)
       is regenerated from a live `DBO` data-dictionary dump by
@@ -150,34 +159,31 @@ ERP/MES). It is grounded in the analysis in
       binds, ORA-00932 COALESCE typing, opaque-500 input) were found and fixed.
       See [`ORACLE_VALIDATION.md`](ORACLE_VALIDATION.md).
 
-### Phase 3 — Pilot both modernization paths on real modules  *(in progress)*
+### Phase 3 — Choose the path; build greenfield  *(done)*
 
-> Detailed plan: [`PHASE3_PILOT_PLAN.md`](PHASE3_PILOT_PLAN.md) — candidate
-> modules, scoring rubric, prerequisites, and decision/exit criteria.
-> **Live results: [`PHASE3_PILOT_LOG.md`](PHASE3_PILOT_LOG.md).**
+> Detailed plan: [`PHASE3_PILOT_PLAN.md`](PHASE3_PILOT_PLAN.md). **Live results:
+> [`PHASE3_PILOT_LOG.md`](PHASE3_PILOT_LOG.md).**
 
-- [ ] **Path B pilot:** run a self-contained, low-risk module (candidate:
-      `quotation`) through Appeon PowerServer; measure reuse %, UX, operability.
-      **← blocked: needs the Windows PB IDE + a PowerServer license** (the 7
-      PFE/PFD libraries it also required are now committed — Phase 0).
-- [~] **Path C pilot:** rebuild a high-value, high-churn module greenfield
-      against the Phase-2 API. → `order_entry` **executed against live Oracle**
-      (search → full detail → transactional create on the real ~48k-order DB);
-      scored in the pilot log. `inv_coil` artifact exists (demo UI), not yet
-      measured. Remaining: a side-by-side UX/perf comparison vs the legacy screen.
-- [ ] **Decide** the per-module strategy from measured results — pending Path B,
-      which can't be scored until its prerequisites land.
+- [x] **Decision (2026-06-26): Path C (greenfield), Path B (PowerServer) dropped.**
+      The `order_entry` Path C pilot ran against live Oracle and scored well; the
+      team committed to building/owning a modern stack rather than an Appeon bake-off.
+- [x] **Path C built out:** the greenfield rebuild was carried beyond the pilot to
+      **every business library** — ~34 typed web modules on the Phase-2 API, each
+      from the vendored real source. (Path B pilot intentionally not run — PowerServer
+      dropped.)
 
-### Phase 4 — Migrate module-by-module (strangler-fig)
+### Phase 4 — Migrate module-by-module (strangler-fig)  *(build complete; rollout pending)*
 
 > Plan: [`PHASE4_CUTOVER_PLAN.md`](PHASE4_CUTOVER_PLAN.md) — sequencing, the
 > per-module pilot→watch→flip procedure, rollback, and exit criteria.
 
-- [ ] Roll modules over behind the API seam in dependency order, oldest/most
-      painful first; keep legacy and new running against one DB until cutover.
-      → **Plan written**; seven greenfield screens are built and ready to pilot
-      (read-only first: `qa-results`, then low-volume writes, then the
-      transactional core). Execution needs production rollout + monitoring.
+- [x] **Greenfield replacement for every module is built** behind the API seam,
+      validated on the SQLite fixture + e2e and (for the data path) live Oracle.
+      Includes the back-check/widening of the modules first built from docs, plus
+      security authorization enforcement and receiving coil-minting.
+- [ ] **Production cutover** — roll each module over against the live DB in
+      dependency order (read-only first), keeping legacy + new on one DB until each
+      is proven; then decommission. **Not yet started** (needs prod rollout + monitoring).
 - [~] Replace serial/OPC integration with a small, well-tested **edge service**
       on the shop floor exposing those devices to the API. → **Skeleton built +
       tested** ([`edge/AbisEdge`](../edge/AbisEdge), [`EDGE_SERVICE.md`](EDGE_SERVICE.md)):
@@ -199,17 +205,16 @@ The `.pbl` binaries can't be diffed or merged. Options:
 2. Keep `.pbl` in git as opaque blobs (status quo) — simplest but gives up real
    version control. Acceptable only until Phase 1 export lands.
 
-## Immediate next steps (what can be done now, here)
+## Immediate next steps (now that the build is feature-complete)
 
-1. Add `.gitignore`/`.gitattributes` and a short `CONTRIBUTING`/build note.
-2. File the **missing-PFE-libraries** and **stale-backup-PBL** items as tracked
-   issues so they aren't lost.
-3. When a database connection or a DDL dump is available, extend
-   `tools/extract_schema.py` to ingest it and produce the full data model.
-4. Prototype the **Phase-2 API skeleton** (read-only endpoints for `ab_job` /
-   `coil`) against a stub or the real DB — the seam everything else needs.
+The greenfield feature surface is complete; what remains is taking it to production.
+See [`NEXT_STEPS.md`](NEXT_STEPS.md) for the detailed, prioritized list. In short:
 
-> **Pick the next concrete deliverable** and this roadmap will be advanced
-> accordingly. The recommended next move is Phase 2's API skeleton, because it
-> unblocks every later phase; but locating the missing PFE libraries (Phase 0)
-> may be more urgent if a clean PB build is needed first.
+1. **Oracle non-prod validation sweep** of the newer modules' read/write paths
+   (everything past the original pilot has only been exercised on SQLite + the
+   gated smoke) — the top remaining risk.
+2. **OIDC rollout**: register the provider, map logins → `security_user`, and
+   broaden the per-feature enforcement beyond the security-admin endpoints.
+3. **Wire the 861 EDI** trigger point to the per-customer Oracle functions.
+4. **Edge/OPC**: the Softing DA→UA bridge + per-device serial formats (needs hardware).
+5. **Per-module production cutover** (Phase 4) with monitoring, then decommission legacy.

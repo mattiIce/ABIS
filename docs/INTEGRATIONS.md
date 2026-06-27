@@ -8,10 +8,13 @@ re-home; they don't move behind the [API seam](../api/README.md) for free.
 
 > **Sources.** Grounded in artifacts in this repo: the live schema
 > ([`DATA_MODEL.md`](DATA_MODEL.md) / `data-model/oracle_schema.json`), the
-> PL/SQL in `data-model/oracle_ddl.sql`, and the two exported PowerBuilder text
-> sources present (`da.sra`, `cb_edi.src`). Items that require the **full PB
-> source export** (still blocked — needs the Windows PB IDE) are marked
-> **⛔ needs PB export**.
+> PL/SQL in `data-model/oracle_ddl.sql`, and the vendored PowerBuilder text source
+> for the rebuilt areas ([`../legacy/src/`](../legacy/src/README.md), incl. `edi/`,
+> `da/`, `opc_log/`). The remaining ⛔ items live in the un-vendored `silverdome*`
+> core libraries (read in place from the export). The real OPC tag structure
+> (host → device → item) is now known from the `opc_log` data and seeded
+> ([`../api/`](../api/README.md) `/opc-log`); per-device serial formats still need
+> the shop-floor hardware.
 
 ## Summary
 

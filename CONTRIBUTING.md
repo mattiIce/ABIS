@@ -13,13 +13,15 @@ PB IDE and is not built here.
   curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0 --install-dir "$HOME/.dotnet"
   export PATH="$HOME/.dotnet:$PATH"
   ```
-- **Node 22** (only for the typed-client demo in `api/clientapp/`).
+- **Node 22** (for the typed web modules + e2e in `api/clientapp/`).
 - **No database needed**: the dev/test profile seeds an in-process SQLite fixture.
 
 ```sh
 cd api
-dotnet test                          # 103 tests (repository + HTTP smoke + units)
+dotnet test                          # 167 tests (repository + HTTP smoke + units)
 dotnet run --project src/ABIS.Api    # Development: seeds SQLite; key dev-local-key
+# typed-client e2e against a running API (58 tests):
+#   ABIS_BASE=http://127.0.0.1:5xxx ABIS_KEY=dev-local-key npm --prefix clientapp run e2e
 ```
 
 ## Branches & PRs
