@@ -1,9 +1,12 @@
 # Validating the Oracle data path
 
 CI only exercises the seeded **SQLite** fixture, so the production **Oracle** path
-(driver, dialect SQL, sequences) is unverified until run against a real database.
-This is the top user-blocked item in [`NEXT_STEPS.md`](NEXT_STEPS.md). This runbook
-makes that validation turnkey once you can provide a connection.
+(driver, dialect SQL, sequences) needs validating against a real database. The
+**original** core surface was validated live (read + write — see results below) and
+fixed three live-only bug classes. Modules built since have only run on SQLite + the
+gated smoke, so a **re-sweep of the newer read/write paths** is the top remaining item
+in [`NEXT_STEPS.md`](NEXT_STEPS.md). This runbook makes that turnkey once you can
+provide a connection.
 
 > Use a **non-production** Oracle (a test/staging copy of the ABIS schema). The API
 > issues real SQL; point it at prod only with explicit sign-off.

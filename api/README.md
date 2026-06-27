@@ -1,21 +1,23 @@
-# ABIS API (modernization Phase 2)
+# ABIS API + greenfield web modules
 
-A read-first REST **seam** over the legacy ABIS database. ABIS today is a 2-tier
-PowerBuilder client that talks straight to the database with no service tier
-(see [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md)). This API is the
-missing integration point every later modernization step builds on
-([`../docs/MODERNIZATION_ROADMAP.md`](../docs/MODERNIZATION_ROADMAP.md), Phase 2).
+The REST **seam** over the ABIS database and the **greenfield web app** built on it.
+ABIS was a 2-tier PowerBuilder client that talked straight to the database with no
+service tier (see [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md)); this API is
+the integration point, and `wwwroot/ui/` + `clientapp/` are the typed web modules that
+replace the legacy screens module-by-module
+([`../docs/MODERNIZATION_ROADMAP.md`](../docs/MODERNIZATION_ROADMAP.md), Phase 3/4).
 
-> **Scope:** read (GET) endpoints across the core entities and reference
-> lookups, plus a broad **write** surface — master data create/replace
-> (customers, parts, carriers, dies, sketches, customer contacts; POST/PUT),
-> order entry (orders, items, skids), shipping/receiving (shipments,
-> receiving BOLs), shop-floor and operations records (scan events, maintenance
-> logs, shifts, downtime), and operational partial updates (PATCH) to jobs,
-> coils, and shipment dispatch. The write path (sequence-backed ids) is
-> validated against the live Oracle database. Write requests are checked for
-> required fields and column-width limits and rejected with `400 ProblemDetails`
-> before reaching the database (the limits mirror the Oracle schema).
+> **Scope:** ~160 endpoints across **31 tags** covering every rebuilt area —
+> jobs, coils (+ inventory & ownership transfer), orders/order-entry, customers,
+> parts, dies, skids/warehouse, scrap, sales (quote lifecycle), quotation, QA
+> mechanical results, coil evaluation/QC, recovery, accounting, EDI, OPC log,
+> scan, maintenance, shifts, downtime, shipping, receiving (with coil-minting),
+> sketches, security/authorization, the production folder, the stacker line
+> board, and a production/customer/inventory/QA **reporting** suite. Reads are
+> paged + allowlist-sorted; writes are server-assigned-id, validated
+> (`400 ProblemDetails`), and exercised against both the SQLite fixture and the
+> live Oracle database. Full per-endpoint reference: the OpenAPI doc at
+> `/swagger` (the table below lists the core surface by group).
 
 ## Stack
 
@@ -54,23 +56,27 @@ The Development profile (`appsettings.Development.json`) uses
 `Provider=Sqlite`, `Seed=true`, so the API comes up populated with sample data
 and needs no external database.
 
-### Demo UIs
+### Web modules
 
-Pages under `wwwroot/ui/`, serving as **Path C greenfield references** (see
-[`../docs/PHASE3_PILOT_PLAN.md`](../docs/PHASE3_PILOT_PLAN.md)) and manual test
-harnesses. Paste the dev API key (`dev-local-key`) into the header field; the
-pages cross-link.
+~34 pages under `wwwroot/ui/`, the greenfield screens that replace the legacy
+PowerBuilder windows. Most are TypeScript modules in `clientapp/src/` that consume
+the **generated, typed client** (compiled by `tsc` to ES modules under `/ui/app/`,
+committed so they run with no runtime build); a handful of early demos are vanilla
+JS. Pages cross-link; sign in via OIDC or paste the dev key (`dev-local-key`).
 
-- **`/ui/index.html`** — order entry: search/filter orders, view header +
-  customer + lines, save a new order with line items. *(vanilla JS)*
-- **`/ui/coils.html`** — coil inventory: filter coils, view a coil + its
-  processing history, receive a coil, and an alloy/location weight rollup. *(vanilla JS)*
-- **`/ui/qa.html`** — QA test results: filter mechanical test results by type,
-  position, and date range, with click-to-sort (server-side) column headers. *(vanilla JS)*
-- **`/ui/typed.html`** — coil inventory driven by the **generated TypeScript
-  client** (`clientapp/`, compiled by `tsc` to ES modules under `/ui/app/`),
-  including a typed **write** (create order via `createOrderWithItems()` built
-  from generated DTOs) — the codegen loop end-to-end, reads and writes.
+By domain (page → what it does):
+- **Commercial** — `order-entry`, `sales` (quote lifecycle), `quotation` (CirclePro
+  calculator), `customers`, `parts`, `accounting` (invoice coils).
+- **Coils & inventory** — `coil-inventory`, `coil-ownership` (toll-transfer +
+  certificate), `receiving` (BOL + coil lines + mint), `skids`, `warehouse`.
+- **Shop floor** — `jobs`, `das-console` (w_da_sheet), `stacker` (line board + error
+  log), `coil-eval` (QC sheet), `prod-folder`, `downtime`, `scan`, `shifts`.
+- **Quality** — `qa-results`, `quality` (recovery).
+- **Logistics** — `shipping`, `carriers`, `edi`, `sketches`, `dies`.
+- **Platform** — `security` (users/groups/permissions), `opc-log`, `reporting`
+  (production / customer-shipment / inventory / QA-scrap, with CSV export).
+- **`/ui/typed.html`** — the original codegen demo (coil screen + a typed
+  create-order write) proving the generated-client loop end-to-end.
 
 #### Typed client demo (`clientapp/`)
 
@@ -95,8 +101,11 @@ running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ```sh
 cd api
-dotnet test                                # 152 tests: repository + HTTP smoke
+dotnet test                                # 167 tests: repository + HTTP smoke
 ```
+
+The typed-client **e2e** suite (`clientapp/e2e/run.mjs`, **58 tests**) drives the
+generated client against a live seeded API and is run by CI on every PR.
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).
 
@@ -249,8 +258,20 @@ CI builds this image on every PR (see `.github/workflows/ci.yml`).
 | `GET /api/lookups/edi-types` | EDI transaction-set types + X12 versions (table `edi_type`) |
 | `GET /api/lookups/customer-edi` | Customer EDI trading-partner configuration (table `customer_edi`) |
 | `GET /api/audit-log?page&pageSize&source&sort&dir` | List the action/audit log, newest first (sortable) |
+| `PATCH /api/sheet-skids/{n}/warehouse` | Warehouse update of a skid (location / ticket / status) |
+| `GET /api/accounting/rej-reband-coils?abJobNum=` | Rejected/rebanded coils that drive a job's invoice |
+| `GET /api/quality/{scrap-types,product-types,recovery-customers,customer-defects?customerId=}` | Recovery / customer-defect setup |
+| **Sales** | `GET /api/sales/quotes?search=`, `/quotes/{id}/{rev}`, `/contacts?customerId=`, `…/events`, `…/probability` (+ POST events/probability) — quote lifecycle, follow-ups, win-probability |
+| **Coil ownership** | `GET /api/coil-ownership/transfers?customerId=`, `…/{cert}/certificate`, `…/transferable-coils`; `POST /api/coil-ownership/transfers` (issues certificate, re-points coil owner) |
+| **Security** | `GET /api/security/{users,users/{id},users/{id}/groups,users/{id}/permissions,groups,applications}`; `GET /api/security/me/{permissions,allowed}`; `POST /api/security/{users,groups,applications}`; `PUT …/applications/{id}` grants; user↔group membership — per-feature authorization (MAX of direct+group), gate enforced on the admin writes |
+| **Receiving (lines)** | `GET /api/receiving-bols/{id}/{detail,coils}`; `POST …/coils`; `DELETE …/coils/{coilId}`; `POST …/{mint,generate-861}` — coil line items + coil-minting (861 = DB-side stub) |
+| **Coil eval / QC** | `GET /api/coil-eval/coils?abJobNum=`, `…/skids/{n}/dimension-checks`, `…/jobs/{n}/eval-scrap`; `POST` dimension-checks + eval-scrap |
+| **Production folder** | `GET /api/prod-folder/jobs/{n}` (summary), `…/notes`; `POST …/notes` — e-folder notes |
+| **Stacker** | `GET /api/stacker/board?lineNum=`, `/stacker/line-errors?lineNum=&from=&to=`; `POST /stacker/line-errors` — line board + fault log |
+| **Reporting** | `GET /api/reporting/{production-summary,line-efficiency,monthly-production,downtime,on-time,customer-shipments,open-shipments,customer-orders,customer-skid-count,coil-inventory,coil-on-hold,skid-inventory,unmatched-coils,qa-mechanical,scrap-summary,scrap-by-job}` — 19 report endpoints (UI viewer + CSV export) |
 
 Collections return a paged envelope: `{ items, page, pageSize, totalCount, totalPages }`.
+The grouped rows above summarize each tag; see `/swagger` for the full per-endpoint contract.
 
 **Sorting.** List endpoints accept `sort` (a field name) and `dir` (`asc`/`desc`,
 default `asc`). Sortable fields are **allowlisted per resource** and mapped to
@@ -422,11 +443,13 @@ conventions, not recovered facts.
 
 The repository SQL is engine-portable (`:name` parameters; columns aliased to
 model property names; dialect-specific paging and next-id supplied by the
-connection factory). The Oracle path is wired and compiles, but is **not exercised by CI**
-(no Oracle instance available) — validate it against a real database before
-relying on it. The model property names and table shapes mirror the *partial*,
-recovered data model; reconcile against the real schema (Phase 1) as it is
-completed. `order_item.order_item_num` is treated as the PK by inference from
-`ab_job.order_item_num`, and `order_item.order_abc_num` is an **inferred FK** to
-`customer_order` (order entry requires an order↔item link) — both pending
-confirmation against the real schema.
+connection factory). The Oracle path was **validated end-to-end** against the live
+non-prod database (read + write/update); the recurring live-only traps — ORA-01745
+reserved-word binds, ORA-00932 CHAR-null COALESCE, Int64 unboxing — are coded
+against throughout (see [`../docs/ORACLE_VALIDATION.md`](../docs/ORACLE_VALIDATION.md)).
+A secret-gated `oracle-smoke` CI job runs it when `ORACLE_CONNECTION_STRING` is set.
+Model shapes are reconciled against the full recovered schema and each built module
+was cross-checked against the real DataWindow/Oracle columns
+([`../docs/data-model/BACKCHECK.md`](../docs/data-model/BACKCHECK.md)) — e.g.
+`order_item`'s composite PK `(order_abc_num, order_item_num)` is **confirmed** (no
+longer inferred).

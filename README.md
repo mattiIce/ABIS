@@ -8,12 +8,23 @@ certification, skid/scrap handling, warehouse, shipping/EDI, and accounting,
 plus direct integration with plant-floor hardware (scales/gauges over serial and
 PLCs over OPC).
 
-> **This repository is undergoing a modernization effort.**
-> - **Phase 1 — discovery & roadmap** is captured under [`docs/`](docs/)
->   (analysis, reproducible tooling, planning; no legacy behavior changed).
-> - **Phase 2 — the API seam** is under [`api/`](api/README.md): a read-first
->   ASP.NET Core 8 REST API over the core entities (Oracle in production; a
->   seeded SQLite fixture for local dev / CI).
+> **This repository is undergoing a modernization effort (greenfield, strangler-fig).**
+> - **Phase 1 — discovery & roadmap** under [`docs/`](docs/): analysis, reproducible
+>   tooling, the full recovered data model, and the plan.
+> - **Phase 2 — the API seam** under [`api/`](api/README.md): an ASP.NET Core 8 REST
+>   API over the database (Oracle in production; a seeded SQLite fixture for dev/CI),
+>   with a fully-typed OpenAPI contract + generated TypeScript client.
+> - **Phase 3/4 — greenfield modules (in progress, far along):** every business
+>   library in the legacy target is now rebuilt as a typed web module on that API —
+>   order entry, jobs, coil inventory & ownership transfer, skids/warehouse, sales,
+>   quotation, QA & coil-evaluation, recovery, accounting, EDI, OPC log, downtime,
+>   maintenance, scan, dies, parts, receiving (with coil-minting), shifts, shipping,
+>   sketches, security/authorization, the DAS & stacker shop-floor consoles, the
+>   production folder, and a production/customer/inventory/QA **reporting** suite.
+>   The legacy PowerBuilder source for these areas is vendored under
+>   [`legacy/src/`](legacy/src/README.md) so each was built against the **real**
+>   tables/columns. Remaining work is production rollout (Oracle cutover, OIDC
+>   rollout, the edge/OPC hardware bridge) — see [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md).
 
 ## Documentation
 
@@ -23,8 +34,12 @@ PLCs over OPC).
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | As-is architecture: stack, 2-tier topology, the two app targets (`lion` + the `da` data-acquisition app), module map, integration surface, the Aug-2025 PB migration, and build-readiness issues. |
 | [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | **Full database model (412 tables)** recovered from a live Oracle data-dictionary dump of the `DBO` schema — real columns, PKs, FKs, indexes, and sequences. Supersedes the earlier partial DataWindow-inferred model. |
 | [`docs/OBJECT_INVENTORY.md`](docs/OBJECT_INVENTORY.md) | Approximate object inventory (~1,345 DataWindows, ~588 windows, …) recovered from the compiled libraries, per-library and grouped by domain. |
-| [`docs/MODERNIZATION_ROADMAP.md`](docs/MODERNIZATION_ROADMAP.md) | Strategic options, a recommended hybrid/strangler-fig approach, and a phased plan with concrete next steps. |
-| [`docs/PHASE3_PILOT_PLAN.md`](docs/PHASE3_PILOT_PLAN.md) | The Phase 3 bake-off: piloting Appeon PowerServer vs. greenfield-on-the-API, with a scoring rubric and candidate modules. |
+| [`docs/MODERNIZATION_ROADMAP.md`](docs/MODERNIZATION_ROADMAP.md) | Strategic options, the greenfield/strangler-fig approach, and the phased plan with status. |
+| [`docs/data-model/BACKCHECK.md`](docs/data-model/BACKCHECK.md) | Verification of each built module's schema against the real DataWindow/Oracle columns. |
+| [`docs/ORACLE_VALIDATION.md`](docs/ORACLE_VALIDATION.md) | Oracle data-path validation runbook + the live-only bug classes found and fixed. |
+| [`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md) · [`docs/EDGE_SERVICE.md`](docs/EDGE_SERVICE.md) | External integrations (EDI/serial/OPC) and the shop-floor edge service. |
+| [`docs/DEPLOY.md`](docs/DEPLOY.md) | Run the API + greenfield UIs on a server (Docker Compose). |
+| [`legacy/src/README.md`](legacy/src/README.md) | The vendored legacy PB source per area + which greenfield module each maps to. |
 
 ## Reproducing the analysis
 
@@ -49,23 +64,29 @@ python3 tools/extract_inventory.py .   # -> docs/inventory/objects.json
 
 ## Important caveats
 
-- The `.pbl` files are **compiled binaries**; their PowerScript source is not
-  recoverable here. The inventory recovers object **names** only, and is
-  **approximate** (see the caveats in `OBJECT_INVENTORY.md`).
-- The data model is **partial** — only what the ~40 exported DataWindows touch.
-  A full model needs a live DB introspection or DDL, and a full text export of
-  the remaining objects from the PowerBuilder IDE.
-- **The app does not build as committed**: 7 PFE/PFD libraries in the target's
-  library list are missing from the repo. See `ARCHITECTURE.md`.
+- The root `.pbl` files are **compiled binaries**; the original PowerScript event
+  bodies aren't recovered. The greenfield modules are rebuilt from the **exported
+  text source** (DataWindows/windows) vendored under [`legacy/src/`](legacy/src/README.md)
+  and the authoritative Oracle DDL — not from guesses.
+- The data model is **complete**: `docs/DATA_MODEL.md` is regenerated from a live
+  Oracle data-dictionary dump (412 tables, PKs/FKs/indexes/sequences).
+- **The legacy target builds as committed**: all 50 libraries in `lion.pbt`'s
+  LibList are present (the 7 previously-missing PFE/PFD libraries were located and
+  committed).
+- The one piece that stays DB-side by design is the per-customer **861 EDI**
+  generation (Oracle PL/SQL functions) — the greenfield API exposes the trigger
+  point and documents the wiring.
 
 ## Repository layout
 
 ```
-*.pbl                 PowerBuilder libraries (compiled, binary)
+*.pbl                 PowerBuilder libraries (compiled, binary; legacy)
 *.srd *.srq *.src     Exported DataWindow / query / event sources (text)
-da.sra                Exported application object for the "da" data-acq app
-abis.pbw  lion.pbt    PowerBuilder workspace / target
+abis.pbw  lion.pbt    PowerBuilder workspace / target (legacy)
 lion_mig.log          PowerBuilder migration report (2025-08-26)
-docs/                 Modernization discovery & roadmap (this effort)
+api/                  Greenfield ASP.NET Core API + typed web modules (clientapp/)
+edge/                 Shop-floor edge service (serial scales/gauges → HTTP)
+legacy/src/           Vendored PB text source for the rebuilt areas (reference)
+docs/                 Modernization discovery, data model & roadmap
 tools/                Reproducible analysis extractors
 ```

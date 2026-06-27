@@ -1,5 +1,12 @@
 # ABIS — Phase 3 Pilot Plan (modernization path bake-off)
 
+> **Status (concluded):** the bake-off resolved to **Path C (greenfield)** — Path B
+> (Appeon PowerServer) was dropped (2026-06-26), so it was never piloted. The
+> greenfield rebuild was then carried across **every** business module (see
+> [`MODERNIZATION_ROADMAP.md`](MODERNIZATION_ROADMAP.md) Phase 3/4 and
+> [`NEXT_STEPS.md`](NEXT_STEPS.md)). This plan is retained for its scoring rubric
+> and the historical decision record.
+
 Phase 2 delivered the missing API seam ([`../api/`](../api/README.md)). Phase 3
 **decides, with evidence, how each ABIS module should be modernized** — rather
 than betting the whole rewrite on one approach. We pilot both candidate paths on
