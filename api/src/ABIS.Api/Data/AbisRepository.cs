@@ -901,6 +901,81 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
+    // ---- Customer / shipment reporting (legacy silverdome3 w_report_customer_*) ----
+
+    // Per-customer shipment roll-up (total / shipped / open + last ship date). Date window
+    // applies to the scheduled date. shipped = date_sent present.
+    public async Task<IReadOnlyList<CustomerShipmentRow>> GetCustomerShipmentsAsync(DateTime? from, DateTime? to, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var p = new DynamicParameters();
+        var where = new List<string>();
+        if (from is not null) { where.Add("s.shipment_scheduled_date_time >= :dfrom"); p.Add("dfrom", from, DbType.DateTime); }
+        if (to is not null) { where.Add("s.shipment_scheduled_date_time < :dto"); p.Add("dto", to, DbType.DateTime); }
+        var clause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
+        var rows = await conn.QueryAsync<CustomerShipmentRow>(new CommandDefinition(
+            $"""
+            SELECT s.customer_id AS CustomerId, c.customer_short_name AS CustomerShortName,
+                   COUNT(s.packing_list) AS Shipments,
+                   SUM(CASE WHEN s.date_sent IS NOT NULL THEN 1 ELSE 0 END) AS Shipped,
+                   SUM(CASE WHEN s.date_sent IS NULL THEN 1 ELSE 0 END) AS Open,
+                   MAX(s.date_sent) AS LastSent
+            FROM shipment s LEFT JOIN customer c ON c.customer_id = s.customer_id
+            {clause}
+            GROUP BY s.customer_id, c.customer_short_name
+            ORDER BY c.customer_short_name
+            """, p, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<OpenShipmentRow>> GetOpenShipmentsAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<OpenShipmentRow>(new CommandDefinition(
+            """
+            SELECT s.packing_list AS PackingList, s.customer_id AS CustomerId, c.customer_short_name AS CustomerShortName,
+                   s.carrier_id AS CarrierId, s.shipment_status AS ShipmentStatus,
+                   s.shipment_scheduled_date_time AS ShipmentScheduledDateTime, s.vehicle_id AS VehicleId, s.shipment_notes AS ShipmentNotes
+            FROM shipment s LEFT JOIN customer c ON c.customer_id = s.customer_id
+            WHERE s.date_sent IS NULL
+            ORDER BY s.shipment_scheduled_date_time
+            """, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<CustomerOrderReportRow>> GetCustomerOrdersReportAsync(long? customerId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<CustomerOrderReportRow>(new CommandDefinition(
+            """
+            SELECT o.order_abc_num AS OrderAbcNum, o.orig_customer_id AS CustomerId, c.customer_short_name AS CustomerShortName,
+                   o.orig_customer_po AS OrigCustomerPo, o.enduser_po AS EnduserPo, o.sales_order AS SalesOrder, o.created_date AS CreatedDate
+            FROM customer_order o LEFT JOIN customer c ON c.customer_id = o.orig_customer_id
+            WHERE (:cust IS NULL OR o.orig_customer_id = :cust)
+            ORDER BY o.order_abc_num
+            """, new { cust = customerId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    // Per-customer finished sheet-skid counts via sheet_skid ⋈ ab_job ⋈ customer_order ⋈ customer.
+    public async Task<IReadOnlyList<CustomerSkidCountRow>> GetCustomerSkidCountsAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<CustomerSkidCountRow>(new CommandDefinition(
+            """
+            SELECT o.orig_customer_id AS CustomerId, c.customer_short_name AS CustomerShortName,
+                   COUNT(ss.sheet_skid_num) AS SkidCount,
+                   COALESCE(SUM(ss.sheet_net_wt), 0.0) AS TotalNetWt
+            FROM sheet_skid ss
+            JOIN ab_job j ON j.ab_job_num = ss.ab_job_num
+            JOIN customer_order o ON o.order_abc_num = j.order_abc_num
+            LEFT JOIN customer c ON c.customer_id = o.orig_customer_id
+            GROUP BY o.orig_customer_id, c.customer_short_name
+            ORDER BY c.customer_short_name
+            """, cancellationToken: ct));
+        return rows.AsList();
+    }
+
     public async Task<IReadOnlyList<OpcLog>> GetOpcLogsAsync(CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);

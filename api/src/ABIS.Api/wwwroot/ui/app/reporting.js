@@ -71,6 +71,45 @@ const REPORTS = {
             { h: 'On-time %', num: true, f: (r) => num(r.onTimePct, 1), raw: (r) => r.onTimePct },
         ],
     },
+    'customer-shipments': {
+        note: 'Per-customer shipment roll-up (total / shipped / open + last ship date).',
+        load: (f, t) => client().getCustomerShipments(f, t),
+        cols: [
+            { h: 'Customer', f: (r) => esc(r.customerShortName) }, { h: 'Id', f: (r) => esc(r.customerId) },
+            { h: 'Shipments', num: true, f: (r) => num(r.shipments), raw: (r) => r.shipments },
+            { h: 'Shipped', num: true, f: (r) => num(r.shipped), raw: (r) => r.shipped },
+            { h: 'Open', num: true, f: (r) => num(r.open), raw: (r) => r.open },
+            { h: 'Last sent', f: (r) => esc(dt(r.lastSent)) },
+        ],
+    },
+    'open-shipments': {
+        note: 'Open (not-yet-sent) shipments with customer, carrier, and scheduled date.',
+        load: () => client().getOpenShipments(),
+        cols: [
+            { h: 'Packing list', f: (r) => esc(r.packingList) }, { h: 'Customer', f: (r) => esc(r.customerShortName) },
+            { h: 'Carrier', f: (r) => esc(r.carrierId) }, { h: 'Status', f: (r) => esc(r.shipmentStatus) },
+            { h: 'Scheduled', f: (r) => esc(dt(r.shipmentScheduledDateTime)) },
+            { h: 'Vehicle', f: (r) => esc(r.vehicleId) }, { h: 'Notes', f: (r) => esc(r.shipmentNotes) },
+        ],
+    },
+    'customer-orders': {
+        note: 'Customer orders with PO / sales-order references.',
+        load: () => client().getCustomerOrdersReport(undefined),
+        cols: [
+            { h: 'Order', f: (r) => esc(r.orderAbcNum) }, { h: 'Customer', f: (r) => esc(r.customerShortName) },
+            { h: 'Customer PO', f: (r) => esc(r.origCustomerPo) }, { h: 'Enduser PO', f: (r) => esc(r.enduserPo) },
+            { h: 'Sales order', f: (r) => esc(r.salesOrder) }, { h: 'Created', f: (r) => esc(dt(r.createdDate)) },
+        ],
+    },
+    'customer-skid-count': {
+        note: 'Per-customer finished sheet-skid counts + total net weight.',
+        load: () => client().getCustomerSkidCount(),
+        cols: [
+            { h: 'Customer', f: (r) => esc(r.customerShortName) }, { h: 'Id', f: (r) => esc(r.customerId) },
+            { h: 'Skids', num: true, f: (r) => num(r.skidCount), raw: (r) => r.skidCount },
+            { h: 'Total net wt', num: true, f: (r) => num(r.totalNetWt), raw: (r) => r.totalNetWt },
+        ],
+    },
 };
 let current = [];
 let currentKey = 'summary';

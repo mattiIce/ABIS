@@ -712,3 +712,30 @@ test('reporting flow: on-time delivery (typed)', async () => {
   assert.equal(l120.late, 0);
   assert.equal(l120.onTimePct, 100);
 });
+
+// Customer / shipment reporting (legacy silverdome3 w_report_customer_*).
+test('reporting flow: customer shipments + open shipments (typed)', async () => {
+  const cs = await client.getCustomerShipments(undefined, undefined);
+  assert.ok(cs.length >= 1);
+  // Seeded: cust 4001 has 1 shipped (8801), cust 4002 has 1 open (8802).
+  const acme = cs.find((r) => r.customerId === 4001);
+  assert.ok(acme && acme.shipped === 1);
+  const beta = cs.find((r) => r.customerId === 4002);
+  assert.ok(beta && beta.open === 1);
+
+  const open = await client.getOpenShipments();
+  assert.ok(open.some((r) => r.packingList === 8802));
+  assert.ok(open.every((r) => r.packingList !== 8801)); // shipped one excluded
+});
+
+test('reporting flow: customer orders + skid counts (typed)', async () => {
+  const orders = await client.getCustomerOrdersReport(undefined);
+  assert.ok(orders.length >= 1);
+  assert.ok(orders.every((r) => typeof r.orderAbcNum === 'number'));
+  const scoped = await client.getCustomerOrdersReport(4001);
+  assert.ok(scoped.length >= 1 && scoped.every((r) => r.customerId === 4001));
+
+  const skids = await client.getCustomerSkidCount();
+  assert.ok(Array.isArray(skids));
+  assert.ok(skids.every((r) => typeof r.skidCount === 'number'));
+});
