@@ -12,8 +12,25 @@ ABIS_DB_CONNECTION="Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=192.16
 # (printed at the end of the install).
 #ABIS_API_KEY="paste-a-long-random-value-here"
 
-# Loopback port Kestrel binds (nginx fronts it in Phase 3). Default 8080.
+# Loopback port Kestrel binds (nginx proxies to it). Default 8080.
 ABIS_PORT=8080
 
 # Database provider: Oracle (production) or Sqlite (demo). Default Oracle.
 ABIS_DB_PROVIDER=Oracle
+
+# --- Public exposure (nginx + TLS) -------------------------------------------
+# Leave ABIS_SERVER_NAME unset to keep the service on loopback only (no nginx).
+# Set it to the public FQDN to front the app with nginx + TLS.
+#ABIS_SERVER_NAME="abis.example.com"
+
+# TLS mode when ABIS_SERVER_NAME is set: letsencrypt | provided | none.
+# Default is letsencrypt.
+#ABIS_TLS_MODE=letsencrypt
+
+# Required for letsencrypt: admin email for registration + expiry notices.
+#ABIS_LETSENCRYPT_EMAIL="ops@example.com"
+
+# Required for 'provided' TLS: paths to an existing cert + key on the server
+# (e.g. an internal CA or a DNS-01 wildcard). Ignored otherwise.
+#ABIS_TLS_CERT="/etc/ssl/abis/fullchain.pem"
+#ABIS_TLS_KEY="/etc/ssl/abis/privkey.pem"

@@ -14,14 +14,22 @@
 #
 # Config inputs (env var / answers-file key — answers file is sourced, so quote
 # values with spaces, e.g. ABIS_DB_CONNECTION="Data Source=..."):
-#   ABIS_DB_CONNECTION   Oracle connection string                 (required)
-#   ABIS_API_KEY         X-Api-Key value clients send   (generated if omitted)
-#   ABIS_PORT            loopback port Kestrel binds              (default 8080)
-#   ABIS_DB_PROVIDER     Oracle | Sqlite                        (default Oracle)
+#   ABIS_DB_CONNECTION     Oracle connection string               (required)
+#   ABIS_API_KEY           X-Api-Key value clients send (generated if omitted)
+#   ABIS_PORT              loopback port Kestrel binds            (default 8080)
+#   ABIS_DB_PROVIDER       Oracle | Sqlite                      (default Oracle)
+#   ABIS_SERVER_NAME       public FQDN to front with nginx+TLS.
+#                          Blank = loopback only, no nginx.        (default blank)
+#   ABIS_TLS_MODE          letsencrypt | provided | none   (default letsencrypt
+#                          when ABIS_SERVER_NAME is set)
+#   ABIS_LETSENCRYPT_EMAIL admin email for Let's Encrypt   (required if TLS mode
+#                          is letsencrypt)
+#   ABIS_TLS_CERT          path to fullchain cert  (required if TLS mode=provided)
+#   ABIS_TLS_KEY           path to private key     (required if TLS mode=provided)
 #
-# What it does NOT do yet: expose the service off-host. Kestrel binds 127.0.0.1
-# only; public HTTPS access is added in Phase 3 (nginx + Let's Encrypt). Until
-# then, verify locally with curl on the box. See docs/INSTALL_PLAN.md.
+# Kestrel always binds 127.0.0.1 only; nginx is the sole public listener. With no
+# ABIS_SERVER_NAME the service is reachable on loopback only (verify with curl on
+# the box). See docs/INSTALL_PLAN.md.
 #
 set -euo pipefail
 
@@ -32,11 +40,17 @@ INSTALL_ROOT="/opt/abis"
 APP_DIR="${INSTALL_ROOT}/app"
 CONFIG_DIR="/etc/abis"
 ENV_FILE="${CONFIG_DIR}/abis.env"
+STATE_FILE="${CONFIG_DIR}/install.state"
 UNIT_DEST="/etc/systemd/system/${SERVICE_NAME}.service"
+NGINX_SITE_AVAIL="/etc/nginx/sites-available/${SERVICE_NAME}"
+NGINX_SITE_ENABLED="/etc/nginx/sites-enabled/${SERVICE_NAME}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC_APP_DIR="${SCRIPT_DIR}/app"
 SRC_UNIT="${SCRIPT_DIR}/abis.service"
+SRC_NGINX_HTTP="${SCRIPT_DIR}/nginx/abis.conf"
+SRC_NGINX_TLS="${SCRIPT_DIR}/nginx/abis-tls.conf"
+SRC_NGINX_PENDING="${SCRIPT_DIR}/nginx/abis-pending.conf"
 
 # --- defaults / args ---------------------------------------------------------
 UNATTENDED=0
@@ -82,6 +96,16 @@ existing_value() {
   printf '%s' "$val"
 }
 
+state_value() {
+  # $1 = exact KEY in STATE_FILE (nginx/TLS settings); echoes value, or empty.
+  [[ -f "$STATE_FILE" ]] || return 0
+  local line; line="$(grep -m1 -E "^$1=" "$STATE_FILE" 2>/dev/null || true)"
+  [[ -z "$line" ]] && return 0
+  local val="${line#*=}"
+  val="${val%\"}"; val="${val#\"}"
+  printf '%s' "$val"
+}
+
 generate_key() {
   if command -v openssl >/dev/null 2>&1; then
     openssl rand -base64 32 | tr -d '\n'
@@ -124,9 +148,28 @@ if [[ -f "$ENV_FILE" ]]; then
 fi
 : "${ABIS_PORT:=$ABIS_PORT_EXISTING}"
 
+# nginx/TLS settings persist in STATE_FILE so an upgrade keeps the public config.
+: "${ABIS_SERVER_NAME:=$(state_value ABIS_SERVER_NAME)}"
+: "${ABIS_TLS_MODE:=$(state_value ABIS_TLS_MODE)}"
+: "${ABIS_LETSENCRYPT_EMAIL:=$(state_value ABIS_LETSENCRYPT_EMAIL)}"
+: "${ABIS_TLS_CERT:=$(state_value ABIS_TLS_CERT)}"
+: "${ABIS_TLS_KEY:=$(state_value ABIS_TLS_KEY)}"
+
 prompt ABIS_DB_PROVIDER   "Database provider (Oracle/Sqlite)" "Oracle"
 prompt ABIS_DB_CONNECTION "Oracle connection string"         ""
-prompt ABIS_PORT          "HTTP port (loopback, nginx fronts it in Phase 3)" "8080"
+prompt ABIS_PORT          "HTTP port Kestrel binds on loopback" "8080"
+
+# Public exposure: a server name turns on the nginx+TLS front. Blank keeps the
+# Phase-2 behaviour (loopback only).
+prompt ABIS_SERVER_NAME   "Public server name for HTTPS (blank = loopback only, no nginx)" ""
+if [[ -n "${ABIS_SERVER_NAME:-}" ]]; then
+  prompt ABIS_TLS_MODE "TLS mode (letsencrypt/provided/none)" "letsencrypt"
+  case "${ABIS_TLS_MODE}" in
+    letsencrypt) prompt ABIS_LETSENCRYPT_EMAIL "Admin email for Let's Encrypt" "" ;;
+    provided)    prompt ABIS_TLS_CERT "Path to TLS certificate (fullchain.pem)" ""
+                 prompt ABIS_TLS_KEY  "Path to TLS private key" "" ;;
+  esac
+fi
 
 # API key: keep existing, else accept provided, else offer to generate.
 if [[ -z "${ABIS_API_KEY:-}" ]]; then
@@ -147,11 +190,49 @@ fi
 [[ "$ABIS_PORT" =~ ^[0-9]+$ ]] && (( ABIS_PORT >= 1 && ABIS_PORT <= 65535 )) || die "ABIS_PORT must be 1-65535 (got: ${ABIS_PORT})."
 case "${ABIS_DB_PROVIDER}" in Oracle|Sqlite) ;; *) die "ABIS_DB_PROVIDER must be Oracle or Sqlite (got: ${ABIS_DB_PROVIDER})." ;; esac
 
+if [[ -n "${ABIS_SERVER_NAME:-}" ]]; then
+  : "${ABIS_TLS_MODE:=letsencrypt}"
+  case "${ABIS_TLS_MODE}" in
+    letsencrypt)
+      [[ -n "${ABIS_LETSENCRYPT_EMAIL:-}" ]] || die "ABIS_LETSENCRYPT_EMAIL is required when ABIS_TLS_MODE=letsencrypt." ;;
+    provided)
+      [[ -n "${ABIS_TLS_CERT:-}" && -n "${ABIS_TLS_KEY:-}" ]] || die "ABIS_TLS_CERT and ABIS_TLS_KEY are required when ABIS_TLS_MODE=provided."
+      [[ -f "$ABIS_TLS_CERT" ]] || die "TLS certificate not found: ${ABIS_TLS_CERT}"
+      [[ -f "$ABIS_TLS_KEY"  ]] || die "TLS private key not found: ${ABIS_TLS_KEY}"
+      # nginx -t later hard-fails on a true cert/key mismatch. Catch the two
+      # things it does NOT catch here, so they surface before install, not as
+      # failing clients in production:
+      if command -v openssl >/dev/null 2>&1; then
+        # (1) leaf-only cert where a fullchain is expected -> incomplete-chain
+        #     TLS errors for clients without the intermediate cached. grep -c
+        #     prints the count even when 0 (and exits non-zero); '|| true' keeps
+        #     set -e happy, and the regex coercion guards a non-numeric result.
+        _cert_count="$(grep -c 'BEGIN CERTIFICATE' "$ABIS_TLS_CERT" 2>/dev/null || true)"
+        [[ "${_cert_count:-0}" =~ ^[0-9]+$ ]] || _cert_count=0
+        if [[ "$_cert_count" -lt 2 ]]; then
+          warn "ABIS_TLS_CERT has ${_cert_count} certificate(s) — looks leaf-only or not PEM."
+          warn "Supply the full chain (fullchain.pem) or clients without the intermediate"
+          warn "cached may get TLS errors."
+        fi
+        # (2) an already-expired certificate.
+        openssl x509 -noout -checkend 0 -in "$ABIS_TLS_CERT" >/dev/null 2>&1 \
+          || warn "ABIS_TLS_CERT appears to be expired or unreadable by openssl."
+      fi ;;
+    none) ;;
+    *) die "ABIS_TLS_MODE must be letsencrypt, provided, or none (got: ${ABIS_TLS_MODE})." ;;
+  esac
+fi
+
 info "Configuration:"
 echo "    mode      : $([[ "$IS_UPGRADE" -eq 1 ]] && echo upgrade || echo fresh install)"
 echo "    provider  : ${ABIS_DB_PROVIDER}"
 echo "    port      : 127.0.0.1:${ABIS_PORT}"
 echo "    api key   : $([[ -n "$ABIS_API_KEY" ]] && echo '(set)' || echo '(none)')"
+if [[ -n "${ABIS_SERVER_NAME:-}" ]]; then
+  echo "    public    : ${ABIS_SERVER_NAME} (nginx, TLS: ${ABIS_TLS_MODE})"
+else
+  echo "    public    : (none — loopback only)"
+fi
 
 # --- stop existing service (idempotent upgrade) ------------------------------
 if systemctl list-unit-files "${SERVICE_NAME}.service" >/dev/null 2>&1 \
@@ -226,6 +307,166 @@ get_code() {
   fi
 }
 
+# --- nginx + TLS front -------------------------------------------------------
+# Render a template to the site file using bash literal substitution (NOT sed):
+# cert/key/server values are admin-supplied and may contain sed metacharacters
+# ('|', '&', '\'). The replacements are QUOTED — "${ABIS_TLS_CERT:-}" — which
+# keeps them literal even on bash 5.2+, where an unquoted '&' in a ${//}
+# replacement is otherwise expanded to the matched text (patsub_replacement),
+# the same hazard sed has.
+render_site() {
+  local src="$1" line
+  [[ -f "$src" ]] || die "nginx template missing: ${src}"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line//@SERVER_NAME@/"$ABIS_SERVER_NAME"}"
+    line="${line//@PORT@/"$ABIS_PORT"}"
+    line="${line//@TLS_CERT@/"${ABIS_TLS_CERT:-}"}"
+    line="${line//@TLS_KEY@/"${ABIS_TLS_KEY:-}"}"
+    printf '%s\n' "$line"
+  done < "$src" > "$NGINX_SITE_AVAIL"
+  ln -sfn "$NGINX_SITE_AVAIL" "$NGINX_SITE_ENABLED"
+}
+
+nginx_test_reload() {
+  if ! nginx -t >/dev/null 2>&1; then
+    nginx -t || true
+    die "nginx configuration test failed (see output above)."
+  fi
+  systemctl reload nginx 2>/dev/null || systemctl restart nginx
+}
+
+open_firewall() {
+  # Open 80+443 only if ufw is the active firewall (best effort).
+  if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "Status: active"; then
+    ufw allow 'Nginx Full' >/dev/null 2>&1 || true
+  fi
+}
+
+configure_nginx() {
+  info "configuring nginx for ${ABIS_SERVER_NAME} (TLS: ${ABIS_TLS_MODE})"
+
+  if ! command -v nginx >/dev/null 2>&1; then
+    info "installing nginx"
+    apt-get update -qq || true
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nginx \
+      || die "failed to install nginx via apt-get; install it manually and re-run."
+  fi
+  open_firewall
+
+  case "$ABIS_TLS_MODE" in
+    provided)
+      render_site "$SRC_NGINX_TLS"
+      nginx_test_reload
+      ;;
+
+    none)
+      # Operator opted out of TLS: proxy the app over plain HTTP on :80.
+      render_site "$SRC_NGINX_HTTP"
+      nginx_test_reload
+      ;;
+
+    letsencrypt)
+      if ! command -v certbot >/dev/null 2>&1; then
+        info "installing certbot"
+        apt-get update -qq || true
+        DEBIAN_FRONTEND=noninteractive apt-get install -y -qq certbot python3-certbot-nginx \
+          || die "failed to install certbot; install it manually or use ABIS_TLS_MODE=provided."
+      fi
+
+      local le_live="/etc/letsencrypt/live/${ABIS_SERVER_NAME}"
+      # Preserve only a site that is genuinely THIS server's certbot-managed LE
+      # site: a live cert dir, a 443 listener, AND the site file actually pointing
+      # at the LE cert path. The last check matters because the provided-mode
+      # template also has `listen 443` — without it, a provided->letsencrypt
+      # switch would wrongly preserve the provided cert and ignore the mode change.
+      if [[ -d "$le_live" ]] && [[ -f "$NGINX_SITE_AVAIL" ]] \
+         && grep -qE 'listen[^;]*443' "$NGINX_SITE_AVAIL" \
+         && grep -qF "/etc/letsencrypt/live/${ABIS_SERVER_NAME}/" "$NGINX_SITE_AVAIL"; then
+        # Upgrade of an already-TLS host: the site file already carries certbot's
+        # 443 block + redirect. Do NOT re-render the HTTP base over it (that would
+        # drop TLS and, if certbot then failed, silently downgrade to plaintext).
+        # Leave the working TLS config in place; the certbot timer renews the cert.
+        info "existing Let's Encrypt TLS site detected — preserving it."
+        ln -sfn "$NGINX_SITE_AVAIL" "$NGINX_SITE_ENABLED"
+        nginx -t >/dev/null 2>&1 && { systemctl reload nginx 2>/dev/null || true; }
+        # The proxy upstream port lives in the existing file; warn if it drifted.
+        local cur_up
+        cur_up="$(grep -oE 'server 127\.0\.0\.1:[0-9]+' "$NGINX_SITE_AVAIL" 2>/dev/null \
+                  | grep -oE '[0-9]+$' | head -1 || true)"
+        if [[ -n "$cur_up" && "$cur_up" != "$ABIS_PORT" ]]; then
+          warn "nginx still proxies to port ${cur_up}, but the app now listens on ${ABIS_PORT}."
+          warn "to apply the new port to the existing TLS site: run uninstall.sh then install.sh."
+        fi
+      else
+        # Fresh TLS setup. Render the HTTP base (which proxies the app) so that
+        # certbot --nginx can clone that proxy into a new 443 block and add the
+        # HTTP->HTTPS redirect. There is a brief (seconds) plaintext window here
+        # that is inherent to certbot --nginx; it closes the moment certbot adds
+        # the redirect below.
+        render_site "$SRC_NGINX_HTTP"
+        nginx_test_reload
+        info "requesting Let's Encrypt certificate for ${ABIS_SERVER_NAME}"
+        if certbot --nginx -d "$ABIS_SERVER_NAME" --non-interactive --agree-tos \
+             -m "$ABIS_LETSENCRYPT_EMAIL" --redirect; then
+          systemctl reload nginx 2>/dev/null || true
+          info "TLS certificate installed; the certbot systemd timer handles renewals."
+        else
+          # Do NOT leave the app proxied over cleartext. Swap to a closed site that
+          # serves only the ACME path and returns 503 for everything else, so the
+          # API key / traffic is never exposed in plaintext. A later re-run retries.
+          warn "certbot could not obtain a certificate for ${ABIS_SERVER_NAME}. Common causes:"
+          warn "  - DNS for ${ABIS_SERVER_NAME} doesn't resolve to this server yet"
+          warn "  - inbound TCP/80 from the internet is blocked (ACME HTTP-01 needs it)"
+          warn "closing plaintext access (HTTP 503) until TLS is in place."
+          warn "fix DNS/firewall, then re-run: sudo ./install.sh   (or use HTTP only with ABIS_TLS_MODE=none)."
+          render_site "$SRC_NGINX_PENDING"
+          # The cleartext HTTP base is still live in memory from the reload above;
+          # the pending 503 config MUST load now, or the app stays exposed on :80.
+          # Refuse to exit cleanly while that's possible.
+          if nginx -t >/dev/null 2>&1; then
+            systemctl reload nginx 2>/dev/null \
+              || die "rendered the TLS-pending (503) config but 'nginx reload' failed; the cleartext proxy may still be live. Inspect: systemctl status nginx"
+          else
+            nginx -t || true
+            die "could not load the TLS-pending (503) config after certbot failed; refusing to leave the app exposed over plaintext on :80. Fix the nginx error above, then re-run."
+          fi
+        fi
+      fi
+      ;;
+  esac
+
+  # Best-effort public probe (non-fatal; DNS propagation / cert trust may lag).
+  local scheme="https"; [[ "$ABIS_TLS_MODE" == "none" ]] && scheme="http"
+  if command -v curl >/dev/null 2>&1; then
+    local pub_code
+    pub_code="$(curl -k -fsS -o /dev/null -w '%{http_code}' --max-time 5 \
+                "${scheme}://${ABIS_SERVER_NAME}/health/ready" 2>/dev/null || true)"
+    if [[ "$pub_code" == "200" ]]; then
+      info "public endpoint ${scheme}://${ABIS_SERVER_NAME}/health/ready is reachable."
+    else
+      warn "public probe of ${scheme}://${ABIS_SERVER_NAME}/health/ready returned '${pub_code:-none}'; verify DNS/firewall."
+    fi
+  fi
+}
+
+# Persist nginx/TLS choices so a later upgrade (re-run) reuses them.
+write_state() {
+  local prev_umask; prev_umask="$(umask)"
+  umask 077
+  cat > "$STATE_FILE" <<EOF
+# ABIS install state — written by install.sh. Records nginx/TLS settings so an
+# upgrade (re-run) reuses them. Root-owned, 0600.
+ABIS_SERVER_NAME="${ABIS_SERVER_NAME:-}"
+ABIS_TLS_MODE="${ABIS_TLS_MODE:-}"
+ABIS_LETSENCRYPT_EMAIL="${ABIS_LETSENCRYPT_EMAIL:-}"
+ABIS_TLS_CERT="${ABIS_TLS_CERT:-}"
+ABIS_TLS_KEY="${ABIS_TLS_KEY:-}"
+EOF
+  chown root:root "$STATE_FILE"
+  chmod 0600 "$STATE_FILE"
+  umask "$prev_umask"
+}
+
 ready=0
 for _ in $(seq 1 30); do
   code="$(get_code "$HEALTH_URL")"
@@ -251,17 +492,34 @@ else
   warn "  journalctl -u ${SERVICE_NAME} -n 50 --no-pager"
 fi
 
-cat <<EOF
+# --- nginx + TLS front (only when a public server name was given) ------------
+if [[ -n "${ABIS_SERVER_NAME:-}" ]]; then
+  configure_nginx
+fi
 
-ABIS ${SERVICE_NAME} service installed.
-  Status : systemctl status ${SERVICE_NAME}
-  Logs   : journalctl -u ${SERVICE_NAME} -f
-  Local  : http://127.0.0.1:${ABIS_PORT}/health/ready
-           http://127.0.0.1:${ABIS_PORT}/ui/order-entry.html
-  Config : ${ENV_FILE}
-  API key (X-Api-Key header):
-    ${ABIS_API_KEY}
+# Record settings for upgrades (writes empty server name when loopback-only).
+write_state
 
-Public HTTPS access (nginx + Let's Encrypt) is added in Phase 3. For now the
-service is reachable on loopback only.
-EOF
+PUBLIC_LINE=""
+if [[ -n "${ABIS_SERVER_NAME:-}" ]]; then
+  if [[ "$ABIS_TLS_MODE" == "none" ]]; then
+    PUBLIC_LINE="  Public : http://${ABIS_SERVER_NAME}/ui/order-entry.html"
+  else
+    PUBLIC_LINE="  Public : https://${ABIS_SERVER_NAME}/ui/order-entry.html"
+  fi
+fi
+
+echo
+echo "ABIS ${SERVICE_NAME} service installed."
+echo "  Status : systemctl status ${SERVICE_NAME}"
+echo "  Logs   : journalctl -u ${SERVICE_NAME} -f"
+echo "  Local  : http://127.0.0.1:${ABIS_PORT}/ui/order-entry.html"
+[[ -n "$PUBLIC_LINE" ]] && echo "$PUBLIC_LINE"
+echo "  Config : ${ENV_FILE}"
+echo "  API key (X-Api-Key header):"
+echo "    ${ABIS_API_KEY}"
+if [[ -z "${ABIS_SERVER_NAME:-}" ]]; then
+  echo
+  echo "No public server name set — reachable on loopback only. Re-run with"
+  echo "ABIS_SERVER_NAME=<fqdn> (and TLS settings) to put it behind nginx + TLS."
+fi
