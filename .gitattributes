@@ -25,3 +25,7 @@
 
 # Generated analysis artifacts.
 docs/**/*.json  text
+
+# Shell scripts must stay LF even on Windows checkouts (autocrlf=true) — they run
+# on the Ubuntu install/build host, where CRLF would break the shebang/parsing.
+*.sh    text eol=lf

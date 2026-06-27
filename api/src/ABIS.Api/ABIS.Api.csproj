@@ -8,6 +8,10 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8" />
+    <!-- Lets the app integrate with systemd (Type=notify, journald-friendly logs)
+         when installed as a native Linux service. No-op when not run under systemd,
+         so the Docker/console paths are unaffected. See docs/INSTALL_PLAN.md. -->
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.8" />
     <!-- Production driver. Selected at runtime via Database:Provider=Oracle.
          Not exercised by the test suite (no Oracle instance in CI). -->

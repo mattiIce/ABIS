@@ -1,0 +1,144 @@
+# ABIS — Server install package (plan)
+
+A one-command install of the ABIS API + web UIs on a single **Ubuntu** server,
+sitting next to the plant Oracle DB. "Single-click" in practice = an admin runs
+one script, answers a couple of prompts (or supplies an answer file), and the
+service comes up healthy behind a known HTTPS URL.
+
+This is a **plan only** — no app code has been changed yet. It pairs with the
+container-based [`DEPLOY.md`](DEPLOY.md), which stays as the documented Docker
+alternative.
+
+## Decision: native systemd service (Path A)
+
+Install a self-contained `linux-x64` build under `systemd`, fronted by nginx for
+TLS. Chosen over the Docker-wrapped path because:
+
+- **No Docker dependency** to install/secure/maintain on the plant server.
+- **Sidesteps `ORA-01882`.** The `tzdata`/`TZ` workaround in `DEPLOY.md` exists
+  only because a bare container has no timezone DB. A real Ubuntu host already
+  has `/usr/share/zoneinfo`, so the problem disappears.
+- `Oracle.ManagedDataAccess.Core` is fully managed → the self-contained publish
+  has **no native dependencies** to install.
+- `systemd` gives start-on-boot, auto-restart, `journalctl` logs, and
+  `systemctl status abis` for free.
+
+## Topology
+
+```
+client ──HTTPS──> nginx (:443, TLS terminate) ──HTTP──> Kestrel (127.0.0.1:8080)
+                                                         └─ abis.service (systemd)
+                                                              └─ Oracle (plant DB)
+```
+
+Kestrel binds **loopback only**; nginx is the sole public listener.
+
+## What the installer does
+
+`sudo ./install.sh` — idempotent, safe to re-run for upgrades.
+
+1. **Preflight** — Ubuntu version, root/sudo, target port free, optional TCP
+   reachability test to the Oracle listener.
+2. **Config** — interactive prompts, or non-interactive from an answer file /
+   env vars (see Unattended mode):
+   - `Database__ConnectionString` (Oracle)
+   - API key — offer to **auto-generate** a strong one; print once
+   - HTTP port (default `8080`, loopback)
+   - Public server name (for the nginx `server_name` + cert)
+   - Admin email for Let's Encrypt registration/expiry notices
+3. **Files** — copy the self-contained publish to `/opt/abis`; write
+   `appsettings.Production.json` (`0600`, owned by the service user) with the
+   answers. `Database__Seed=false` always.
+4. **Service identity** — non-login `abis` system user; `/opt/abis` owned by it.
+5. **systemd unit** — `abis.service`, `Restart=on-failure`, `EnvironmentFile`
+   for `ASPNETCORE_*`, hardening (`NoNewPrivileges`, `ProtectSystem=strict`,
+   `PrivateTmp`). `systemctl enable --now abis`.
+6. **nginx + TLS** — write `/etc/nginx/sites-available/abis` (proxy to
+   `127.0.0.1:<port>`, forwarded headers), symlink into `sites-enabled`,
+   `nginx -t`, reload. Then obtain the cert via `certbot --nginx` (Let's Encrypt)
+   for the server name, which rewrites the site to HTTPS and installs the
+   auto-renew timer. The server has internet access, so the ACME HTTP-01
+   challenge works directly (port 80 must reach the box); an admin-provided cert
+   stays as a fallback for anyone deploying internal-only.
+7. **Verify** — poll `https://<server>/health/ready` until 200 (Oracle
+   reachable), then print the order-entry URL + API key. Fail loudly with a
+   `journalctl -u abis` hint if it never goes healthy.
+
+**Uninstall** (`uninstall.sh`): `systemctl disable --now abis`, remove unit +
+`/opt/abis` + nginx site; optionally preserve config.
+**Upgrade**: re-run `install.sh` → stop service, swap files, restart, re-verify.
+
+## Unattended mode
+
+`install.sh --unattended --answers /path/abis.answers` (or all values via
+`ABIS_*` env vars). Required values absent in unattended mode → fail fast, no
+prompts. Answer file is a simple `KEY=value` list mirroring the prompts
+(`ABIS_DB_CONNECTION`, `ABIS_API_KEY`, `ABIS_PORT`, `ABIS_SERVER_NAME`,
+`ABIS_SERVER_NAME`, `ABIS_LETSENCRYPT_EMAIL`). Enables repeatable rebuilds and
+config mgmt.
+
+## Repo changes required (not built yet)
+
+| Change | Where | Notes |
+|---|---|---|
+| `builder.Host.UseSystemd()` | [`Program.cs`](../api/src/ABIS.Api/Program.cs) | via `Microsoft.Extensions.Hosting.Systemd`; no-op off-systemd, so Docker/console paths untouched |
+| `app.UseForwardedHeaders(...)` | [`Program.cs`](../api/src/ABIS.Api/Program.cs) | trust the nginx proxy so scheme/host are correct (redirects, OIDC) |
+| Self-contained publish profile | `api/src/ABIS.Api/Properties/PublishProfiles/` | `linux-x64`, `SelfContained=true`, single-file optional |
+| `deploy/install.sh`, `deploy/uninstall.sh` | new `deploy/` | the installer above |
+| `deploy/abis.service` | new | systemd unit template |
+| `deploy/nginx/abis.conf` | new | TLS + reverse-proxy site template |
+| `build-release.sh` | new | `dotnet publish` → `abis-<version>-linux-x64.tar.gz` (publish + installer + templates) |
+| Docs | new `docs/INSTALL.md`; link from README | native quick start; keep `DEPLOY.md` as Docker alternative |
+
+## Distribution
+
+`build-release.sh` produces `abis-x.y.z-linux-x64.tar.gz`. Primary route is a
+**CI release job**: on a version tag, CI runs `build-release.sh` and attaches the
+tarball to a **GitHub Release**; the admin downloads it, untars, and runs
+`sudo ./install.sh`. (`build-release.sh` stays runnable from a local clone too —
+needs the .NET SDK on the box — for offline/air-gapped builds.)
+
+A `.deb` (for `apt install` + clean upgrade semantics) is a natural follow-on,
+but more packaging machinery than v1 needs.
+
+## Phasing
+
+- **Phase 1** — `UseSystemd()` + forwarded headers + publish profile +
+  `build-release.sh`. Prove a manual install runs end-to-end against non-prod
+  Oracle (`192.168.1.230:1521/abc11`).
+- **Phase 2** — `install.sh`/`uninstall.sh`: prompts, unattended mode,
+  health-gated start, idempotent upgrade.
+- **Phase 3** — nginx site template + `certbot --nginx` (Let's Encrypt) wired
+  into the installer, with the admin-provided-cert fallback for internal-only
+  hosts.
+- **Phase 4** — `docs/INSTALL.md`; CI release job (tag → `build-release.sh` →
+  tarball attached to a GitHub Release); optional `.deb`.
+
+## Parallel plan: edge service installer
+
+The OPC/scale [edge service](../edge/AbisEdge) is a **separate deployable** with
+a different shape, so it gets its own (lighter) installer rather than riding in
+this one:
+
+- **Where it runs** — on the shop floor, not the app server: a Windows box (or
+  IoT gateway) with line-of-sight to the serial scales/gauges and the plant OPC
+  servers. Per project notes those OPC servers are **Classic OPC DA/DCOM**, not
+  UA — so the edge host needs a DA→UA bridge or a DA client path before this is
+  real. That gating question is upstream of packaging.
+- **Likely target is Windows, not Ubuntu** — serial `COM` ports + DCOM live on
+  Windows. So the edge installer is probably the *native Windows Service +
+  installer* idea (self-contained `win-x64` publish, Windows Service hosting,
+  Inno Setup `.exe`) that we set aside for the app server.
+- **Config** — serial port/baud + OPC endpoint/tags (see
+  [`EDGE_SERVICE.md`](EDGE_SERVICE.md)); plus the app API base URL + API key so
+  it can publish readings.
+- **Sequencing** — do the app-server installer (this plan) first; revisit the
+  edge installer once the Classic-OPC bridge path is decided.
+
+## Decisions locked
+
+- **TLS** — `certbot --nginx` (Let's Encrypt); the server has internet access so
+  ACME HTTP-01 works directly. Admin-provided cert kept as a fallback for
+  internal-only deployments.
+- **Release** — built by a CI job on a version tag and attached to a GitHub
+  Release; `build-release.sh` also runnable from a local clone.
