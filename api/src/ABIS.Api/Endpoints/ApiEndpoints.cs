@@ -1009,6 +1009,24 @@ public static class ApiEndpoints
            .WithSummary("Coils not referenced by any process_coil — orphan / unmatched inventory.")
            .Produces<IReadOnlyList<UnmatchedCoilRow>>();
 
+        api.MapGet("/reporting/qa-mechanical", async (DateTime? from, DateTime? to, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetQaMechanicalAsync(from, to, ct)))
+           .WithName("GetQaMechanical").WithTags("Reporting")
+           .WithSummary("Mechanical test results by test type: count + average YTS/UTS/elongation.")
+           .Produces<IReadOnlyList<QaMechanicalRow>>();
+
+        api.MapGet("/reporting/scrap-summary", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetScrapSummaryAsync(ct)))
+           .WithName("GetScrapSummary").WithTags("Reporting")
+           .WithSummary("Scrap by type (code/defect) with skid count + total net weight.")
+           .Produces<IReadOnlyList<ScrapSummaryRow>>();
+
+        api.MapGet("/reporting/scrap-by-job", async (IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetScrapByJobAsync(ct)))
+           .WithName("GetScrapByJob").WithTags("Reporting")
+           .WithSummary("Scrap by job: skid count + total net weight.")
+           .Produces<IReadOnlyList<ScrapByJobRow>>();
+
         // ---- Quality / Recovery (customer-defect setup) -----------------
         api.MapGet("/quality/scrap-types", async (IAbisRepository repo, CancellationToken ct) =>
                 Results.Ok(await repo.GetScrapTypesAsync(ct)))

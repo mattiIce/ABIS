@@ -759,3 +759,20 @@ test('reporting flow: inventory — coil by alloy, on-hold, skid, unmatched (typ
   assert.ok(unmatched.some((r) => r.coilAbcNum === 5004));
   assert.ok(unmatched.every((r) => r.coilAbcNum !== 5001));
 });
+
+// QA / scrap reporting (legacy silverdome3 w_report_qa, w_report_scrap).
+test('reporting flow: QA mechanical + scrap summaries (typed)', async () => {
+  const qa = await client.getQaMechanical(undefined, undefined);
+  assert.ok(qa.length >= 1);
+  assert.ok(qa.every((r) => typeof r.resultCount === 'number'));
+  assert.ok(qa.every((r) => r.avgYts == null || typeof r.avgYts === 'number'));
+
+  // Seeded scrap: type 1 (DENT) on job 1001, type 2 (SCR) on job 1003.
+  const byType = await client.getScrapSummary();
+  const dent = byType.find((r) => r.scrapType === 1);
+  assert.ok(dent && dent.scrapCode === 'DENT' && dent.skidCount >= 1);
+
+  const byJob = await client.getScrapByJob();
+  assert.ok(byJob.some((r) => r.scrapAbJobNum === '1001'));
+  assert.ok(byJob.every((r) => typeof r.totalNetWt === 'number'));
+});
