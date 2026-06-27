@@ -40,6 +40,7 @@ import {
   DimensionCheckWrite,
   EvalScrapWrite,
   JobFolderNoteWrite,
+  LineErrorWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -924,4 +925,28 @@ test('prod-folder flow: folder summary + e-folder notes (typed)', async () => {
 
   const missing = await client.getProductionFolder(999999).catch((e) => e);
   assert.ok(missing instanceof ApiException && missing.status === 404);
+});
+
+// Stacker line board + error log (legacy stacker_110).
+test('stacker flow: line board + error log (typed)', async () => {
+  const board = await client.getStackerBoard(110);
+  assert.ok(board.length >= 1 && board.every((j) => j.lineNum === 110));
+  assert.ok(board.every((j) => typeof j.coilCount === 'number' && typeof j.skidCount === 'number'));
+
+  // Seeded errors: 9701 on line 110 (Jam), 9702 on line 120 (PLC fault).
+  const errs110 = await client.getLineErrors(110, undefined, undefined);
+  assert.ok(errs110.some((e) => e.errorEvtId === 9701 && e.errorType === 'Jam'));
+  assert.ok(errs110.every((e) => e.lineId === 110));
+
+  const created = await client.createLineError(new LineErrorWrite({
+    errorTypeId: 3, errorUser: 'e2e', lineId: 110, abJobNum: 1001, title: 'E2E fault', errorComment: 'test',
+  }));
+  assert.ok(created.errorEvtId > 0);
+  assert.equal(created.errorType, 'Operator');
+
+  // Required fields.
+  await assert.rejects(
+    () => client.createLineError(new LineErrorWrite({ title: 'no type/user' })),
+    (err) => err?.status === 400,
+  );
 });

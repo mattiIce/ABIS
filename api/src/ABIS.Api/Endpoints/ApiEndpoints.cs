@@ -595,6 +595,33 @@ public static class ApiEndpoints
            .WithSummary("Add a note to a job's e-folder (author from the OIDC user or body userId).")
            .Produces<JobFolderNote>(StatusCodes.Status201Created).ProducesValidationProblem();
 
+        // ---- Stacker line board / error log (legacy stacker_110) ----
+        api.MapGet("/stacker/board", async (IAbisRepository repo, CancellationToken ct, long? lineNum = null) =>
+                Results.Ok(await repo.GetStackerBoardAsync(lineNum, ct)))
+           .WithName("GetStackerBoard").WithTags("Stacker")
+           .WithSummary("A line's stacker board: jobs on the line with coil/skid counts (read-only monitor).")
+           .Produces<IReadOnlyList<StackerBoardRow>>();
+
+        api.MapGet("/stacker/line-errors", async (IAbisRepository repo, CancellationToken ct, long? lineNum = null, DateTime? from = null, DateTime? to = null) =>
+                Results.Ok(await repo.GetLineErrorsAsync(lineNum, from, to, ct)))
+           .WithName("GetLineErrors").WithTags("Stacker")
+           .WithSummary("The line/stacker error log (error_evt ⋈ error_type), newest first.")
+           .Produces<IReadOnlyList<LineErrorRow>>();
+
+        api.MapPost("/stacker/line-errors", async (LineErrorWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (body.ErrorTypeId is null || string.IsNullOrWhiteSpace(body.ErrorUser))
+                    return Results.ValidationProblem(new Dictionary<string, string[]>
+                    {
+                        ["lineError"] = ["errorTypeId and errorUser are required."],
+                    });
+                var created = await repo.CreateLineErrorAsync(body, ct);
+                return Results.Created($"/api/stacker/line-errors/{created.ErrorEvtId}", created);
+            })
+           .WithName("CreateLineError").WithTags("Stacker")
+           .WithSummary("Log a line/stacker error event.")
+           .Produces<LineErrorRow>(StatusCodes.Status201Created).ProducesValidationProblem();
+
         // ---- EDI (outbound X12 transaction ledger + transmission log) --
         api.MapGet("/edi/transactions", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, long? customerId = null, string? transactionTypeId = null, string? sort = null, string? dir = null) =>

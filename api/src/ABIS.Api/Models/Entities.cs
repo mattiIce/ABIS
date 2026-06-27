@@ -1302,3 +1302,34 @@ public sealed class JobFolderNote
     public DateTime? Timestamp { get; set; }
     public string? Notes { get; set; }
 }
+
+// ---- Stacker line board / error log (legacy stacker_110) ----
+
+/// <summary>One job on a line's stacker board (legacy w_110_stacker_read_only): the job +
+/// its coil/skid counts — a read-only monitoring view of what's running on the line.</summary>
+public sealed class StackerBoardRow
+{
+    public long AbJobNum { get; set; }
+    public long? LineNum { get; set; }
+    public int? JobStatus { get; set; }
+    public long? OrderAbcNum { get; set; }
+    public int CoilCount { get; set; }
+    public int SkidCount { get; set; }
+}
+
+/// <summary>A line/stacker error event (table <c>error_evt</c> ⋈ <c>error_type</c>, legacy
+/// w_report_line_error). The fault log: type, user, comment, and the linked job/coil.</summary>
+public sealed class LineErrorRow
+{
+    public long ErrorEvtId { get; set; }
+    public DateTime? EvtTime { get; set; }
+    public int? ErrorTypeId { get; set; }
+    public string? ErrorType { get; set; }
+    public string? ErrorUser { get; set; }
+    public string? ErrorComment { get; set; }
+    public long? LineId { get; set; }
+    public long? CoilAbcNum { get; set; }
+    public long? AbJobNum { get; set; }
+    public string? Title { get; set; }
+    public string? Message { get; set; }
+}

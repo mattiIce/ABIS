@@ -70,6 +70,8 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS sheet_skid_dimension_check;
             DROP TABLE IF EXISTS quality_coil_eval_scrap;
             DROP TABLE IF EXISTS job_efolder_notes;
+            DROP TABLE IF EXISTS error_evt;
+            DROP TABLE IF EXISTS error_type;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
@@ -353,6 +355,16 @@ public static class SqliteFixture
             CREATE TABLE job_efolder_notes (
                 ab_job_num INTEGER, user_id INTEGER, timestamp TEXT, notes TEXT,
                 PRIMARY KEY (ab_job_num, user_id, timestamp));
+
+            -- Stacker line error log (legacy stacker_110 w_report_line_error). error_evt is
+            -- the fault log; error_type is the catalog. Column names authoritative.
+            CREATE TABLE error_type (
+                error_type_id INTEGER PRIMARY KEY, error_type TEXT);
+            CREATE TABLE error_evt (
+                error_evt_id INTEGER PRIMARY KEY, evt_time TEXT, error_type_id INTEGER, error_user TEXT,
+                error_comment TEXT, line_id INTEGER, shift_id INTEGER, coil_abc_num INTEGER, ab_job_num INTEGER,
+                sheet_skid_num INTEGER, scrap_skid_num INTEGER, dt_instance_num INTEGER, opc_item TEXT,
+                title TEXT, message TEXT);
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -933,6 +945,26 @@ public static class SqliteFixture
             {
                 new { AbJobNum = 1001L, UserId = 9001L, Timestamp = d.AddHours(3).ToString("yyyy-MM-dd HH:mm:ss"), Notes = "Folder opened; coil 5001 staged." },
                 new { AbJobNum = 1001L, UserId = 9002L, Timestamp = d.AddHours(5).ToString("yyyy-MM-dd HH:mm:ss"), Notes = "QC reviewed first piece." }
+            });
+
+        // ---- Stacker line error log ----
+        conn.Execute(
+            "INSERT INTO error_type (error_type_id, error_type) VALUES (:ErrorTypeId, :ErrorType)",
+            new[]
+            {
+                new { ErrorTypeId = 1, ErrorType = "PLC fault" },
+                new { ErrorTypeId = 2, ErrorType = "Jam" },
+                new { ErrorTypeId = 3, ErrorType = "Operator" }
+            });
+        conn.Execute(
+            """
+            INSERT INTO error_evt (error_evt_id, evt_time, error_type_id, error_user, error_comment, line_id, ab_job_num, coil_abc_num, title, message)
+            VALUES (:ErrorEvtId, :EvtTime, :ErrorTypeId, :ErrorUser, :ErrorComment, :LineId, :AbJobNum, :CoilAbcNum, :Title, :Message)
+            """,
+            new[]
+            {
+                new { ErrorEvtId = 9701L, EvtTime = d.AddHours(2).ToString("yyyy-MM-dd HH:mm:ss"), ErrorTypeId = 2, ErrorUser = "op1", ErrorComment = "Sheet jam at stacker", LineId = 110L, AbJobNum = (long?)1001L, CoilAbcNum = (long?)5001L, Title = "Stacker jam", Message = "Photo-eye blocked" },
+                new { ErrorEvtId = 9702L, EvtTime = d.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"), ErrorTypeId = 1, ErrorUser = "op2", ErrorComment = "Drive fault", LineId = 120L, AbJobNum = (long?)1003L, CoilAbcNum = (long?)null, Title = "PLC fault", Message = "VFD overcurrent" }
             });
     }
 }

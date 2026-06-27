@@ -166,6 +166,11 @@ public interface IAbisRepository
     Task<ProductionFolder?> GetProductionFolderAsync(long abJobNum, CancellationToken ct);
     Task<IReadOnlyList<JobFolderNote>> GetJobFolderNotesAsync(long abJobNum, CancellationToken ct);
     Task<JobFolderNote> AddJobFolderNoteAsync(long abJobNum, long userId, string? notes, CancellationToken ct);
+
+    // ---- Stacker line board / error log ---------------------------------
+    Task<IReadOnlyList<StackerBoardRow>> GetStackerBoardAsync(long? lineNum, CancellationToken ct);
+    Task<IReadOnlyList<LineErrorRow>> GetLineErrorsAsync(long? lineNum, DateTime? from, DateTime? to, CancellationToken ct);
+    Task<LineErrorRow> CreateLineErrorAsync(LineErrorWrite body, CancellationToken ct);
     Task<PagedResult<EdiTransaction>> GetEdiTransactionsAsync(int page, int pageSize, long? customerId, string? transactionTypeId, string? orderBy, CancellationToken ct);
     Task<EdiTransaction?> GetEdiTransactionAsync(long ediFileId, CancellationToken ct);
     Task<PagedResult<EdiLogEntry>> GetEdiLogAsync(int page, int pageSize, long? customerId, string? orderBy, CancellationToken ct);
