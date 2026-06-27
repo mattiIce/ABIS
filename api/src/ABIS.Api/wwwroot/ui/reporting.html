@@ -56,19 +56,29 @@
 
 <main>
   <section>
-    <h2>Production summary by line</h2>
+    <h2>Production reports</h2>
     <form id="repForm" class="row">
-      <div><label>From (job start)</label><br /><input id="from" type="date" /></div>
+      <div><label>Report</label><br />
+        <select id="report">
+          <option value="summary">Production summary (by line)</option>
+          <option value="efficiency">Line efficiency (+ downtime)</option>
+          <option value="monthly">Monthly production</option>
+          <option value="downtime">Downtime events</option>
+          <option value="ontime">On-time delivery</option>
+        </select>
+      </div>
+      <div><label>From</label><br /><input id="from" type="date" /></div>
       <div><label>To</label><br /><input id="to" type="date" /></div>
       <button type="submit">Run report</button>
+      <button id="btnCsv" type="button" class="sec">Export CSV</button>
     </form>
     <div class="muted totals" id="totals"></div>
     <table>
-      <thead><tr><th>Line</th><th>Description</th><th style="text-align:right">Jobs</th><th style="text-align:right">Avg yield %</th><th style="text-align:right">Processed wt (lb)</th></tr></thead>
+      <thead><tr id="head"></tr></thead>
       <tbody id="rows"></tbody>
     </table>
     <div id="err" class="err"></div>
-    <p class="muted">Per-line roll-up over <code>line ⋈ ab_job ⋈ process_coil</code> — the daily-production summary (legacy <code>daily_prod</code>). Leave dates blank for all jobs.</p>
+    <p class="muted" id="repNote"></p>
   </section>
 </main>
 

@@ -1012,3 +1012,57 @@ public sealed class ReceivingBolDetail
     public required ReceivingBol Bol { get; set; }
     public IReadOnlyList<ReceivingBolCoil> Coils { get; set; } = [];
 }
+
+// ---- Production reporting (legacy daily_prod / silverdome3 w_report_production_*) ----
+// The legacy reports are shift-based; the greenfield equivalents aggregate the same
+// metrics from ab_job / process_coil / dt_instance / line (no shift table in the model).
+
+/// <summary>Per-line efficiency over a window: jobs, processed weight, average material
+/// yield, and downtime (events + minutes). Legacy w_report_line_efficiency.</summary>
+public sealed class LineEfficiencyRow
+{
+    public long LineNum { get; set; }
+    public string? LineDesc { get; set; }
+    public int JobCount { get; set; }
+    public double? ProcessedWt { get; set; }
+    public double? AvgYield { get; set; }
+    public int DowntimeEvents { get; set; }
+    public double DowntimeMinutes { get; set; }
+}
+
+/// <summary>Production rolled up by month (YYYY-MM): jobs touched + processed weight.
+/// Legacy w_report_production_monthly_summary.</summary>
+public sealed class MonthlyProductionRow
+{
+    public string? Month { get; set; }
+    public int JobCount { get; set; }
+    public double? ProcessedWt { get; set; }
+}
+
+/// <summary>One downtime event (legacy w_report_production_downtime): the line, job, and
+/// window. <see cref="DurationMinutes"/> is computed from start/end (portable — no DB
+/// date math).</summary>
+public sealed class ProductionDowntimeRow
+{
+    public long? InstanceNum { get; set; }
+    public long? LineNum { get; set; }
+    public string? LineDesc { get; set; }
+    public long? AbJobNum { get; set; }
+    public DateTime? StartingTime { get; set; }
+    public DateTime? EndingTime { get; set; }
+    public string? Note { get; set; }
+    public double? DurationMinutes =>
+        StartingTime.HasValue && EndingTime.HasValue ? (EndingTime.Value - StartingTime.Value).TotalMinutes : null;
+}
+
+/// <summary>Per-line on-time delivery (legacy w_report_production_ontime): of the jobs
+/// finished in the window, how many shipped on/before their due date.</summary>
+public sealed class OnTimeRow
+{
+    public long LineNum { get; set; }
+    public string? LineDesc { get; set; }
+    public int FinishedJobs { get; set; }
+    public int OnTime { get; set; }
+    public int Late { get; set; }
+    public double OnTimePct => FinishedJobs == 0 ? 0 : Math.Round(100.0 * OnTime / FinishedJobs, 1);
+}

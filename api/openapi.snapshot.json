@@ -4214,6 +4214,194 @@
         }
       }
     },
+    "/api/reporting/line-efficiency": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "Per-line efficiency: jobs, processed weight, avg yield, and downtime (events + minutes).",
+        "operationId": "GetLineEfficiency",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LineEfficiencyRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/reporting/monthly-production": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "Production rolled up by month (YYYY-MM): jobs touched + processed weight.",
+        "operationId": "GetMonthlyProduction",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MonthlyProductionRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/reporting/downtime": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "Downtime events over a window (optionally one line), with computed duration minutes.",
+        "operationId": "GetProductionDowntime",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "lineNum",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductionDowntimeRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/reporting/on-time": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "Per-line on-time delivery (jobs finished on/before due date) over an optional window.",
+        "operationId": "GetOnTimeDelivery",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OnTimeRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/sales/quotes": {
       "get": {
         "tags": [
@@ -8528,6 +8716,42 @@
         },
         "additionalProperties": false
       },
+      "LineEfficiencyRow": {
+        "type": "object",
+        "properties": {
+          "lineNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lineDesc": {
+            "type": "string",
+            "nullable": true
+          },
+          "jobCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "processedWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "avgYield": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "downtimeEvents": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "downtimeMinutes": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "MaintLog": {
         "type": "object",
         "properties": {
@@ -8711,6 +8935,56 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MonthlyProductionRow": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "nullable": true
+          },
+          "jobCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "processedWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OnTimeRow": {
+        "type": "object",
+        "properties": {
+          "lineNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lineDesc": {
+            "type": "string",
+            "nullable": true
+          },
+          "finishedJobs": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "onTime": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "late": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "onTimePct": {
+            "type": "number",
+            "format": "double",
+            "readOnly": true
           }
         },
         "additionalProperties": false
@@ -10109,6 +10383,51 @@
           "productTypeName": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductionDowntimeRow": {
+        "type": "object",
+        "properties": {
+          "instanceNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "lineNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "lineDesc": {
+            "type": "string",
+            "nullable": true
+          },
+          "abJobNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "startingTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endingTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "durationMinutes": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "readOnly": true
           }
         },
         "additionalProperties": false
