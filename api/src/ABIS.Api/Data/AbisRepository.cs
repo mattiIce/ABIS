@@ -2179,6 +2179,51 @@ public sealed class AbisRepository : IAbisRepository
         return n > 0;
     }
 
+    // Mint coil inventory for a receiving BOL's line items (the legacy w_coil_receiving
+    // save). For each line without a coil_abc_num: allocate one, INSERT a COIL inventory
+    // row (status 2 = new, or 11 = qa_onhold when damaged), and link it back to the line.
+    // One transaction; idempotent (already-minted lines are skipped). null = BOL missing.
+    public async Task<MintResult?> MintBolCoilsAsync(long receivingBolId, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var customerId = await conn.ExecuteScalarAsync<long?>(new CommandDefinition(
+            "SELECT customer_id FROM receiving_bol WHERE receiving_bol_id = :id", new { id = receivingBolId }, cancellationToken: ct));
+        if (!await ExistsAsync(conn, "receiving_bol", "receiving_bol_id", receivingBolId, ct)) return null;
+
+        var lines = await conn.QueryAsync<ReceivingBolCoil>(new CommandDefinition(
+            $"SELECT {ReceivingBolCoilCols} FROM receiving_bol_coil WHERE receiving_bol_id = :id AND coil_abc_num IS NULL ORDER BY coil_id",
+            new { id = receivingBolId }, cancellationToken: ct));
+
+        var minted = 0;
+        await using (var tx = await conn.BeginTransactionAsync(ct))
+        {
+            foreach (var line in lines)
+            {
+                var coilAbcNum = await NextIdAsync(conn, tx, "coil", "coil_abc_num", ct);
+                var status = line.DamagedFault == 1 ? 11 : 2; // 11 = qa_onhold, 2 = new
+                await conn.ExecuteAsync(new CommandDefinition(
+                    """
+                    INSERT INTO coil (coil_abc_num, coil_org_num, coil_alloy2, coil_temper, coil_gauge, coil_width,
+                        coil_status, customer_id, date_received, coil_entry_date, lot_num, net_wt, net_wt_balance)
+                    VALUES (:abc, :org, :alloy, :temper, :gauge, :width, :status, :cust, :now, :now, :lot, :net, :net)
+                    """,
+                    new
+                    {
+                        abc = coilAbcNum, org = line.CoilOrgNum, alloy = line.Alloy, temper = line.Temper,
+                        gauge = line.CoilGauge, width = line.CoilWidth, status, cust = customerId,
+                        now = (DateTime?)DateTime.UtcNow, lot = line.Lot, net = (decimal?)line.NetWeight
+                    },
+                    transaction: tx, cancellationToken: ct));
+                await conn.ExecuteAsync(new CommandDefinition(
+                    "UPDATE receiving_bol_coil SET coil_abc_num = :abc, status = :status WHERE receiving_bol_id = :id AND coil_id = :coilId",
+                    new { abc = coilAbcNum, status, id = receivingBolId, coilId = line.CoilId }, transaction: tx, cancellationToken: ct));
+                minted++;
+            }
+            await tx.CommitAsync(ct);
+        }
+        return new MintResult { ReceivingBolId = receivingBolId, Minted = minted, Coils = await GetReceivingBolCoilsAsync(receivingBolId, ct) };
+    }
+
     public Task<PagedResult<ScanLog>> GetScanLogsAsync(int page, int pageSize, long? abJobNum, string? orderBy, CancellationToken ct) =>
         PageAsync<ScanLog>(ScanLogCols, "scan_log", orderBy ?? "scan_id DESC",
             abJobNum is null ? null : "ab_job_num = :abJobNum",

@@ -1201,3 +1201,23 @@ public sealed class FeatureAllowedResult
     public int Level { get; set; }
     public bool Allowed { get; set; }
 }
+
+/// <summary>Result of minting coil inventory for a receiving BOL's lines (legacy
+/// w_coil_receiving save): how many coils were newly created + the updated lines.</summary>
+public sealed class MintResult
+{
+    public long ReceivingBolId { get; set; }
+    public int Minted { get; set; }
+    public IReadOnlyList<ReceivingBolCoil> Coils { get; set; } = [];
+}
+
+/// <summary>Result of an 861 (Receiving Advice) generation request. The real EDI is
+/// produced DB-side by per-customer Oracle functions (f_edi_*_861), gated on the
+/// customer's create_861_at_receiving flag — this records the dispatch decision.</summary>
+public sealed class Edi861Result
+{
+    public long ReceivingBolId { get; set; }
+    public long? CustomerId { get; set; }
+    public string Status { get; set; } = "deferred";
+    public string? Note { get; set; }
+}

@@ -140,6 +140,44 @@ async function deleteCoil(coilId) {
         setBusy(false);
     }
 }
+// Mint COIL inventory for this BOL's lines (the legacy w_coil_receiving save).
+async function mintCoils() {
+    if (editingId == null) {
+        setErr('Load or save a BOL first.');
+        return;
+    }
+    setErr('');
+    setBusy(true);
+    try {
+        const r = await client().mintBolCoils(editingId);
+        $('#coilOk').textContent = `✓ Minted ${r.minted} coil(s) into inventory.`;
+        await loadCoils();
+    }
+    catch (e) {
+        setErr(`Mint failed: ${e.message}`);
+    }
+    finally {
+        setBusy(false);
+    }
+}
+async function generate861() {
+    if (editingId == null) {
+        setErr('Load or save a BOL first.');
+        return;
+    }
+    setErr('');
+    setBusy(true);
+    try {
+        const r = await client().generateReceiving861(editingId);
+        $('#coilOk').textContent = `861: ${r.status} — ${r.note ?? ''}`;
+    }
+    catch (e) {
+        setErr(`861 failed: ${e.message}`);
+    }
+    finally {
+        setBusy(false);
+    }
+}
 function newBol() {
     editingId = null;
     $('#formTitle').textContent = 'New receiving BOL';
@@ -189,6 +227,8 @@ async function init() {
     $('#btnNew').addEventListener('click', newBol);
     $('#btnSave').addEventListener('click', save);
     $('#btnAddCoil').addEventListener('click', addCoil);
+    $('#btnMint').addEventListener('click', mintCoils);
+    $('#btnGen861').addEventListener('click', generate861);
     newBol();
     await search();
 }

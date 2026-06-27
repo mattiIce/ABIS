@@ -5345,6 +5345,110 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Mint coil inventory for the BOL's lines (legacy w_coil_receiving save) — creates COIL rows (status 2/new, 11/on-hold if damaged) and links them. Idempotent.
+     * @return OK
+     */
+    mintBolCoils(receivingBolId) {
+        let url_ = this.baseUrl + "/api/receiving-bols/{receivingBolId}/mint";
+        if (receivingBolId === undefined || receivingBolId === null)
+            throw new globalThis.Error("The parameter 'receivingBolId' must be defined.");
+        url_ = url_.replace("{receivingBolId}", encodeURIComponent("" + receivingBolId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processMintBolCoils(_response);
+        });
+    }
+    processMintBolCoils(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = MintResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Generate the 861 (Receiving Advice) for a BOL — DB-side in production; a documented stub here.
+     * @return OK
+     */
+    generateReceiving861(receivingBolId) {
+        let url_ = this.baseUrl + "/api/receiving-bols/{receivingBolId}/generate-861";
+        if (receivingBolId === undefined || receivingBolId === null)
+            throw new globalThis.Error("The parameter 'receivingBolId' must be defined.");
+        url_ = url_.replace("{receivingBolId}", encodeURIComponent("" + receivingBolId));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGenerateReceiving861(_response);
+        });
+    }
+    processGenerateReceiving861(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = Edi861Result.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * Per-line production summary (job count, avg yield, processed weight) over an optional date range.
      * @param from (optional)
      * @param to (optional)
@@ -10742,6 +10846,38 @@ export class DowntimeInstanceWrite {
         return data;
     }
 }
+export class Edi861Result {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.receivingBolId = _data["receivingBolId"];
+            this.customerId = _data["customerId"];
+            this.status = _data["status"];
+            this.note = _data["note"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new Edi861Result();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["receivingBolId"] = this.receivingBolId;
+        data["customerId"] = this.customerId;
+        data["status"] = this.status;
+        data["note"] = this.note;
+        return data;
+    }
+}
 export class EdiLogEntry {
     constructor(data) {
         if (data) {
@@ -11471,6 +11607,44 @@ export class MaintLogWrite {
         data["completedBy"] = this.completedBy;
         data["laborHours"] = this.laborHours;
         data["probCost"] = this.probCost;
+        return data;
+    }
+}
+export class MintResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.receivingBolId = _data["receivingBolId"];
+            this.minted = _data["minted"];
+            if (Array.isArray(_data["coils"])) {
+                this.coils = [];
+                for (let item of _data["coils"])
+                    this.coils.push(ReceivingBolCoil.fromJS(item));
+            }
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new MintResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["receivingBolId"] = this.receivingBolId;
+        data["minted"] = this.minted;
+        if (Array.isArray(this.coils)) {
+            data["coils"] = [];
+            for (let item of this.coils)
+                data["coils"].push(item ? item.toJSON() : undefined);
+        }
         return data;
     }
 }
