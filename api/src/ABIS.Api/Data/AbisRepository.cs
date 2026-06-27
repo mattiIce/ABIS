@@ -1557,6 +1557,40 @@ public sealed class AbisRepository : IAbisRepository
         return true;
     }
 
+    public async Task<SecurityUser?> GetSecurityUserByLoginAsync(string login, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<SecurityUser>(new CommandDefinition(
+            """
+            SELECT user_id AS UserId, login_id AS LoginId, user_last_name AS UserLastName, user_first_name AS UserFirstName,
+                   user_middle_initial AS UserMiddleInitial, last_login_time AS LastLoginTime, last_modified_date AS LastModifiedDate,
+                   user_status AS UserStatus, user_notes AS UserNotes
+            FROM security_user WHERE LOWER(login_id) = LOWER(:login)
+            """, new { login }, cancellationToken: ct));
+    }
+
+    // The caller's effective privilege on a feature, resolved by login (case-insensitive):
+    // MAX over direct + group grants. null = no such user, feature, or grant. Mirrors the
+    // legacy f_security_door and is the server-side enforcement primitive.
+    public async Task<int?> GetEffectivePrivilegeAsync(string login, string applicationName, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.ExecuteScalarAsync<int?>(new CommandDefinition(
+            """
+            SELECT MAX(g.priv)
+            FROM security_user u
+            JOIN security_application a ON LOWER(a.application_name) = LOWER(:feature)
+            JOIN (
+                SELECT ua.user_id AS uid, ua.application_id AS aid, ua.user_application_privilege AS priv
+                FROM security_user_application ua
+                UNION ALL
+                SELECT ug.user_id AS uid, ga.application_id AS aid, ga.group_application_privilege AS priv
+                FROM security_group_application ga JOIN security_user_group ug ON ug.user_group_id = ga.user_group_id
+            ) g ON g.uid = u.user_id AND g.aid = a.application_id
+            WHERE LOWER(u.login_id) = LOWER(:login)
+            """, new { login, feature = applicationName }, cancellationToken: ct));
+    }
+
     public async Task<bool> RemoveUserFromGroupAsync(long userId, long groupId, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);

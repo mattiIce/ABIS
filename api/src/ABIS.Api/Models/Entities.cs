@@ -1193,3 +1193,11 @@ public sealed class ScrapByJobRow
     public int SkidCount { get; set; }
     public double? TotalNetWt { get; set; }
 }
+
+/// <summary>Result of a feature-permission check (drives UI enable/read-only/hide).</summary>
+public sealed class FeatureAllowedResult
+{
+    public string? Feature { get; set; }
+    public int Level { get; set; }
+    public bool Allowed { get; set; }
+}
