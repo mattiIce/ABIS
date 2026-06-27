@@ -501,6 +501,31 @@ public static class ApiEndpoints
            .WithSummary("Remove a coil line from a receiving BOL.")
            .Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound);
 
+        api.MapPost("/receiving-bols/{receivingBolId:long}/mint", async (long receivingBolId, IAbisRepository repo, CancellationToken ct) =>
+                await repo.MintBolCoilsAsync(receivingBolId, ct) is { } r ? Results.Ok(r) : Results.NotFound())
+           .WithName("MintBolCoils").WithTags("Receiving")
+           .WithSummary("Mint coil inventory for the BOL's lines (legacy w_coil_receiving save) — creates COIL rows (status 2/new, 11/on-hold if damaged) and links them. Idempotent.")
+           .Produces<MintResult>().Produces(StatusCodes.Status404NotFound);
+
+        api.MapPost("/receiving-bols/{receivingBolId:long}/generate-861", async (long receivingBolId, IAbisRepository repo, CancellationToken ct) =>
+            {
+                var bol = await repo.GetReceivingBolAsync(receivingBolId, ct);
+                if (bol is null) return Results.NotFound();
+                // The real 861 (Receiving Advice) is produced DB-side by per-customer Oracle
+                // functions (f_edi_novelis_861 / _constellium_861 / _commonwealth_861 /
+                // f_edi_861_for_all), gated on customer.create_861_at_receiving. The greenfield
+                // dev stack has no Oracle EDI packages, so this records the dispatch decision.
+                return Results.Ok(new Edi861Result
+                {
+                    ReceivingBolId = receivingBolId, CustomerId = bol.CustomerId, Status = "deferred",
+                    Note = "861 generation runs DB-side via per-customer Oracle functions (f_edi_*_861); " +
+                           "not implemented in the greenfield dev stack. Wire to the Oracle function in production.",
+                });
+            })
+           .WithName("GenerateReceiving861").WithTags("Receiving")
+           .WithSummary("Generate the 861 (Receiving Advice) for a BOL — DB-side in production; a documented stub here.")
+           .Produces<Edi861Result>().Produces(StatusCodes.Status404NotFound);
+
         // ---- EDI (outbound X12 transaction ledger + transmission log) --
         api.MapGet("/edi/transactions", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, long? customerId = null, string? transactionTypeId = null, string? sort = null, string? dir = null) =>

@@ -4169,6 +4169,82 @@
         }
       }
     },
+    "/api/receiving-bols/{receivingBolId}/mint": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "summary": "Mint coil inventory for the BOL's lines (legacy w_coil_receiving save) — creates COIL rows (status 2/new, 11/on-hold if damaged) and links them. Idempotent.",
+        "operationId": "MintBolCoils",
+        "parameters": [
+          {
+            "name": "receivingBolId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MintResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/receiving-bols/{receivingBolId}/generate-861": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "summary": "Generate the 861 (Receiving Advice) for a BOL — DB-side in production; a documented stub here.",
+        "operationId": "GenerateReceiving861",
+        "parameters": [
+          {
+            "name": "receivingBolId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Edi861Result"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/reporting/production-summary": {
       "get": {
         "tags": [
@@ -8816,6 +8892,29 @@
         },
         "additionalProperties": false
       },
+      "Edi861Result": {
+        "type": "object",
+        "properties": {
+          "receivingBolId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "EdiLogEntry": {
         "type": "object",
         "properties": {
@@ -9511,6 +9610,27 @@
           "probCost": {
             "type": "number",
             "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MintResult": {
+        "type": "object",
+        "properties": {
+          "receivingBolId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "minted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coils": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceivingBolCoil"
+            },
             "nullable": true
           }
         },

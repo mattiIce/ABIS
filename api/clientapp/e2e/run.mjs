@@ -820,3 +820,36 @@ test('security enforcement: me/permissions + me/allowed (typed)', async () => {
   const svcAllowed = await client.getMyAllowed('User Control', 1);
   assert.equal(svcAllowed.allowed, true);
 });
+
+// Coil-minting at receiving (legacy w_coil_receiving save): mint COIL inventory for a
+// BOL's lines, then the 861 stub.
+test('receiving flow: mint coil inventory + 861 stub (typed)', async () => {
+  const bol = await client.createReceivingBol(new ReceivingBolWrite({ bol: 'E2E-MINT', customerId: 4001, createdBy: 'e2e', status: 0 }));
+  const good = await client.addReceivingBolCoil(bol.receivingBolId, new ReceivingBolCoilWrite({ coilOrgNum: 'MINT-1', alloy: '3003', temper: 'H14', netWeight: 9000, coilGauge: 0.05, coilWidth: 48 }));
+  const dmg = await client.addReceivingBolCoil(bol.receivingBolId, new ReceivingBolCoilWrite({ coilOrgNum: 'MINT-2', alloy: '5052', netWeight: 8000, damagedFault: 1 }));
+  assert.ok(good.coilAbcNum == null); // not minted yet (null)
+
+  const r = await client.mintBolCoils(bol.receivingBolId);
+  assert.equal(r.minted, 2);
+  const lines = r.coils;
+  const l1 = lines.find((c) => c.coilId === good.coilId);
+  const l2 = lines.find((c) => c.coilId === dmg.coilId);
+  assert.ok(l1.coilAbcNum > 0 && l2.coilAbcNum > 0);
+
+  // The minted coils now exist in inventory; damaged → status 11 (on-hold), good → 2 (new).
+  const c1 = await client.getCoil(l1.coilAbcNum);
+  assert.equal(c1.coilStatus, 2);
+  assert.equal(c1.customerId, 4001);
+  assert.equal(c1.coilOrgNum, 'MINT-1');
+  const c2 = await client.getCoil(l2.coilAbcNum);
+  assert.equal(c2.coilStatus, 11);
+
+  // Idempotent: re-mint creates nothing new.
+  const again = await client.mintBolCoils(bol.receivingBolId);
+  assert.equal(again.minted, 0);
+
+  // 861 stub: deferred (DB-side in production).
+  const edi = await client.generateReceiving861(bol.receivingBolId);
+  assert.equal(edi.status, 'deferred');
+  assert.equal(edi.customerId, 4001);
+});
