@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
     --version=*)
       RAW_VERSION="${1#*=}"; shift ;;
     -h|--help)
-      grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+      grep '^#' "$0" | grep -v '^#!' | sed 's/^# \{0,1\}//'; exit 0 ;;
     *)
       echo "error: unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -89,6 +89,10 @@ dotnet publish "$API_PROJECT" \
   "-p:Version=${NUMERIC_VERSION}" \
   "-p:InformationalVersion=${RAW_VERSION}" \
   -o "${PKG_DIR}/app"
+
+# Ensure the Linux apphost ships executable. A cross-publish from Windows leaves
+# it at 0644; on Linux CI dotnet already marks it +x (this is then a no-op).
+chmod +x "${PKG_DIR}/app/ABIS.Api"
 
 # --- bundle deploy assets (present from Phase 2 onward) ----------------------
 if [[ -d "${SCRIPT_DIR}/deploy" ]]; then

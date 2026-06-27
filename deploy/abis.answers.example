@@ -1,0 +1,19 @@
+# Example answers file for an unattended ABIS install:
+#   sudo ./install.sh --unattended --answers /path/to/abis.answers
+#
+# This file is SOURCED by install.sh, so it is shell syntax: quote any value
+# containing spaces, '=', ';' or parentheses (the Oracle connection string does).
+# Keep it readable only by root (chmod 600) — it holds the DB password + API key.
+
+# Oracle connection string (required). EZConnect or full TNS descriptor.
+ABIS_DB_CONNECTION="Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=192.168.1.230)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=abc11)));User Id=APP_USER;Password=CHANGE_ME;"
+
+# API key clients send as X-Api-Key. Leave unset to auto-generate a strong one
+# (printed at the end of the install).
+#ABIS_API_KEY="paste-a-long-random-value-here"
+
+# Loopback port Kestrel binds (nginx fronts it in Phase 3). Default 8080.
+ABIS_PORT=8080
+
+# Database provider: Oracle (production) or Sqlite (demo). Default Oracle.
+ABIS_DB_PROVIDER=Oracle
