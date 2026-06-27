@@ -5,8 +5,9 @@ sitting next to the plant Oracle DB. "Single-click" in practice = an admin runs
 one script, answers a couple of prompts (or supplies an answer file), and the
 service comes up healthy behind a known HTTPS URL.
 
-This is a **plan only** — no app code has been changed yet. It pairs with the
-container-based [`DEPLOY.md`](DEPLOY.md), which stays as the documented Docker
+**Status: implemented (Phases 1–4 ✅).** This doc is the design record + status
+tracker; the user-facing quick start is [`INSTALL.md`](INSTALL.md). It pairs with
+the container-based [`DEPLOY.md`](DEPLOY.md), which stays as the documented Docker
 alternative.
 
 ## Decision: native systemd service (Path A)
@@ -92,8 +93,9 @@ prompts. The answer file is sourced shell (`KEY="value"`), template at
 | `build-release.sh` | [`build-release.sh`](../build-release.sh) | ✅ Phase 1 | `dotnet publish` → `abis-<version>-linux-x64.tar.gz` (publish + deploy assets) |
 | `deploy/install.sh`, `deploy/uninstall.sh` | [`deploy/`](../deploy/) | ✅ Phase 2 | interactive + unattended; idempotent upgrade; health-gated start |
 | `deploy/abis.service` | [`deploy/abis.service`](../deploy/abis.service) | ✅ Phase 2 | `Type=notify` unit + sandbox hardening |
-| nginx site templates | [`deploy/nginx/abis.conf`](../deploy/nginx/abis.conf), [`abis-tls.conf`](../deploy/nginx/abis-tls.conf) | ✅ Phase 3 | HTTP base (certbot upgrades) + provided-cert TLS variant; wired into `install.sh`/`uninstall.sh` with `certbot --nginx` |
-| Docs | new `docs/INSTALL.md`; link from README | ⏳ Phase 4 | native quick start; keep `DEPLOY.md` as Docker alternative |
+| nginx site templates | [`deploy/nginx/abis.conf`](../deploy/nginx/abis.conf), [`abis-tls.conf`](../deploy/nginx/abis-tls.conf), [`abis-pending.conf`](../deploy/nginx/abis-pending.conf) | ✅ Phase 3 | HTTP base (certbot upgrades) + provided-cert variant + TLS-pending 503 fallback; wired into `install.sh`/`uninstall.sh` with `certbot --nginx` |
+| Docs | [`docs/INSTALL.md`](INSTALL.md) + README/DEPLOY links | ✅ Phase 4 | native quick start; `DEPLOY.md` kept as the Docker alternative |
+| CI release job | [`.github/workflows/release.yml`](../.github/workflows/release.yml) | ✅ Phase 4 | tag `v*` → test → `build-release.sh` → tarball + SHA256SUMS on a GitHub Release |
 
 ## Distribution
 
@@ -120,8 +122,10 @@ but more packaging machinery than v1 needs.
   `provided`-cert variant for internal CA / DNS-01 and a `none` mode. Settings
   persist to `/etc/abis/install.state` for upgrades; `uninstall.sh` removes the
   site (and the cert on `--purge`).
-- **Phase 4** — `docs/INSTALL.md`; CI release job (tag → `build-release.sh` →
-  tarball attached to a GitHub Release); optional `.deb`.
+- **Phase 4 ✅** — [`docs/INSTALL.md`](INSTALL.md) (linked from README + DEPLOY);
+  CI release job [`release.yml`](../.github/workflows/release.yml) (tag `v*` →
+  test → `build-release.sh` → tarball + `SHA256SUMS` on a GitHub Release). A
+  `.deb` remains an optional future follow-on.
 
 ## Parallel plan: edge service installer
 

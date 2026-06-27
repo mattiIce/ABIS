@@ -38,6 +38,7 @@ PLCs over OPC).
 | [`docs/data-model/BACKCHECK.md`](docs/data-model/BACKCHECK.md) | Verification of each built module's schema against the real DataWindow/Oracle columns. |
 | [`docs/ORACLE_VALIDATION.md`](docs/ORACLE_VALIDATION.md) | Oracle data-path validation runbook + the live-only bug classes found and fixed. |
 | [`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md) · [`docs/EDGE_SERVICE.md`](docs/EDGE_SERVICE.md) | External integrations (EDI/serial/OPC) and the shop-floor edge service. |
+| [`docs/INSTALL.md`](docs/INSTALL.md) | **One-command native install** on Ubuntu — systemd service + nginx + HTTPS (Let's Encrypt). The Docker-free path. |
 | [`docs/DEPLOY.md`](docs/DEPLOY.md) | Run the API + greenfield UIs on a server (Docker Compose). |
 | [`legacy/src/README.md`](legacy/src/README.md) | The vendored legacy PB source per area + which greenfield module each maps to. |
 
@@ -86,6 +87,7 @@ abis.pbw  lion.pbt    PowerBuilder workspace / target (legacy)
 lion_mig.log          PowerBuilder migration report (2025-08-26)
 api/                  Greenfield ASP.NET Core API + typed web modules (clientapp/)
 edge/                 Shop-floor edge service (serial scales/gauges → HTTP)
+deploy/               Native Ubuntu installer (systemd unit, install/uninstall, nginx)
 legacy/src/           Vendored PB text source for the rebuilt areas (reference)
 docs/                 Modernization discovery, data model & roadmap
 tools/                Reproducible analysis extractors

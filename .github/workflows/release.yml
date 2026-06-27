@@ -1,0 +1,49 @@
+name: Release
+
+# Build the native-install tarball on a version tag and attach it to a GitHub
+# Release. Tag a release commit on main:  git tag v1.2.3 && git push origin v1.2.3
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write   # required for `gh release create`
+
+jobs:
+  release:
+    name: Build + publish release tarball
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # tags/history for build-release.sh version detection
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('api/**/*.csproj', 'api/Directory.Build.props', 'api/.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      # Never ship an untested artifact: run the API suite before packaging.
+      - name: Test (API)
+        working-directory: api
+        run: |
+          dotnet restore ABIS.Api.sln
+          dotnet test ABIS.Api.sln -c Release
+
+      - name: Build release tarball
+        run: |
+          bash build-release.sh --version "${GITHUB_REF_NAME}"
+          ( cd dist && sha256sum *.tar.gz > SHA256SUMS )
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/*.tar.gz dist/SHA256SUMS \
+            --title "ABIS ${GITHUB_REF_NAME}" \
+            --generate-notes
