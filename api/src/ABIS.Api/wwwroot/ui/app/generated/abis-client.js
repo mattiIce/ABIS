@@ -396,6 +396,274 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Coils on a job to evaluate (coil ⋈ process_coil).
+     * @return OK
+     */
+    getQcCoils(abJobNum) {
+        let url_ = this.baseUrl + "/api/coil-eval/coils?";
+        if (abJobNum === undefined || abJobNum === null)
+            throw new globalThis.Error("The parameter 'abJobNum' must be defined and cannot be null.");
+        else
+            url_ += "abJobNum=" + encodeURIComponent("" + abJobNum) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetQcCoils(_response);
+        });
+    }
+    processGetQcCoils(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(QcCoilRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Dimensional QC checks recorded on a sheet skid.
+     * @return OK
+     */
+    getDimensionChecks(sheetSkidNum) {
+        let url_ = this.baseUrl + "/api/coil-eval/skids/{sheetSkidNum}/dimension-checks";
+        if (sheetSkidNum === undefined || sheetSkidNum === null)
+            throw new globalThis.Error("The parameter 'sheetSkidNum' must be defined.");
+        url_ = url_.replace("{sheetSkidNum}", encodeURIComponent("" + sheetSkidNum));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetDimensionChecks(_response);
+        });
+    }
+    processGetDimensionChecks(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(SheetSkidDimensionCheck.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Record a dimensional QC check on a sheet-skid piece (in-spec pass/fail).
+     * @return Created
+     */
+    createDimensionCheck(sheetSkidNum, body) {
+        let url_ = this.baseUrl + "/api/coil-eval/skids/{sheetSkidNum}/dimension-checks";
+        if (sheetSkidNum === undefined || sheetSkidNum === null)
+            throw new globalThis.Error("The parameter 'sheetSkidNum' must be defined.");
+        url_ = url_.replace("{sheetSkidNum}", encodeURIComponent("" + sheetSkidNum));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processCreateDimensionCheck(_response);
+        });
+    }
+    processCreateDimensionCheck(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+                let result201 = null;
+                let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = SheetSkidDimensionCheck.fromJS(resultData201);
+                return result201;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Scrap items found during evaluation for a job (joined to the scrap-type catalog).
+     * @return OK
+     */
+    getEvalScrap(abJobNum) {
+        let url_ = this.baseUrl + "/api/coil-eval/jobs/{abJobNum}/eval-scrap";
+        if (abJobNum === undefined || abJobNum === null)
+            throw new globalThis.Error("The parameter 'abJobNum' must be defined.");
+        url_ = url_.replace("{abJobNum}", encodeURIComponent("" + abJobNum));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetEvalScrap(_response);
+        });
+    }
+    processGetEvalScrap(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(EvalScrap.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Record (upsert) a scrap item found during coil evaluation.
+     * @return OK
+     */
+    upsertEvalScrap(body) {
+        let url_ = this.baseUrl + "/api/coil-eval/eval-scrap";
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processUpsertEvalScrap(_response);
+        });
+    }
+    processUpsertEvalScrap(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = EvalScrap.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * The coil-ownership transfer ledger (optionally scoped to a customer).
      * @param customerId (optional)
      * @return OK
@@ -10700,6 +10968,52 @@ export class DieWrite {
         return data;
     }
 }
+export class DimensionCheckWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.pcNumber = _data["pcNumber"];
+            this.gauge = _data["gauge"];
+            this.width = _data["width"];
+            this.lengthOper = _data["lengthOper"];
+            this.lengthDrive = _data["lengthDrive"];
+            this.square = _data["square"];
+            this.headDimension = _data["headDimension"];
+            this.allCutEdge = _data["allCutEdge"];
+            this.inSpec = _data["inSpec"];
+            this.checkedBy = _data["checkedBy"];
+            this.note = _data["note"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new DimensionCheckWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["pcNumber"] = this.pcNumber;
+        data["gauge"] = this.gauge;
+        data["width"] = this.width;
+        data["lengthOper"] = this.lengthOper;
+        data["lengthDrive"] = this.lengthDrive;
+        data["square"] = this.square;
+        data["headDimension"] = this.headDimension;
+        data["allCutEdge"] = this.allCutEdge;
+        data["inSpec"] = this.inSpec;
+        data["checkedBy"] = this.checkedBy;
+        data["note"] = this.note;
+        return data;
+    }
+}
 export class DowntimeCause {
     constructor(data) {
         if (data) {
@@ -11147,6 +11461,92 @@ export class EquipmentType {
         data["equipmentTypeCode"] = this.equipmentTypeCode;
         data["equipmentTypeDesc"] = this.equipmentTypeDesc;
         data["equipmentTypeNote"] = this.equipmentTypeNote;
+        return data;
+    }
+}
+export class EvalScrap {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.abJobNum = _data["abJobNum"];
+            this.scrapItemType = _data["scrapItemType"];
+            this.scrapCode = _data["scrapCode"];
+            this.scrapDefect = _data["scrapDefect"];
+            this.scrapItemPiece = _data["scrapItemPiece"];
+            this.scrapItemNetWt = _data["scrapItemNetWt"];
+            this.scrapItemNote = _data["scrapItemNote"];
+            this.scrapItemOd = _data["scrapItemOd"];
+            this.scrapItemMill = _data["scrapItemMill"];
+            this.dataSource = _data["dataSource"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new EvalScrap();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["abJobNum"] = this.abJobNum;
+        data["scrapItemType"] = this.scrapItemType;
+        data["scrapCode"] = this.scrapCode;
+        data["scrapDefect"] = this.scrapDefect;
+        data["scrapItemPiece"] = this.scrapItemPiece;
+        data["scrapItemNetWt"] = this.scrapItemNetWt;
+        data["scrapItemNote"] = this.scrapItemNote;
+        data["scrapItemOd"] = this.scrapItemOd;
+        data["scrapItemMill"] = this.scrapItemMill;
+        data["dataSource"] = this.dataSource;
+        return data;
+    }
+}
+export class EvalScrapWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.abJobNum = _data["abJobNum"];
+            this.scrapItemType = _data["scrapItemType"];
+            this.scrapItemPiece = _data["scrapItemPiece"];
+            this.scrapItemNetWt = _data["scrapItemNetWt"];
+            this.scrapItemNote = _data["scrapItemNote"];
+            this.scrapItemOd = _data["scrapItemOd"];
+            this.scrapItemMill = _data["scrapItemMill"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new EvalScrapWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["abJobNum"] = this.abJobNum;
+        data["scrapItemType"] = this.scrapItemType;
+        data["scrapItemPiece"] = this.scrapItemPiece;
+        data["scrapItemNetWt"] = this.scrapItemNetWt;
+        data["scrapItemNote"] = this.scrapItemNote;
+        data["scrapItemOd"] = this.scrapItemOd;
+        data["scrapItemMill"] = this.scrapItemMill;
         return data;
     }
 }
@@ -12892,6 +13292,44 @@ export class QaMechanicalRow {
         return data;
     }
 }
+export class QcCoilRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.abJobNum = _data["abJobNum"];
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.coilOrgNum = _data["coilOrgNum"];
+            this.coilAlloy2 = _data["coilAlloy2"];
+            this.coilTemper = _data["coilTemper"];
+            this.processCoilStatus = _data["processCoilStatus"];
+            this.processEndWt = _data["processEndWt"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new QcCoilRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["abJobNum"] = this.abJobNum;
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["coilOrgNum"] = this.coilOrgNum;
+        data["coilAlloy2"] = this.coilAlloy2;
+        data["coilTemper"] = this.coilTemper;
+        data["processCoilStatus"] = this.processCoilStatus;
+        data["processEndWt"] = this.processEndWt;
+        return data;
+    }
+}
 export class ReceivingBol {
     constructor(data) {
         if (data) {
@@ -14106,6 +14544,56 @@ export class SheetSkid {
         data["skidSheetStatus"] = this.skidSheetStatus;
         data["skidTicketIfWhed"] = this.skidTicketIfWhed;
         data["skidFromIfWhed"] = this.skidFromIfWhed;
+        return data;
+    }
+}
+export class SheetSkidDimensionCheck {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.dimensionCheckNum = _data["dimensionCheckNum"];
+            this.sheetSkidNum = _data["sheetSkidNum"];
+            this.pcNumber = _data["pcNumber"];
+            this.gauge = _data["gauge"];
+            this.width = _data["width"];
+            this.lengthOper = _data["lengthOper"];
+            this.lengthDrive = _data["lengthDrive"];
+            this.square = _data["square"];
+            this.headDimension = _data["headDimension"];
+            this.allCutEdge = _data["allCutEdge"];
+            this.inSpec = _data["inSpec"];
+            this.checkedBy = _data["checkedBy"];
+            this.note = _data["note"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new SheetSkidDimensionCheck();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["dimensionCheckNum"] = this.dimensionCheckNum;
+        data["sheetSkidNum"] = this.sheetSkidNum;
+        data["pcNumber"] = this.pcNumber;
+        data["gauge"] = this.gauge;
+        data["width"] = this.width;
+        data["lengthOper"] = this.lengthOper;
+        data["lengthDrive"] = this.lengthDrive;
+        data["square"] = this.square;
+        data["headDimension"] = this.headDimension;
+        data["allCutEdge"] = this.allCutEdge;
+        data["inSpec"] = this.inSpec;
+        data["checkedBy"] = this.checkedBy;
+        data["note"] = this.note;
         return data;
     }
 }

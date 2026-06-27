@@ -2224,6 +2224,100 @@ public sealed class AbisRepository : IAbisRepository
         return new MintResult { ReceivingBolId = receivingBolId, Minted = minted, Coils = await GetReceivingBolCoilsAsync(receivingBolId, ct) };
     }
 
+    // ---- Coil evaluation / QC (legacy coil_eval w_qc_sheet) ----
+
+    public async Task<IReadOnlyList<QcCoilRow>> GetQcCoilsAsync(long abJobNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<QcCoilRow>(new CommandDefinition(
+            """
+            SELECT pc.ab_job_num AS AbJobNum, pc.coil_abc_num AS CoilAbcNum, c.coil_org_num AS CoilOrgNum,
+                   c.coil_alloy2 AS CoilAlloy2, c.coil_temper AS CoilTemper,
+                   pc.process_coil_status AS ProcessCoilStatus, pc.process_end_wt AS ProcessEndWt
+            FROM process_coil pc JOIN coil c ON c.coil_abc_num = pc.coil_abc_num
+            WHERE pc.ab_job_num = :job
+            ORDER BY pc.coil_abc_num
+            """, new { job = abJobNum }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    private const string DimCheckCols = """
+        dimension_check_num AS DimensionCheckNum, sheet_skid_num AS SheetSkidNum, pc_number AS PcNumber,
+        gauge AS Gauge, width AS Width, length_oper AS LengthOper, length_drive AS LengthDrive, square AS Square,
+        head_dimension AS HeadDimension, all_cut_edge AS AllCutEdge, in_spec AS InSpec, checked_by AS CheckedBy, note AS Note
+        """;
+
+    public async Task<IReadOnlyList<SheetSkidDimensionCheck>> GetDimensionChecksAsync(long sheetSkidNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<SheetSkidDimensionCheck>(new CommandDefinition(
+            $"SELECT {DimCheckCols} FROM sheet_skid_dimension_check WHERE sheet_skid_num = :id ORDER BY pc_number",
+            new { id = sheetSkidNum }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    public async Task<SheetSkidDimensionCheck> CreateDimensionCheckAsync(long sheetSkidNum, DimensionCheckWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        var id = await NextIdAsync(conn, tx, "sheet_skid_dimension_check", "dimension_check_num", ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO sheet_skid_dimension_check (dimension_check_num, sheet_skid_num, pc_number, gauge, width,
+                length_oper, length_drive, square, head_dimension, all_cut_edge, in_spec, checked_by, note)
+            VALUES (:id, :skid, :pc, :gauge, :width, :lo, :ld, :sq, :head, :ace, :inspec, :by, :note)
+            """,
+            new
+            {
+                id, skid = sheetSkidNum, pc = body.PcNumber, gauge = body.Gauge, width = body.Width,
+                lo = body.LengthOper, ld = body.LengthDrive, sq = body.Square, head = body.HeadDimension,
+                ace = body.AllCutEdge, inspec = body.InSpec ?? 1, by = body.CheckedBy, note = body.Note
+            },
+            transaction: tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return (await GetDimensionChecksAsync(sheetSkidNum, ct)).First(c => c.DimensionCheckNum == id);
+    }
+
+    public async Task<IReadOnlyList<EvalScrap>> GetEvalScrapAsync(long abJobNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<EvalScrap>(new CommandDefinition(
+            """
+            SELECT s.coil_abc_num AS CoilAbcNum, s.ab_job_num AS AbJobNum, s.scrap_item_type AS ScrapItemType,
+                   t.scrap_code AS ScrapCode, t.scrap_defect AS ScrapDefect, s.scrap_item_piece AS ScrapItemPiece,
+                   s.scrap_item_net_wt AS ScrapItemNetWt, s.scrap_item_note AS ScrapItemNote,
+                   s.scrap_item_od AS ScrapItemOd, s.scrap_item_mill AS ScrapItemMill, s.data_source AS DataSource
+            FROM quality_coil_eval_scrap s LEFT JOIN scrap_type t ON t.scrap_type_id = s.scrap_item_type
+            WHERE s.ab_job_num = :job
+            ORDER BY s.coil_abc_num, s.scrap_item_type
+            """, new { job = abJobNum }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
+    // Upsert an eval-scrap item on its composite natural key (coil/job/type/od/mill).
+    public async Task<EvalScrap> UpsertEvalScrapAsync(EvalScrapWrite body, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var key = new { coil = body.CoilAbcNum, job = body.AbJobNum, type = body.ScrapItemType,
+                        od = body.ScrapItemOd ?? 0, mill = body.ScrapItemMill ?? 0 };
+        var vals = new { key.coil, key.job, key.type, key.od, key.mill,
+                         piece = body.ScrapItemPiece, net = body.ScrapItemNetWt, note = body.ScrapItemNote };
+        var n = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE quality_coil_eval_scrap SET scrap_item_piece = :piece, scrap_item_net_wt = :net, scrap_item_note = :note, data_source = 'QC'
+            WHERE coil_abc_num = :coil AND ab_job_num = :job AND scrap_item_type = :type AND scrap_item_od = :od AND scrap_item_mill = :mill
+            """, vals, cancellationToken: ct));
+        if (n == 0)
+            await conn.ExecuteAsync(new CommandDefinition(
+                """
+                INSERT INTO quality_coil_eval_scrap (coil_abc_num, ab_job_num, scrap_item_type, scrap_item_piece,
+                    scrap_item_net_wt, scrap_item_note, scrap_item_od, scrap_item_mill, data_source)
+                VALUES (:coil, :job, :type, :piece, :net, :note, :od, :mill, 'QC')
+                """, vals, cancellationToken: ct));
+        return (await GetEvalScrapAsync(body.AbJobNum ?? 0, ct))
+            .First(s => s.CoilAbcNum == key.coil && s.ScrapItemType == key.type && s.ScrapItemOd == key.od && s.ScrapItemMill == key.mill);
+    }
+
     public Task<PagedResult<ScanLog>> GetScanLogsAsync(int page, int pageSize, long? abJobNum, string? orderBy, CancellationToken ct) =>
         PageAsync<ScanLog>(ScanLogCols, "scan_log", orderBy ?? "scan_id DESC",
             abJobNum is null ? null : "ab_job_num = :abJobNum",

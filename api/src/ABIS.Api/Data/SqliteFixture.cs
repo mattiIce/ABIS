@@ -67,6 +67,8 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS security_user_group;
             DROP TABLE IF EXISTS security_user_application;
             DROP TABLE IF EXISTS security_group_application;
+            DROP TABLE IF EXISTS sheet_skid_dimension_check;
+            DROP TABLE IF EXISTS quality_coil_eval_scrap;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
@@ -331,6 +333,19 @@ public static class SqliteFixture
             CREATE TABLE security_group_application (
                 application_id INTEGER, user_group_id INTEGER, group_application_privilege INTEGER,
                 PRIMARY KEY (application_id, user_group_id));
+
+            -- Coil evaluation / QC (legacy coil_eval w_qc_sheet). Dimensional checks per
+            -- skid piece + scrap items found during evaluation. Column names authoritative
+            -- (oracle_ddl.sql). quality_coil_eval_scrap has a composite natural key.
+            CREATE TABLE sheet_skid_dimension_check (
+                dimension_check_num INTEGER PRIMARY KEY, sheet_skid_num INTEGER, pc_number INTEGER,
+                gauge REAL, width REAL, length_oper REAL, length_drive REAL, square REAL, head_dimension REAL,
+                all_cut_edge INTEGER, in_spec INTEGER, checked_by TEXT, note TEXT);
+            CREATE TABLE quality_coil_eval_scrap (
+                coil_abc_num INTEGER, ab_job_num INTEGER, scrap_item_type INTEGER,
+                scrap_item_piece INTEGER, scrap_item_net_wt INTEGER, scrap_item_note TEXT,
+                scrap_item_od INTEGER, scrap_item_mill INTEGER, data_source TEXT,
+                PRIMARY KEY (coil_abc_num, ab_job_num, scrap_item_type, scrap_item_od, scrap_item_mill));
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -878,6 +893,30 @@ public static class SqliteFixture
             {
                 // jsmith has a DIRECT Write grant on Order Entry; effective = MAX(1 direct, 0 group) = 1.
                 new { UserId = 9001L, ApplicationId = 1L, UserApplicationPrivilege = 1 }
+            });
+
+        // ---- Coil evaluation / QC ----
+        conn.Execute(
+            """
+            INSERT INTO sheet_skid_dimension_check (dimension_check_num, sheet_skid_num, pc_number, gauge, width,
+                length_oper, length_drive, square, head_dimension, all_cut_edge, in_spec, checked_by, note)
+            VALUES (:DimensionCheckNum, :SheetSkidNum, :PcNumber, :Gauge, :Width, :LengthOper, :LengthDrive,
+                :Square, :HeadDimension, :AllCutEdge, :InSpec, :CheckedBy, :Note)
+            """,
+            new[]
+            {
+                new { DimensionCheckNum = 9501L, SheetSkidNum = 3001L, PcNumber = 1, Gauge = 0.125, Width = 48.5, LengthOper = 96.0, LengthDrive = 96.01, Square = 0.02, HeadDimension = 0.0, AllCutEdge = 1, InSpec = 1, CheckedBy = "qc1", Note = "OK" },
+                new { DimensionCheckNum = 9502L, SheetSkidNum = 3001L, PcNumber = 50, Gauge = 0.126, Width = 48.6, LengthOper = 96.0, LengthDrive = 96.2, Square = 0.20, HeadDimension = 0.0, AllCutEdge = 1, InSpec = 0, CheckedBy = "qc1", Note = "Square out" }
+            });
+        conn.Execute(
+            """
+            INSERT INTO quality_coil_eval_scrap (coil_abc_num, ab_job_num, scrap_item_type, scrap_item_piece,
+                scrap_item_net_wt, scrap_item_note, scrap_item_od, scrap_item_mill, data_source)
+            VALUES (:CoilAbcNum, :AbJobNum, :ScrapItemType, :ScrapItemPiece, :ScrapItemNetWt, :ScrapItemNote, :ScrapItemOd, :ScrapItemMill, :DataSource)
+            """,
+            new[]
+            {
+                new { CoilAbcNum = 5001L, AbJobNum = 1001L, ScrapItemType = 1, ScrapItemPiece = 5, ScrapItemNetWt = 120, ScrapItemNote = "Edge dents", ScrapItemOd = 0, ScrapItemMill = 0, DataSource = "QC" }
             });
     }
 }

@@ -526,6 +526,47 @@ public static class ApiEndpoints
            .WithSummary("Generate the 861 (Receiving Advice) for a BOL — DB-side in production; a documented stub here.")
            .Produces<Edi861Result>().Produces(StatusCodes.Status404NotFound);
 
+        // ---- Coil evaluation / QC (legacy coil_eval w_qc_sheet) ----
+        api.MapGet("/coil-eval/coils", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetQcCoilsAsync(abJobNum, ct)))
+           .WithName("GetQcCoils").WithTags("CoilEval")
+           .WithSummary("Coils on a job to evaluate (coil ⋈ process_coil).")
+           .Produces<IReadOnlyList<QcCoilRow>>();
+
+        api.MapGet("/coil-eval/skids/{sheetSkidNum:long}/dimension-checks", async (long sheetSkidNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetDimensionChecksAsync(sheetSkidNum, ct)))
+           .WithName("GetDimensionChecks").WithTags("CoilEval")
+           .WithSummary("Dimensional QC checks recorded on a sheet skid.")
+           .Produces<IReadOnlyList<SheetSkidDimensionCheck>>();
+
+        api.MapPost("/coil-eval/skids/{sheetSkidNum:long}/dimension-checks", async (long sheetSkidNum, DimensionCheckWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                var created = await repo.CreateDimensionCheckAsync(sheetSkidNum, body, ct);
+                return Results.Created($"/api/coil-eval/skids/{sheetSkidNum}/dimension-checks/{created.DimensionCheckNum}", created);
+            })
+           .WithName("CreateDimensionCheck").WithTags("CoilEval")
+           .WithSummary("Record a dimensional QC check on a sheet-skid piece (in-spec pass/fail).")
+           .Produces<SheetSkidDimensionCheck>(StatusCodes.Status201Created);
+
+        api.MapGet("/coil-eval/jobs/{abJobNum:long}/eval-scrap", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetEvalScrapAsync(abJobNum, ct)))
+           .WithName("GetEvalScrap").WithTags("CoilEval")
+           .WithSummary("Scrap items found during evaluation for a job (joined to the scrap-type catalog).")
+           .Produces<IReadOnlyList<EvalScrap>>();
+
+        api.MapPost("/coil-eval/eval-scrap", async (EvalScrapWrite body, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (body.CoilAbcNum is null or <= 0 || body.AbJobNum is null or <= 0 || body.ScrapItemType is null)
+                    return Results.ValidationProblem(new Dictionary<string, string[]>
+                    {
+                        ["evalScrap"] = ["coilAbcNum, abJobNum and scrapItemType are required."],
+                    });
+                return Results.Ok(await repo.UpsertEvalScrapAsync(body, ct));
+            })
+           .WithName("UpsertEvalScrap").WithTags("CoilEval")
+           .WithSummary("Record (upsert) a scrap item found during coil evaluation.")
+           .Produces<EvalScrap>().ProducesValidationProblem();
+
         // ---- EDI (outbound X12 transaction ledger + transmission log) --
         api.MapGet("/edi/transactions", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, long? customerId = null, string? transactionTypeId = null, string? sort = null, string? dir = null) =>

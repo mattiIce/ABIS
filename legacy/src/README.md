@@ -26,7 +26,7 @@ File types: `.srw` windows · `.srd` DataWindows (embedded SQL) · `.srm` menus 
 | `sales/` | **Sales / quote lifecycle** (`w_new_quote`, `w_edit_quote`, `w_sales_main`, `w_sales_quote_review`) — `sales_quote` (composite `quote_id`+`quote_revision_id`), `sales_reminder` (follow-ups), `sales_probability` (win-probability reviews), `customer_contact` (address book) |
 | `coil_ownership/` | **Coil ownership transfer** (`w_coil_ownership_transfer`, `w_coil_ownership_transfer_certificate`, from silverdome4) — toll processing: `coil_ownership_transfer` (certificate ledger, `customer_id_orig` → `customer_id_new`) + the printable certificate (full customer addresses + coil details) |
 | `inv_skid/`, `skid_entry/` | Skid inventory / entry |
-| `coil_eval/` | Coil evaluation |
+| `coil_eval/` | **Coil evaluation / QC** (`w_qc_sheet`) — `sheet_skid_dimension_check` (dimensional QC per skid piece) + `quality_coil_eval_scrap` (scrap found during eval). Built greenfield. |
 | `stacker_110/` | Line #110 stacker |
 | `prod-folder/` | Production folder |
 | `da_offline/` | **DAS offline** variant of `da/` (operate a job without a live DB connection) — superseded by the always-connected web DAS console |

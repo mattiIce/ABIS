@@ -37,6 +37,8 @@ import {
   SecurityGroupWrite,
   SecurityApplicationWrite,
   GrantWrite,
+  DimensionCheckWrite,
+  EvalScrapWrite,
 } from '../../src/ABIS.Api/wwwroot/ui/app/generated/abis-client.js';
 
 const base = process.env.ABIS_BASE ?? 'http://127.0.0.1:5225';
@@ -852,4 +854,45 @@ test('receiving flow: mint coil inventory + 861 stub (typed)', async () => {
   const edi = await client.generateReceiving861(bol.receivingBolId);
   assert.equal(edi.status, 'deferred');
   assert.equal(edi.customerId, 4001);
+});
+
+// Coil evaluation / QC (legacy coil_eval w_qc_sheet): QC coil picker, dimensional checks,
+// and eval scrap (upsert on the composite key).
+test('coil-eval flow: QC coils, dimension checks, eval scrap (typed)', async () => {
+  const coils = await client.getQcCoils(1001);
+  assert.ok(coils.length >= 1 && coils.every((c) => c.abJobNum === 1001));
+
+  // Seeded skid 3001 has two dimension checks (one out of spec).
+  const checks = await client.getDimensionChecks(3001);
+  assert.ok(checks.length >= 2);
+  assert.ok(checks.some((c) => c.inSpec === 0));
+
+  const created = await client.createDimensionCheck(3001, new DimensionCheckWrite({
+    pcNumber: 99, gauge: 0.125, width: 48.5, lengthOper: 96, lengthDrive: 96.0, square: 0.01, inSpec: 1, checkedBy: 'e2e',
+  }));
+  assert.ok(created.dimensionCheckNum > 0);
+  assert.equal(created.inSpec, 1);
+
+  // Seeded eval scrap on coil 5001 / job 1001 / type 1.
+  const scrap = await client.getEvalScrap(1001);
+  assert.ok(scrap.some((s) => s.coilAbcNum === 5001 && s.scrapItemType === 1));
+
+  // Upsert: same composite key updates rather than duplicating.
+  const up = await client.upsertEvalScrap(new EvalScrapWrite({
+    coilAbcNum: 5001, abJobNum: 1001, scrapItemType: 1, scrapItemPiece: 9, scrapItemNetWt: 200, scrapItemNote: 'updated',
+  }));
+  assert.equal(up.scrapItemPiece, 9);
+  const after = await client.getEvalScrap(1001);
+  assert.equal(after.filter((s) => s.coilAbcNum === 5001 && s.scrapItemType === 1).length, 1); // still one row
+
+  // A new scrap type adds a row.
+  await client.upsertEvalScrap(new EvalScrapWrite({ coilAbcNum: 5001, abJobNum: 1001, scrapItemType: 2, scrapItemNetWt: 50 }));
+  const after2 = await client.getEvalScrap(1001);
+  assert.ok(after2.some((s) => s.scrapItemType === 2));
+
+  // Required-field validation.
+  await assert.rejects(
+    () => client.upsertEvalScrap(new EvalScrapWrite({ scrapItemNetWt: 10 })),
+    (err) => err?.status === 400,
+  );
 });
