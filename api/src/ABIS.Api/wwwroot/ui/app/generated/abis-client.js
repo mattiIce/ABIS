@@ -6884,7 +6884,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
-     * Create an application user.
+     * Create an application user (requires User Control).
      * @return Created
      */
     createSecurityUser(body) {
@@ -6929,6 +6929,11 @@ export class AbisClient {
         else if (status === 401) {
             return response.text().then((_responseText) => {
                 return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 403) {
+            return response.text().then((_responseText) => {
+                return throwException("Forbidden", status, _responseText, _headers);
             });
         }
         else if (status !== 200 && status !== 204) {
@@ -7099,6 +7104,111 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * The calling user's effective permissions (resolved from the OIDC login / X-User-Login).
+     * @return OK
+     */
+    getMyPermissions() {
+        let url_ = this.baseUrl + "/api/security/me/permissions";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetMyPermissions(_response);
+        });
+    }
+    processGetMyPermissions(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(EffectivePermission.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Whether the caller has at least the given privilege on a feature.
+     * @param feature (optional)
+     * @param level (optional)
+     * @return OK
+     */
+    getMyAllowed(feature, level) {
+        let url_ = this.baseUrl + "/api/security/me/allowed?";
+        if (feature === null)
+            throw new globalThis.Error("The parameter 'feature' cannot be null.");
+        else if (feature !== undefined)
+            url_ += "feature=" + encodeURIComponent("" + feature) + "&";
+        if (level === null)
+            throw new globalThis.Error("The parameter 'level' cannot be null.");
+        else if (level !== undefined)
+            url_ += "level=" + encodeURIComponent("" + level) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetMyAllowed(_response);
+        });
+    }
+    processGetMyAllowed(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = FeatureAllowedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * The security groups / roles.
      * @return OK
      */
@@ -7150,7 +7260,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
-     * Create a security group.
+     * Create a security group (requires User Control).
      * @return Created
      */
     createSecurityGroup(body) {
@@ -7187,6 +7297,11 @@ export class AbisClient {
         else if (status === 401) {
             return response.text().then((_responseText) => {
                 return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 403) {
+            return response.text().then((_responseText) => {
+                return throwException("Forbidden", status, _responseText, _headers);
             });
         }
         else if (status !== 200 && status !== 204) {
@@ -7248,7 +7363,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
-     * Create a protected feature.
+     * Create a protected feature (requires User Control).
      * @return Created
      */
     createSecurityApplication(body) {
@@ -7287,6 +7402,11 @@ export class AbisClient {
                 return throwException("Unauthorized", status, _responseText, _headers);
             });
         }
+        else if (status === 403) {
+            return response.text().then((_responseText) => {
+                return throwException("Forbidden", status, _responseText, _headers);
+            });
+        }
         else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
                 return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -7295,7 +7415,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
-     * Set a user's privilege on a feature (0 = ReadOnly, 1 = Write).
+     * Set a user's privilege on a feature (0 = ReadOnly, 1 = Write; requires User Control).
      * @return No Content
      */
     setUserApplicationGrant(userId, applicationId, body) {
@@ -7336,6 +7456,11 @@ export class AbisClient {
                 return throwException("Unauthorized", status, _responseText, _headers);
             });
         }
+        else if (status === 403) {
+            return response.text().then((_responseText) => {
+                return throwException("Forbidden", status, _responseText, _headers);
+            });
+        }
         else if (status === 404) {
             return response.text().then((_responseText) => {
                 return throwException("Not Found", status, _responseText, _headers);
@@ -7349,7 +7474,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
-     * Set a group's privilege on a feature (0 = ReadOnly, 1 = Write).
+     * Set a group's privilege on a feature (0 = ReadOnly, 1 = Write; requires User Control).
      * @return No Content
      */
     setGroupApplicationGrant(groupId, applicationId, body) {
@@ -7390,6 +7515,11 @@ export class AbisClient {
                 return throwException("Unauthorized", status, _responseText, _headers);
             });
         }
+        else if (status === 403) {
+            return response.text().then((_responseText) => {
+                return throwException("Forbidden", status, _responseText, _headers);
+            });
+        }
         else if (status === 404) {
             return response.text().then((_responseText) => {
                 return throwException("Not Found", status, _responseText, _headers);
@@ -7403,7 +7533,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
-     * Add a user to a group.
+     * Add a user to a group (requires User Control).
      * @return No Content
      */
     addUserToGroup(userId, groupId) {
@@ -7440,6 +7570,11 @@ export class AbisClient {
                 return throwException("Unauthorized", status, _responseText, _headers);
             });
         }
+        else if (status === 403) {
+            return response.text().then((_responseText) => {
+                return throwException("Forbidden", status, _responseText, _headers);
+            });
+        }
         else if (status === 404) {
             return response.text().then((_responseText) => {
                 return throwException("Not Found", status, _responseText, _headers);
@@ -7453,7 +7588,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
-     * Remove a user from a group.
+     * Remove a user from a group (requires User Control).
      * @return No Content
      */
     removeUserFromGroup(userId, groupId) {
@@ -7488,6 +7623,11 @@ export class AbisClient {
         else if (status === 401) {
             return response.text().then((_responseText) => {
                 return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 403) {
+            return response.text().then((_responseText) => {
+                return throwException("Forbidden", status, _responseText, _headers);
             });
         }
         else if (status === 404) {
@@ -10871,6 +11011,36 @@ export class EquipmentType {
         data["equipmentTypeCode"] = this.equipmentTypeCode;
         data["equipmentTypeDesc"] = this.equipmentTypeDesc;
         data["equipmentTypeNote"] = this.equipmentTypeNote;
+        return data;
+    }
+}
+export class FeatureAllowedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.feature = _data["feature"];
+            this.level = _data["level"];
+            this.allowed = _data["allowed"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new FeatureAllowedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["feature"] = this.feature;
+        data["level"] = this.level;
+        data["allowed"] = this.allowed;
         return data;
     }
 }

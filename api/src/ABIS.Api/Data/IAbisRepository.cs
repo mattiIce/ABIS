@@ -95,6 +95,8 @@ public interface IAbisRepository
     Task<bool> SetGroupApplicationGrantAsync(long groupId, long applicationId, int privilege, CancellationToken ct);
     Task<bool> AddUserToGroupAsync(long userId, long groupId, CancellationToken ct);
     Task<bool> RemoveUserFromGroupAsync(long userId, long groupId, CancellationToken ct);
+    Task<SecurityUser?> GetSecurityUserByLoginAsync(string login, CancellationToken ct);
+    Task<int?> GetEffectivePrivilegeAsync(string login, string applicationName, CancellationToken ct);
 
     Task<IReadOnlyList<ScrapType>> GetScrapTypesAsync(CancellationToken ct);
     Task<IReadOnlyList<ProductType>> GetProductTypesAsync(CancellationToken ct);

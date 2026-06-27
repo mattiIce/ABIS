@@ -776,3 +776,47 @@ test('reporting flow: QA mechanical + scrap summaries (typed)', async () => {
   assert.ok(byJob.some((r) => r.scrapAbJobNum === '1001'));
   assert.ok(byJob.every((r) => typeof r.totalNetWt === 'number'));
 });
+
+// A client that authenticates as a specific ABIS user (X-User-Login) in addition to the
+// API key — exercises the server-side per-feature enforcement (legacy f_security_door).
+function loginClient(login) {
+  return new AbisClient(base, {
+    fetch: (url, init = {}) => {
+      const headers = new Headers(init.headers);
+      headers.set('X-Api-Key', key);
+      headers.set('X-User-Login', login);
+      return fetch(url, { ...init, headers });
+    },
+  });
+}
+
+// Server-side enforcement: the "User Control" gate on security-admin writes.
+test('security enforcement: non-admin is denied, admin allowed, service account bypasses (typed)', async () => {
+  // jsmith (Operators) holds Order Entry but NOT User Control → creating a group is 403.
+  await assert.rejects(
+    () => loginClient('jsmith').createSecurityGroup(new SecurityGroupWrite({ groupName: 'X-by-jsmith' })),
+    (e) => e instanceof ApiException && e.status === 403,
+  );
+  // mlee (Admins) holds User Control (Write) → allowed.
+  const g = await loginClient('mlee').createSecurityGroup(new SecurityGroupWrite({ groupName: 'X-by-mlee' }));
+  assert.ok(g.userGroupId > 0);
+  // The API-key service account (no X-User-Login) bypasses the gate.
+  const g2 = await client.createSecurityGroup(new SecurityGroupWrite({ groupName: 'X-by-service' }));
+  assert.ok(g2.userGroupId > 0);
+});
+
+// /security/me/* resolves the caller and drives UI enable/read-only decisions.
+test('security enforcement: me/permissions + me/allowed (typed)', async () => {
+  const mine = await loginClient('jsmith').getMyPermissions();
+  assert.ok(mine.some((p) => p.applicationName === 'Order Entry'));
+  // jsmith can write Order Entry but not User Control.
+  const oe = await loginClient('jsmith').getMyAllowed('Order Entry', 1);
+  assert.equal(oe.allowed, true);
+  const uc = await loginClient('jsmith').getMyAllowed('User Control', 1);
+  assert.equal(uc.allowed, false);
+  // service account: empty permissions, but allowed (bypass) everywhere.
+  const svc = await client.getMyPermissions();
+  assert.equal(svc.length, 0);
+  const svcAllowed = await client.getMyAllowed('User Control', 1);
+  assert.equal(svcAllowed.allowed, true);
+});

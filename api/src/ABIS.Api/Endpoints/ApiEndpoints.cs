@@ -1172,6 +1172,29 @@ public static class ApiEndpoints
            .WithSummary("A user's effective per-feature permissions (MAX of direct + group grants).")
            .Produces<IReadOnlyList<EffectivePermission>>();
 
+        // The CALLER's effective permissions — resolves the OIDC login (or X-User-Login dev
+        // header) to a security_user. Empty when the caller is a service account / unknown.
+        api.MapGet("/security/me/permissions", async (HttpContext ctx, IAbisRepository repo, CancellationToken ct) =>
+            {
+                var login = ResolveLogin(ctx);
+                if (login is null) return Results.Ok(Array.Empty<EffectivePermission>());
+                var u = await repo.GetSecurityUserByLoginAsync(login, ct);
+                return Results.Ok(u is null
+                    ? Array.Empty<EffectivePermission>()
+                    : (await repo.GetUserEffectivePermissionsAsync(u.UserId, ct)).ToArray());
+            })
+           .WithName("GetMyPermissions").WithTags("Security")
+           .WithSummary("The calling user's effective permissions (resolved from the OIDC login / X-User-Login).")
+           .Produces<IReadOnlyList<EffectivePermission>>();
+
+        // Whether the caller is allowed a feature at a level — exposes the gate for the UI
+        // to drive enable/read-only/hide decisions (server remains the source of truth).
+        api.MapGet("/security/me/allowed", async (HttpContext ctx, IAbisRepository repo, CancellationToken ct, string feature = "", int level = 1) =>
+                Results.Ok(new FeatureAllowedResult { Feature = feature, Level = level, Allowed = await RequireFeatureAsync(ctx, repo, feature, level, ct) is null }))
+           .WithName("GetMyAllowed").WithTags("Security")
+           .WithSummary("Whether the caller has at least the given privilege on a feature.")
+           .Produces<FeatureAllowedResult>();
+
         api.MapGet("/security/groups", async (IAbisRepository repo, CancellationToken ct) =>
                 Results.Ok(await repo.GetSecurityGroupsAsync(ct)))
            .WithName("GetSecurityGroups").WithTags("Security")
@@ -1182,49 +1205,58 @@ public static class ApiEndpoints
            .WithName("GetSecurityApplications").WithTags("Security")
            .WithSummary("The protected feature catalog.").Produces<IReadOnlyList<SecurityApplication>>();
 
-        api.MapPost("/security/users", async (SecurityUserWrite body, IAbisRepository repo, CancellationToken ct) =>
+        // The security-admin writes are gated by the "User Control" feature (Write). An
+        // API-key service account bypasses (login null); a real OIDC user must hold the grant.
+        api.MapPost("/security/users", async (SecurityUserWrite body, HttpContext ctx, IAbisRepository repo, CancellationToken ct) =>
             {
+                if (await RequireFeatureAsync(ctx, repo, "User Control", 1, ct) is { } deny) return deny;
                 if (string.IsNullOrWhiteSpace(body.LoginId))
                     return Results.ValidationProblem(new Dictionary<string, string[]> { ["loginId"] = ["loginId is required."] });
                 var created = await repo.CreateSecurityUserAsync(body, ct);
                 return Results.Created($"/api/security/users/{created.UserId}", created);
             })
            .WithName("CreateSecurityUser").WithTags("Security")
-           .WithSummary("Create an application user.").Produces<SecurityUser>(StatusCodes.Status201Created).ProducesValidationProblem();
+           .WithSummary("Create an application user (requires User Control).").Produces<SecurityUser>(StatusCodes.Status201Created).ProducesValidationProblem().Produces(StatusCodes.Status403Forbidden);
 
-        api.MapPost("/security/groups", async (SecurityGroupWrite body, IAbisRepository repo, CancellationToken ct) =>
-                Results.Created("/api/security/groups", await repo.CreateSecurityGroupAsync(body, ct)))
+        api.MapPost("/security/groups", async (SecurityGroupWrite body, HttpContext ctx, IAbisRepository repo, CancellationToken ct) =>
+                await RequireFeatureAsync(ctx, repo, "User Control", 1, ct) is { } deny ? deny
+                    : Results.Created("/api/security/groups", await repo.CreateSecurityGroupAsync(body, ct)))
            .WithName("CreateSecurityGroup").WithTags("Security")
-           .WithSummary("Create a security group.").Produces<SecurityGroup>(StatusCodes.Status201Created);
+           .WithSummary("Create a security group (requires User Control).").Produces<SecurityGroup>(StatusCodes.Status201Created).Produces(StatusCodes.Status403Forbidden);
 
-        api.MapPost("/security/applications", async (SecurityApplicationWrite body, IAbisRepository repo, CancellationToken ct) =>
-                Results.Created("/api/security/applications", await repo.CreateSecurityApplicationAsync(body, ct)))
+        api.MapPost("/security/applications", async (SecurityApplicationWrite body, HttpContext ctx, IAbisRepository repo, CancellationToken ct) =>
+                await RequireFeatureAsync(ctx, repo, "User Control", 1, ct) is { } deny ? deny
+                    : Results.Created("/api/security/applications", await repo.CreateSecurityApplicationAsync(body, ct)))
            .WithName("CreateSecurityApplication").WithTags("Security")
-           .WithSummary("Create a protected feature.").Produces<SecurityApplication>(StatusCodes.Status201Created);
+           .WithSummary("Create a protected feature (requires User Control).").Produces<SecurityApplication>(StatusCodes.Status201Created).Produces(StatusCodes.Status403Forbidden);
 
-        api.MapPut("/security/users/{userId:long}/applications/{applicationId:long}", async (long userId, long applicationId, GrantWrite body, IAbisRepository repo, CancellationToken ct) =>
-                await repo.SetUserApplicationGrantAsync(userId, applicationId, body.Privilege ?? 0, ct)
-                    ? Results.NoContent() : Results.NotFound())
+        api.MapPut("/security/users/{userId:long}/applications/{applicationId:long}", async (long userId, long applicationId, GrantWrite body, HttpContext ctx, IAbisRepository repo, CancellationToken ct) =>
+                await RequireFeatureAsync(ctx, repo, "User Control", 1, ct) is { } deny ? deny
+                    : await repo.SetUserApplicationGrantAsync(userId, applicationId, body.Privilege ?? 0, ct)
+                        ? Results.NoContent() : Results.NotFound())
            .WithName("SetUserApplicationGrant").WithTags("Security")
-           .WithSummary("Set a user's privilege on a feature (0 = ReadOnly, 1 = Write).")
-           .Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound);
+           .WithSummary("Set a user's privilege on a feature (0 = ReadOnly, 1 = Write; requires User Control).")
+           .Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status403Forbidden);
 
-        api.MapPut("/security/groups/{groupId:long}/applications/{applicationId:long}", async (long groupId, long applicationId, GrantWrite body, IAbisRepository repo, CancellationToken ct) =>
-                await repo.SetGroupApplicationGrantAsync(groupId, applicationId, body.Privilege ?? 0, ct)
-                    ? Results.NoContent() : Results.NotFound())
+        api.MapPut("/security/groups/{groupId:long}/applications/{applicationId:long}", async (long groupId, long applicationId, GrantWrite body, HttpContext ctx, IAbisRepository repo, CancellationToken ct) =>
+                await RequireFeatureAsync(ctx, repo, "User Control", 1, ct) is { } deny ? deny
+                    : await repo.SetGroupApplicationGrantAsync(groupId, applicationId, body.Privilege ?? 0, ct)
+                        ? Results.NoContent() : Results.NotFound())
            .WithName("SetGroupApplicationGrant").WithTags("Security")
-           .WithSummary("Set a group's privilege on a feature (0 = ReadOnly, 1 = Write).")
-           .Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound);
+           .WithSummary("Set a group's privilege on a feature (0 = ReadOnly, 1 = Write; requires User Control).")
+           .Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status403Forbidden);
 
-        api.MapPost("/security/users/{userId:long}/groups/{groupId:long}", async (long userId, long groupId, IAbisRepository repo, CancellationToken ct) =>
-                await repo.AddUserToGroupAsync(userId, groupId, ct) ? Results.NoContent() : Results.NotFound())
+        api.MapPost("/security/users/{userId:long}/groups/{groupId:long}", async (long userId, long groupId, HttpContext ctx, IAbisRepository repo, CancellationToken ct) =>
+                await RequireFeatureAsync(ctx, repo, "User Control", 1, ct) is { } deny ? deny
+                    : await repo.AddUserToGroupAsync(userId, groupId, ct) ? Results.NoContent() : Results.NotFound())
            .WithName("AddUserToGroup").WithTags("Security")
-           .WithSummary("Add a user to a group.").Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound);
+           .WithSummary("Add a user to a group (requires User Control).").Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status403Forbidden);
 
-        api.MapDelete("/security/users/{userId:long}/groups/{groupId:long}", async (long userId, long groupId, IAbisRepository repo, CancellationToken ct) =>
-                await repo.RemoveUserFromGroupAsync(userId, groupId, ct) ? Results.NoContent() : Results.NotFound())
+        api.MapDelete("/security/users/{userId:long}/groups/{groupId:long}", async (long userId, long groupId, HttpContext ctx, IAbisRepository repo, CancellationToken ct) =>
+                await RequireFeatureAsync(ctx, repo, "User Control", 1, ct) is { } deny ? deny
+                    : await repo.RemoveUserFromGroupAsync(userId, groupId, ct) ? Results.NoContent() : Results.NotFound())
            .WithName("RemoveUserFromGroup").WithTags("Security")
-           .WithSummary("Remove a user from a group.").Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound);
+           .WithSummary("Remove a user from a group (requires User Control).").Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status403Forbidden);
 
         api.MapGet("/scrap-skids", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, string? sort = null, string? dir = null) =>
@@ -1378,6 +1410,33 @@ public static class ApiEndpoints
     private static void Req(Dictionary<string, string[]> e, string field, DateTime? value)
     {
         if (value is null) e[field] = [$"{field} is required."];
+    }
+
+    // ---- Security enforcement (legacy f_security_door) ----
+    // The caller's ABIS login: the OIDC preferred_username/name claim, or the X-User-Login
+    // header (dev/testing). Null => an API-key service account (full trust, bypasses gates).
+    private static string? ResolveLogin(HttpContext ctx)
+    {
+        var claim = ctx.User?.FindFirst("preferred_username")?.Value
+                    ?? ctx.User?.FindFirst("name")?.Value;
+        if (!string.IsNullOrWhiteSpace(claim)) return claim;
+        var hdr = ctx.Request.Headers["X-User-Login"].ToString();
+        return string.IsNullOrWhiteSpace(hdr) ? null : hdr;
+    }
+
+    // Per-feature gate: returns null when allowed, or a 403 result when the resolved user
+    // lacks the required privilege. A null login (API-key service account) is allowed —
+    // enforcement applies only to real end users (OIDC), matching the rollout policy.
+    private static async Task<IResult?> RequireFeatureAsync(HttpContext ctx, IAbisRepository repo, string feature, int level, CancellationToken ct)
+    {
+        var login = ResolveLogin(ctx);
+        if (login is null) return null; // service account / trusted internal caller
+        var priv = await repo.GetEffectivePrivilegeAsync(login, feature, ct);
+        return priv is { } p && p >= level
+            ? null
+            : Results.Problem(statusCode: StatusCodes.Status403Forbidden,
+                title: "Forbidden",
+                detail: $"User '{login}' lacks the required privilege ({level}) on feature '{feature}'.");
     }
 
     private static void Max(Dictionary<string, string[]> e, string field, string? value, int max)

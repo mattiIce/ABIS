@@ -5279,7 +5279,7 @@
         "tags": [
           "Security"
         ],
-        "summary": "Create an application user.",
+        "summary": "Create an application user (requires User Control).",
         "operationId": "CreateSecurityUser",
         "requestBody": {
           "content": {
@@ -5311,6 +5311,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden"
           },
           "401": {
             "description": "Unauthorized"
@@ -5432,6 +5435,76 @@
         }
       }
     },
+    "/api/security/me/permissions": {
+      "get": {
+        "tags": [
+          "Security"
+        ],
+        "summary": "The calling user's effective permissions (resolved from the OIDC login / X-User-Login).",
+        "operationId": "GetMyPermissions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EffectivePermission"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/security/me/allowed": {
+      "get": {
+        "tags": [
+          "Security"
+        ],
+        "summary": "Whether the caller has at least the given privilege on a feature.",
+        "operationId": "GetMyAllowed",
+        "parameters": [
+          {
+            "name": "feature",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeatureAllowedResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/security/groups": {
       "get": {
         "tags": [
@@ -5462,7 +5535,7 @@
         "tags": [
           "Security"
         ],
-        "summary": "Create a security group.",
+        "summary": "Create a security group (requires User Control).",
         "operationId": "CreateSecurityGroup",
         "requestBody": {
           "content": {
@@ -5484,6 +5557,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden"
           },
           "401": {
             "description": "Unauthorized"
@@ -5521,7 +5597,7 @@
         "tags": [
           "Security"
         ],
-        "summary": "Create a protected feature.",
+        "summary": "Create a protected feature (requires User Control).",
         "operationId": "CreateSecurityApplication",
         "requestBody": {
           "content": {
@@ -5544,6 +5620,9 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden"
+          },
           "401": {
             "description": "Unauthorized"
           }
@@ -5555,7 +5634,7 @@
         "tags": [
           "Security"
         ],
-        "summary": "Set a user's privilege on a feature (0 = ReadOnly, 1 = Write).",
+        "summary": "Set a user's privilege on a feature (0 = ReadOnly, 1 = Write; requires User Control).",
         "operationId": "SetUserApplicationGrant",
         "parameters": [
           {
@@ -5594,6 +5673,9 @@
           "404": {
             "description": "Not Found"
           },
+          "403": {
+            "description": "Forbidden"
+          },
           "401": {
             "description": "Unauthorized"
           }
@@ -5605,7 +5687,7 @@
         "tags": [
           "Security"
         ],
-        "summary": "Set a group's privilege on a feature (0 = ReadOnly, 1 = Write).",
+        "summary": "Set a group's privilege on a feature (0 = ReadOnly, 1 = Write; requires User Control).",
         "operationId": "SetGroupApplicationGrant",
         "parameters": [
           {
@@ -5644,6 +5726,9 @@
           "404": {
             "description": "Not Found"
           },
+          "403": {
+            "description": "Forbidden"
+          },
           "401": {
             "description": "Unauthorized"
           }
@@ -5655,7 +5740,7 @@
         "tags": [
           "Security"
         ],
-        "summary": "Add a user to a group.",
+        "summary": "Add a user to a group (requires User Control).",
         "operationId": "AddUserToGroup",
         "parameters": [
           {
@@ -5684,6 +5769,9 @@
           "404": {
             "description": "Not Found"
           },
+          "403": {
+            "description": "Forbidden"
+          },
           "401": {
             "description": "Unauthorized"
           }
@@ -5693,7 +5781,7 @@
         "tags": [
           "Security"
         ],
-        "summary": "Remove a user from a group.",
+        "summary": "Remove a user from a group (requires User Control).",
         "operationId": "RemoveUserFromGroup",
         "parameters": [
           {
@@ -5721,6 +5809,9 @@
           },
           "404": {
             "description": "Not Found"
+          },
+          "403": {
+            "description": "Forbidden"
           },
           "401": {
             "description": "Unauthorized"
@@ -8970,6 +9061,23 @@
           "equipmentTypeNote": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FeatureAllowedResult": {
+        "type": "object",
+        "properties": {
+          "feature": {
+            "type": "string",
+            "nullable": true
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "allowed": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
