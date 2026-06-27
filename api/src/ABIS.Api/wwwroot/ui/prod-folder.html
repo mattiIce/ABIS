@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ABIS Production Folder</title>
+<style>
+  :root { --bd:#d0d7de; --bg:#f6f8fa; --ac:#0969da; }
+  * { box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 0; color: #1f2328; }
+  body.busy { cursor: progress; }
+  body.busy button { opacity:.6; pointer-events:none; }
+  header { background:#24292f; color:#fff; padding:10px 16px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; font-weight:600; }
+  header nav { display:flex; gap:12px; flex-wrap:wrap; }
+  header nav a { color:#9ecbff; text-decoration:none; }
+  header .key { margin-left:auto; display:flex; gap:6px; align-items:center; }
+  main { max-width:900px; margin:0 auto; padding:16px; display:grid; gap:16px; }
+  section { border:1px solid var(--bd); border-radius:8px; padding:14px; }
+  h2 { font-size:14px; margin:0 0 10px; text-transform:uppercase; letter-spacing:.04em; color:#57606a; }
+  label { font-size:12px; color:#57606a; }
+  input, button { font:inherit; padding:6px 8px; border:1px solid var(--bd); border-radius:6px; }
+  button { background:var(--ac); color:#fff; border-color:var(--ac); cursor:pointer; }
+  table { width:100%; border-collapse:collapse; margin-top:8px; }
+  th, td { text-align:left; padding:5px 6px; border-bottom:1px solid var(--bd); font-size:13px; vertical-align:top; }
+  th { color:#57606a; font-weight:600; }
+  table.hdr th { width:28%; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:end; }
+  .entry { display:flex; gap:8px; flex-wrap:wrap; align-items:end; margin-top:6px; }
+  .entry > div { display:flex; flex-direction:column; }
+  .muted { color:#8b949e; }
+  .pill { background:var(--bg); border:1px solid var(--bd); border-radius:12px; padding:1px 8px; font-size:12px; }
+  .err { color:#cf222e; min-height:18px; } .ok { color:#1a7f37; min-height:18px; font-size:13px; }
+  .disabled { opacity:.5; pointer-events:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ABIS Production Folder <span class="pill">w_production_folder · typed client</span></h1>
+  <nav>
+    <a href="/ui/jobs.html">Jobs</a>
+    <a href="/ui/das-console.html">DAS console</a>
+    <a href="/ui/prod-folder.html">Prod folder</a>
+    <a href="/ui/coil-eval.html">Coil eval</a>
+    <a href="/ui/reporting.html">Reporting</a>
+  </nav>
+  <div class="key">
+    <label for="apiKey" style="color:#fff">X-Api-Key</label>
+    <input id="apiKey" placeholder="dev-local-key" style="width:160px" />
+  </div>
+</header>
+
+<main>
+  <section>
+    <h2>Open a job folder</h2>
+    <form id="jobForm" class="row">
+      <div><label>Job #</label><br /><input id="fJob" type="number" style="width:140px" /></div>
+      <button type="submit">Open folder</button>
+    </form>
+  </section>
+
+  <section id="workarea" class="disabled">
+    <h2>Folder summary</h2>
+    <table class="hdr"><tbody id="hdr"></tbody></table>
+
+    <h2 style="margin-top:14px">E-folder notes</h2>
+    <table><thead><tr><th>Time</th><th>By</th><th>Note</th></tr></thead><tbody id="tNotes"></tbody></table>
+    <div class="entry">
+      <div><label>User id</label><input id="nUser" type="number" style="width:100px" /></div>
+      <div style="flex:1; min-width:240px"><label>Note</label><input id="nNotes" maxlength="2048" style="width:100%" /></div>
+      <button id="btnNote" type="button">Add note</button>
+    </div>
+    <div id="ok" class="ok"></div>
+  </section>
+
+  <section><div id="err" class="err"></div></section>
+</main>
+
+<script type="module" src="/ui/app/prod-folder.js"></script>
+</body>
+</html>

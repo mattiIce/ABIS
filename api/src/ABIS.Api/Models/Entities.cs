@@ -1273,3 +1273,32 @@ public sealed class EvalScrap
     public int ScrapItemMill { get; set; }
     public string? DataSource { get; set; }
 }
+
+// ---- Production folder (legacy prod-folder: w_production_folder) ----
+
+/// <summary>A job's production-folder summary (legacy w_production_folder): the job +
+/// order/customer header plus rolled-up counts. The folder's printable tickets assemble
+/// from these same tables; this is the header/index.</summary>
+public sealed class ProductionFolder
+{
+    public long AbJobNum { get; set; }
+    public int? JobStatus { get; set; }
+    public long? LineNum { get; set; }
+    public long? OrderAbcNum { get; set; }
+    public string? OrigCustomerPo { get; set; }
+    public string? CustomerShortName { get; set; }
+    public int CoilCount { get; set; }
+    public int SkidCount { get; set; }
+    public int NoteCount { get; set; }
+}
+
+/// <summary>A note on a job's e-folder (table <c>job_efolder_notes</c>, PK
+/// ab_job_num + user_id + timestamp), joined to the author's name.</summary>
+public sealed class JobFolderNote
+{
+    public long AbJobNum { get; set; }
+    public long UserId { get; set; }
+    public string? UserName { get; set; }
+    public DateTime? Timestamp { get; set; }
+    public string? Notes { get; set; }
+}

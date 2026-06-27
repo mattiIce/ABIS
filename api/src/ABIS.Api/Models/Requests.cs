@@ -562,3 +562,12 @@ public sealed class EvalScrapWrite
     public int? ScrapItemOd { get; set; }
     public int? ScrapItemMill { get; set; }
 }
+
+/// <summary>Add a note to a job's e-folder (table <c>job_efolder_notes</c>). The job
+/// comes from the route; <c>timestamp</c> is server-set. <see cref="UserId"/> is the author
+/// (resolved from the OIDC identity in production; supplied here for the dev API).</summary>
+public sealed class JobFolderNoteWrite
+{
+    public long? UserId { get; set; }
+    public string? Notes { get; set; }
+}

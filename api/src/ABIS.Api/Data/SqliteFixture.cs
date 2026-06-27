@@ -69,6 +69,7 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS security_group_application;
             DROP TABLE IF EXISTS sheet_skid_dimension_check;
             DROP TABLE IF EXISTS quality_coil_eval_scrap;
+            DROP TABLE IF EXISTS job_efolder_notes;
 
             CREATE TABLE ab_job (
                 ab_job_num INTEGER PRIMARY KEY, order_abc_num INTEGER, order_item_num INTEGER,
@@ -346,6 +347,12 @@ public static class SqliteFixture
                 scrap_item_piece INTEGER, scrap_item_net_wt INTEGER, scrap_item_note TEXT,
                 scrap_item_od INTEGER, scrap_item_mill INTEGER, data_source TEXT,
                 PRIMARY KEY (coil_abc_num, ab_job_num, scrap_item_type, scrap_item_od, scrap_item_mill));
+
+            -- Production folder (legacy prod-folder w_production_folder): e-folder notes on
+            -- a job. PK (ab_job_num, user_id, timestamp). Column names authoritative.
+            CREATE TABLE job_efolder_notes (
+                ab_job_num INTEGER, user_id INTEGER, timestamp TEXT, notes TEXT,
+                PRIMARY KEY (ab_job_num, user_id, timestamp));
             """);
 
         var d = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Unspecified);
@@ -917,6 +924,15 @@ public static class SqliteFixture
             new[]
             {
                 new { CoilAbcNum = 5001L, AbJobNum = 1001L, ScrapItemType = 1, ScrapItemPiece = 5, ScrapItemNetWt = 120, ScrapItemNote = "Edge dents", ScrapItemOd = 0, ScrapItemMill = 0, DataSource = "QC" }
+            });
+
+        // ---- Production folder e-folder notes ----
+        conn.Execute(
+            "INSERT INTO job_efolder_notes (ab_job_num, user_id, timestamp, notes) VALUES (:AbJobNum, :UserId, :Timestamp, :Notes)",
+            new[]
+            {
+                new { AbJobNum = 1001L, UserId = 9001L, Timestamp = d.AddHours(3).ToString("yyyy-MM-dd HH:mm:ss"), Notes = "Folder opened; coil 5001 staged." },
+                new { AbJobNum = 1001L, UserId = 9002L, Timestamp = d.AddHours(5).ToString("yyyy-MM-dd HH:mm:ss"), Notes = "QC reviewed first piece." }
             });
     }
 }
