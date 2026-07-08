@@ -166,12 +166,14 @@ public static class ApiEndpoints
 
         api.MapPost("/jobs", async (JobWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
+                if (Validate(body) is { } problems)
+                    return Results.ValidationProblem(problems);
                 var created = await repo.CreateJobAsync(body, ct);
                 return Results.Created($"/api/jobs/{created.AbJobNum}", created);
             })
            .WithName("CreateJob").WithTags("Jobs")
-           .WithSummary("Create a production job.")
-           .Produces<AbJob>(StatusCodes.Status201Created);
+           .WithSummary("Create a production job (requires the order refs it belongs to).")
+           .Produces<AbJob>(StatusCodes.Status201Created).ProducesValidationProblem();
 
         api.MapPatch("/jobs/{abJobNum:long}", async (long abJobNum, JobPatch body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
@@ -1211,11 +1213,19 @@ public static class ApiEndpoints
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
+                // A finished sheet skid must hang off a job that resolves to an order — legacy
+                // refuses a job number with no order ("Can not find order number from job number!!",
+                // w_wh_business:831). Rejects both a phantom job and a job with no order line.
+                if (await repo.GetJobAsync(body.AbJobNum, ct) is not { OrderAbcNum: > 0 })
+                    return Results.ValidationProblem(new Dictionary<string, string[]>
+                    {
+                        ["abJobNum"] = ["abJobNum must reference an existing job that belongs to an order."],
+                    });
                 var created = await repo.CreateSheetSkidAsync(body, ct);
                 return Results.Created($"/api/sheet-skids/{created.SheetSkidNum}", created);
             })
            .WithName("CreateSheetSkid").WithTags("Skids")
-           .WithSummary("Create a finished sheet skid.")
+           .WithSummary("Create a finished sheet skid (its job must belong to an order).")
            .Produces<SheetSkid>(StatusCodes.Status201Created).ProducesValidationProblem();
 
         // Warehouse-side update of a finished sheet skid (the legacy w_wh_* windows):
@@ -1998,6 +2008,22 @@ public static class ApiEndpoints
         // a create-specific/finalize point, verified against live Oracle.)
         AddEdgeTrimErrors(e, body.TrimmingRequired, body.IncomingCoilWidth, body.TrimmedCoilWidth,
             body.TrimTypeCode, body.TrimmedWidthOverridden, body.TrimmedWidthOverrideUser);
+        return e.Count == 0 ? null : e;
+    }
+
+    private static Dictionary<string, string[]>? Validate(JobWrite body)
+    {
+        var e = new Dictionary<string, string[]>();
+        // A production job belongs to an order line — legacy refuses a job/production order with
+        // no order ("NO ABC Order specified in the production order", w_stacker_job_details:491),
+        // and the sheet-weight rollup resolves the order_item by (order_abc_num, order_item_num).
+        if (body.OrderAbcNum is null or <= 0)
+            e["orderAbcNum"] = ["orderAbcNum is required (a job belongs to an order)."];
+        if (body.OrderItemNum is null or <= 0)
+            e["orderItemNum"] = ["orderItemNum is required (a job targets an order line)."];
+        // Material yield drives the sheet-weight rollup; a zero/negative yield is rejected
+        // ("Invalid yield value.", w_stacker_job_details:272). Optional at create, positive when set.
+        Positive(e, "materialYield", body.MaterialYield);
         return e.Count == 0 ? null : e;
     }
 

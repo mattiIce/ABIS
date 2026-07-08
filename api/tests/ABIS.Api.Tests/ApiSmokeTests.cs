@@ -160,6 +160,33 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Job_requires_order_refs_and_positive_yield()
+    {
+        // A job must reference the order line it belongs to (w_stacker_job_details:491) -> 400.
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _client.PostAsJsonAsync("/api/jobs", new { lineNum = 110, materialYield = 92.5 })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _client.PostAsJsonAsync("/api/jobs", new { orderAbcNum = 9001, lineNum = 110 })).StatusCode);
+        // A supplied yield must be positive ("Invalid yield value.", w_stacker_job_details:272) -> 400.
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _client.PostAsJsonAsync("/api/jobs", new { orderAbcNum = 9001, orderItemNum = 7001, materialYield = 0 })).StatusCode);
+        // Full order refs (yield optional at create) -> 201.
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/jobs", new { orderAbcNum = 9001, orderItemNum = 7001, lineNum = 110, materialYield = 92.5 })).StatusCode);
+    }
+
+    [Fact]
+    public async Task Sheet_skid_requires_job_with_an_order()
+    {
+        // A sheet skid whose job can't resolve an order is refused (w_wh_business:831) -> 400.
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _client.PostAsJsonAsync("/api/sheet-skids", new { abJobNum = 999999, sheetNetWt = 2000, skidPieces = 100 })).StatusCode);
+        // Job 1001 belongs to order 9001 -> 201.
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/sheet-skids", new { abJobNum = 1001, sheetNetWt = 2000, skidPieces = 100 })).StatusCode);
+    }
+
+    [Fact]
     public async Task Part_edge_trim_tolerance_is_enforced()
     {
         // The part-master trimming spec shares the order-item edge-trim rule
