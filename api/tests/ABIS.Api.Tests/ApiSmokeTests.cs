@@ -191,6 +191,22 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Scrap_skid_requires_net_weight()
+    {
+        // Legacy refuses a null/zero scrap-skid net weight ("Skid Net Weight must be populated",
+        // w_office_skid_entry:5413).
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _client.PostAsJsonAsync("/api/scrap-skids", new { scrapAbJobNum = "1001", scrapAlloy2 = "3003" })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _client.PostAsJsonAsync("/api/scrap-skids", new { scrapAbJobNum = "1001", scrapNetWt = 0 })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _client.PostAsJsonAsync("/api/scrap-skids", new { scrapAbJobNum = "1001", scrapNetWt = 50, scrapTareWt = -5 })).StatusCode);
+        // A real net weight -> 201.
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/scrap-skids", new { scrapAbJobNum = "1001", scrapAlloy2 = "3003", scrapNetWt = 50, scrapType = 1 })).StatusCode);
+    }
+
+    [Fact]
     public async Task Shift_time_window_is_validated()
     {
         var start = new DateTime(2026, 1, 15, 6, 0, 0, DateTimeKind.Utc);

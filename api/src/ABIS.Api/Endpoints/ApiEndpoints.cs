@@ -2153,6 +2153,13 @@ public static class ApiEndpoints
         Max(e, "scrapTemper", body.ScrapTemper, 8);
         Max(e, "scrapLocation", body.ScrapLocation, 18);
         Max(e, "scrapNotes", body.ScrapNotes, 255);
+        // A scrap skid must carry a real net weight — legacy refuses a null/zero skid net
+        // ("Skid Net Weight must be populated", w_office_skid_entry:5413). Tare stays optional
+        // but cannot be negative.
+        if (body.ScrapNetWt is null or <= 0m)
+            e["scrapNetWt"] = ["scrapNetWt is required and must be greater than zero (skid net weight must be populated)."];
+        if (body.ScrapTareWt is < 0m)
+            e["scrapTareWt"] = ["scrapTareWt cannot be negative."];
         return e.Count == 0 ? null : e;
     }
 
