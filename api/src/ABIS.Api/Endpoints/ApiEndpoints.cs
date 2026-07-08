@@ -2169,6 +2169,13 @@ public static class ApiEndpoints
         var e = new Dictionary<string, string[]>();
         Max(e, "operatorInitial", body.OperatorInitial, 10);
         Max(e, "note", body.Note, 1024);
+        // A shift must have a start time — legacy treats a null start/end as "Invalid Date Info"
+        // (w_daily_production:197). End time stays optional: a shift is opened when it starts and
+        // closed when it ends. But when an end IS given it cannot precede the start
+        // (w_shift_info_new:130 "Shift ending time is before starting time." -> RETURN -1).
+        Req(e, "startTime", body.StartTime);
+        if (body.StartTime is { } s && body.EndTime is { } end && end < s)
+            e["endTime"] = ["endTime cannot be before startTime."];
         return e.Count == 0 ? null : e;
     }
 

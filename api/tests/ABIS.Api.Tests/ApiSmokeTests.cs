@@ -191,6 +191,24 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Shift_time_window_is_validated()
+    {
+        var start = new DateTime(2026, 1, 15, 6, 0, 0, DateTimeKind.Utc);
+        // A shift must have a start time (legacy "Invalid Date Info" on null start/end) -> 400.
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _client.PostAsJsonAsync("/api/shifts", new { lineNum = 110, operatorInitial = "QA" })).StatusCode);
+        // End before start -> 400 (w_shift_info_new:130 "ending time is before starting time").
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _client.PostAsJsonAsync("/api/shifts", new { startTime = start, endTime = start.AddHours(-2), lineNum = 110 })).StatusCode);
+        // Open shift (start only, no end yet) -> 201: a shift is opened at start, closed at end.
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/shifts", new { startTime = start, lineNum = 110, operatorInitial = "QA" })).StatusCode);
+        // Completed shift (end after start) -> 201.
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/shifts", new { startTime = start, endTime = start.AddHours(8), lineNum = 110, operatorInitial = "QA" })).StatusCode);
+    }
+
+    [Fact]
     public async Task Dimension_check_input_is_validated()
     {
         const string url = "/api/coil-eval/skids/3001/dimension-checks";
