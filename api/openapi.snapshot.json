@@ -6936,7 +6936,7 @@
         "tags": [
           "Shifts"
         ],
-        "summary": "Create a production shift.",
+        "summary": "Create a production shift (one per line + schedule type + day).",
         "operationId": "CreateShift",
         "requestBody": {
           "content": {
@@ -6958,6 +6958,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Conflict"
           },
           "400": {
             "description": "Bad Request",

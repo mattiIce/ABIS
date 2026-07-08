@@ -304,6 +304,26 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Shift_is_unique_per_line_schedule_and_day()
+    {
+        var day = new DateTime(2026, 5, 20, 6, 0, 0, DateTimeKind.Utc);
+        object Shift(object start, int sched, long line) => new { startTime = start, scheduleType = sched, lineNum = line };
+        // First shift for (line 220, schedule 1, 2026-05-20) -> 201.
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/shifts", Shift(day, 1, 220))).StatusCode);
+        // Second shift, same line + schedule + day (even a different hour) -> 409 conflict.
+        Assert.Equal(HttpStatusCode.Conflict,
+            (await _client.PostAsJsonAsync("/api/shifts", Shift(day.AddHours(9), 1, 220))).StatusCode);
+        // A different schedule type -> 201; a different day -> 201; a different line -> 201.
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/shifts", Shift(day, 2, 220))).StatusCode);
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/shifts", Shift(day.AddDays(1), 1, 220))).StatusCode);
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/shifts", Shift(day, 1, 221))).StatusCode);
+    }
+
+    [Fact]
     public async Task Shift_time_window_is_validated()
     {
         var start = new DateTime(2026, 1, 15, 6, 0, 0, DateTimeKind.Utc);

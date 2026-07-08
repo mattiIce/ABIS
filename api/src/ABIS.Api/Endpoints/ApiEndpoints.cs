@@ -953,12 +953,18 @@ public static class ApiEndpoints
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
+                // One shift per (line, schedule_type, day): a scheduled shift already exists is a
+                // conflict — use the update instead (w_daily_production_modify_schedule:543).
+                if (body is { LineNum: { } line, ScheduleType: { } sched, StartTime: { } start }
+                    && await repo.ShiftExistsAsync(line, sched, start, ct))
+                    return Results.Problem(statusCode: StatusCodes.Status409Conflict, title: "Shift already exists",
+                        detail: "A shift already exists for this line, schedule type, and date. Update the existing shift instead.");
                 var created = await repo.CreateShiftAsync(body, ct);
                 return Results.Created($"/api/shifts/{created.ShiftNum}", created);
             })
            .WithName("CreateShift").WithTags("Shifts")
-           .WithSummary("Create a production shift.")
-           .Produces<Shift>(StatusCodes.Status201Created).ProducesValidationProblem();
+           .WithSummary("Create a production shift (one per line + schedule type + day).")
+           .Produces<Shift>(StatusCodes.Status201Created).Produces(StatusCodes.Status409Conflict).ProducesValidationProblem();
 
         api.MapPut("/shifts/{shiftNum:long}", async (long shiftNum, ShiftWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
