@@ -2206,8 +2206,10 @@ public sealed class AbisRepository : IAbisRepository
             """,
             new
             {
+                // scrap_tare_wt is NOT NULL on Oracle; default an unspecified tare to 0 (same
+                // live-only trap as sheet_skid — SQLite tolerates the null, Oracle throws ORA-01400).
                 id, job = body.ScrapAbJobNum, alloy = body.ScrapAlloy2, temper = body.ScrapTemper, type = body.ScrapType,
-                net = body.ScrapNetWt, tare = body.ScrapTareWt, loc = body.ScrapLocation, notes = body.ScrapNotes,
+                net = body.ScrapNetWt, tare = body.ScrapTareWt ?? 0m, loc = body.ScrapLocation, notes = body.ScrapNotes,
                 status = body.SkidScrapStatus, dval = (DateTime?)DateTime.UtcNow
             },
             transaction: tx, cancellationToken: ct));

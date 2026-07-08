@@ -221,7 +221,7 @@ public static class SqliteFixture
 
             CREATE TABLE scrap_skid (
                 scrap_skid_num INTEGER PRIMARY KEY, scrap_ab_job_num TEXT, scrap_alloy2 TEXT, scrap_temper TEXT,
-                scrap_type INTEGER, scrap_net_wt REAL, scrap_tare_wt REAL, scrap_location TEXT,
+                scrap_type INTEGER, scrap_net_wt REAL NOT NULL, scrap_tare_wt REAL NOT NULL, scrap_location TEXT,
                 scrap_notes TEXT, skid_scrap_status INTEGER, scrap_date TEXT);
 
             -- Finished production items rolled onto a job (legacy production_sheet_item): the
@@ -260,8 +260,8 @@ public static class SqliteFixture
                 opc_log_id INTEGER PRIMARY KEY, time_stamp TEXT, source TEXT, success INTEGER, notes TEXT);
 
             CREATE TABLE part_num (
-                part_num_id INTEGER PRIMARY KEY, customer_id INTEGER, enduser_id INTEGER,
-                enduser_part_num TEXT, item_status INTEGER,
+                part_num_id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, enduser_id INTEGER,
+                enduser_part_num TEXT, item_status INTEGER NOT NULL,
                 sheet_type TEXT, alloy TEXT, temper TEXT, gauge REAL, gauge_p REAL, gauge_m REAL,
                 surface TEXT, flatness TEXT, material_end_use TEXT, theoretical_unit_wt REAL,
                 incoming_coil_width REAL, trimmed_coil_width REAL, trim_type_code INTEGER, trimming_required TEXT,

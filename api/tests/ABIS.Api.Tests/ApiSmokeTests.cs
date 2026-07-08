@@ -799,6 +799,17 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Scrap_skid_create_without_tare_defaults_to_zero()
+    {
+        // SCRAP_SKID.SCRAP_TARE_WT is NOT NULL on Oracle; omitting tare must default to 0, not 500.
+        var resp = await _client.PostAsJsonAsync("/api/scrap-skids",
+            new { scrapAbJobNum = "1001", scrapAlloy2 = "3003", scrapNetWt = 50, scrapType = 1 });
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var got = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(0, got.GetProperty("scrapTareWt").GetDecimal());
+    }
+
+    [Fact]
     public async Task Sheet_skid_create_without_tare_defaults_to_zero()
     {
         // SHEET_SKID.SHEET_TARE_WT is NOT NULL on Oracle; omitting tare must default to 0
