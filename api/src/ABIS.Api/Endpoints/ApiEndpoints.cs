@@ -233,12 +233,18 @@ public static class ApiEndpoints
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
+                // Reject a duplicate coil: same original number for the same customer + MID
+                // ("Duplicated coil original number.", w_receiving_dock:494).
+                if (!string.IsNullOrWhiteSpace(body.CoilOrgNum) &&
+                    await repo.CoilExistsByKeyAsync(body.CoilOrgNum!, body.CustomerId, body.CoilMidNum, ct))
+                    return Results.Problem(statusCode: StatusCodes.Status409Conflict, title: "Duplicate coil",
+                        detail: "A coil with this original number already exists for this customer and MID (duplicated coil original number).");
                 var created = await repo.CreateCoilAsync(body, ct);
                 return Results.Created($"/api/coils/{created.CoilAbcNum}", created);
             })
            .WithName("CreateCoil").WithTags("Coils")
-           .WithSummary("Create a coil on receipt.")
-           .Produces<Coil>(StatusCodes.Status201Created).ProducesValidationProblem();
+           .WithSummary("Create a coil on receipt (rejects a duplicate org+customer+MID).")
+           .Produces<Coil>(StatusCodes.Status201Created).Produces(StatusCodes.Status409Conflict).ProducesValidationProblem();
 
         api.MapPatch("/coils/{coilAbcNum:long}", async (long coilAbcNum, CoilPatch body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {

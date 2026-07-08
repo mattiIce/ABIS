@@ -28,6 +28,7 @@ public interface IAbisRepository
     Task<IReadOnlyList<CoilProcessing>> GetCoilProcessingAsync(long coilAbcNum, CancellationToken ct);
     Task<IReadOnlyList<CoilInventoryGroup>> GetCoilInventorySummaryAsync(string groupBy, CancellationToken ct);
     Task<Coil> CreateCoilAsync(CoilWrite body, CancellationToken ct);
+    Task<bool> CoilExistsByKeyAsync(string coilOrgNum, long? customerId, string? coilMidNum, CancellationToken ct);
     Task<Coil?> PatchCoilAsync(long coilAbcNum, CoilPatch patch, CancellationToken ct);
 
     // ---- Orders (read + write) -----------------------------------------

@@ -719,6 +719,25 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Duplicate_coil_is_rejected()
+    {
+        object Coil(string org, long cust, string mid) => new
+        {
+            coilAlloy2 = "9099", netWt = 12000, coilWidth = 48.0,
+            coilOrgNum = org, customerId = cust, coilMidNum = mid,
+        };
+        // First coil with a fully-identified (org, customer, MID) -> 201.
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/coils", Coil("ORG-DUP-1", 4001, "MID-A"))).StatusCode);
+        // Same org + customer + MID -> 409 duplicate (w_receiving_dock:494).
+        Assert.Equal(HttpStatusCode.Conflict,
+            (await _client.PostAsJsonAsync("/api/coils", Coil("ORG-DUP-1", 4001, "MID-A"))).StatusCode);
+        // Same org + customer but a different MID -> 201 (a distinct coil).
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/coils", Coil("ORG-DUP-1", 4001, "MID-B"))).StatusCode);
+    }
+
+    [Fact]
     public async Task Terminal_coil_cannot_be_patched()
     {
         var create = await _client.PostAsJsonAsync("/api/coils",

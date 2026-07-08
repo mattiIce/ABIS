@@ -1018,6 +1018,21 @@ public sealed class AbisRepository : IAbisRepository
         return (await GetCoilAsync(id, ct))!;
     }
 
+    // Duplicate-coil guard (legacy w_receiving_dock:494): a coil is a duplicate when another
+    // coil already carries the same original number for the same customer + MID. Matches the
+    // legacy AND on all three keys — with SQL null semantics a null customer/MID never matches,
+    // so dedup only fires when the identifying triple is fully populated (as at receiving).
+    public async Task<bool> CoilExistsByKeyAsync(string coilOrgNum, long? customerId, string? coilMidNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.ExecuteScalarAsync<long>(new CommandDefinition(
+            """
+            SELECT COUNT(*) FROM coil
+            WHERE coil_org_num = :org AND customer_id = :cust AND coil_mid_num = :mid
+            """,
+            new { org = coilOrgNum, cust = customerId, mid = coilMidNum }, cancellationToken: ct)) > 0;
+    }
+
     public async Task<SheetSkid?> GetSheetSkidAsync(long sheetSkidNum, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
