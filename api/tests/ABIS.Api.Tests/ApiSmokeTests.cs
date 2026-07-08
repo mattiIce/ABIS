@@ -719,6 +719,53 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Trim_override_user_is_stamped_from_the_principal()
+    {
+        // A throwaway order (own item count) so we don't perturb a seeded order's assertions.
+        var orderResp = await _client.PostAsJsonAsync("/api/orders/with-items", new
+        {
+            order = new { origCustomerId = 4001, origCustomerPo = "PO-OVR" },
+            items = new[] { new { enduserPartNum = "PN-SEED", sheetType = "FLAT" } },
+        });
+        Assert.Equal(HttpStatusCode.Created, orderResp.StatusCode);
+        var orderId = (await orderResp.Content.ReadFromJsonAsync<JsonElement>())
+            .GetProperty("order").GetProperty("orderAbcNum").GetInt64();
+
+        // An authenticated overrider (X-User-Login jsmith, who has Order Entry Write): an
+        // out-of-tolerance override records THEIR login, not the spoofed body value
+        // (legacy sets trimmed_width_override_user = sqlca.logid).
+        var spoof = new HttpRequestMessage(HttpMethod.Post, $"/api/orders/{orderId}/items")
+        {
+            Content = JsonContent.Create(new
+            {
+                enduserPartNum = "PN-OVR", sheetType = "RECTANGLE",
+                trimmingRequired = "Y", incomingCoilWidth = 60.0, trimmedCoilWidth = 47.0, trimTypeCode = 1,
+                trimmedWidthOverridden = "Y", trimmedWidthOverrideUser = "SPOOFED",
+            }),
+        };
+        spoof.Headers.Add("X-User-Login", "jsmith");
+        var spoofResp = await _client.SendAsync(spoof);
+        Assert.Equal(HttpStatusCode.Created, spoofResp.StatusCode);
+        Assert.Equal("jsmith", (await spoofResp.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("trimmedWidthOverrideUser").GetString());
+
+        // The stamp runs before validation, so an authenticated overrider needn't send the
+        // field at all — omitting it still yields a stamped user and a 201 (not a 400).
+        var omit = new HttpRequestMessage(HttpMethod.Post, $"/api/orders/{orderId}/items")
+        {
+            Content = JsonContent.Create(new
+            {
+                enduserPartNum = "PN-OVR2", sheetType = "RECTANGLE",
+                trimmingRequired = "Y", incomingCoilWidth = 60.0, trimmedCoilWidth = 47.0, trimTypeCode = 1,
+                trimmedWidthOverridden = "Y",
+            }),
+        };
+        omit.Headers.Add("X-User-Login", "jsmith");
+        var omitResp = await _client.SendAsync(omit);
+        Assert.Equal(HttpStatusCode.Created, omitResp.StatusCode);
+        Assert.Equal("jsmith", (await omitResp.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("trimmedWidthOverrideUser").GetString());
+    }
+
+    [Fact]
     public async Task Duplicate_coil_is_rejected()
     {
         object Coil(string org, long cust, string mid) => new

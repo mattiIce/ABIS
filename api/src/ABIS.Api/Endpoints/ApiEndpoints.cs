@@ -350,8 +350,9 @@ public static class ApiEndpoints
            .WithSummary("Get one order line item by its composite key (order + line number).")
            .Produces<OrderItem>().Produces(StatusCodes.Status404NotFound);
 
-        api.MapPost("/orders/{orderAbcNum:long}/items", async (long orderAbcNum, OrderItemWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPost("/orders/{orderAbcNum:long}/items", async (long orderAbcNum, OrderItemWrite body, IAbisRepository repo, HttpContext ctx, CancellationToken ct) =>
             {
+                StampTrimOverrideUser(body, ctx);
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
                 NormalizeTrimAndPieces(body);
@@ -364,6 +365,7 @@ public static class ApiEndpoints
 
         api.MapPut("/orders/{orderAbcNum:long}/items/{orderItemNum:long}", async (long orderAbcNum, long orderItemNum, OrderItemWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
+                StampTrimOverrideUser(body, ctx);
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
                 NormalizeTrimAndPieces(body);
@@ -419,8 +421,9 @@ public static class ApiEndpoints
            .WithSummary("Get one part-number record by id.")
            .Produces<Part>().Produces(StatusCodes.Status404NotFound);
 
-        api.MapPost("/parts", async (PartWrite body, IAbisRepository repo, CancellationToken ct) =>
+        api.MapPost("/parts", async (PartWrite body, IAbisRepository repo, HttpContext ctx, CancellationToken ct) =>
             {
+                StampTrimOverrideUser(body, ctx);
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
                 NormalizeTrimAndPieces(body);
@@ -433,6 +436,7 @@ public static class ApiEndpoints
 
         api.MapPut("/parts/{partNumId:long}", async (long partNumId, PartWrite body, IAbisRepository repo, HttpContext ctx, IOptions<JsonOptions> json, CancellationToken ct) =>
             {
+                StampTrimOverrideUser(body, ctx);
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
                 // Legacy w_part_num_management: a part already applied to one or more orders
@@ -1896,6 +1900,17 @@ public static class ApiEndpoints
         if (year < currentYear - 2 || year > currentYear)
             return $"cashDate year must be between {currentYear - 2} and {currentYear}.";
         return null;
+    }
+
+    // A trimmer-tolerance override is attributable to whoever is signed in: stamp the
+    // trimmed-width override user from the principal, never client input (legacy sets it to
+    // sqlca.logid, w_order_entry:616). A null login (API-key service account) keeps the
+    // supplied value. Runs before Validate so an authenticated overrider needn't send the field.
+    private static void StampTrimOverrideUser(ITrimNormalizable body, HttpContext ctx)
+    {
+        if (string.Equals(body.TrimmedWidthOverridden?.Trim(), "Y", StringComparison.OrdinalIgnoreCase)
+            && ResolveLogin(ctx) is { } login)
+            body.TrimmedWidthOverrideUser = login;
     }
 
     // ---- Security enforcement (legacy f_security_door) ----
