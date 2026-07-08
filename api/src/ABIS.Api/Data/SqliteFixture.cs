@@ -105,9 +105,9 @@ public static class SqliteFixture
             CREATE TABLE coil (
                 coil_abc_num INTEGER PRIMARY KEY, coil_alloy2 TEXT, coil_temper TEXT, coil_gauge REAL,
                 coil_width REAL, coil_line_num INTEGER, coil_location TEXT, coil_mid_num TEXT,
-                coil_org_num TEXT, coil_status INTEGER, coil_notes TEXT, coil_entry_date TEXT,
+                coil_org_num TEXT NOT NULL, coil_status INTEGER, coil_notes TEXT, coil_entry_date TEXT,
                 customer_id INTEGER, coil_from_cust_id INTEGER, date_received TEXT, icra TEXT,
-                lot_num TEXT, net_wt REAL, net_wt_balance REAL, pieces_per_case INTEGER);
+                lot_num TEXT NOT NULL, net_wt REAL NOT NULL, net_wt_balance REAL NOT NULL, pieces_per_case INTEGER);
 
             CREATE TABLE process_coil (
                 ab_job_num INTEGER, coil_abc_num INTEGER, process_coil_status INTEGER,
@@ -216,7 +216,7 @@ public static class SqliteFixture
 
             CREATE TABLE sheet_skid (
                 sheet_skid_num INTEGER PRIMARY KEY, ab_job_num INTEGER, sheet_skid_display_num TEXT,
-                sheet_net_wt REAL, sheet_tare_wt REAL, skid_pieces INTEGER, skid_date TEXT,
+                sheet_net_wt REAL NOT NULL, sheet_tare_wt REAL NOT NULL, skid_pieces INTEGER, skid_date TEXT,
                 skid_location TEXT, skid_sheet_status INTEGER, skid_ticket_if_whed TEXT, skid_from_if_whed TEXT);
 
             CREATE TABLE scrap_skid (
