@@ -31,14 +31,14 @@ Status key: ✅ done · ⬜ todo (offline-now) · ⏸ deferred (needs live Oracl
 | 15 | ✅ | Dimension-check absolute bounds (gauge≤1, width 5..199, square 0..9, len 1..999, PC 1..99). pc_number=MAX+1 derivation deferred | S/low | u_tabpg_skid_dim_check:103/974 |
 | 16 | ✅ | Scrap-skid net wt > 0 (+ non-negative tare). Item net-wt + scrap_net=SUM(return_scrap_item) rollup deferred (no return_scrap_item write endpoint yet) | S/low | w_office_skid_entry:5413/5445/5551 |
 | 17 | ✅ | Validate(ShiftWrite): require start; endTime < startTime → 400 (end stays optional = open shift). end-shift sign_time sub-rule deferred (no field) | S/low | w_shift_info_new:130; w_daily_production:197 |
-| 18 | ⬜ | Shift uniqueness per (line, schedule_type, date) | M/med | w_daily_production_modify_schedule:543 |
+| 18 | ✅ | Shift uniqueness per (line, schedule_type, day) → POST /shifts 409 (ShiftExistsAsync, portable [day..next-day) range; Oracle DateTime binding to confirm in the write sweep) | M/med | w_daily_production_modify_schedule:543 |
 | 19 | ✅ | Cash-date format+range on receiving coil (MMDDYYYY; mm 1..12, dd 1..31, yr [cur-2,cur]). Part B conditional-required per customer.cash_date_required deferred | M/low | w_coil_receiving:2869/2841; w_coil_detail_new:93/110 |
 | 20 | ✅ | Harden Validate(DieWrite): Y/N flag, Max(owner,32), whole-number gross_weight. numOfPartsPerHit/status/location enums deferred (live Oracle) | S/low | w_die_new:88/98; d_die_new:10/14/17 |
 | 21 | ✅ | prod-folder note: require existing job (GetJobAsync → 404) before insert; author already resolved from principal | S/low | w_e_car_folder:537/557 |
 | 22 | ✅ | Validate(JobWrite): require order refs + positive material_yield; POST /sheet-skids rejects a job w/o order. new-job status default deferred (live Oracle) | M/med | w_stacker_job_details:491/273/1272; w_wh_business:831 |
 | 23 | ✅ | Null-out trim fields when trimming!='Y' + derive pieces_skid=Int(max_skid_wt/theo_wt) when unset (shared ITrimNormalizable, parts+order-items) | S/low | w_order_entry:1152; w_part_num_new:562 |
-| 24 | ⬜ | Cert-label completeness when customer.coil_cert_label_req; heavy-gauge/small-OD advisory (bal/width≤100 AND gauge≥0.1) | M/low | w_order_entry:1832/2972; w_coil_detail_new:393 |
-| 25 | ⬜ | Trimmed-width override provenance from principal; edge-trim tolerance config/band + system_log audit | M/med | w_order_entry:611-632; w_edge_trim_tolearance:161/165 |
+| 24 | ⏸ | Cert-label completeness when customer.coil_cert_label_req; heavy-gauge/small-OD advisory — DEFERRED: part 1 is customer-flag-conditional (like 19 Part B) and part 2 is a soft ADVISORY, not a hard 400 (no warnings channel yet) | M/low | w_order_entry:1832/2972; w_coil_detail_new:393 |
+| 25 | ✅ | Trimmed-width override user stamped from the principal (StampTrimOverrideUser on part/order-item POST+PUT). Tolerance config/band + system_log audit deferred (needs a system_log write path) | M/med | w_order_entry:611-632; w_edge_trim_tolearance:161/165 |
 | 26 | ⏸ | Model order_coil table + order-entry coil-assignment guards — whole unbuilt subsystem | L/high | w_order_entry:956/1126/3049/… |
 | 27 | ⏸ | Suggested piece-weight by shape/alloy density — needs METAL_DENSITY table (live Oracle) | M/med | w_order_entry:694-820 |
 | 28 | ⏸ | End-Coil / coil-eval weight subsystem (yield, H/L%, reject/reband) — needs live Oracle weight cols | L/high | u_tabpg_end_coil:* |
@@ -52,12 +52,18 @@ Status key: ✅ done · ⬜ todo (offline-now) · ⏸ deferred (needs live Oracl
 ---
 
 **Progress (2026-07-08).** Landed on `main` via PR #83: ranks 1,2,3,4,5,6,7,9,11,14,15.
-On PR #84 (`claude/parity-guards-2`, CI green): ranks **10,12,16,17,19,20,21,22,23**.
-**Remaining offline-now:** **18** (shift uniqueness per line/schedule/date, M/med),
-**24** (cert-label completeness + heavy-gauge advisory, M/low — customer-conditional +
-advisory, less clean to hard-enforce), **25** (trim-override provenance from principal
-[clean] + tolerance config/band + system_log audit [defer]). **Deferred (live Oracle /
-bigger):** 8 (order-finalize), 13, and the sub-parts noted per row above; ranks 26-32
-are unbuilt subsystems. **Snapshot gotcha:** always `rm -rf src/ABIS.Api/bin/Release
-src/ABIS.Api/obj/Release` before `swagger tofile` — an incremental Release build can be
-stale and silently emit an old contract (this bit rank 22/12; fixed in a follow-up).
+On PR #84 (`claude/parity-guards-2`, CI green): ranks **10,12,16,17,18,19,20,21,22,23,25**
+— every offline-verifiable guard is now landed. **Only 24 left offline** and it's
+**deferred** (part 1 customer-flag-conditional like 19 Part B; part 2 is a soft advisory,
+not a hard 400 — no warnings channel yet). **Deferred (live Oracle / bigger):** 8
+(order-finalize), 13, 24, and the sub-parts noted per row above; ranks 26-32 are unbuilt
+subsystems. When the plant network is steady, run the live-Oracle write sweep to confirm
+the deferred value-set enums + the shift/date DateTime binding (rank 18).
+
+**Snapshot regen — two gotchas that bit this batch:** (1) always `rm -rf
+src/ABIS.Api/bin/Release src/ABIS.Api/obj/Release` before `swagger tofile` — an
+incremental Release build can silently emit a stale contract; (2) run the `git diff --
+api/openapi.snapshot.json` verification from the **repo root**, not `api/` (a wrong
+relative path shows a falsely-empty diff). Commit the regenerated snapshot; never restore
+it on a real contract change. CI's "Verify OpenAPI matches the committed snapshot" is the
+backstop.
