@@ -983,7 +983,7 @@
         "tags": [
           "Coils"
         ],
-        "summary": "Create a coil on receipt.",
+        "summary": "Create a coil on receipt (rejects a duplicate org+customer+MID).",
         "operationId": "CreateCoil",
         "requestBody": {
           "content": {
@@ -1005,6 +1005,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Conflict"
           },
           "400": {
             "description": "Bad Request",
@@ -2475,7 +2478,7 @@
         "tags": [
           "Jobs"
         ],
-        "summary": "Create a production job.",
+        "summary": "Create a production job (requires the order refs it belongs to).",
         "operationId": "CreateJob",
         "requestBody": {
           "content": {
@@ -2494,6 +2497,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AbJob"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
                 }
               }
             }
@@ -7609,7 +7622,7 @@
         "tags": [
           "Skids"
         ],
-        "summary": "Create a finished sheet skid.",
+        "summary": "Create a finished sheet skid (its job must belong to an order).",
         "operationId": "CreateSheetSkid",
         "requestBody": {
           "content": {
