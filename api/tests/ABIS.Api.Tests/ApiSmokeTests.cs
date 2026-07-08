@@ -191,6 +191,43 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Part_save_clears_trim_fields_and_derives_pieces_skid()
+    {
+        static bool IsNullOrAbsent(JsonElement o, string name) =>
+            !o.TryGetProperty(name, out var v) || v.ValueKind == JsonValueKind.Null;
+
+        // Trimming not required: any submitted trim widths are cleared at save (w_part_num_new:562).
+        var noTrim = await _client.PostAsJsonAsync("/api/parts", new
+        {
+            customerId = 4001, enduserPartNum = "PN-NORM-1", sheetType = "RECTANGLE",
+            trimmingRequired = "N", incomingCoilWidth = 48.5, trimmedCoilWidth = 46.0, trimTypeCode = 1,
+        });
+        Assert.Equal(HttpStatusCode.Created, noTrim.StatusCode);
+        var noTrimBody = await noTrim.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(IsNullOrAbsent(noTrimBody, "incomingCoilWidth"));
+        Assert.True(IsNullOrAbsent(noTrimBody, "trimmedCoilWidth"));
+        Assert.True(IsNullOrAbsent(noTrimBody, "trimTypeCode"));
+
+        // pieces_skid omitted -> derived as Int(max_skid_wt / theoretical_unit_wt) = 4000/2 = 2000.
+        var derive = await _client.PostAsJsonAsync("/api/parts", new
+        {
+            customerId = 4001, enduserPartNum = "PN-NORM-2", sheetType = "RECTANGLE",
+            maxSkidWt = 4000, theoreticalUnitWt = 2.0, trimmingRequired = "N",
+        });
+        var deriveBody = await derive.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(2000, deriveBody.GetProperty("piecesSkid").GetInt32());
+
+        // An explicit pieces_skid is preserved — the derivation only fills a missing value.
+        var kept = await _client.PostAsJsonAsync("/api/parts", new
+        {
+            customerId = 4001, enduserPartNum = "PN-NORM-3", sheetType = "RECTANGLE",
+            maxSkidWt = 4000, theoreticalUnitWt = 2.0, piecesSkid = 123, trimmingRequired = "N",
+        });
+        var keptBody = await kept.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(123, keptBody.GetProperty("piecesSkid").GetInt32());
+    }
+
+    [Fact]
     public async Task Scrap_skid_requires_net_weight()
     {
         // Legacy refuses a null/zero scrap-skid net weight ("Skid Net Weight must be populated",

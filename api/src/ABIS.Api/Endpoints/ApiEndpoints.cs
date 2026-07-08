@@ -346,6 +346,7 @@ public static class ApiEndpoints
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
+                NormalizeTrimAndPieces(body);
                 var created = await repo.CreateOrderItemAsync(orderAbcNum, body, ct);
                 return Results.Created($"/api/orders/{orderAbcNum}/items/{created.OrderItemNum}", created);
             })
@@ -357,6 +358,7 @@ public static class ApiEndpoints
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
+                NormalizeTrimAndPieces(body);
                 return await WithIfMatch(ctx, json, () => repo.GetOrderItemAsync(orderAbcNum, orderItemNum, ct), () => repo.UpdateOrderItemAsync(orderAbcNum, orderItemNum, body, ct));
             })
            .WithName("UpdateOrderItem").WithTags("OrderItems")
@@ -413,6 +415,7 @@ public static class ApiEndpoints
             {
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
+                NormalizeTrimAndPieces(body);
                 var created = await repo.CreatePartAsync(body, ct);
                 return Results.Created($"/api/parts/{created.PartNumId}", created);
             })
@@ -429,6 +432,7 @@ public static class ApiEndpoints
                 if (await repo.IsPartInUseAsync(partNumId, ct))
                     return Results.Problem(statusCode: StatusCodes.Status409Conflict, title: "Part in use",
                         detail: "Can't modify this part because it has already been applied to one or more orders. Create a revision instead.");
+                NormalizeTrimAndPieces(body);
                 return await WithIfMatch(ctx, json, () => repo.GetPartAsync(partNumId, ct), () => repo.UpdatePartAsync(partNumId, body, ct));
             })
            .WithName("UpdatePart").WithTags("Parts")
@@ -1834,6 +1838,25 @@ public static class ApiEndpoints
             else if (diff is < 1.50m or > 12.00m && string.IsNullOrWhiteSpace(overrideUser))
                 e["trimmedWidthOverrideUser"] = ["trimmedWidthOverrideUser is required to override the trimmer tolerance."];
         }
+    }
+
+    // "At save" normalization shared by parts and order items (rank 23). Two legacy rules:
+    //  - When trimming isn't required, the trim columns are cleared so a stale incoming/trimmed
+    //    width can't linger on the record (w_part_num_new:562 wf_update_trimming_data(False)).
+    //  - Pieces-per-skid is only a suggestion: when it wasn't supplied, derive it as
+    //    Int(max_skid_wt / theoretical_unit_wt) (w_order_entry:1152) — an explicit value is kept.
+    private static void NormalizeTrimAndPieces(ITrimNormalizable b)
+    {
+        if (!string.Equals(b.TrimmingRequired?.Trim(), "Y", StringComparison.OrdinalIgnoreCase))
+        {
+            b.IncomingCoilWidth = null;
+            b.TrimmedCoilWidth = null;
+            b.TrimTypeCode = null;
+            b.TrimmedWidthOverridden = null;
+            b.TrimmedWidthOverrideUser = null;
+        }
+        if (b.PiecesSkid is null or 0 && b.MaxSkidWt is > 0 && b.TheoreticalUnitWt is > 0m)
+            b.PiecesSkid = (int)(b.MaxSkidWt.Value / b.TheoreticalUnitWt.Value);
     }
 
     // ---- Security enforcement (legacy f_security_door) ----
