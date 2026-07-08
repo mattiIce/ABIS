@@ -651,6 +651,17 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Die_validation_constrains_flag_owner_and_weight()
+    {
+        // Bad Y/N flag, fractional gross weight, and over-length owner each -> 400.
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync("/api/dies", new { dieName = "D", engineeredScrapYN = "X" })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync("/api/dies", new { dieName = "D", grossWeight = 1250.5 })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync("/api/dies", new { dieName = "D", owner = new string('x', 33) })).StatusCode);
+        // Valid Y/N + whole weight -> 201.
+        Assert.Equal(HttpStatusCode.Created, (await _client.PostAsJsonAsync("/api/dies", new { dieName = "D-OK", engineeredScrapYN = "y", grossWeight = 500, owner = "ACME" })).StatusCode);
+    }
+
+    [Fact]
     public async Task Shipped_skid_cannot_be_warehouse_patched()
     {
         // Seed skid 3003 is shipped (status 0 = GONE) -> warehouse update rejected (409).

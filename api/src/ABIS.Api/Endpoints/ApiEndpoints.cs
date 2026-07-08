@@ -1981,6 +1981,16 @@ public static class ApiEndpoints
         Max(e, "partName", body.PartName, 64);
         Max(e, "location", body.Location, 32);
         Max(e, "description", body.Description, 64);
+        Max(e, "owner", body.Owner, 32);   // the one string field that was unbounded
+        // engineered_scrap_y_n is a Y/N flag (legacy w_die_new / die.engineered_scrap_y_n CHAR(1)).
+        if (!string.IsNullOrWhiteSpace(body.EngineeredScrapYN) && body.EngineeredScrapYN.Trim().ToUpperInvariant() is not ("Y" or "N"))
+            e["engineeredScrapYN"] = ["engineeredScrapYN must be Y or N."];
+        // gross_weight is stored as a whole number (legacy d_die_new integer column).
+        if (body.GrossWeight is { } gw && gw != decimal.Truncate(gw))
+            e["grossWeight"] = ["grossWeight must be a whole number."];
+        // NOTE: num_of_parts_per_hit / status / location value-sets are NOT hard-enforced —
+        // the worklist's {1,2,3} / {0,1,2} / {BLDG #1..3} don't match the real data (seed uses
+        // location RACK-*), so they need live-Oracle confirmation before an enum gate.
         return e.Count == 0 ? null : e;
     }
 
