@@ -282,6 +282,28 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Receiving_coil_cash_date_is_validated()
+    {
+        const string url = "/api/receiving-bols/5501/coils";
+        var year = DateTime.Today.Year; // keep the test in the rolling [year-2 .. year] window
+        // Malformed (not 8 digits) -> 400.
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _client.PostAsJsonAsync(url, new { coilOrgNum = "CD-1", cashDate = "3/15/26" })).StatusCode);
+        // Month out of range (13) -> 400.
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _client.PostAsJsonAsync(url, new { coilOrgNum = "CD-2", cashDate = $"1315{year}" })).StatusCode);
+        // Year outside the last-two-years window -> 400.
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _client.PostAsJsonAsync(url, new { coilOrgNum = "CD-3", cashDate = "03151999" })).StatusCode);
+        // Well-formed, in-window (MMDDYYYY) -> 201.
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync(url, new { coilOrgNum = "CD-4", cashDate = $"0315{year}" })).StatusCode);
+        // Cash date omitted -> 201 (presence is a deferred, customer-conditional rule).
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync(url, new { coilOrgNum = "CD-5" })).StatusCode);
+    }
+
+    [Fact]
     public async Task Shift_time_window_is_validated()
     {
         var start = new DateTime(2026, 1, 15, 6, 0, 0, DateTimeKind.Utc);

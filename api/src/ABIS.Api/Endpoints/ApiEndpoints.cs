@@ -616,6 +616,8 @@ public static class ApiEndpoints
             {
                 if (string.IsNullOrWhiteSpace(body.CoilOrgNum))
                     return Results.ValidationProblem(new Dictionary<string, string[]> { ["coilOrgNum"] = ["coilOrgNum is required."] });
+                if (CashDateFormatError(body.CashDate) is { } cashErr)
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["cashDate"] = [cashErr] });
                 var created = await repo.AddReceivingBolCoilAsync(receivingBolId, body, ct);
                 return created is null
                     ? Results.NotFound(new { message = $"Receiving BOL {receivingBolId} not found." })
@@ -1867,6 +1869,27 @@ public static class ApiEndpoints
         }
         if (b.PiecesSkid is null or 0 && b.MaxSkidWt is > 0 && b.TheoreticalUnitWt is > 0m)
             b.PiecesSkid = (int)(b.MaxSkidWt.Value / b.TheoreticalUnitWt.Value);
+    }
+
+    // A cash_date is stored as an 8-digit MMDDYYYY string. Legacy validates month 1-12,
+    // day 1-31, and a year inside the last two years [today-2 .. today]
+    // (w_coil_detail_new:69-103). Returns an error message, or null when blank (presence is a
+    // separate, customer-conditional rule — deferred) or well-formed.
+    private static string? CashDateFormatError(string? cashDate)
+    {
+        var s = cashDate?.Trim();
+        if (string.IsNullOrEmpty(s)) return null;
+        if (s.Length != 8 || !s.All(char.IsDigit))
+            return "cashDate must be an 8-digit MMDDYYYY string.";
+        var month = int.Parse(s[..2]);
+        var day = int.Parse(s.Substring(2, 2));
+        var year = int.Parse(s[4..]);
+        if (month is < 1 or > 12) return "cashDate month must be 01–12.";
+        if (day is < 1 or > 31) return "cashDate day must be 01–31.";
+        var currentYear = DateTime.Today.Year;
+        if (year < currentYear - 2 || year > currentYear)
+            return $"cashDate year must be between {currentYear - 2} and {currentYear}.";
+        return null;
     }
 
     // ---- Security enforcement (legacy f_security_door) ----
