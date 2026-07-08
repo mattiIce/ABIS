@@ -207,6 +207,17 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Prod_folder_note_requires_existing_job()
+    {
+        // A note against a phantom job -> 404 (legacy "Job X does not exist.", w_e_car_folder:537).
+        Assert.Equal(HttpStatusCode.NotFound,
+            (await _client.PostAsJsonAsync("/api/prod-folder/jobs/999999/notes", new { userId = 9001, notes = "phantom" })).StatusCode);
+        // A note on a real job with a known author -> 201.
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/prod-folder/jobs/1001/notes", new { userId = 9001, notes = "real note" })).StatusCode);
+    }
+
+    [Fact]
     public async Task Shift_time_window_is_validated()
     {
         var start = new DateTime(2026, 1, 15, 6, 0, 0, DateTimeKind.Utc);

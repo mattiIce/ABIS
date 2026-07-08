@@ -717,6 +717,10 @@ public static class ApiEndpoints
 
         api.MapPost("/prod-folder/jobs/{abJobNum:long}/notes", async (long abJobNum, JobFolderNoteWrite body, HttpContext ctx, IAbisRepository repo, CancellationToken ct) =>
             {
+                // Don't file a note against a phantom job — legacy rejects it with
+                // "Job X does not exist." (w_e_car_folder:537) before anything else.
+                if (await repo.GetJobAsync(abJobNum, ct) is null)
+                    return Results.NotFound();
                 // The author: the resolved OIDC user, else the body's userId (dev API).
                 long? userId = body.UserId;
                 if (userId is null && ResolveLogin(ctx) is { } login)
@@ -728,7 +732,7 @@ public static class ApiEndpoints
             })
            .WithName("AddJobFolderNote").WithTags("ProdFolder")
            .WithSummary("Add a note to a job's e-folder (author from the OIDC user or body userId).")
-           .Produces<JobFolderNote>(StatusCodes.Status201Created).ProducesValidationProblem();
+           .Produces<JobFolderNote>(StatusCodes.Status201Created).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
         // ---- Stacker line board / error log (legacy stacker_110) ----
         api.MapGet("/stacker/board", async (IAbisRepository repo, CancellationToken ct, long? lineNum = null) =>
