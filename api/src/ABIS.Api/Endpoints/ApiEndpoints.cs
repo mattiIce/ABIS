@@ -1808,6 +1808,30 @@ public static class ApiEndpoints
         if (value is null) e[field] = [$"{field} is required."];
     }
 
+    // Edge-trim tolerance (legacy w_order_entry:496-549 / w_part_num_new:523). When trimming is
+    // required, the trim data must be complete and incoming >= trimmed (hard errors); the trim
+    // amount must sit within the 1.5"-12" trimmer tolerance, overridable via
+    // trimmed_width_overridden='Y' + an override user. Shared by order items and part masters.
+    private static void AddEdgeTrimErrors(Dictionary<string, string[]> e, string? trimmingRequired,
+        decimal? incoming, decimal? trimmed, int? trimType, string? overridden, string? overrideUser)
+    {
+        if (!string.Equals(trimmingRequired?.Trim(), "Y", StringComparison.OrdinalIgnoreCase)) return;
+        if (incoming is null) e["incomingCoilWidth"] = ["incomingCoilWidth is required when trimming is required."];
+        if (trimmed is null) e["trimmedCoilWidth"] = ["trimmedCoilWidth is required when trimming is required."];
+        if (trimType is null) e["trimTypeCode"] = ["trimTypeCode is required when trimming is required."];
+        if (incoming is { } inc && trimmed is { } trm)
+        {
+            var diff = inc - trm;
+            var isOverridden = string.Equals(overridden?.Trim(), "Y", StringComparison.OrdinalIgnoreCase);
+            if (diff < 0m)
+                e["trimmedCoilWidth"] = ["Incoming coil width must be greater than trimmed coil width."];
+            else if (diff is < 1.50m or > 12.00m && !isOverridden)
+                e["trimmedCoilWidth"] = ["Trim (incoming − trimmed) is under trimmer tolerance (must be 1.5\"–12\"); resend with trimmedWidthOverridden='Y' to override."];
+            else if (diff is < 1.50m or > 12.00m && string.IsNullOrWhiteSpace(overrideUser))
+                e["trimmedWidthOverrideUser"] = ["trimmedWidthOverrideUser is required to override the trimmer tolerance."];
+        }
+    }
+
     // ---- Security enforcement (legacy f_security_door) ----
     // The caller's ABIS login: the OIDC preferred_username/name claim, or the X-User-Login
     // header (dev/testing). Null => an API-key service account (full trust, bypasses gates).
@@ -1884,23 +1908,8 @@ public static class ApiEndpoints
         // legacy prompts Yes/No and, on override, stamps trimmed_width_overridden='Y' +
         // trimmed_width_override_user and logs it. We mirror that: out-of-tolerance is a 400
         // unless trimmedWidthOverridden='Y' is sent, in which case an override user is required.
-        if (string.Equals(body.TrimmingRequired?.Trim(), "Y", StringComparison.OrdinalIgnoreCase))
-        {
-            if (body.IncomingCoilWidth is null) e["incomingCoilWidth"] = ["incomingCoilWidth is required when trimming is required."];
-            if (body.TrimmedCoilWidth is null) e["trimmedCoilWidth"] = ["trimmedCoilWidth is required when trimming is required."];
-            if (body.TrimTypeCode is null) e["trimTypeCode"] = ["trimTypeCode is required when trimming is required."];
-            if (body.IncomingCoilWidth is { } inc && body.TrimmedCoilWidth is { } trm)
-            {
-                var diff = inc - trm;
-                var overridden = string.Equals(body.TrimmedWidthOverridden?.Trim(), "Y", StringComparison.OrdinalIgnoreCase);
-                if (diff < 0m)
-                    e["trimmedCoilWidth"] = ["Incoming coil width must be greater than trimmed coil width."];
-                else if (diff is < 1.50m or > 12.00m && !overridden)
-                    e["trimmedCoilWidth"] = ["Trim (incoming − trimmed) is under trimmer tolerance (must be 1.5\"–12\"); resend with trimmedWidthOverridden='Y' to override."];
-                else if (diff is < 1.50m or > 12.00m && string.IsNullOrWhiteSpace(body.TrimmedWidthOverrideUser))
-                    e["trimmedWidthOverrideUser"] = ["trimmedWidthOverrideUser is required to override the trimmer tolerance."];
-            }
-        }
+        AddEdgeTrimErrors(e, body.TrimmingRequired, body.IncomingCoilWidth, body.TrimmedCoilWidth,
+            body.TrimTypeCode, body.TrimmedWidthOverridden, body.TrimmedWidthOverrideUser);
         return e.Count == 0 ? null : e;
     }
 
@@ -1956,6 +1965,12 @@ public static class ApiEndpoints
         Max(e, "sheetType", body.SheetType, 18);
         Max(e, "alloy", body.Alloy, 8);
         Max(e, "temper", body.Temper, 8);
+        // The same edge-trim rule as order items applies to a part's trimming spec.
+        // (sheetType / gauge / enduser_id / sector are NOT required here: Validate(PartWrite) is
+        // shared by the full-replace PUT, and parts are built up incrementally — enforce those at
+        // a create-specific/finalize point, verified against live Oracle.)
+        AddEdgeTrimErrors(e, body.TrimmingRequired, body.IncomingCoilWidth, body.TrimmedCoilWidth,
+            body.TrimTypeCode, body.TrimmedWidthOverridden, body.TrimmedWidthOverrideUser);
         return e.Count == 0 ? null : e;
     }
 

@@ -160,6 +160,37 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Part_edge_trim_tolerance_is_enforced()
+    {
+        // The part-master trimming spec shares the order-item edge-trim rule
+        // (legacy w_part_num_new / w_order_entry). Validate(PartWrite) lifts it via the same helper.
+        static object Part(double? inc, double? trm) => new
+        {
+            customerId = 4001, enduserPartNum = "PN-PART-TRIM", sheetType = "RECTANGLE",
+            trimmingRequired = "Y", incomingCoilWidth = inc, trimmedCoilWidth = trm, trimTypeCode = 1,
+        };
+        // Under tolerance (0.1" < 1.5"), over tolerance (13" > 12"), and incoming < trimmed -> 400.
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync("/api/parts", Part(48.0, 47.9))).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync("/api/parts", Part(60.0, 47.0))).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync("/api/parts", Part(40.0, 45.0))).StatusCode);
+        // Trimming required but trim data missing (widths + trimTypeCode) -> 400.
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync("/api/parts",
+            new { customerId = 4001, enduserPartNum = "PN-PART-TRIM", sheetType = "RECTANGLE", trimmingRequired = "Y" })).StatusCode);
+        // Valid trim (2.0" within tolerance) -> 201; trimming not required -> widths irrelevant -> 201.
+        Assert.Equal(HttpStatusCode.Created, (await _client.PostAsJsonAsync("/api/parts", Part(48.0, 46.0))).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await _client.PostAsJsonAsync("/api/parts",
+            new { customerId = 4001, enduserPartNum = "PN-PART-NOTRIM", sheetType = "RECTANGLE", trimmingRequired = "N" })).StatusCode);
+        // customerId is required (legacy: a part belongs to a customer) -> 400.
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync("/api/parts",
+            new { enduserPartNum = "PN-PART-NOCUST", sheetType = "RECTANGLE", trimmingRequired = "N" })).StatusCode);
+        // Out-of-tolerance is OVERRIDABLE: override flag without a user -> 400; with a user -> 201.
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync("/api/parts",
+            new { customerId = 4001, enduserPartNum = "PN-PART-TRIM", sheetType = "RECTANGLE", trimmingRequired = "Y", incomingCoilWidth = 60.0, trimmedCoilWidth = 47.0, trimTypeCode = 1, trimmedWidthOverridden = "Y" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await _client.PostAsJsonAsync("/api/parts",
+            new { customerId = 4001, enduserPartNum = "PN-PART-TRIM", sheetType = "RECTANGLE", trimmingRequired = "Y", incomingCoilWidth = 60.0, trimmedCoilWidth = 47.0, trimTypeCode = 1, trimmedWidthOverridden = "Y", trimmedWidthOverrideUser = "qa" })).StatusCode);
+    }
+
+    [Fact]
     public async Task Dimension_check_input_is_validated()
     {
         const string url = "/api/coil-eval/skids/3001/dimension-checks";
