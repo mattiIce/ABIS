@@ -53,10 +53,19 @@ there is **nothing extra to install**. **VALIDATED LIVE on `.170` (2026-07-09):*
    tag** (per line) — the PLC chip shows 🟢/🔴 and the "⛔ LINE DOWN" banner opens on a stop.
 5. Install it as a **Windows Service** for a permanent deployment (`sc create` / NSSM), same env.
 
-> **First de-risk with the probe:** `AbisEdge.exe --probe <item>...` does a one-shot read (value +
-> quality); `--probe --browse [filter]` lists item ids. Used to confirm the read on `.170`.
-> **`automode`-bit variant** (simpler, but blind to jams-while-in-auto): `RunStateTag=PLC5-BL84.automode`,
-> `RunStateMode=Equals`, `RunningValues__0=True`.
+> **De-risk with the probe:** `AbisEdge.exe --probe <item>...` does a one-shot read (value +
+> quality); `--probe --browse [filter]` lists item ids; `--probe --watch <item>...` polls them
+> once a second so you can watch a run-signal candidate move over time.
+>
+> **Why `strokecnt`, not the legacy `autorunning` bit** (confirmed live on `.170`, 2026-07-09 via
+> `--watch PLC5-BL84.autorunning PLC5-BL84.automode PLC5-BL84.strokecnt`): while the press ran,
+> `strokecnt` climbed steadily and `autorunning` held `True`; while stopped, `strokecnt` went
+> dead-static. **But operators run in auto and *manually trigger* the press** — then `autorunning`
+> reads `False` while the press is still stroking, so keying off `autorunning` (as the legacy DA app
+> does) would false-log downtime during manual runs. `strokecnt` climbing is the one signal that's
+> right in both auto and manual, so that's the run signal. `automode`-bit variant (simpler, but
+> blind to jams-while-in-auto): `RunStateTag=PLC5-BL84.automode`, `RunStateMode=Equals`,
+> `RunningValues__0=True`.
 
 ---
 
