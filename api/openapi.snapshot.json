@@ -12598,6 +12598,10 @@
             "type": "integer",
             "format": "int64",
             "nullable": true
+          },
+          "downtimeType": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
