@@ -3908,10 +3908,14 @@ public sealed class AbisRepository : IAbisRepository
                     if (coil.CoilStatus == 3 && sheetCount == 0) continue;
                     scrap.Add(new Edi870ConstScrapLine { ScrapNetWeight = scrapNw });
                 }
-                // Rejected(3)/rebanded(7) coil that still carried good material → the trailing reject block.
+                // Rejected(3)/rebanded(7) coil that still carried good material → the trailing reject block. The
+                // legacy ll_coil_length_left is NUMBER(10) (integer), so Oracle rounds net_wt_balance/net_wt*lfeed
+                // to a whole number before emitting — round here to match (else MEA*PD*LN carries stray decimals).
                 if ((coil.CoilStatus == 3 || coil.CoilStatus == 7) && sheetCount > 0)
                 {
-                    var lengthLeft = coil.NetWt != 0m ? coil.NetWtBalance / coil.NetWt * coil.Lfeed : 0m;
+                    var lengthLeft = coil.NetWt != 0m
+                        ? Math.Round(coil.NetWtBalance / coil.NetWt * coil.Lfeed, 0, MidpointRounding.AwayFromZero)
+                        : 0m;
                     reject = new Edi870ConstReject { CoilStatus = coil.CoilStatus, CoilLengthLeft = lengthLeft, NetWtBalance = coil.NetWtBalance };
                 }
             }
