@@ -19,15 +19,17 @@ Run everything below **on the .230 host as the `oracle` user**. Nothing runs on 
 ### 1. A database link to prod (.9)
 The import pulls over this link, so no job ever runs on prod and no dump files are shuffled.
 
-```sql
--- as SYSTEM on .230
-CREATE DATABASE LINK prod_9
-  CONNECT TO dbo IDENTIFIED BY "<dbo-password-on-.9>"
-  USING '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=192.168.1.9)(PORT=1521))
-          (CONNECT_DATA=(SERVICE_NAME=abc11)))';
+> **Prod's listener is on port `1523`** (host `db01` = .9), not the default 1521 — confirmed via
+> `lsnrctl status` on .9 (2026-07-23). Service name is `abc11`. SQL\*Plus also splits a statement at
+> a **blank line** by default, so paste the `CREATE DATABASE LINK` as a single line (or
+> `SET SQLBLANKLINES ON` first).
 
--- verify it reaches prod:
-SELECT COUNT(*) FROM coil@prod_9;      -- ~150k on prod
+```sql
+-- as SYSTEM on .230 — one line (blank lines break it in SQL*Plus)
+CREATE DATABASE LINK prod_9 CONNECT TO dbo IDENTIFIED BY "<dbo-password-on-.9>" USING '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=192.168.1.9)(PORT=1523))(CONNECT_DATA=(SERVICE_NAME=abc11)))';
+
+-- verify it reaches prod (returned 149837 on 2026-07-23):
+SELECT COUNT(*) FROM coil@prod_9;
 ```
 
 > Store the link's prod password with care (it lives in the data dictionary). Rotate it if
