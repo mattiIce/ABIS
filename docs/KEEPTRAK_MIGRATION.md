@@ -144,6 +144,33 @@ reading columns are mapped anyway (they cost nothing) so a future meter PM has s
 Completion history spans **2002-02-17 → 2026-07-22** — 24 years, considerably deeper than the
 2021-onward window an early truncated query suggested.
 
+## Step 4 — retire the pre-KeepTrak PMs (REQUIRED, or the due board is unusable)
+
+ABIS's own PM module died in 2010 but its 77 definitions still hold `nextduedate` values from then,
+and they are **not** status 0 — so the due board counts them ACTIVE and shows them **overdue by
+~5,800 days**, burying the 125 real KeepTrak PMs.
+
+`deploy/keeptrak/retire_legacy_pm.sql` sets `pm_status = 0` on PM rows below the import offset.
+Nothing is deleted: the definitions stay browsable and their 2,051 completions are untouched, and
+the due board already excludes status 0 so no code change is needed.
+
+**Reversible, but not by a blanket update** — the legacy rows did not share one status (8×`1`,
+46×`2`, 23×`3`), so `deploy/keeptrak/undo_retire_legacy_pm.sql` restores each row individually.
+Regenerate it against the live schema before running the retire anywhere new.
+
+Verified on `.230` (2026-07-24): the due board went from 125 KeepTrak + 77 legacy to **125 KeepTrak
+and nothing else**, with all 77 legacy rows and 2,051 completions still present.
+
+## Where it shows up in the UI
+
+**Nowhere new.** KeepTrak is being *replaced*, not embedded, so its data lands in ABIS's own
+`pm` / `pm_actions` / `pmcompletions` tables and appears in the existing **Maintenance** page tabs
+(PM due board / PM schedules / Logs) with no additional screen. Adding a "KeepTrak" section would
+recreate the two-places-to-look problem this migration exists to remove.
+
+Imported rows stay identifiable for traceability: `pm_id >= 100000`, `groupdepartment.depttype =
+'KEEPTRAK'`, and `pm.pmreference = 'KT-<KeepTrak id>'`.
+
 ## Follow-on scope (mapped, not yet planned)
 
 - **`t_LG` (7,201)** — the work/issue log, with `t_LG_x_IssuePhrases` / `ActionPhrases` / `Status`
