@@ -52,10 +52,79 @@ The script was verified against a synthetic CMMS-shaped Access database (equipme
 history, including a table name containing a space and `MEMO` columns) — schema and samples both
 render correctly.
 
-## Step 2 — map
+## Step 2 — map  ✅ schema inspected 2026-07-24
 
-Write the KeepTrak→ABIS field mapping from the *real* schema dump, not from assumptions. The
-mapping is the step where surprises live; see Open questions.
+Source: `\\192.168.1.45\Maintenance\KeepTrakPro\KData.accdb` (KeepTrak Pro, 9.8 MB, **40 tables**).
+Full dump: `docs/data-model/KEEPTRAK_SCHEMA.md`. Worked from a copy, never the live file.
+
+**KeepTrak is unambiguously the live system.** The file was written the day before inspection, and
+completions run ~800/year without a gap: 2021→748, 2022→776, 2023→773, 2024→864, 2025→841,
+2026→466 so far, **13,648** total. ABIS's legacy `pm` tables hold 2,051 completions by comparison.
+
+### Equipment hierarchy — maps 4-into-4 exactly
+
+KeepTrak nests `usys_tLev0..tLev4`; `Lev0` is a single company root (`ABCo`) that has no ABIS
+counterpart and is dropped. The remaining four line up one-for-one:
+
+| KeepTrak | Rows | Example | ABIS |
+| --- | ---: | --- | --- |
+| `usys_tLev1.fs_Lev1` | 39 | "Auxiliary Equipment", "Die Area Building 3" | `groupdepartment` |
+| `usys_tLev2.fs_Lev2` | 249 | "Air Compressors", "AB #80 Die" | `systemequipment` |
+| `usys_tLev3.fs_Lev3` | 726 | "110 Line Looping Pit" | `subsystemequipment` |
+| `usys_tLev4.fs_Lev4` | 233 | (components) | `itemdevice` |
+
+**All 143 PMs populate Lev2, Lev3 *and* Lev4** — every PM attaches at full depth, so no level needs
+a synthetic placeholder. **Key on the KeepTrak id, never the name:** names repeat across parents
+("Air Compressors" appears three times in Lev2). Each level also carries `fb_InActive`.
+
+### `t_PM` (143) → `pm`
+
+| KeepTrak | ABIS | Note |
+| --- | --- | --- |
+| `fa_PMid` | *(natural key for idempotency)* | ABIS `pm_id` is minted MAX+1; keep a KeepTrak-id cross-reference |
+| `fs_Status` | `pm_status` | text → number: 142 `ok`, 1 `Due`. Nothing is retired, so nothing maps to 0 |
+| `fs_AssignedTo` / `fs_AssignedToTitle` | `assignedtogroup` / `titlecraft_id` | title resolves against `titlecraft` by name |
+| `fm_Info` | `pm_notice` | memo |
+| `fm_Action` | `pm_actions` | the checklist body — split into items, or land as one action |
+| `fs_Freq` → `t_PM_x_Freq.fl_DaysBetween` | **`daysbetween`** | see below — this is the whole ballgame |
+| `fld_EstMinPerPerson` / `fld_EstNumOfPeople` | `mins_per_unit` / `num_of_units` | |
+| `fs_PMShift` | `pmshift` | seed `pmshift` from `t_PM_x_Shift` (7 rows) |
+| `fl_Range` | `pmrange` | |
+| `fd_LastCompDate` / `fs_LastCompBy` | `pm_completed` / `completed_by` | |
+| **`fd_NextDueDate`** | **`nextduedate`** | the due board reads this directly |
+| `fld_LastReading` / `fld_NextDueReading` / `fld_LastCompReading` | `lastreading` / `nextduereading` / `completedreading` | unused in practice — see below |
+| `fld_HrsMilCycRepeat` | `pm_repeat` | |
+| `fc_EstCost` | `pm_cost` | |
+| `fdt_DateAdd` / `fdt_DateEdit` | `pm_entered` / `lastupdate` | |
+
+### Frequency — the auto-advance lands natively
+
+`t_PM_x_Freq` (38 rows) carries **`fl_DaysBetween`** — precisely the quantity ABIS's completion
+auto-advance consumes (`1XM`→30, `4XY`→91, `1XY`→365, …). So the mapping is a straight copy into
+`pm.daysbetween`, and completing an imported PM advances it exactly as KeepTrak scheduled it.
+
+`fs_Type` admits non-calendar modes — `HMC` (hours/miles/cycles), `DOW`, `DOM`, `SPD` — but
+**every one of the 143 live PMs is `CAL`**. The meter-based risk flagged before the dump is
+therefore *moot*: the calendar-only due board and auto-advance cover 100% of the real data. The
+reading columns are mapped anyway (they cost nothing) so a future meter PM has somewhere to land.
+
+### `t_PM_Completions` (13,648) → `pmcompletions`
+
+`fl_PMid`→`pm_id`, `fs_CompStatus`→`pm_status`, `fd_CompletedDate`→`completeddate`,
+`fs_AssignedTo`→`assignedtogroup`, `fs_CompBy`→`completedby`, `fm_CompNote`→`completed_notes`.
+
+**Gap:** KeepTrak records `fld_LaborHours` and `fc_Cost` per completion; ABIS `pmcompletions` has
+**no column for either**. Preserving them needs DDL on a legacy Oracle table — a decision, not an
+assumption. Dropping them loses real maintenance-cost history.
+
+## Follow-on scope (mapped, not yet planned)
+
+- **`t_LG` (7,201)** — the work/issue log, with `t_LG_x_IssuePhrases` / `ActionPhrases` / `Status`
+  lookups. Target is ABIS `maint_log`.
+- **`t_PI` (1,401) + `t_PI_x_Suppliers` (90) + `t_PI_PartUsed` (151) + categories/units** — the
+  spares inventory. **This settles the earlier question: KeepTrak *does* hold spares**, so ABIS's
+  legacy `PARTS` (762 rows) is the wrong source and building from it was correctly deferred.
+- `t_EI_EquipInfo` (2 rows), `t_DocPics` (0), `t_PI_PO`/`PO_LineItems` (0) — effectively unused.
 
 ## Step 3 — import
 
@@ -70,17 +139,25 @@ mapping is the step where surprises live; see Open questions.
 
 ## Open questions
 
-1. **Is the legacy ABIS `pm` data live or abandoned?** The tables hold 77 PMs / 2,051 completions /
-   1,618 actions. If KeepTrak superseded them, the import should start clean rather than merge into
-   stale rows. Needs a read-only check against `.230` for the newest `pm_entered` / `lastupdate` /
-   `completeddate` — blocked on a credential (the tooling takes it at runtime; nothing is stored).
-2. **Meter-based PMs.** KeepTrak may schedule some PMs by run-hours rather than calendar days. The
-   ABIS `pm` table *does* carry `lastreading` / `nextduereading` / `completedreading` for this, so
-   there is somewhere to put it — but the due board and the completion auto-advance are
-   **calendar-only** today. If KeepTrak uses meter-based PMs, extend them rather than drop those PMs.
-3. **Spares inventory.** ABIS has legacy `PARTS` / `PARTS_SUPPLIERS` tables (762 rows) that were
-   *not* built out, on the assumption they were the maintenance spares store. If KeepTrak also holds
-   spares, building ABIS spares from the legacy tables would be building on the wrong source —
-   decide after the schema dump. This is why the spares half of the maintenance module is on hold.
-4. **Attachments / images.** KeepTrak may store PM documents or photos (OLE object columns). ABIS's
-   `pm` carries `hasimage` / `image_path` but no blob storage; decide whether to migrate or drop.
+**Resolved by the schema dump (2026-07-24):**
+
+- ~~Is the legacy ABIS `pm` data live or abandoned?~~ **Abandoned.** KeepTrak is written daily and
+  carries 13,648 completions still running ~800/year; ABIS's `pm` holds 2,051 and nothing current.
+  The import starts clean rather than merging into those rows. (A `.230` query would only confirm
+  this and is no longer worth blocking on.)
+- ~~Meter-based PMs?~~ **None.** All 143 live PMs are calendar (`CAL`) type, so the calendar-only
+  due board and auto-advance cover everything. Reading columns are mapped anyway for future use.
+- ~~Does KeepTrak hold spares?~~ **Yes** — `t_PI` (1,401 parts) + suppliers/categories/usage. ABIS's
+  legacy `PARTS` (762) is the wrong source; deferring the spares build was correct.
+- ~~Attachments / images?~~ `t_DocPics` is **empty** (0 rows), so nothing to migrate.
+
+**Still open — need a decision:**
+
+1. **Labour hours + cost per completion.** KeepTrak records `fld_LaborHours` and `fc_Cost` on each
+   of its 13,648 completions; ABIS `pmcompletions` has no column for either. Preserving them means
+   adding two columns to a legacy Oracle table; dropping them discards real cost history. Options:
+   add the columns, fold them into `completed_notes` (lossy, unqueryable), or drop.
+2. **How much completion history to import.** All 13,648 rows back to 2021, or a recent window?
+   Full history is more faithful and only ~13k rows — the default should be all of it.
+3. **Retire-in-place vs cutover date.** Once imported, KeepTrak must stop being written or the two
+   diverge. Needs an agreed cutover moment, not just a successful import.
