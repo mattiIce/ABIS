@@ -6650,7 +6650,26 @@ public sealed class AbisRepository : IAbisRepository
             return "titleCraftId must reference an existing craft.";
         if (body.GroupDepartmentId is { } dept && !await Exists("groupdepartment", "groupdepartment_id", dept))
             return "groupDepartmentId must reference an existing group/department.";
+        // maint_freq is a FOREIGN KEY to maint_frequency on Oracle, not free text — an unchecked
+        // value passes SQLite CI and then fails live with ORA-02291.
+        if (!string.IsNullOrWhiteSpace(body.MaintFreq))
+        {
+            var known = await conn.ExecuteScalarAsync<long>(new CommandDefinition(
+                "SELECT COUNT(*) FROM maint_frequency WHERE maint_freq = :f",
+                new { f = body.MaintFreq }, cancellationToken: ct)) > 0;
+            if (!known) return $"maintFreq '{body.MaintFreq}' is not a known frequency code (see /lookups/maint-frequencies).";
+        }
         return null;
+    }
+
+    public async Task<IReadOnlyList<MaintFrequency>> GetMaintFrequenciesAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var rows = await conn.QueryAsync<MaintFrequency>(new CommandDefinition(
+            "SELECT maint_freq AS MaintFreq, freq_type AS FreqType, numperyear AS NumPerYear, " +
+            "daysbetween AS DaysBetween, pmrange AS PmRange FROM maint_frequency ORDER BY daysbetween, maint_freq",
+            cancellationToken: ct));
+        return rows.AsList();
     }
 
     public async Task<PmAction> AddPmActionAsync(long pmId, PmActionWrite body, CancellationToken ct)

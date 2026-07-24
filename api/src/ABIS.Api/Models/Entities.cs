@@ -1156,6 +1156,18 @@ public sealed class ItemDevice
     public string? ItemDeviceName { get; set; }
 }
 
+/// <summary>A maintenance frequency code (table <c>maint_frequency</c>) — the catalog
+/// <c>pm.maint_freq</c> is a FOREIGN KEY to. <c>FreqType</c> is <c>CAL</c> (calendar — the
+/// schedule comes off <c>DaysBetween</c>) or <c>HMC</c> (hours/miles/cycles — meter-driven).</summary>
+public sealed class MaintFrequency
+{
+    public string? MaintFreq { get; set; }
+    public string? FreqType { get; set; }
+    public decimal? NumPerYear { get; set; }
+    public decimal? DaysBetween { get; set; }
+    public decimal? PmRange { get; set; }
+}
+
 /// <summary>A maintenance craft/trade and its hourly rate (table <c>titlecraft</c>) —
 /// drives a PM's labour cost.</summary>
 public sealed class TitleCraft

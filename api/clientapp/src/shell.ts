@@ -61,6 +61,8 @@ const I = {
   truck2: '<rect x="1" y="6" width="14" height="10" rx="1"/><path d="M15 9h4l3 3v4h-7z"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',
   swap: '<path d="M7 4l-4 4 4 4M3 8h13M17 20l4-4-4-4M21 16H8"/>',
   wrench: '<path d="M14 7a4 4 0 0 0-5 5l-6 6 2 2 6-6a4 4 0 0 0 5-5l-2 2-2-2z"/>',
+  screen: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  scan: '<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M3 12h18"/>',
 };
 
 const NAV: NavGroup[] = [
@@ -108,7 +110,20 @@ const NAV: NavGroup[] = [
     { id: 'accounting', label: 'Accounting', href: '/ui/accounting.html', icon: I.acct },
   ]},
   { group: 'Maintenance', items: [
-    { id: 'maintenance', label: 'Maintenance', href: '/ui/maintenance.html', feature: 'Maintenance', icon: I.wrench },
+    // NOT feature-gated: there is no 'Maintenance' row in the live security_application (35
+    // features, none matching), so gating on it hid the page from EVERY user including admins.
+    // Same reasoning as Dies / Sketches / Trucks / Carriers above — no authoritative feature name
+    // exists to gate on, and the server still enforces RBAC on the write tags.
+    { id: 'maintenance', label: 'Maintenance', href: '/ui/maintenance.html', icon: I.wrench },
+  ]},
+  // Standalone operator terminals. These pages deliberately do NOT load this shell (they are
+  // kiosk//floor screens), so they have no sidebar of their own and were previously reachable only
+  // by typing the URL. Linking them here makes them discoverable; use Back to return.
+  { group: 'Floor terminals', items: [
+    { id: 'das-console', label: 'DAS console', href: '/ui/das-console.html', icon: I.screen },
+    { id: 'das-board', label: 'Production floor board', href: '/ui/das-board.html', icon: I.screen },
+    { id: 'coil-scanner', label: 'Coil scanner', href: '/ui/coil-scanner.html', icon: I.scan },
+    { id: 'truck-kiosk', label: 'Driver check-in', href: '/ui/truck-kiosk.html', icon: I.truck2 },
   ]},
   { group: 'EDI & Admin', items: [
     { id: 'edi', label: 'EDI operations', href: '/ui/edi.html', feature: 'EDI', icon: I.edi },
