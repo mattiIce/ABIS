@@ -73,9 +73,14 @@ counterpart and is dropped. The remaining four line up one-for-one:
 | `usys_tLev3.fs_Lev3` | 726 | "110 Line Looping Pit" | `subsystemequipment` |
 | `usys_tLev4.fs_Lev4` | 233 | (components) | `itemdevice` |
 
-**All 143 PMs populate Lev2, Lev3 *and* Lev4** — every PM attaches at full depth, so no level needs
-a synthetic placeholder. **Key on the KeepTrak id, never the name:** names repeat across parents
-("Air Compressors" appears three times in Lev2). Each level also carries `fb_InActive`.
+**Access stores `0`, not NULL, for "no level assigned"** — and there is no Lev3/Lev4 row with id 0.
+So a naive `IS NULL` test badly overstates the depth: in reality all 143 PMs carry Lev1 + Lev2, but
+only **94 have a subsystem** (49 are 0) and only **19 have an item/device** (124 are 0). Mapping 0
+through as an id produces `offset + 0`, a dangling parent key — this cost a failed load (ORA-02291)
+before it was caught. **Treat 0 exactly like NULL.**
+
+**Key on the KeepTrak id, never the name:** names repeat across parents ("Air Compressors" appears
+three times in Lev2). Each level also carries `fb_InActive`.
 
 ### `t_PM` (143) → `pm`
 
@@ -97,6 +102,21 @@ a synthetic placeholder. **Key on the KeepTrak id, never the name:** names repea
 | `fc_EstCost` | `pm_cost` | |
 | `fdt_DateAdd` / `fdt_DateEdit` | `pm_entered` / `lastupdate` | |
 
+### `pm.maint_freq` is a FOREIGN KEY, and the code vocabularies are identical
+
+`PM.MAINT_FREQ` is not free text — it is an FK to a `MAINT_FREQUENCY` lookup. And that lookup uses
+**exactly the same short codes as KeepTrak**, with the same intervals (`1XY`→365, `4XY`→91,
+`WX8`→56, `YX10`→3650). This is the strongest evidence yet that ABIS's PM module and KeepTrak share
+a CMMS lineage. So the import writes the **code** (`fs_Freq`), not the description.
+
+All 12 codes in live use resolve except **`HOLD`**, which is KeepTrak's parking marker and has no
+`MAINT_FREQUENCY` row — those import as `maint_freq = NULL` (they are already `pm_status = 0`, so
+they carry no schedule anyway).
+
+> ⚠ This FK also constrains the ABIS **write** path: `POST /pms` accepts `maintFreq` as free text
+> today, so an arbitrary value would fail on Oracle with ORA-02291 while passing SQLite CI. Worth
+> validating against `maint_frequency` — tracked as follow-up.
+
 ### Frequency — the auto-advance lands natively
 
 `t_PM_x_Freq` (38 rows) carries **`fl_DaysBetween`** — precisely the quantity ABIS's completion
@@ -113,9 +133,16 @@ reading columns are mapped anyway (they cost nothing) so a future meter PM has s
 `fl_PMid`→`pm_id`, `fs_CompStatus`→`pm_status`, `fd_CompletedDate`→`completeddate`,
 `fs_AssignedTo`→`assignedtogroup`, `fs_CompBy`→`completedby`, `fm_CompNote`→`completed_notes`.
 
-**Gap:** KeepTrak records `fld_LaborHours` and `fc_Cost` per completion; ABIS `pmcompletions` has
-**no column for either**. Preserving them needs DDL on a legacy Oracle table — a decision, not an
-assumption. Dropping them loses real maintenance-cost history.
+`fld_LaborHours` / `fc_Cost` → `labor_hours` / `comp_cost` (added by **migration 008**).
+
+> **Reality check:** every one of the 13,648 completions stores **0** for both — the plant populated
+> the fields but never used them, so there is no historical cost data to recover. The columns were
+> still worth adding (the values were unknowable before the load, and future completions can record
+> them through `POST /pms/{id}/complete`), but nobody should expect cost reporting from the imported
+> history.
+
+Completion history spans **2002-02-17 → 2026-07-22** — 24 years, considerably deeper than the
+2021-onward window an early truncated query suggested.
 
 ## Follow-on scope (mapped, not yet planned)
 

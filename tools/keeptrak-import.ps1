@@ -88,7 +88,18 @@ function S($v, [int]$max = 0, [string]$what = '') {
             $script:Truncations[$what] = $script:Truncations[$what] + 1
         }
     }
-    return "'" + $s.Replace("'", "''") + "'"
+    $s = $s.Replace("'", "''")
+    # Keep every statement on ONE physical line. SQL*Plus is a line-oriented client: it ends a
+    # statement at a ';' that falls at end-of-line and executes the buffer on a lone '/', and it
+    # does BOTH even inside a string literal. PM procedure memos contain semicolons at line ends
+    # and stray slashes, which produced ORA-00933. Encoding the newlines as CHR(10) sidesteps the
+    # whole class of problem and preserves the text exactly.
+    $s = $s -replace "`r`n", "`n"
+    if ($s.Contains("`n") -or $s.Contains("`r")) {
+        $parts = ($s -split "`n") | ForEach-Object { "'" + ($_ -replace "`r", '') + "'" }
+        return ($parts -join "||CHR(10)||")
+    }
+    return "'" + $s + "'"
 }
 function N($v) {
     if ($null -eq $v -or $v -is [DBNull] -or [string]::IsNullOrWhiteSpace([string]$v)) { return 'NULL' }
@@ -133,18 +144,18 @@ foreach ($r in $lev1.Rows) {
 }
 $lev2 = Q "SELECT fa_Lev2id, fl_Lev1id, fs_Lev2 FROM usys_tLev2"
 foreach ($r in $lev2.Rows) {
-    $dept = if ($r.fl_Lev1id -is [DBNull]) { 'NULL' } else { $IdOffset + [int]$r.fl_Lev1id }
+    $dept = if ($r.fl_Lev1id -is [DBNull] -or [int]$r.fl_Lev1id -eq 0) { 'NULL' } else { $IdOffset + [int]$r.fl_Lev1id }
     W ("INSERT INTO systemequipment (sysequipment_id, groupdepartment_id, systemequipment) VALUES ({0}, {1}, {2});" -f `
         ($IdOffset + [int]$r.fa_Lev2id), $dept, (S $r.fs_Lev2 128 "systemequipment.systemequipment"))
 }
 # Lev2 -> Lev1 lookup so subsystem rows can carry the department too (ABIS stores it on each level).
 $deptOfLev2 = @{}
-foreach ($r in $lev2.Rows) { if ($r.fl_Lev1id -isnot [DBNull]) { $deptOfLev2[[int]$r.fa_Lev2id] = [int]$r.fl_Lev1id } }
+foreach ($r in $lev2.Rows) { if ($r.fl_Lev1id -isnot [DBNull] -and [int]$r.fl_Lev1id -ne 0) { $deptOfLev2[[int]$r.fa_Lev2id] = [int]$r.fl_Lev1id } }
 $lev3 = Q "SELECT fa_Lev3id, fl_Lev2id, fs_Lev3 FROM usys_tLev3"
 $sysOfLev3 = @{}
 foreach ($r in $lev3.Rows) {
     $sysId = 'NULL'; $deptId = 'NULL'
-    if ($r.fl_Lev2id -isnot [DBNull]) {
+    if ($r.fl_Lev2id -isnot [DBNull] -and [int]$r.fl_Lev2id -ne 0) {
         $l2 = [int]$r.fl_Lev2id
         $sysOfLev3[[int]$r.fa_Lev3id] = $l2
         $sysId = $IdOffset + $l2
@@ -156,7 +167,7 @@ foreach ($r in $lev3.Rows) {
 $lev4 = Q "SELECT fa_Lev4id, fl_Lev3id, fs_Lev4 FROM usys_tLev4"
 foreach ($r in $lev4.Rows) {
     $subId = 'NULL'; $sysId = 'NULL'
-    if ($r.fl_Lev3id -isnot [DBNull]) {
+    if ($r.fl_Lev3id -isnot [DBNull] -and [int]$r.fl_Lev3id -ne 0) {
         $l3 = [int]$r.fl_Lev3id
         $subId = $IdOffset + $l3
         if ($sysOfLev3.ContainsKey($l3)) { $sysId = $IdOffset + $sysOfLev3[$l3] }
@@ -206,10 +217,18 @@ foreach ($r in $pms.Rows) {
     if ($isHold) { $holdCount++ }
     $status = if ($isHold) { 0 } else { 1 }
     $days   = if ($isHold) { 'NULL' } else { N $r.fl_DaysBetween }
+    # pm.maint_freq is a FOREIGN KEY to MAINT_FREQUENCY, not free text — and ABIS uses the SAME
+    # code vocabulary as KeepTrak (1XY=365, 4XY=91, WX8=56 ...), so the code imports directly.
+    # 'HOLD' is KeepTrak's parking marker and has no MAINT_FREQUENCY row -> NULL (the PM is
+    # already pm_status 0, so it carries no schedule anyway).
+    $freqCode = if ($isHold) { 'NULL' } else { (S $r.fs_Freq 32 "pm.maint_freq") }
     $craft  = 'NULL'
     $t = [string]$r.fs_AssignedToTitle
     if (-not [string]::IsNullOrWhiteSpace($t) -and $craftId.ContainsKey($t)) { $craft = $craftId[$t] }
-    $lev = { param($v) if ($v -is [DBNull]) { 'NULL' } else { $IdOffset + [int]$v } }
+    # KeepTrak (Access) stores 0 -- not NULL -- for "no level assigned": 124 of 143 PMs have
+    # fl_Lev4id = 0 and 49 have fl_Lev3id = 0, and no Lev3/Lev4 row has id 0. Mapping 0 naively
+    # emits offset+0, a dangling parent key (ORA-02291). Treat 0 exactly like NULL.
+    $lev = { param($v) if ($v -is [DBNull] -or [int]$v -eq 0) { 'NULL' } else { $IdOffset + [int]$v } }
 
     $tmpl = "INSERT INTO pm (pm_id, pmshift, titlecraft_id, maint_freq, itemdevice_id, subsysequipment_id," +
             " sysequipment_id, groupdepartment_id, assignedtogroup, pm_status, pm_notice, mins_per_unit," +
@@ -219,7 +238,7 @@ foreach ($r in $pms.Rows) {
             " VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}," +
             " {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, 0, {26});"
     W ($tmpl -f `
-        $pmId, (S $r.fs_PMShift 32), $craft, (S $r.fs_FreqDesc 32 "pm.maint_freq"),
+        $pmId, (S $r.fs_PMShift 32), $craft, $freqCode,
         (& $lev $r.fl_Lev4id), (& $lev $r.fl_Lev3id), (& $lev $r.fl_Lev2id), (& $lev $r.fl_Lev1id),
         (S $r.fs_AssignedTo 64 "pm.assignedtogroup"), $status, (S $r.fm_Info 1024 "pm.pm_notice"), (N $r.fld_EstMinPerPerson),
         (N $r.fld_EstNumOfPeople), $days, (N $r.fl_Range), (D $r.fd_NextDueDate),
@@ -272,7 +291,10 @@ foreach ($r in $comps.Rows) {
     $kpm = [int]$r.fl_PMid
     if (-not $pmLevels.ContainsKey($kpm)) { continue }   # orphaned completion — no parent PM
     $p = $pmLevels[$kpm]
-    $lev = { param($v) if ($v -is [DBNull]) { 'NULL' } else { $IdOffset + [int]$v } }
+    # KeepTrak (Access) stores 0 -- not NULL -- for "no level assigned": 124 of 143 PMs have
+    # fl_Lev4id = 0 and 49 have fl_Lev3id = 0, and no Lev3/Lev4 row has id 0. Mapping 0 naively
+    # emits offset+0, a dangling parent key (ORA-02291). Treat 0 exactly like NULL.
+    $lev = { param($v) if ($v -is [DBNull] -or [int]$v -eq 0) { 'NULL' } else { $IdOffset + [int]$v } }
     # assignedtogroup + completedby are NOT NULL; Oracle treats '' as NULL, so supply a real value.
     $grp = [string]$r.fs_AssignedTo; if ([string]::IsNullOrWhiteSpace($grp)) { $grp = 'Unassigned' }
     $by  = [string]$r.fs_CompBy;     if ([string]::IsNullOrWhiteSpace($by))  { $by  = 'unknown' }
@@ -292,7 +314,8 @@ W "--          $($lev4.Rows.Count) item/devices, $($craftId.Count) crafts, $pmCo
 W "--          $compCount completions."
 $conn.Close()
 
-$out | Out-File -FilePath $OutFile -Encoding utf8
+# No BOM: SQL*Plus reports SP2-0734 on a leading byte-order mark.
+[System.IO.File]::WriteAllLines($OutFile, $out, (New-Object System.Text.UTF8Encoding $false))
 Write-Host "Wrote $OutFile"
 Write-Host "  hierarchy : $($lev1.Rows.Count) dept / $($lev2.Rows.Count) system / $($lev3.Rows.Count) subsystem / $($lev4.Rows.Count) item"
 Write-Host "  crafts    : $($craftId.Count)"
