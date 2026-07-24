@@ -105,6 +105,10 @@ const NAV: NavGroup[] = [
     { id: 'carriers', label: 'Carriers', href: '/ui/carriers.html', icon: I.truck2 },
     { id: 'trucks', label: 'Truck scheduling', href: '/ui/truck-scheduling.html', icon: I.truck2 },
     { id: 'coil-ownership', label: 'Coil ownership', href: '/ui/coil-ownership.html', feature: 'Inventory(Coil)', icon: I.swap },
+    // PENDING a legacy/current call: this is pre-design-system standalone HTML with its own
+    // header nav and no compiled TS, and the printable docs it covers are now reached from the
+    // Print buttons on Shipping. Linked so it can be judged rather than forgotten; remove if legacy.
+    { id: 'documents', label: 'Documents', href: '/ui/documents.html', icon: I.folder },
   ]},
   { group: 'Finance', items: [
     { id: 'accounting', label: 'Accounting', href: '/ui/accounting.html', icon: I.acct },
@@ -124,6 +128,8 @@ const NAV: NavGroup[] = [
     { id: 'das-board', label: 'Production floor board', href: '/ui/das-board.html', icon: I.screen },
     { id: 'coil-scanner', label: 'Coil scanner', href: '/ui/coil-scanner.html', icon: I.scan },
     { id: 'truck-kiosk', label: 'Driver check-in', href: '/ui/truck-kiosk.html', icon: I.truck2 },
+    // Shop-floor barcode capture (greenfield module replacing the legacy `scan` window).
+    { id: 'scan', label: 'Scan events', href: '/ui/scan.html', icon: I.scan },
   ]},
   { group: 'EDI & Admin', items: [
     { id: 'edi', label: 'EDI operations', href: '/ui/edi.html', feature: 'EDI', icon: I.edi },
