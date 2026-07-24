@@ -141,10 +141,11 @@ assumption. Dropping them loses real maintenance-cost history.
 
 **Resolved by the schema dump (2026-07-24):**
 
-- ~~Is the legacy ABIS `pm` data live or abandoned?~~ **Abandoned.** KeepTrak is written daily and
-  carries 13,648 completions still running ~800/year; ABIS's `pm` holds 2,051 and nothing current.
-  The import starts clean rather than merging into those rows. (A `.230` query would only confirm
-  this and is no longer worth blocking on.)
+- ~~Is the legacy ABIS `pm` data live or abandoned?~~ **Abandoned since August 2010** — confirmed
+  directly against `.230` (2026-07-24): newest `pm_entered` **2010-02-17**, newest `lastupdate`
+  **2010-08-10**, newest `pmcompletions.completeddate` **2010-08-24**, 77 PMs / 2,051 completions.
+  KeepTrak's own frequency catalog dates from 2019, so it took over long afterwards. **The import
+  starts clean** — no merge, no id reconciliation against those rows.
 - ~~Meter-based PMs?~~ **None.** All 143 live PMs are calendar (`CAL`) type, so the calendar-only
   due board and auto-advance cover everything. Reading columns are mapped anyway for future use.
 - ~~Does KeepTrak hold spares?~~ **Yes** — `t_PI` (1,401 parts) + suppliers/categories/usage. ABIS's
@@ -153,11 +154,16 @@ assumption. Dropping them loses real maintenance-cost history.
 
 **Still open — need a decision:**
 
-1. **Labour hours + cost per completion.** KeepTrak records `fld_LaborHours` and `fc_Cost` on each
-   of its 13,648 completions; ABIS `pmcompletions` has no column for either. Preserving them means
-   adding two columns to a legacy Oracle table; dropping them discards real cost history. Options:
-   add the columns, fold them into `completed_notes` (lossy, unqueryable), or drop.
-2. **How much completion history to import.** All 13,648 rows back to 2021, or a recent window?
+- ~~Labour hours + cost per completion?~~ **Decided: add the columns.** `pmcompletions` gains
+  `labor_hours` and `comp_cost` via **migration 008**, preserving all 13,648 rows of cost history
+  as queryable numbers. NULL means "not recorded" — deliberately distinct from 0 ("free").
+  Note 008 is the first migration to ALTER a *legacy* table (001–007 only created ABIS-owned
+  tables); it is additive and NULLable, so the legacy PowerBuilder app is unaffected.
+
+**Still open — need a decision:**
+
+1. **How much completion history to import.** All 13,648 rows back to 2021, or a recent window?
    Full history is more faithful and only ~13k rows — the default should be all of it.
-3. **Retire-in-place vs cutover date.** Once imported, KeepTrak must stop being written or the two
-   diverge. Needs an agreed cutover moment, not just a successful import.
+2. **Retire-in-place vs cutover date.** Once imported, KeepTrak must stop being written or the two
+   diverge. Needs an agreed cutover moment, not just a successful import. Current plan: load the
+   `.230` sandbox as a dry run first, cut over as a separate deliberate step.

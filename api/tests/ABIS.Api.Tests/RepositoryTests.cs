@@ -2161,7 +2161,8 @@ public sealed class RepositoryTests : IDisposable
         var completedOn = DateTime.Today;
 
         var r = await _repo.CompletePmAsync(7001,
-            new PmCompleteWrite { CompletedBy = "tech9", CompletedDate = completedOn, CompletedNotes = "Done" },
+            new PmCompleteWrite { CompletedBy = "tech9", CompletedDate = completedOn, CompletedNotes = "Done",
+                                  LaborHours = 2.25m, CompCost = 95.63m },
             CancellationToken.None);
 
         Assert.Equal("daysBetween", r!.AdvanceBasis);
@@ -2181,6 +2182,8 @@ public sealed class RepositoryTests : IDisposable
         Assert.Equal(r.PmCompletionId, history[0].PmCompletionId);
         Assert.Equal("tech9", history[0].CompletedBy);
         Assert.Equal("Done", history[0].CompletedNotes);
+        Assert.Equal(2.25m, history[0].LaborHours);     // migration 008 fields persist on write
+        Assert.Equal(95.63m, history[0].CompCost);
         Assert.Equal(500, history[0].ItemDeviceId);
         Assert.Equal("Maintenance", history[0].AssignedToGroup);
     }
@@ -2333,6 +2336,11 @@ public sealed class RepositoryTests : IDisposable
         Assert.Equal(2, done.Count);
         Assert.True(done[0].CompletedDate > done[1].CompletedDate);
         Assert.Equal("tech1", done[0].CompletedBy);
+        // Labour/cost (migration 008) round-trip; NULL stays NULL rather than collapsing to 0,
+        // because "not recorded" is a different fact from "free".
+        Assert.Equal(0.5m, done[0].LaborHours);
+        Assert.Equal(21.25m, done[0].CompCost);
+        Assert.Null(Assert.Single(await _repo.GetPmCompletionsAsync(7002, CancellationToken.None)).LaborHours);
         Assert.Empty(await _repo.GetPmCompletionsAsync(7003, CancellationToken.None));
     }
 

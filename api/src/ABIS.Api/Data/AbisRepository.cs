@@ -6530,7 +6530,7 @@ public sealed class AbisRepository : IAbisRepository
                    subsysequipment_id AS SubsysEquipmentId, sysequipment_id AS SysEquipmentId,
                    groupdepartment_id AS GroupDepartmentId, pm_status AS PmStatus, completeddate AS CompletedDate,
                    assignedtogroup AS AssignedToGroup, completedby AS CompletedBy, completed_notes AS CompletedNotes,
-                   recordeddate AS RecordedDate
+                   recordeddate AS RecordedDate, labor_hours AS LaborHours, comp_cost AS CompCost
             FROM pmcompletions WHERE pm_id = :id ORDER BY completeddate DESC, pmcompletion_id DESC
             """, new { id = pmId }, cancellationToken: ct));
         return rows.AsList();
@@ -6699,13 +6699,15 @@ public sealed class AbisRepository : IAbisRepository
             """
             INSERT INTO pmcompletions (pmcompletion_id, itemdevice_id, subsysequipment_id, sysequipment_id,
                 groupdepartment_id, pm_id, pm_status, completeddate, assignedtogroup, completedby,
-                completed_notes, recordeddate)
-            VALUES (:id, :item, :subsys, :sys, :dept, :pm, :status, :completed, :grp, :by, :notes, :recorded)
+                completed_notes, recordeddate, labor_hours, comp_cost)
+            VALUES (:id, :item, :subsys, :sys, :dept, :pm, :status, :completed, :grp, :by, :notes, :recorded,
+                :labor, :cost)
             """,
             new { id = completionId, item = pm.ItemDeviceId, subsys = pm.SubsysEquipmentId,
                   sys = pm.SysEquipmentId, dept = pm.GroupDepartmentId, pm = pmId,
                   status = pm.PmStatus ?? 1, completed = completedDate, grp = group,
-                  by = body.CompletedBy, notes = body.CompletedNotes, recorded = (DateTime?)DateTime.UtcNow },
+                  by = body.CompletedBy, notes = body.CompletedNotes, recorded = (DateTime?)DateTime.UtcNow,
+                  labor = body.LaborHours, cost = body.CompCost },
             transaction: tx, cancellationToken: ct));
 
         await conn.ExecuteAsync(new CommandDefinition(

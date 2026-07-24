@@ -1104,6 +1104,11 @@ public sealed class PmCompletion
     public string? CompletedBy { get; set; }
     public string? CompletedNotes { get; set; }
     public DateTime? RecordedDate { get; set; }
+    /// <summary>Hours worked on this completion. NULL = not recorded (distinct from 0 = free).
+    /// Added by migration 008 to carry KeepTrak's history.</summary>
+    public decimal? LaborHours { get; set; }
+    /// <summary>Cost of this completion (migration 008). NULL = not recorded.</summary>
+    public decimal? CompCost { get; set; }
 }
 
 /// <summary>Outcome of recording a PM completion — reports exactly how the schedule moved so the

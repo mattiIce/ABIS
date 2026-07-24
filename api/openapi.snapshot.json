@@ -20416,6 +20416,16 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "laborHours": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "compCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -20475,6 +20485,16 @@
           "recordedDate": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          },
+          "laborHours": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "compCost": {
+            "type": "number",
+            "format": "double",
             "nullable": true
           }
         },

@@ -522,7 +522,10 @@ public static class SqliteFixture
                 pmcompletion_id INTEGER PRIMARY KEY, itemdevice_id INTEGER, subsysequipment_id INTEGER,
                 sysequipment_id INTEGER, groupdepartment_id INTEGER, pm_id INTEGER, pm_status INTEGER NOT NULL,
                 completeddate TEXT NOT NULL, assignedtogroup TEXT NOT NULL, completedby TEXT NOT NULL,
-                completed_notes TEXT, recordeddate TEXT);
+                completed_notes TEXT, recordeddate TEXT,
+                -- Added by migration 008 to carry KeepTrak's per-completion labour/cost history.
+                -- NULL means "not recorded", deliberately distinct from 0 ("free").
+                labor_hours REAL, comp_cost REAL);
 
             CREATE TABLE dt_cause (
                 id INTEGER PRIMARY KEY, cause_name TEXT, note TEXT);
@@ -1534,21 +1537,23 @@ public static class SqliteFixture
 
         conn.Execute("""
             INSERT INTO pmcompletions (pmcompletion_id, itemdevice_id, subsysequipment_id, sysequipment_id,
-                groupdepartment_id, pm_id, pm_status, completeddate, assignedtogroup, completedby, completed_notes, recordeddate)
+                groupdepartment_id, pm_id, pm_status, completeddate, assignedtogroup, completedby, completed_notes,
+                recordeddate, labor_hours, comp_cost)
             VALUES (:PmCompletionId, :ItemDeviceId, :SubsysEquipmentId, :SysEquipmentId, :GroupDepartmentId,
-                :PmId, :PmStatus, :CompletedDate, :AssignedToGroup, :CompletedBy, :CompletedNotes, :RecordedDate)
+                :PmId, :PmStatus, :CompletedDate, :AssignedToGroup, :CompletedBy, :CompletedNotes, :RecordedDate,
+                :LaborHours, :CompCost)
             """,
             new[]
             {
                 new { PmCompletionId = 7201L, ItemDeviceId = (long?)500L, SubsysEquipmentId = (long?)400L, SysEquipmentId = (long?)300L,
                       GroupDepartmentId = (long?)10L, PmId = (long?)7001L, PmStatus = 1, CompletedDate = ds(today.AddDays(-40)),
-                      AssignedToGroup = "Maintenance", CompletedBy = "tech1", CompletedNotes = "Greased, no play", RecordedDate = ds(today.AddDays(-40)) },
+                      AssignedToGroup = "Maintenance", CompletedBy = "tech1", CompletedNotes = "Greased, no play", RecordedDate = ds(today.AddDays(-40)), LaborHours = (decimal?)0.5m, CompCost = (decimal?)21.25m },
                 new { PmCompletionId = 7202L, ItemDeviceId = (long?)500L, SubsysEquipmentId = (long?)400L, SysEquipmentId = (long?)300L,
                       GroupDepartmentId = (long?)10L, PmId = (long?)7001L, PmStatus = 1, CompletedDate = ds(today.AddDays(-70)),
-                      AssignedToGroup = "Maintenance", CompletedBy = "tech2", CompletedNotes = "Replaced seal", RecordedDate = ds(today.AddDays(-70)) },
+                      AssignedToGroup = "Maintenance", CompletedBy = "tech2", CompletedNotes = "Replaced seal", RecordedDate = ds(today.AddDays(-70)), LaborHours = (decimal?)1.5m, CompCost = (decimal?)63.75m },
                 new { PmCompletionId = 7203L, ItemDeviceId = (long?)501L, SubsysEquipmentId = (long?)401L, SysEquipmentId = (long?)300L,
                       GroupDepartmentId = (long?)10L, PmId = (long?)7002L, PmStatus = 1, CompletedDate = ds(today.AddDays(-4)),
-                      AssignedToGroup = "Maintenance", CompletedBy = "tech2", CompletedNotes = "Tensioned", RecordedDate = ds(today.AddDays(-4)) }
+                      AssignedToGroup = "Maintenance", CompletedBy = "tech2", CompletedNotes = "Tensioned", RecordedDate = ds(today.AddDays(-4)), LaborHours = (decimal?)null, CompCost = (decimal?)null }
             });
 
         conn.Execute("""

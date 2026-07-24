@@ -24037,6 +24037,8 @@ export class PmCompleteWrite {
             this.completedDate = _data["completedDate"] ? new Date(_data["completedDate"].toString()) : undefined;
             this.completedNotes = _data["completedNotes"];
             this.nextDueDate = _data["nextDueDate"] ? new Date(_data["nextDueDate"].toString()) : undefined;
+            this.laborHours = _data["laborHours"];
+            this.compCost = _data["compCost"];
         }
     }
     static fromJS(data) {
@@ -24051,6 +24053,8 @@ export class PmCompleteWrite {
         data["completedDate"] = this.completedDate ? this.completedDate.toISOString() : undefined;
         data["completedNotes"] = this.completedNotes;
         data["nextDueDate"] = this.nextDueDate ? this.nextDueDate.toISOString() : undefined;
+        data["laborHours"] = this.laborHours;
+        data["compCost"] = this.compCost;
         return data;
     }
 }
@@ -24077,6 +24081,8 @@ export class PmCompletion {
             this.completedBy = _data["completedBy"];
             this.completedNotes = _data["completedNotes"];
             this.recordedDate = _data["recordedDate"] ? new Date(_data["recordedDate"].toString()) : undefined;
+            this.laborHours = _data["laborHours"];
+            this.compCost = _data["compCost"];
         }
     }
     static fromJS(data) {
@@ -24099,6 +24105,8 @@ export class PmCompletion {
         data["completedBy"] = this.completedBy;
         data["completedNotes"] = this.completedNotes;
         data["recordedDate"] = this.recordedDate ? this.recordedDate.toISOString() : undefined;
+        data["laborHours"] = this.laborHours;
+        data["compCost"] = this.compCost;
         return data;
     }
 }
