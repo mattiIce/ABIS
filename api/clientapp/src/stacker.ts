@@ -99,6 +99,7 @@ async function loadPath(): Promise<void> {
   const onPath = (s: PathSkid) => /^\d+$/.test(s.slot);
   const anyStack = lines.some((l) => (l.skids ?? []).some(onPath));
 
+  const onShownPath = new Set(STACK_PATH.map((p) => p.slot));
   box.innerHTML = lines.map((l) => {
     const bySlot = new Map((l.skids ?? []).filter(onPath).map((s) => [s.slot, s]));
     const cells = STACK_PATH.map(({ slot, label }) => {
@@ -109,7 +110,13 @@ async function loadPath(): Promise<void> {
         <div class="sv">${s ? `#${esc(s.sheetSkidDisplayNum ?? s.sheetSkidNum)}${s.abJobNum != null ? `<span>job ${esc(s.abJobNum)}</span>` : ''}` : ''}</div>
       </div>`;
     }).join('');
-    return `<div class="stack-line"><div class="sh">${esc(lineLabel(l.lineNum))}</div><div class="stack-cells">${cells}</div></div>`;
+    // A skid recorded at a station the path no longer shows (wrapper 2 was removed) must NOT vanish —
+    // dropping it silently would hide real inventory. Surface it explicitly instead.
+    const offPath = (l.skids ?? []).filter((s) => onPath(s) && !onShownPath.has(s.slot));
+    const stray = offPath.length
+      ? `<div class="stack-stray">⚠ ${offPath.map((s) => `skid #${esc(s.sheetSkidDisplayNum ?? s.sheetSkidNum)} recorded at removed station ${esc(s.slot)} (${esc(statusChip('stackLocation', Number(s.slot)).replace(/<[^>]*>/g, ''))})`).join('; ')}</div>`
+      : '';
+    return `<div class="stack-line"><div class="sh">${esc(lineLabel(l.lineNum))}</div><div class="stack-cells">${cells}</div>${stray}</div>`;
   }).join('');
 
   // Be explicit when the path is empty rather than showing a silent row of blanks: on the live DB

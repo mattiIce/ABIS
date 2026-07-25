@@ -182,9 +182,19 @@ const stackConveyor = {
     6: { label: 'Wrapper 2 unload', tone: 'info' },
     7: { label: 'Overhead crane', tone: 'warn' },
 };
-/** The stacker conveyor path in order — the 19 stations a stack passes through, matching the
- * LINE_CURRENT_STATUS.SHEET_SKID_LOCATION_n columns the line board exposes as slots "0".."18". */
-export const STACK_PATH = Array.from({ length: 19 }, (_, i) => ({ slot: String(i), label: stackLocation[i].label }));
+/** Stations that no longer physically exist. **WRAPPER 2 HAS BEEN REMOVED FROM THE PLANT** (confirmed
+ * by the user 2026-07-25): the belt now runs stacker → wrapper 1 → output, so locations 14–18 (WP2 load
+ * conveyor, entering/leaving wrapper 2, WP2 unload conveyor, end of WP2 unload) are dead track. They stay
+ * in {@link stackLocation} so a HISTORICAL row carrying one of those codes still decodes to its real
+ * meaning — we only drop them from the live path, which should show the line as it is today. */
+const REMOVED_STATIONS = new Set([14, 15, 16, 17, 18]);
+/** The stacker conveyor path in order — the stations a stack passes through that still exist, matching
+ * the LINE_CURRENT_STATUS.SHEET_SKID_LOCATION_n columns the line board exposes as slots "0".."18".
+ * Wrapper 2's stations are omitted (see {@link REMOVED_STATIONS}), so the board shows the real line
+ * rather than legacy's 19 — that is an intentional divergence from the legacy board, not an omission. */
+export const STACK_PATH = Array.from({ length: 19 }, (_, i) => i)
+    .filter((i) => !REMOVED_STATIONS.has(i))
+    .map((i) => ({ slot: String(i), label: stackLocation[i].label }));
 export const STATUS_MAPS = {
     jobStatus,
     coilStatus,

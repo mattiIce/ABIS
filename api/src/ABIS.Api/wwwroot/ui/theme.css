@@ -429,6 +429,9 @@ tr.run-open td { background:color-mix(in srgb, var(--accent) 10%, transparent); 
 .stack-cell.full { border-color:color-mix(in srgb, var(--accent) 55%, transparent);
   background:color-mix(in srgb, var(--accent) 10%, var(--surface-2)); }
 .stack-cell.full .sl { color:var(--ink); }
+/* A skid recorded at a station that no longer exists (wrapper 2 was removed) — surfaced rather than
+   dropped, so real inventory can't disappear off the board. */
+.stack-stray { margin-top:6px; font-size:12px; color:var(--crit); }
 
 /* Scan-to-load result: the coil a scanned label resolved to (or why it didn't), confirmed by the
    operator before the coil is loaded. */

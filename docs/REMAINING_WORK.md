@@ -211,8 +211,12 @@ The edge read path is live (run-state + piece-count → auto-downtime); the DAS 
   18 At end WP2 unload). So the board renders straight from the line board's `skids[]` slots with no new read
   path. Both that legend and the `conveyor` zone legend (`:13`) are now decoded in the shared `status-labels`
   (`stackLocation` / `stackConveyor` + an ordered `STACK_PATH`), ported verbatim rather than invented. The
-  Stacker page gained a **Conveyor path** card: one row per line, 19 stations left-to-right, occupied stations
-  highlighted with the skid + job. ⚠ **These columns are unpopulated on the live DB** (only a stacker head had a
+  Stacker page gained a **Conveyor path** card: one row per line, stations left-to-right, occupied stations
+  highlighted with the skid + job. **WRAPPER 2 HAS BEEN REMOVED FROM THE PLANT** (user, 2026-07-25 — the belt
+  now runs stacker → wrapper 1 → output), so locations **14–18 are omitted** and the board shows **14** stations
+  (0–13), not legacy's 19 — a deliberate divergence so the board reflects the real line. The removed codes stay
+  in the decode map so historical rows still resolve, and a skid recorded at a removed station is **surfaced as
+  a warning rather than dropped**, so real inventory can't disappear off the board. ⚠ **These columns are unpopulated on the live DB** (only a stacker head had a
   value), so the path renders empty in practice and says so explicitly rather than showing a silent blank row —
   they are written by the stacker automation. Still TODO: the 11 **shape displays**, and driving positions from
   the live OPC conveyor cells (`StackOnConveyor1..3`, `StackEntering/LeavingWrapper1/2`, …) which are readable
