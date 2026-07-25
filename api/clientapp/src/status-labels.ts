@@ -164,6 +164,50 @@ const testType: Domain = {
 // process_coil.process_coil_status shares the coil_status code space (accounting.js:19 confirms
 // 3=Rejected/7=Rebanded; w_invoice.srw:250/274). receiving coil lines are stamped 2=New / 11=QA
 // on hold (receiving.ts mint), also the coil_status space — so both reuse the coilStatus map.
+// The stacker conveyor path: where a finished stack is between the stacker head and the end of the
+// wrapper line. Ported VERBATIM from the legacy board's value list (d_conveyor_skid.srd:12) — these
+// 19 codes are exactly the 19 LINE_CURRENT_STATUS.SHEET_SKID_LOCATION_0..18 columns, i.e. the columns
+// ARE the stations of this path, which is why the board can be rendered straight from the line board.
+const stackLocation: Domain = {
+  0: { label: 'Stack complete', tone: 'ok' },
+  1: { label: 'Leaving lift table', tone: 'info' },
+  2: { label: 'Entering conveyor 1', tone: 'info' },
+  3: { label: 'On conveyor 1', tone: 'info' },
+  4: { label: 'Leaving conveyor 1', tone: 'info' },
+  5: { label: 'On conveyor 2', tone: 'info' },
+  6: { label: 'Leaving conveyor 2', tone: 'info' },
+  7: { label: 'On conveyor 3', tone: 'info' },
+  8: { label: 'At centre conveyor 3', tone: 'info' },
+  9: { label: 'Entering wrapper 1', tone: 'info' },
+  10: { label: 'Leaving wrapper 1', tone: 'info' },
+  11: { label: 'On WP1 unload conveyor', tone: 'info' },
+  12: { label: 'At centre WP1 unload', tone: 'info' },
+  13: { label: 'Overhead crane', tone: 'warn' },
+  14: { label: 'On WP2 load conveyor', tone: 'info' },
+  15: { label: 'Entering wrapper 2', tone: 'info' },
+  16: { label: 'Leaving wrapper 2', tone: 'info' },
+  17: { label: 'On WP2 unload conveyor', tone: 'info' },
+  18: { label: 'At end WP2 unload', tone: 'ok' },
+};
+
+// The physical zone a stack sits in (legacy d_conveyor_skid.srd:13). Note 0 = the stacker conveyor
+// itself, so the codes are NOT a prefix of the location codes above — they are a coarser grouping.
+const stackConveyor: Domain = {
+  0: { label: 'Stacker conveyor', tone: 'info' },
+  1: { label: 'Idle conveyor 1', tone: 'mut' },
+  2: { label: 'Idle conveyor 2', tone: 'mut' },
+  3: { label: 'Idle conveyor 3', tone: 'mut' },
+  4: { label: 'Wrapper 1 unload', tone: 'info' },
+  5: { label: 'Wrapper 2 load', tone: 'info' },
+  6: { label: 'Wrapper 2 unload', tone: 'info' },
+  7: { label: 'Overhead crane', tone: 'warn' },
+};
+
+/** The stacker conveyor path in order — the 19 stations a stack passes through, matching the
+ * LINE_CURRENT_STATUS.SHEET_SKID_LOCATION_n columns the line board exposes as slots "0".."18". */
+export const STACK_PATH: { slot: string; label: string }[] =
+  Array.from({ length: 19 }, (_, i) => ({ slot: String(i), label: stackLocation[i].label }));
+
 export const STATUS_MAPS: Record<string, Domain> = {
   jobStatus,
   coilStatus,
@@ -179,6 +223,8 @@ export const STATUS_MAPS: Record<string, Domain> = {
   truckStatus,
   shipmentStatus,
   testType,
+  stackLocation,
+  stackConveyor,
 };
 
 // The plant's real line names (BL78, BL84, BL110, BL108, BL60) live in the LINE table (line_num →
