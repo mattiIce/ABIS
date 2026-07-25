@@ -2474,15 +2474,24 @@ public static class ApiEndpoints
             {
                 var shipment = await repo.GetShipmentAsync(packingList, ct);
                 if (shipment is null) return Results.NotFound();
+                var doc = await repo.GetBolDocumentAsync(packingList, ct);
+                // Legacy stops with "There is nothing to ship in this shipment!" rather than printing a
+                // blank form — a bill of lading with no freight on it is worse than none, because it
+                // looks like a valid document. 409, not an empty 200.
+                if (doc is null || doc.Empty)
+                    return Results.Problem(
+                        title: "Nothing to ship",
+                        detail: $"Shipment {packingList} has no sheet skids, scrap skids or rejected coils on it, so there is no bill of lading to print.",
+                        statusCode: StatusCodes.Status409Conflict);
                 var carrier = shipment.CarrierId is { } carId ? await repo.GetCarrierAsync(carId, ct) : null;
                 var customer = shipment.CustomerId is { } cid ? await repo.GetCustomerAsync(cid, ct) : null;
                 var shipTo = shipment.DesShCustId is { } shId ? await repo.GetCustomerAsync(shId, ct) : null;
-                var items = await repo.GetPackingItemsAsync(packingList, ct);
-                return Results.Content(HtmlDocuments.BillOfLading(shipment, carrier, customer, shipTo, items), "text/html; charset=utf-8");
+                return Results.Content(HtmlDocuments.BillOfLading(shipment, carrier, customer, shipTo, doc), "text/html; charset=utf-8");
             })
            .WithName("BolDocument").WithTags("Documents")
-           .WithSummary("Printable bill of lading for a shipment — ship-from / ship-to / carrier + the freight summary (handling units + total net/gross weight) + signature lines.")
-           .Produces(StatusCodes.Status200OK, contentType: "text/html").Produces(StatusCodes.Status404NotFound);
+           .WithSummary("Printable bill of lading (legacy rpabco/u_default_billoflading) — ship-from / ship-to / carrier, the per-job PO/part blocks, the three freight sections (sheet skids / accumulated scrap return / rejected coil return) with counts and weights, the multi-stop package note, and signature lines. 409 when the shipment carries nothing, since a blank BOL is worse than none.")
+           .Produces(StatusCodes.Status200OK, contentType: "text/html")
+           .Produces(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
 
         api.MapPost("/sheet-skids", async (SheetSkidWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
