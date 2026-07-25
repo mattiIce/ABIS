@@ -369,7 +369,8 @@ Other stacker bits discovered live but not mapped to a location: `StackRemovedFr
 **BL84 has no cell map, on purpose.** Verified live 2026-07-25 via `/opc/browse`: the whole `stacker84`
 branch is stripped to five `Display_0N` items — **no `Stack*` cells exist at all**, and even
 `station1_stack_counter` / `Sta1StackComplete` / `ScaleSkidWt` read `quality=Bad`. That matches the BL84
-stacker being out of service (~6 months). An earlier draft of the plant config mapped `stacker84.Stack*`
+stacker having been down for **years**, with no near-term return (confirmed by the plant 2026-07-25) —
+**BL110 is the only line with a working stacker.** An earlier draft of the plant config mapped `stacker84.Stack*`
 cells **by pattern** from `stacker110`; none of them exist, and all twelve read Bad. **When the BL84
 stacker returns to service, browse `stacker84` first and add only the item ids the server actually
 offers** — do not assume it mirrors `stacker110`.
