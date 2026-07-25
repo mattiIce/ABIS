@@ -987,6 +987,12 @@ public static class ApiEndpoints
            .WithSummary("A shipment's status-change audit trail (legacy SHIPMENT_TRACK) — before/after shipment + vehicle status (and customer/ship-to) with who/when, newest first.")
            .Produces<IReadOnlyList<ShipmentTrackRow>>();
 
+        api.MapGet("/shipments/{packingList:long}/bol-document", async (long packingList, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetBolDocumentAsync(packingList, ct) is { } doc ? Results.Ok(doc) : Results.NotFound())
+           .WithName("GetBolDocument").WithTags("Shipments")
+           .WithSummary("Everything a printed bill of lading needs (legacy rpabco/u_default_billoflading): parties, the three sections (sheet skids / accumulated scrap return / rejected coil return) with counts and weights, the per-job PO/part blocks, the shipment total, and the whole BOL's multi-stop totals. Read-only. `empty` = nothing to ship (legacy refuses to print); `detailsPrintable` = false past 3 jobs, which the legacy form has no room for.")
+           .Produces<BolDocument>().Produces(StatusCodes.Status404NotFound);
+
         api.MapPost("/shipments", async (ShipmentWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
                 if (Validate(body) is { } problems)
