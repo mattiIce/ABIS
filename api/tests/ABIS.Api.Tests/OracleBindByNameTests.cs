@@ -5,13 +5,15 @@ using Xunit;
 namespace Abis.Api.Tests;
 
 /// <summary>
-/// Pins that Oracle binds parameters by NAME. ODP.NET defaults this to false, which makes an
-/// <c>OracleCommand</c> match parameters to placeholders by ORDER — while SQLite, which every test in
-/// this suite runs against, matches by name.
-/// <para>That divergence is silent and does not throw: if a parameter object's member order differs
-/// from the placeholder order, each value lands in the neighbouring column and the row is written
-/// wrong. Nothing in CI can see it. This test is the only thing standing between the codebase and a
-/// return to that behaviour.</para>
+/// Pins that Oracle binds parameters by NAME. <b>Defence in depth — this fixes no known defect.</b>
+/// <para>ODP.NET defaults <c>BindByName</c> to false (positional). A sweep claimed that silently
+/// corrupted rows wherever a parameter object's member order differed from the placeholder order.
+/// <b>That was checked against the live Oracle and is FALSE:</b> Dapper reorders parameters to match
+/// the SQL before executing, so the driver never sees a mismatch — six scrambled members and a
+/// wrongly-ordered <c>DynamicParameters</c> both bound correctly with <c>BindByName=false</c>.</para>
+/// <para>The setting is kept only to remove reliance on that Dapper behaviour and to make a genuine
+/// name mismatch fail immediately. Reserved-word bind names are the real trap and are unaffected by
+/// binding mode — see <see cref="OracleBindNameTests"/>.</para>
 /// </summary>
 public sealed class OracleBindByNameTests
 {
@@ -22,10 +24,9 @@ public sealed class OracleBindByNameTests
         _ = new DbConnectionFactory(new DatabaseOptions { Provider = "Sqlite", ConnectionString = "Data Source=:memory:" });
 
         Assert.True(OracleConfiguration.BindByName,
-            "OracleConfiguration.BindByName is false, so ODP.NET is matching parameters to placeholders " +
-            "BY POSITION while the test suite runs on SQLite, which matches BY NAME. Any parameter " +
-            "object whose member order differs from its SQL's placeholder order will silently write " +
-            "every value into the wrong column on Oracle, and no test here can detect it.");
+            "OracleConfiguration.BindByName is false. Dapper's own reordering means this is not " +
+            "currently a live defect, but the setting exists so the codebase does not depend on that " +
+            "behaviour and so a genuine name mismatch fails loudly rather than binding by position.");
     }
 
     [Fact]

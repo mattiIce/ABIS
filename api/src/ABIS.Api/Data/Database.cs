@@ -95,27 +95,24 @@ public sealed class DbConnectionFactory : IDbConnectionFactory
     private readonly DatabaseOptions _options;
 
     /// <summary>
-    /// Bind Oracle parameters by NAME rather than by position — the single most valuable line in this
-    /// file, because it closes the widest gap between what CI proves and what production does.
+    /// Bind Oracle parameters by NAME rather than by position. <b>Defence in depth, not a bug fix.</b>
     /// </summary>
     /// <remarks>
-    /// <para>ODP.NET defaults <c>BindByName</c> to <b>false</b>, so an <c>OracleCommand</c> matches
-    /// parameters to placeholders by ORDER and ignores their names. SQLite binds by name. That
-    /// divergence is silent and it does not throw: when a parameter object's member order differs from
-    /// the placeholder order, every value lands in the neighbouring column and the row is written
-    /// wrong. A sweep found that happening in <c>CreatePartAsync</c> (all 54 part columns shifted by
-    /// one), <c>UpdateSecurityUserAsync</c>, <c>UpdateDimensionCheckAsync</c>, the order/order-item
-    /// INSERTs and every truck-appointment write — none of which any test could catch, because the
-    /// tests run on SQLite where the names line up.</para>
-    /// <para>Setting it true makes Oracle agree with SQLite, so the test suite finally means something
-    /// for this class. It also fixes reusing one bind name for two placeholders (previously ORA-01008),
-    /// and it converts a name mismatch from silent corruption into a loud, immediate error — which is
-    /// exactly the trade you want before a cutover.</para>
-    /// <para>It does NOT excuse reserved-word bind names: <c>:from</c>, <c>:by</c> and friends still
-    /// fail at parse time with ORA-01745 no matter how they bind. <c>OracleBindNameTests</c> guards
-    /// those separately.</para>
-    /// <para>Static and set once — <c>OracleConfiguration</c> is process-wide, and the type initialiser
-    /// guarantees it runs before this factory can hand out a connection.</para>
+    /// <para>ODP.NET defaults <c>BindByName</c> to false, so an <c>OracleCommand</c> matches parameters
+    /// to placeholders by ORDER. That sounds alarming next to a parameter object whose member order
+    /// differs from the SQL — but <b>Dapper reorders parameters to match the SQL text before the
+    /// command is executed</b>, so the mismatch never reaches the driver. Verified against the live
+    /// Oracle both ways: six scrambled members, and a <c>DynamicParameters</c> built in the wrong order
+    /// (the exact shape used by <c>PartParams</c>), both bind correctly with <c>BindByName=false</c>.</para>
+    /// <para>It is set anyway for two narrow reasons: it removes the codebase's reliance on that Dapper
+    /// implementation detail, and it turns a genuine name mismatch into an immediate error rather than
+    /// something that depends on ordering behaviour. It fixes no known defect.</para>
+    /// <para>It does NOT help with reserved-word bind names — <c>:from</c>, <c>:by</c> and friends fail
+    /// at parse time with ORA-01745 whatever the binding mode. <c>OracleBindNameTests</c> guards those,
+    /// and that IS a real, live-confirmed defect class.</para>
+    /// <para>Placement is load-bearing: ODP.NET throws ORA-50099 if the property is set after any
+    /// connection has opened, and this class is the only place the app constructs one, so the type
+    /// initialiser is guaranteed to run first.</para>
     /// </remarks>
     static DbConnectionFactory() => OracleConfiguration.BindByName = true;
 
