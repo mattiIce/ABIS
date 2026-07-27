@@ -442,6 +442,22 @@ The edge read path is live (run-state + piece-count → auto-downtime); the DAS 
 - [ ] **M** Step-up re-auth popup; in-DB job control (DBMS_SCHEDULER enable/disable/run-now)
 
 ## D. Bug / robustness leftovers (from the sweep — verified, low severity)
+
+- [ ] **H — "Processed wt" on the production reports is the wrong quantity (confirmed against legacy source; live arithmetic check still owed).**
+  `GetProductionSummaryAsync` and `GetLineEfficiencyAsync` both report
+  `SUM(process_coil.process_end_wt)` as `ProcessedWt`. That column is not the weight processed.
+  Legacy `w_production_folder.srw:1271` (`wf_rejected_coil_wt`) reads it and, when it is NULL,
+  substitutes `coil.net_wt_balance` — it treats the two as the same quantity, so `process_end_wt`
+  is the weight **remaining** on the coil at end of job. The legacy DataWindows label it
+  "End WT." and "End of Job WT", never "processed".
+  Legacy computes the processed figure separately and differently
+  (`w_production_folder.srw:1262`): `processed = coilnet − unprocessednet − rejnet`.
+  So the current metric is roughly **inverted**: a line that consumed its coils fully
+  (end weight ≈ 0) reports ≈ 0 processed weight, and a line that barely ran reports a high one.
+  Not yet fixed because the replacement needs the unprocessed and rejected components, and
+  `.230` was unreachable when this was found — swapping in a second unvalidated formula is not an
+  improvement. Fix and check the numbers against live in one go.
+
 - [x] **M** Invoice-save duplicate: return **409** not a 500 — done (#260): `CreateInvoiceAsync` now catches the PK violation on the INSERT (the pre-check's TOCTOU race) and re-checks → returns Duplicate (409) instead of a 500.
 - [ ] **L** `If-Match` optimistic concurrency: push the version into the UPDATE `WHERE` (true compare-and-swap; today check-then-act) — `WithIfMatch`
 - [x] **L** Invoice **tare** bucket — done (#260): `GetInvoiceComputationAsync` tare now excludes voided skids (`skid_sheet_status <> 6`) so it matches `SkidCount`.
