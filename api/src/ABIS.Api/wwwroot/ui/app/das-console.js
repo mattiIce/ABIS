@@ -1381,6 +1381,10 @@ async function pickerBrowse(bases, targetId, path) {
     $('#edgeUrl').addEventListener('change', () => startRunStatePoll()); // (re)start PLC run-state + stacker watch
     $('#runTag').addEventListener('change', () => startRunStatePoll());
     $('#pieceTag').addEventListener('change', () => startRunStatePoll());
+    // The scale tag persists in startRunStatePoll like the others, so it needs the same change hook —
+    // without it the value saved only when some OTHER field happened to change, and typing the tag on
+    // its own was silently lost at the next reload.
+    $('#scaleTag').addEventListener('change', () => startRunStatePoll());
     $('#btnBrowseRun').addEventListener('click', () => openTagPicker('#runTag', 'Pick this line’s run tag'));
     $('#btnBrowsePiece').addEventListener('click', () => openTagPicker('#pieceTag', 'Pick this line’s stacker count tag'));
     $('#btnBrowseScale').addEventListener('click', () => openTagPicker('#scaleTag', 'Pick this line’s conveyor scale tag (e.g. stacker110.ScaleSkidWt)'));
