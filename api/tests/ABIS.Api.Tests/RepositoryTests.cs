@@ -338,17 +338,20 @@ public sealed class RepositoryTests : IDisposable
         Assert.Equal(60m, inv.NetWt);                   // SUM(process_quantity)
         Assert.Equal(0m, inv.UnappliedWt);
         Assert.Equal(1500m, inv.RejectedWt);            // the MAX rule, NOT the naive process_end_wt sum
-        Assert.Equal(0m, inv.RebandedWt);
+        // A REBANDED coil (status 7) on the same job, so the offal assertion below actually exercises
+        // the rebanded term. Without one the sum is identical whether or not rebanded is included —
+        // which is precisely why this went unnoticed.
+        Assert.Equal(900m, inv.RebandedWt);
         Assert.Equal(48m, inv.ProcessedWt);             // SUM(prod_item_net_wt)
         Assert.Equal(6m, inv.ScrapWt);                  // SUM(return_item_net_wt)
         Assert.Equal(0m, inv.TareWt);                   // no sheet skids on job 1002
         Assert.Equal(0, inv.SkidCount);
-        Assert.Equal(1494m, inv.OffalWt);               // 48 + 6 + 1500 + 0 − 60
-        Assert.Equal(2490m, inv.OffalPct);              // 1494 / 60 × 100
+        Assert.Equal(2394m, inv.OffalWt);               // 48 + 6 + 1500 + 900 + 0 − 60
+        Assert.Equal(3990m, inv.OffalPct);              // 2394 / 60 × 100
         Assert.Null(inv.ScrapStatus);                   // no scrap skids on job 1002
 
         // The driving coil carries its billed weight and the resolved prior-process term.
-        var coil = Assert.Single(inv.Coils);
+        var coil = inv.Coils.Single(c => c.ProcessCoilStatus == 3);
         Assert.Equal(5003, coil.CoilAbcNum);
         Assert.Equal(3, coil.ProcessCoilStatus);
         Assert.Equal(40m, coil.MaxPriorProcessQuantity);
