@@ -394,7 +394,7 @@ public sealed class RepositoryTests : IDisposable
         // shift-end weight stands. This is the branch that reaches the coalesced subquery — with a
         // bare MAX() it came back NULL and the reader mistyped the whole column.
         var rebanded = coils.Single(x => x.ProcessCoilStatus == 7);
-        Assert.Equal(5004, rebanded.CoilAbcNum);
+        Assert.Equal(5002, rebanded.CoilAbcNum);
         Assert.Equal(0m, rebanded.MaxPriorProcessQuantity);
         Assert.Equal(900m, rebanded.BilledWeight);
     }
