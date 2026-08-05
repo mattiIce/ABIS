@@ -12,13 +12,11 @@
   `Maintenance_logs`, `Part Number`, `Scheduler Admin`, `Server Admin`. Applied through the app's own
   grant endpoint, and re-applied automatically by `refresh-nonprod.sh` because a Data Pump refresh
   replaces `SECURITY_GROUP_APPLICATION` from prod.
-- [ ] **M — the remaining half of that question: WHICH people, not whether anyone.** `Part Number` and
-  `Maintenance_logs` went from 1 holder to 5, and those 5 are the IT group. That is enough to
-  administer and to pilot; it is **not** enough for the people who would use Parts or Maintenance
-  daily — Production has 22 members and Order Entry 43, and none of them hold either feature. It
-  matters most for maintenance: ABIS is meant to replace KeepTrak, so whoever does maintenance work
-  needs `Maintenance_logs` before that migration. Ask the plant who, then widen the group grants.
-
+- [x] **Who else holds Parts / Maintenance — settled 2026-08-05: IT assigns as needed.** The plant's
+  call: five holders is enough to administer, and IT can grant `Part Number` / `Maintenance_logs` to
+  testers and to the people who need them as testing widens. No code change — it is done from
+  Admin → Security, which is exactly what that screen is for. Recorded so the next session does not
+  re-raise it as an open blocker.
 - [x] **C** EDI outbound generation (861 / 870 / 846 / 856) — **DONE + tested + verified live on codi-ABIS**.
   All 17 live-partner profiles on the `abis_edi_partner` backbone map to a built variant: **861** Novelis(1153/1459/2582)/
   Commonwealth(1980)/Constellium(2776)/Arconic(2784); **870** Novelis(1153/1459/2950)/Aleris(1980)/Constellium(2776,
