@@ -502,8 +502,10 @@ The edge read path is live (run-state + piece-count → auto-downtime); the DAS 
   vendoring for size (~1.1 GB with binaries - see `legacy/src/README.md`). The same exclusion is why
   `f_suppress_barcode_print` and `f_print_cert_label` have call sites but no bodies here: only 26
   `.srf` are vendored.
-  <br>**It is not lost** - the README says to read the core libraries in place from the export. Getting
-  the label body is an extraction from that export, not a reverse-engineering job.
+  <br>**RECOVERED (#374).** `tools/pbl_extract.py` reads object source straight out of a `.pbl`, and the
+  layout is now written up in `docs/LABEL_6X10_LAYOUT.md`: 59 controls with exact x/y/w/h, fonts, and
+  the Code 39 barcode font that becomes ZPL `^B3`. Artwork is 5.11in x 9.64in on the 6x10 INCH stock
+  (plant-confirmed). What remains is emitting the ZPL and a test print to 192.168.10.53.
 - [ ] **DO NOT PORT: `SUPPRESS_BARCODE_PRINT` (86 rows).** It suppresses the **first** of the two
   shipping-label prints for a given (workstation MAC, customer, ship-to, user) - so a matching
   combination prints ONE label instead of two. It is keyed on **MAC address**, which is the tell: the
