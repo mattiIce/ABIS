@@ -33,6 +33,14 @@
 - [ ] **DEFERRED (by policy)** EDI VAN transport (GXS / Inovis SFTP) + postpro — legacy-owned, do NOT build (transmit seam stays no-op).
 - [ ] **DEFERRED (operational, → 1.0)** Data-source cutover (codi-ABIS reads the .230 sandbox, not live prod .9) — enables the EDI-stall alert to be meaningful.
 
+- [ ] **H** **4x6 skid + scrap tags (currently browser-printed HTML, #129).** Hardware is known:
+  192.168.9.14 is a **ZM400 at 203 dpi**, so 4x6in = `^PW812` / `^LL1218`, thermal transfer (`^MTT`).
+  <br>**BLOCKED on the other lines' printer IPs.** That printer's System Name is **"BL-78 Ticket"** -
+  it is BL-78's own, not a shared 4x6. Per-station printing is how this plant works: the legacy
+  receiving CGI routes scanner guns at 192.168.10.8/.9/.10 to printers at 192.168.10.12/.13/.14. A
+  skid tag should print at the line that made the skid, so `LabelPrinters:DeviceRouting` needs one
+  entry per line. Ask the plant for each line's ticket-printer IP before building this.
+
 ## B. Architectural program — the live-DAS workflow spine
 The edge read path is live (run-state + piece-count → auto-downtime); the DAS *workflow core* is absent. Buildable in pieces.
 
