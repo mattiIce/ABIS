@@ -14,8 +14,12 @@ roughly a 0.4in margin. The detail band is vestigial; all content is in the head
 > file. The plant confirmed the stock is **inches** (2026-08-05), which is what fixes the reading. Do
 > not re-derive it from the geometry alone.
 
-At 203 dpi that is `^PW1218` (6in) and `^LL2030` (10in); at 300 dpi, `^PW1800` / `^LL3000`. Confirm the
-printer's head resolution before committing either — the 6x10 is a Zebra on 192.168.10.53.
+The printer answered for itself: `~HI` on 192.168.10.53 returns
+`ZT620-300dpi,V80.20.29Z,12,32768KB` — a **ZT620 at 300 dpi** (the `12` is dots/mm). So the label is
+**`^PW1800`** (6in x 300) and **`^LL3000`** (10in x 300).
+
+The plant confirms all its Zebras are **thermal transfer**, so the body must set **`^MTT`** (ribbon).
+`^MTD` would be direct thermal and print blank on this stock.
 
 **Barcodes are a Code 39 TrueType font** (`C39 Low 54pt LJ4`), not a native barcode object: the
 `bar_X_t` control is the barcode glyphs and `bar_X_t_up` the human-readable line 250 units above it.
