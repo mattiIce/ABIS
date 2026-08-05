@@ -269,4 +269,25 @@ public sealed class ShippingLabel6x10Tests
         Assert.True(grossCaption < grossBarcode,
             "the gross caption must sit above its own barcode");
     }
+
+    [Fact]
+    public void No_barcode_runs_its_interpretation_line_into_the_field_below()
+    {
+        // Found by the SECOND test print: the pieces barcode printed over the address line.
+        //
+        // Legacy stacks two 250-unit rows per barcode (bar_X_t_up above bar_X_t) because it draws with
+        // a font. A native ^B3 is ONE control whose interpretation line prints BELOW it, so it must be
+        // anchored at the _up row to occupy the same block. Anchoring at the lower row overflows by a
+        // text height — invisible unless something sits directly beneath, which only pieces does.
+        var z = ShippingLabel6x10.Build(Sample());
+
+        var piecesBarcodeY = int.Parse(Regex.Match(z, @"\^FO\d+,(\d+)\^BY[^^]*\^B3[^^]*\^FH_\^FDQ250").Groups[1].Value);
+        var barcodeHeight = int.Parse(Regex.Match(z, @"\^FO\d+,\d+\^BY[^^]*\^B3N,N,(\d+),Y,N[^^]*\^FH_\^FDQ250").Groups[1].Value);
+        var addressY = int.Parse(Regex.Match(z, @"\^FO\d+,(\d+)[^^]*\^[^^]*\^FH_\^FDAleris").Groups[1].Value);
+
+        // barcode + its interpretation line (roughly one 10pt row) must finish above the address.
+        var bottom = piecesBarcodeY + barcodeHeight + 42;
+        Assert.True(bottom < addressY,
+            $"the pieces barcode ends at y={bottom} but the address starts at y={addressY}");
+    }
 }

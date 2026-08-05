@@ -194,7 +194,12 @@ public static class ShippingLabel6x10
         // what collided.
         z.Append(Text(58, 8266, 10, "8-PIECES"));
         z.Append(Text(983, 8266, 22, d.Pieces?.ToString(CultureInfo.InvariantCulture)));
-        z.Append(Barcode(441, 8816, 250, Aiag.Pieces, d.Pieces?.ToString(CultureInfo.InvariantCulture)));
+        // 8566 is bar_pieces_t_up, NOT bar_pieces_t at 8816. Legacy stacks two 250-unit font rows
+        // (_up above, the barcode below) so the pair spans 8566-9066 and stops just short of the
+        // address at 9083. A native ^B3 is one control whose interpretation line prints BELOW it, so
+        // anchoring at the lower row pushed that text into the address — which is what the second test
+        // print showed. Every other barcode here already anchors at its _up row; this one did not.
+        z.Append(Barcode(441, 8566, 250, Aiag.Pieces, d.Pieces?.ToString(CultureInfo.InvariantCulture)));
 
         z.Append(Text(2116, 7883, 10, "10-DLOC:"));
         z.Append(Text(3258, 7950, 16, d.Dock));
