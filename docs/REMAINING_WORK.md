@@ -494,6 +494,16 @@ The edge read path is live (run-state + piece-count → auto-downtime); the DAS 
   separate `Print()` calls - and **1 cert label**, the cert only when `f_coil_cert_label_req` says the
   customer requires it. A `sleep_ms(f_get_ship_print_delay())` precedes every print (added 2019,
   "Ship_Print_Delay").
+  <br>**Where the layout actually is.** 761 `.srd` DataWindows ARE vendored, including barcode ones
+  (`da/d_report_coil_barcode_zebra*`, `coil_receiving/d_coil_barcode`, `inv_coil/d_report_coil_barcode`)
+  - so start by checking whether one of those is the 6x10. The SHIPPING label is not among them:
+  `u_default_barcode` prints through an inherited `idw_requestor`, assigned at runtime by its caller,
+  and the ancestor lives in the **`silverdome*` / `aaaa` core libraries**, deliberately excluded from
+  vendoring for size (~1.1 GB with binaries - see `legacy/src/README.md`). The same exclusion is why
+  `f_suppress_barcode_print` and `f_print_cert_label` have call sites but no bodies here: only 26
+  `.srf` are vendored.
+  <br>**It is not lost** - the README says to read the core libraries in place from the export. Getting
+  the label body is an extraction from that export, not a reverse-engineering job.
 - [ ] **DO NOT PORT: `SUPPRESS_BARCODE_PRINT` (86 rows).** It suppresses the **first** of the two
   shipping-label prints for a given (workstation MAC, customer, ship-to, user) - so a matching
   combination prints ONE label instead of two. It is keyed on **MAC address**, which is the tell: the
