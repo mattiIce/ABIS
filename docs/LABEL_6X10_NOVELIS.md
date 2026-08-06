@@ -220,10 +220,10 @@ behaves differently from the mechanical one — chemistry keeps its fixed slots.
 
 - ~~`PST_TEST_RESULT`~~ — an earlier guess, **superseded**. It holds test results, but not the element
   codes the cert is keyed on, and it cannot supply the chemical block at all.
-> **SUPERSEDED — see `CERT_LABEL.md` §2.** The mechanical results come from **`mech_test_results`**
-> (suffixes `_f` / `_b`, each with its own `_date` and `_uom`), not from `DATA_IN_863`. The bullet below
-> was inferred from matching column-name fragments and is wrong. `f_print_cert_label` builds the column
-> names explicitly and reads them from `d_863_mech_test_results`, retrieved by `coil_org_num`.
+> **SUPERSEDED — see `CERT_LABEL.md` §2**, which settles this on live data. The table below is right;
+> the COLUMN is not. Values live in `<CODE>_F_M2`, not `_F_M1` — `_M1` is populated 0 times in 11,696
+> rows — and `_M2` is pipe-delimited `value|YYYYMMDD`, carrying the measurement date with it. The unit
+> comes from `<CODE>_F_UOM` decoded through `unit_of_measure`.
 
 - ~~**EVERYTHING comes from the inbound EDI 863.**~~ `DATA_IN_863` carries **72 columns** matching the
   `data_element` codes — `TTL`, `TTT`, `TET`, `TRT`, `TNT`, `MDO`, `DPA`, `ARO`, `BKN`, `X27`, `ULT`,
