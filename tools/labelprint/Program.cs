@@ -17,9 +17,13 @@ namespace LabelPrint;
 /// <see cref="ShippingLabel6x10"/> itself, so what lands on paper is what the endpoint would send. A
 /// tool with its own copy of the layout would only ever prove the copy works.</para>
 ///
-/// <para><b>Every print is marked.</b> The part number carries a test tag and the placement footer
-/// carries the run label, because a previous round wasted a trip to the printer arguing about whether
-/// a photographed label was the new one or an older sheet someone had left in the tray.</para>
+/// <para><b>Every print is marked — in the FOOTER only.</b> A run label is needed because a previous
+/// round wasted a trip to the printer arguing about whether a photographed label was the new one or an
+/// older sheet left in the tray. It goes in the placement field, which is short and has room.
+/// <b>It must NOT go in the part number:</b> that prints at 65pt in a 271-dot character cell, and
+/// "68416648-1" alone is already ~1600 of the label's 1800 dots. Appending a five-character tag
+/// overflows it by roughly 600 and the printer silently clips at the edge — which is exactly what
+/// happened on the first run of this tool.</para>
 /// </summary>
 internal static class Program
 {
@@ -104,7 +108,7 @@ internal static class Program
     /// shows. Passing kilograms here would convert twice and print 879.</para></summary>
     private static ShippingLabelData Sample(string tag) => new()
     {
-        PartNum = $"68416648-1 {tag}",
+        PartNum = "68416648-1",                // NOT tagged — see the class remarks on clipping
         SupplierCode = "",                  // blank on the real label, so the empty case is exercised
         Serial = "T1846085",
         CustomerOrder = "11381005",
