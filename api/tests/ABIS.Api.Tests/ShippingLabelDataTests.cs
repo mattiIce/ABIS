@@ -291,6 +291,24 @@ public sealed class ShippingLabelDataTests : IDisposable
         Assert.Empty(await _repo.GetShipmentSkidNumbersAsync(8802, CancellationToken.None));
     }
 
+    // ---- Configuration that has to survive systemd -------------------------------------------
+
+    [Fact]
+    public void The_shipping_printer_device_name_is_a_legal_environment_variable_name()
+    {
+        // The server configures routing through systemd's EnvironmentFile, where this string becomes
+        // part of a variable NAME: LabelPrinters__DeviceRouting__<device>. systemd silently SKIPS a
+        // line whose key is not a legal variable name, so a hyphen here does not fail loudly — the
+        // label just prints nowhere, and the only symptom is a 503 at the dock.
+        //
+        // The per-line routing keys already cost a redeploy over exactly this (a ':' in "6:offload").
+        // This is the same bug in a different place, caught before it shipped.
+        var device = Abis.Api.Endpoints.ApiEndpoints.ShippingLabelDevice;
+        Assert.Matches("^[A-Za-z_][A-Za-z0-9_]*$", device);
+        Assert.DoesNotContain("-", device);
+        Assert.DoesNotContain(":", device);
+    }
+
     public void Dispose()
     {
         SqliteConnection.ClearAllPools();

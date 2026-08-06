@@ -4412,8 +4412,13 @@ public static class ApiEndpoints
     /// <para>Resolved by <c>LabelPrinters:DeviceRouting</c> like a scanner gun is, so the shipping
     /// office's printer is configuration rather than code. Unlike the 4x6 skid tags this is NOT routed
     /// per line: a shipping label is produced at the dock for a shipment, not at the line that made the
-    /// skid, so there is no line to route by.</para></summary>
-    public const string ShippingLabelDevice = "shipping-6x10";
+    /// skid, so there is no line to route by.</para>
+    /// <para><b>Underscores, no hyphen.</b> The server configures this through systemd's
+    /// <c>EnvironmentFile</c>, where this string becomes part of an ENVIRONMENT VARIABLE NAME
+    /// (<c>LabelPrinters__DeviceRouting__shipping_6x10</c>). A hyphen is not valid in one, so systemd
+    /// silently skips the line and the label prints nowhere. This is the same trap that cost a redeploy
+    /// on the per-line routing keys — see <see cref="Documents.LabelPrinterOptions.LineRouting"/>.</para></summary>
+    public const string ShippingLabelDevice = "shipping_6x10";
 
     /// <summary>How many lot rows the label had to drop. The artwork has exactly three numbered rows, so
     /// a skid built from more coils silently loses the rest — reported so the caller can warn rather
