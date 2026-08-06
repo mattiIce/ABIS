@@ -235,8 +235,22 @@ Do not port the `cert_label_shipto_name` lookup. It is dead, and the customer ag
 (`1281_Add_Country_Of_Cast_2Coil_and_BOL`). Primary/Secondary country of smelt are the same pair the
 shipping label's lot table prints as `CA AE` via `primary_cntry_of_smelt + …`.
 
-**Spec, ABC Serial and Born Date are still unlocated.** `d_863_cert`'s own SQL would name them; it was
-not recovered.
+**Spec, ABC Serial and Born Date are located and verified** against the photographed cert for coil
+`1949234`:
+
+| cert field | printed | source | value on `.230` |
+|---|---|---|---|
+| `ABC Serial` | `235729` | `COIL.COIL_ABC_NUM` | `235729` |
+| `Cntry of Cast` | `CA` | `COIL.CNTRY_OF_CAST` | `CA` |
+| `Primary/Secondary Cntry of Smelt` | `CA` / `AE` | `DATA_IN_863.PRIMARY_CNTRY_OF_SMELT` / `SECONDARY_…` | — |
+| `Born Date` | `07/17/2026` | `DATA_IN_863.CASH_DATE` | `20260717` |
+| `Spec` (first token) | `MS.50005` | `ORDER_ITEM.SPEC` | `MS.50005` |
+
+Note `CASH_DATE` is also what the shipping label's lot table prints as `H.T. DATE`, and both photographed
+documents show `07/17/2026` — the same field on both, which is a useful cross-check when wiring them.
+
+**The second Spec token (`MS.50005-AA5000-RS-U`) is still unlocated.** It is not in any `%SPEC%` column;
+`d_863_cert`'s SQL would name it.
 
 ## 7. The "order pack transfer" retry
 

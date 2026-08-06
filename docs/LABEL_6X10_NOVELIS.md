@@ -301,10 +301,17 @@ and not the package number. `uf_set_package_num` was the obvious suspect and is 
 photographed footer is a bare number on a Novelis label.
 
 `prod_item_placement` is free text — on `.230` it is mostly `Edge`, `Center`, `Edge/Center` (hence
-legacy's `/`-join when a skid spans several items), with customer codes like `LT0304` mixed in. Novelis
-jobs are using it to carry what looks like an SAP delivery number. **Print it as given; do not compute
-it.** No numeric placements appear on `.230` only because its snapshot stops at job `124385`, below
-both photographed jobs.
+legacy's `/`-join when a skid spans several items), with customer codes like `LT0304` mixed in.
+
+**What the Novelis value IS:** an SAP material number of the same family as
+`ORDER_ITEM.STARTING_GOODS_MATERIAL_NUM`, whose values on `.230` run `3000001514` … `3000023296` — the
+same ten-digit `30000…` shape as the printed `3000032609` / `3000032639`, and just below them, which
+fits a snapshot that stops at job `124385`.
+
+It is **not read from that column** — `u_default_barcode.sru` is unambiguous that `place_t` comes from
+`prod_item_placement` — so the office is entering the SAP number into the placement field for these
+jobs. **Print it as given; do not compute it, and do not "helpfully" join it to `order_item`.** A
+lookup would be right until the day someone types something else in there.
 
 ## 11. The `11-LOT NO.` table is a nested sub-report
 
