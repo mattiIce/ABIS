@@ -114,16 +114,52 @@ The three absent ones presumably had no value for this coil. **So the cert's mec
 generated from that table, not laid out statically** — and GM (`customer_code=2`) has a different,
 shorter list, so the block must be built per (customer, OEM).
 
+### The two-column layout is DERIVABLE, not designed
+
+Verified against a real Novelis-Oswego (1459) cert, whose FCA list has 12 elements while the cert
+printed 11 — every one except `n4t` (N Value 4-6), which had no value.
+
+Take the elements **that have values**, in `seq_num` order, and deal them **alternately into two
+columns**:
+
+```
+present, in seq order:  ttl trt ttt mdo ult dpa tet aro x27 bkn itt
+seq:                     1   2   3   4   5   6   7   8   9   10  12
+
+left  (1st,3rd,5th...):  Tensile · Yield · Elong UNI · Elong TOT · N Value 10-UTS · Thickness
+right (2nd,4th,6th...):  R Value · PT Bot Center · PT Top Center · PT Rinse Bot · PT Rinse Top
+```
+
+That reproduces the printed cert exactly. Note it is the PRESENT elements that alternate, not the
+seq numbers — dropping `n4t` shifts everything after it, which is why `itt` (seq 12) lands bottom-LEFT
+rather than right.
+
+An element with no value is omitted entirely; it does not print a blank row. (Confirmed twice: on the
+second cert `V` in the chemical block printed its label with an empty value, so the CHEMICAL block
+behaves differently from the mechanical one — chemistry keeps its fixed slots.)
+
 ### Data sources
 
 - **Mechanical properties** → `PST_TEST_RESULT` (47,516 rows on live): `YTS_VAL`, `UTS_VAL`,
   `ELONG_VAL`, `R_VAL`, `N_VAL`, `THICKNESS`, `WIDTH`, by coil and `POSITION`.
-- **Chemical composition** → **NOT YET LOCATED.** SI/FE/CU/MN/MG/CR/ZN/TI/V/AL are not in
-  `CERT_LABEL_DATA_ELEMENTS`. Find this before building the cert.
-- **Spec, Country of Cast, Country of Smelt, Born Date** → not yet located.
-- **Which customers require a cert** → `CERT_LABEL_CUSTOMERS` = `1153, 1459, 2950` (all Novelis).
+- **EVERYTHING comes from the inbound EDI 863.** `DATA_IN_863` carries **72 columns** matching the
+  `data_element` codes — `TTL`, `TTT`, `TET`, `TRT`, `TNT`, `MDO`, `DPA`, `ARO`, `BKN`, `X27`, `ULT`,
+  `UPT`, `ITT`, `ISU`, `YSR`, `YPN`, `N4T` — each suffixed `_F_M1` / `_F_M2` / `_B_M1` / `_B_M2`
+  (front/back x two measurements). The **chemical composition** is on the same tables: `SI FE CU MN MG
+  CR NI ZN TI GH AL BB V` (`INBOUND_863`, `DATA_IN_863`, `DATA_IN_863_REJECTED`).
+  So the mapping is simply:
+  `CERT_LABEL_DATA_ELEMENTS.data_element` → `DATA_IN_863.<code>_F_M1`.
+- **This is why the 863 gate exists.** `DATA_IN_863` is the cert's ONLY data source, so a coil with no
+  inbound 863 physically cannot be certified. Legacy abandoning the whole print run is correct
+  behaviour, not a quirk.
+- **Spec, Country of Cast/Smelt, Born Date** → still unlocated; likely the same 863 feed or the coil.
+- **Which customers require a cert** → **`customer.coil_cert_label_req = 'Y'`: 32 customers**, not 3.
+  Novelis entities, GM plants, Stellantis, WAYNE IND, and others.
+  **`CERT_LABEL_CUSTOMERS` (1153/1459/2950) is a DIFFERENT, narrower thing** — only those three have
+  rows in `CERT_LABEL_DATA_ELEMENTS`, so they are the customers with a customised element list. The
+  other 29 must get a default set or an older cert format. **Resolve this before building.**
 - **Which OEM's element list applies** → `customer_order.cert_label_customer_code`
-  (`CERT_LABEL_CUSTOMER`: 1=FCA, 2=GM, 3=Ford).
+  (`CERT_LABEL_CUSTOMER`: 1=FCA, 2=GM, 3=Ford). Only codes 1 and 2 have rows; Ford has none.
 
 ## 4. Open questions
 
