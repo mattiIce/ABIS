@@ -501,8 +501,8 @@
   300 dpi (`^PW1800`/`^LL3000`), thermal transfer, 8 Code 39 barcodes with AIAG identifiers, the
   numbered captions, and the metric variant. Print #4 came out correct in every respect after three
   defects found on paper across prints 1-3 (overprint, missing AIAG prefixes, barcode running into the
-  address). **Remaining: confirm a SCANNER decodes the barcodes** — the printed text proves what is
-  encoded, not that a reader returns it.
+  address). **Scanner-verified the same day**, so the 6x10 is proven END TO END: correct on paper and
+  machine-readable. Nothing on this label is outstanding.
   <br>**RECOVERED (#374).** `tools/pbl_extract.py` reads object source straight out of a `.pbl`, and the
   layout is now written up in `docs/LABEL_6X10_LAYOUT.md`: 59 controls with exact x/y/w/h, fonts, and
   the Code 39 barcode font that becomes ZPL `^B3`. Artwork is 5.11in x 9.64in on the 6x10 INCH stock
