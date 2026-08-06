@@ -2656,8 +2656,11 @@ public static class ApiEndpoints
                     Date = d.SkidDate, Customer = d.Customer ?? "", EndUser = d.EndUser ?? "",
                     JobNum = d.AbJobNum, Alloy = d.Alloy ?? "", Temper = d.Temper ?? "",
                     Gauge = Dec(d.Gauge), Width = Dec(d.Width), Length = Dec(d.Length),
-                    TareWt = d.TareWt, NetWt = d.NetWt, Pieces = d.Pieces,
-                    LotNum = d.LotNum ?? "", CoilNum = d.CoilOrgNum ?? "",
+                    TareWt = d.TareWt, NetWt = d.NetWt,
+                    Lots = d.Lots.Select(l => new SkidTagLot
+                    {
+                        LotNum = l.LotNum ?? "", CoilNum = l.CoilOrgNum ?? "", Pieces = l.Pieces,
+                    }).ToList(),
                 });
                 var r = await printer.PrintForLineAsync(line, purpose, zpl, 1, ct);
                 return r.Printed

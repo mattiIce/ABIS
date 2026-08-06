@@ -57,7 +57,14 @@ internal static class Program
             return 2;
         }
 
-        var zpl = ShippingLabel6x10.Build(Sample(tag));
+        var which = (Arg(args, "--label") ?? "6x10").ToLowerInvariant();
+        var zpl = which switch
+        {
+            "skid"  => SkidTag4x6.SheetSkid(SkidSample(tag)),
+            "scrap" => SkidTag4x6.ScrapSkid(ScrapSample(tag)),
+            "6x10"  => ShippingLabel6x10.Build(Sample(tag)),
+            _ => throw new ArgumentException($"--label must be 6x10, skid or scrap (got {which})"),
+        };
 
         Console.WriteLine($"Label: {zpl.Length} bytes, {Count(zpl, "^B3")} barcodes, {Count(zpl, "^GB")} rules.");
         if (dryRun)
@@ -100,6 +107,35 @@ internal static class Program
         var i = Array.IndexOf(args, name);
         return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
     }
+
+    /// <summary>A finished sheet-skid tag with TWO coils, so the repeating detail band and its
+    /// per-row underline both do real work. One coil would look identical to the old single-row port.</summary>
+    private static SkidTagData SkidSample(string tag) => new()
+    {
+        SkidNum = 414637, SkidDisplayNum = "414637",
+        Shift = "1st Shift", Date = DateTime.Today,
+        Customer = "ALCAN RP", EndUser = $"FREIGHTCAR-SHELBY {tag}",
+        JobNum = 56535, SkidSeq = 3,
+        Alloy = "5454", Temper = "H34", Gauge = "0.024899", Width = "45.69", Length = "125.125",
+        TareWt = 101m, NetWt = 1380m,
+        Lots =
+        [
+            new SkidTagLot { LotNum = "LOT-1", CoilNum = "ORG-5001", Pieces = 200 },
+            new SkidTagLot { LotNum = "LOT-2", CoilNum = "ORG-5002", Pieces = 50 },
+        ],
+    };
+
+    /// <summary>A scrap tag with two contributing coils.</summary>
+    private static ScrapTagData ScrapSample(string tag) => new()
+    {
+        ScrapSkidNum = 71033, Shift = $"2nd Shift {tag}", Date = DateTime.Today,
+        Customer = "NOVELIS-KINGSTON", TareWt = 190m, NetWt = 6340m,
+        Coils =
+        [
+            new ScrapTagCoil { JobNum = 56535, LotNum = "LOT-1", CoilNum = "ORG-5001", Pieces = 40, NetWt = 3100m, Alloy = "5454", Temper = "H34", Gauge = "0.0249" },
+            new ScrapTagCoil { JobNum = 56536, LotNum = "LOT-2", CoilNum = "ORG-5002", Pieces = 35, NetWt = 3240m, Alloy = "3003", Temper = "H14", Gauge = "0.0312" },
+        ],
+    };
 
     /// <summary>A real photographed Novelis label (job 124401, skid T1846085) with the identifying
     /// fields tagged, so what comes out of the printer can be compared field-by-field against the

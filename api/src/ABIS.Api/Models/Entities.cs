@@ -3478,9 +3478,18 @@ public sealed class SkidTagPrintData
     public decimal? TareWt { get; set; }
     public int? Pieces { get; set; }
     public DateTime? SkidDate { get; set; }
+    /// <summary>The coils on the skid. The legacy tag's lot/coil/pieces sit in a REPEATING detail
+    /// band, so a skid built from several coils lists them all.</summary>
+    public List<SkidTagCoilRow> Lots { get; set; } = [];
+    public string? OperatorInitial { get; set; }
+}
+
+/// <summary>One row of the sheet-skid tag's repeating lot/coil/pieces band.</summary>
+public sealed class SkidTagCoilRow
+{
     public string? LotNum { get; set; }
     public string? CoilOrgNum { get; set; }
-    public string? OperatorInitial { get; set; }
+    public int? Pieces { get; set; }
 }
 
 /// <summary>A scrap tag's data. The coil rows are the legacy detail band.</summary>

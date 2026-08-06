@@ -9812,15 +9812,6 @@ public sealed class AbisRepository : IAbisRepository
         return p;
     }
 
-    /// <summary>The coil identity printed on a skid tag. A named type rather than a ValueTuple because
-    /// Dapper maps tuples POSITIONALLY — reordering the two columns would silently swap lot and coil
-    /// number, and both are opaque strings so nothing downstream would notice.</summary>
-    private sealed class CoilIdentity
-    {
-        public string? LotNum { get; set; }
-        public string? CoilOrgNum { get; set; }
-    }
-
     /// <summary>The 4x6 sheet-skid tag's data.
     /// <para>The coil identity (lot + org number) and the piece count come from the legacy ticket's own
     /// retrieve — <c>production_sheet_item</c> ⋈ <c>sheet_skid_detail</c> ⋈ <c>coil</c>
@@ -9857,23 +9848,21 @@ public sealed class AbisRepository : IAbisRepository
             """, new { skid = sheetSkidNum }, cancellationToken: ct));
         if (head is null) return null;
 
-        // The coil identity, from the legacy ticket's own retrieve.
-        // FIRST, not Single: a skid carries several detail items and a job several coils, so this query
-        // returns a row per pairing. QuerySingleOrDefault threw "Sequence contains more than one
-        // element" on the seeded fixture — the tag shows one coil identity, the topmost, which is what
-        // the legacy detail band shows first.
-        var coil = await conn.QueryFirstOrDefaultAsync<CoilIdentity>(new CommandDefinition(
+        // ALL the coils, not the first. The legacy ticket puts lot / coil / pieces in a REPEATING
+        // detail band (height 109), so a skid assembled from several production items lists every one.
+        // An earlier revision took QueryFirstOrDefault and printed a single row, which silently
+        // under-reports the tag on the ~15% of live skids carrying more than one item.
+        head.Lots = (await conn.QueryAsync<SkidTagCoilRow>(new CommandDefinition(
             """
-            SELECT c.lot_num AS LotNum, c.coil_org_num AS CoilOrgNum
+            SELECT c.lot_num          AS LotNum,
+                   c.coil_org_num     AS CoilOrgNum,
+                   p.prod_item_pieces AS Pieces
               FROM sheet_skid_detail d
               JOIN production_sheet_item p ON p.prod_item_num = d.prod_item_num
-              LEFT JOIN process_coil pc    ON pc.ab_job_num = p.ab_job_num
-              LEFT JOIN coil c             ON c.coil_abc_num = pc.coil_abc_num
+              LEFT JOIN coil c             ON c.coil_abc_num = p.coil_abc_num
              WHERE d.sheet_skid_num = :skid
              ORDER BY d.prod_item_num
-            """, new { skid = sheetSkidNum }, cancellationToken: ct));
-        head.LotNum = coil?.LotNum;
-        head.CoilOrgNum = coil?.CoilOrgNum;
+            """, new { skid = sheetSkidNum }, cancellationToken: ct))).ToList();
         return head;
     }
 
