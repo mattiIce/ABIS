@@ -314,12 +314,22 @@ public static class ShippingLabel6x10
         z.Append(FieldRule(25, 8233, 5108, 25));   // 8-PIECES / 11-LOT NO.
         z.Append(Rule(33, 9250, 5142, 0, 16));     // above the address footer
 
-        // Under the alloy VALUE rather than its caption: the value is 275 units tall and starts at 7641,
-        // so a rule at the usual caption offset underlines it instead of closing the block.
-        z.Append(Rule(2000, 7960, 3100, 0, 16));
+        // The lower block has exactly TWO verticals, and each spans only its own rows:
+        //
+        //   6-ACTUAL WT. | 9-SIZE          <- the upper divider, 2783
+        //   7-LGTH./THEO | 10-ALLOY        <- same divider continues
+        //   ------------------------------ <- the 8-PIECES rule ends it
+        //   8-PIECES     | 11-LOT NO.      <- the lower divider, 1975, starts HERE
+        //
+        // The lower one previously began at 7375, which drew a second vertical between fields 7 and 10
+        // where the real label has one. Caught on the seventh test print by the plant, against the
+        // photographed original.
+        z.Append(Rule(2783, 6483, 0, 1733, 16));            // 6|9 and 7|10
+        z.Append(Rule(1975, 8200, 0, 841, 16));             // 8|11 only
 
-        z.Append(Rule(1975, 7375, 0, 1666, 16));
-        z.Append(Rule(2783, 6483, 0, 1733, 16));
+        // NO horizontal under the alloy value. The recovered artwork has a line() at 7850 spanning that
+        // width, but it belongs to the GROSS variant, where 10-DLOC occupies the space - on the real
+        // Novelis label the alloy block is closed by the 8-PIECES rule below it and nothing else.
 
         // --- header block: date and the part number, both oversized -------------------
         z.Append(Text(975, 66, 36, Date(d.ShippingDate)));

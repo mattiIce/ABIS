@@ -496,11 +496,34 @@ public sealed class ShippingLabel6x10Tests
     [Fact]
     public void The_numbered_fields_are_boxed_by_rules()
     {
-        // The plant spotted this from memory before a photo arrived: "the fields were in little boxes."
-        // My first extraction pulled only text and compute controls, silently dropping the DataWindow's
-        // 24 line() elements, so four test prints came out as bare rows.
+        // The plant spotted the ABSENCE of these from memory before a photo arrived: "the fields were in
+        // little boxes." My first extraction pulled only text and compute controls, silently dropping the
+        // DataWindow's line() elements, so four test prints came out as bare rows.
+        //
+        // Asserted as STRUCTURE rather than a count, because a count passed while the label carried two
+        // rules the real one does not have — an eighth vertical between fields 7 and 10, and a
+        // horizontal underlining the alloy. Both survived a ">= 12 rules" check and were found on paper.
         var z = ShippingLabel6x10.Build(Sample());
-        Assert.True(Regex.Matches(z, @"\^GB\d+,\d+,\d+\^FS").Count >= 12);
+        var rules = Regex.Matches(z, @"\^FO(\d+),(\d+)\^GB(\d+),(\d+),(\d+)\^FS")
+            .Select(m => (X: int.Parse(m.Groups[1].Value), Y: int.Parse(m.Groups[2].Value),
+                          W: int.Parse(m.Groups[3].Value), H: int.Parse(m.Groups[4].Value),
+                          T: int.Parse(m.Groups[5].Value)))
+            .ToList();
+
+        var horizontals = rules.Where(r => r.W > r.T).ToList();
+        var verticals = rules.Where(r => r.W <= r.T).ToList();
+
+        // Eight numbered field bands plus the address footer.
+        Assert.Equal(9, horizontals.Count);
+
+        // EXACTLY TWO verticals, and each spans only its own rows: the upper one divides 6|9 and
+        // continues past 7|10; the lower one starts at the 8-PIECES rule and divides 8|11.
+        Assert.Equal(2, verticals.Count);
+        var lower = verticals.OrderBy(v => v.Y).Last();
+        var piecesRule = horizontals.OrderBy(h => h.Y).ToList()[7];
+        Assert.True(lower.Y >= piecesRule.Y,
+            $"the 8|11 divider starts at y={lower.Y}, above the 8-PIECES rule at y={piecesRule.Y} — "
+            + "that draws a second vertical between fields 7 and 10, which the real label does not have");
     }
 
     [Fact]
