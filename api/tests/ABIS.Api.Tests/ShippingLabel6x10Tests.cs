@@ -518,6 +518,45 @@ public sealed class ShippingLabel6x10Tests
     }
 
     [Fact]
+    public void No_rule_is_drawn_through_a_field()
+    {
+        // THE DEFECT THE FIFTH TEST PRINT FOUND — 14 text fields printed with a line through them.
+        //
+        // The captions for fields 1-5 were recovered from one DataWindow and those for 6-11 from
+        // another, and the two sit ~33 units apart. Every RULE came from the first. Fields 1-3 looked
+        // correct, which is what made it survive review: the error was invisible until the lower half of
+        // a physical label came back with "6-ACTUAL WT.", "8-PIECES" and the alloy struck through.
+        //
+        // Rules are now derived from the caption they box, so the two cannot drift. This asserts the
+        // OUTPUT rather than the derivation, so it still fails if someone reintroduces a raw y.
+        var z = ShippingLabel6x10.Build(Sample());
+
+        var rules = Regex.Matches(z, @"\^FO(\d+),(\d+)\^GB(\d+),(\d+),(\d+)\^FS")
+            .Select(m => (X: int.Parse(m.Groups[1].Value), Y: int.Parse(m.Groups[2].Value),
+                          W: Math.Max(int.Parse(m.Groups[3].Value), int.Parse(m.Groups[5].Value)),
+                          H: Math.Max(int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value))))
+            .ToList();
+
+        foreach (Match m in Regex.Matches(z, @"\^FO(\d+),(\d+)\^A0N,(\d+),\d+\^FH_\^FD(.+?)\^FS"))
+        {
+            var (x, y, h, v) = (int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value),
+                                int.Parse(m.Groups[3].Value), m.Groups[4].Value);
+            if (v.Trim().Length == 0) continue;
+
+            // 0.55 em per character is a deliberate under-estimate of ^A0 advance, and the glyph box is
+            // taken at 80% of the character cell: digits and capitals have no descender, so the printed
+            // ink stops short of the cell. Over-estimating either would fail on pairs the photographed
+            // label shows are fine.
+            var w = v.Length * h * 0.55;
+            var ink = h * 0.8;
+
+            foreach (var r in rules)
+                Assert.False(x < r.X + r.W && r.X < x + w && y < r.Y + r.H && r.Y < y + ink,
+                    $"the rule at y={r.Y} runs through \"{v}\" at y={y}..{y + ink:F0}");
+        }
+    }
+
+    [Fact]
     public void No_rule_is_drawn_off_the_stock()
     {
         var z = ShippingLabel6x10.Build(Sample());
