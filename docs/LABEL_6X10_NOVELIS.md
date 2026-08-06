@@ -140,8 +140,8 @@ behaves differently from the mechanical one — chemistry keeps its fixed slots.
 
 ### Data sources
 
-- **Mechanical properties** → `PST_TEST_RESULT` (47,516 rows on live): `YTS_VAL`, `UTS_VAL`,
-  `ELONG_VAL`, `R_VAL`, `N_VAL`, `THICKNESS`, `WIDTH`, by coil and `POSITION`.
+- ~~`PST_TEST_RESULT`~~ — an earlier guess, **superseded**. It holds test results, but not the element
+  codes the cert is keyed on, and it cannot supply the chemical block at all.
 - **EVERYTHING comes from the inbound EDI 863.** `DATA_IN_863` carries **72 columns** matching the
   `data_element` codes — `TTL`, `TTT`, `TET`, `TRT`, `TNT`, `MDO`, `DPA`, `ARO`, `BKN`, `X27`, `ULT`,
   `UPT`, `ITT`, `ISU`, `YSR`, `YPN`, `N4T` — each suffixed `_F_M1` / `_F_M2` / `_B_M1` / `_B_M2`
@@ -161,11 +161,38 @@ behaves differently from the mechanical one — chemistry keeps its fixed slots.
 - **Which OEM's element list applies** → `customer_order.cert_label_customer_code`
   (`CERT_LABEL_CUSTOMER`: 1=FCA, 2=GM, 3=Ford). Only codes 1 and 2 have rows; Ford has none.
 
-## 4. Open questions
+## 4. Confirmed by a second job
 
-- Which customers use which label variant? Only "per-customer" is known; the mapping is not in any
-  table found so far, so it may be code-side.
-- What is the extra footer field (`3000032609`)?
-- Where does chemical composition come from?
+A second Novelis-Oswego shipping tag + cert (job `124401`, part `68416648-1`, skid `T1846085`, coil
+`1949234`) was photographed alongside the first (job `124424`). Everything structural is identical, so
+the layout above is the FORMAT and not one job's accident. What varies is only data:
+
+| | first sample | second sample |
+|---|---|---|
+| job / skid | `124424` / `T1846071` | `124401` / `T1846085` |
+| actual wt | `1935 kg` | `1939 kg` |
+| lot / coil | `5897540` / `1957838` | `5896879` / `1949234` |
+| footer field | `3000032609` | `3000032639` |
+| `AL` | `94.78` | `94.7` |
+
+Three things this settles:
+
+1. **`11-LOT NO.` really is a table** — both samples printed row `1.` populated with rows `2.` and `3.`
+   empty, so the three rows are a FIXED allowance, not a repeat-until-done band. A skid built from more
+   than three coils is an untested case.
+2. **Chemistry prints its raw value, not a fixed precision** — `94.78` and `94.7` on the same element.
+   Do not format it; pass it through.
+3. **The footer field is not derived from the job** — `124424→…609` but `124401→…639`, so it moves
+   independently. Still unidentified.
+
+## 5. Open questions
+
+- **Which customers use which label variant?** Only "per-customer" is known. Searched `.230` for any
+  column matching `%LABEL%`, `%BARCODE%`, `%FORMAT%` on `CUSTOMER` and found no format selector, so
+  **the variant is almost certainly chosen in code**, which means the PBLs are the only source.
+- **What do the other 29 cert-requiring customers get?** 32 have `coil_cert_label_req='Y'`; only 3 have
+  an element list. This has to be answered before the cert is built for anyone but Novelis.
+- What is the extra footer field (`3000032639` / `3000032609`)?
+- Where do Spec, Country of Cast/Smelt and Born Date come from?
 - `w_barcode_item_setup` lets an operator override the identifiers and unit flags per print run. Does
   the plant use it, or are the 2021 defaults always accepted?
