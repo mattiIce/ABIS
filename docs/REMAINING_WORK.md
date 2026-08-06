@@ -497,10 +497,12 @@
   vendoring for size (~1.1 GB with binaries - see `legacy/src/README.md`). The same exclusion is why
   `f_suppress_barcode_print` and `f_print_cert_label` have call sites but no bodies here: only 26
   `.srf` are vendored.
-  <br>**BODY WRITTEN (#375)** - `ShippingLabel6x10.Build` emits the label from the recovered geometry:
-  6x10in at 300 dpi (`^PW1800`/`^LL3000`), thermal transfer (`^MTT`), 8 Code 39 barcodes, the AIAG
-  numbered captions, and the metric variant. 24 tests. **Not yet printed** - the test print to
-  192.168.10.53 is the remaining step, and orientation/scale only fail visibly on paper.
+  <br>**BODY WRITTEN (#375) and VERIFIED ON PAPER 2026-08-06.** `ShippingLabel6x10.Build` — 6x10in at
+  300 dpi (`^PW1800`/`^LL3000`), thermal transfer, 8 Code 39 barcodes with AIAG identifiers, the
+  numbered captions, and the metric variant. Print #4 came out correct in every respect after three
+  defects found on paper across prints 1-3 (overprint, missing AIAG prefixes, barcode running into the
+  address). **Remaining: confirm a SCANNER decodes the barcodes** — the printed text proves what is
+  encoded, not that a reader returns it.
   <br>**RECOVERED (#374).** `tools/pbl_extract.py` reads object source straight out of a `.pbl`, and the
   layout is now written up in `docs/LABEL_6X10_LAYOUT.md`: 59 controls with exact x/y/w/h, fonts, and
   the Code 39 barcode font that becomes ZPL `^B3`. Artwork is 5.11in x 9.64in on the 6x10 INCH stock
