@@ -240,12 +240,22 @@
   credential with a guessable default into a system that already has AD-backed sign-in and
   server-enforced RBAC. Parity is the floor, not the ceiling — but *whether* an override is gated is a
   plant behaviour, so the gate stays; only HOW it authenticates should change.
-  <br>**The decision needed:** the DAS console is a shop-floor kiosk, and a supervisor override is
-  exactly the case where someone walks up mid-shift. Options: (a) keep a shared PIN, stored hashed and
-  configurable per line; (b) a per-supervisor PIN against `security_user`; (c) the supervisor signs in
-  with their AD account and the existing RBAC decides. (c) is the most defensible and needs no new
-  secret store, but it is slower at a panel with gloves on. **Ask the plant which they want before
-  building any of them.**
+  <br>**DECIDED 2026-08-08 — option (b): a PER-SUPERVISOR PIN against `security_user`,** as the best
+  mix of security and shop-floor usability. Options considered: (a) a shared PIN stored hashed and
+  configurable per line; (b) per-supervisor; (c) the supervisor signs in with their AD account and the
+  existing RBAC decides — most defensible, but slowest at a panel with gloves on.
+  <br>**What (b) means for the build**, and the constraints that fall out of it:
+  <br>&nbsp;&nbsp;• The PIN is **attributable** — every override records WHICH supervisor authorised it,
+  which the shared secret could never do. That audit trail is most of the value; write it.
+  <br>&nbsp;&nbsp;• **Store it hashed, never plaintext** — PBKDF2, the same as `abis_user_credential`
+  already does for passwords. Reuse that path rather than adding a second credential store.
+  <br>&nbsp;&nbsp;• A PIN is short and typed on a kiosk, so it is **guessable by brute force in a way a
+  password is not**: rate-limit attempts per user and per panel, and log failures. `Program.cs` already
+  throttles `POST /auth/login` for exactly this reason — follow it.
+  <br>&nbsp;&nbsp;• **Who may hold a PIN is an RBAC question**, not a new flag: gate issuing one on an
+  existing feature rather than inventing a "supervisor" boolean beside the permission system.
+  <br>&nbsp;&nbsp;• The gated actions come from the legacy call sites: **the Operation Panel**
+  (`wf_open_operation_panel`), **change-coil** (`downtime2/w_change_coil`), and the offline sheet.
 - [ ] **M** Serial scale zero command + scrap-scale/gauge separation
 - [ ] **M** Live job sheet / e-folder (sketch image, shape-specific tolerances, coil totals, partial-skid usage)
 
