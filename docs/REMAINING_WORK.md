@@ -749,7 +749,13 @@
   is inserted only when non-zero, and nothing is ever deleted (so a coil the office has touched stays
   office-sourced even once zeroed). Still TODO here: email/print/export.
 - [x] **M** Dimension-check edit/delete; job-level dim-QC green/red board; good-material in-spec rollup; PC# auto-increment — done (#236 edit/delete + PC# auto-increment; #237 QC board page + GET /coil-eval/jobs/{n}/qc-board with good/out-of-spec roll-ups + WinSPC verdict)
-- [~] **M** QA coil photos; QA email notification; **"make scrap" action — done (#266)**: `POST /sheet-skids/{n}/make-scrap` faithfully ports legacy `F_CONVERT_TO_SCRAP` (mints a scrap skid, moves the skid + production items to the `scraped_*` mirrors, credits each as a `return_scrap_item`, removes the live rows) — the inverse of the return-scrap #250, and reversible via it. **UI done (#269)**: "Make scrap" (per sheet skid) + "Return to sheet" (per scrap skid) confirm-gated row actions on the Skids page.
+- [~] **M** QA coil photos; QA email notification — **both are source-complete but INFRASTRUCTURE-BLOCKED,
+  now recorded in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) §C5 rather than left as a silent gap.** Neither
+  touches the database: photos are files staged in `C:\COILPHOTO` and `cmd /c move`d to
+  `<FOLDER_BASE>\<coil_abc_num>\` (default `E:\PHOTO`) with the on-screen list a `DirList()`, and the
+  email is **MAPI** whose recipients the operator picks from the desktop address book at send time —
+  there is no recipient list in the code at all. Needs: where `E:\PHOTO` really is + Linux access to it,
+  how many/how big, and who the QA email should go to. **"make scrap" action — done (#266)**: `POST /sheet-skids/{n}/make-scrap` faithfully ports legacy `F_CONVERT_TO_SCRAP` (mints a scrap skid, moves the skid + production items to the `scraped_*` mirrors, credits each as a `return_scrap_item`, removes the live rows) — the inverse of the return-scrap #250, and reversible via it. **UI done (#269)**: "Make scrap" (per sheet skid) + "Return to sheet" (per scrap skid) confirm-gated row actions on the Skids page.
 
 ### C6. Platform / admin / reports
 - [~] **C** Scheduler EXECUTION engine — DONE: `SchedulerHostedService` (off by default, `Scheduler:Enabled=false`) + `SchedulerService`/`CronSchedule` (5/6-field cron matcher) dispatch enabled+due jobs to an **allowlist** of in-process `IScheduledOperation` handlers (noop/heartbeat seeded); unknown/legacy `target_operation` is recorded "unsupported" and NEVER executed (no shell/legacy path → guardrail intact). `POST /admin/jobs/{id}/run` for manual/on-demand. Still TODO: cron auto-import off the DB host (the server-console DB-host cron card already reads the .230 crontab read-only — see [[abis-230-cron-inventory]]).
