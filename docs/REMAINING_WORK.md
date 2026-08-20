@@ -30,6 +30,8 @@
   code, `N1*MF` not `SU`, heat number, no bare qualifiers); everything else is unbuilt. Full map, the six open
   decisions (starting with: the DUNS we hold for 3061 matches **none** of Cliffs' four works) and the build order:
   **[EDI_CLIFFS.md](EDI_CLIFFS.md)**. Note this is the first work that would need an **inbound** EDI parser.
+  Its two hard blockers (the works DUNS, and the ISA/GS envelope for every set but the 846) are in
+  **[OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)** along with everything else waiting on a human answer.
 - [x] **H** 997 functional-ack matching + aging bell alert (#206/#207) — `Edi997Parser` + `/edi/997/waiting` + `/edi/997/ingest`.
 
 **Deferred out of 0.5 (accepted at close — NOT built; carried on the backlog):**

@@ -189,6 +189,9 @@ Measured on `.230`, 2026-08-20.
 
 ## 6. Open decisions — need the plant or Cliffs, not a guess
 
+Also carried, with the rest of the project's blocked-on-a-human items, in
+[`OPEN_QUESTIONS.md`](OPEN_QUESTIONS.md) §A.
+
 1. **Which Cliffs works are we processing for?** The guides give four `N1*MF` (Steel Producer) DUNS:
 
    | Works | DUNS |
