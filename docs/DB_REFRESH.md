@@ -96,8 +96,9 @@ impdp dbo parfile=/u01/app/oracle/dpump/net.par      # enter dbo password
 
 **Part 2 — LONG tables, on prod `db01`** (export → copy → load on .230):
 ```bash
-# on prod:
-expdp dbo/<pwd> directory=DATA_PUMP_DIR dumpfile=long_tabs.dmp logfile=long_exp.log reuse_dumpfiles=yes \
+# on prod: keep the credential QUOTED - unquoted, bash reads <pwd> as a redirect
+# and answers "pwd: No such file or directory" before expdp is reached.
+expdp "dbo/<pwd>" directory=DATA_PUMP_DIR dumpfile=long_tabs.dmp logfile=long_exp.log reuse_dumpfiles=yes \
   tables=OUTBOUND_EDI_TRANSACTION,INBOUND_TRANSACTION,EDI_FILE_863,IMPORTED_FILE_863,SKETCH,SKETCH_JPG
 scp /u01/app_11g/product/11.2.0/home/rdbms/log/long_tabs.dmp oracle@192.168.1.230:/u01/app/oracle/dpump/
 # on .230:
@@ -115,9 +116,23 @@ by 877,220. Until they are advanced, **every id-minting INSERT fails with `ORA-0
 constraint violated): order entry, coil mint, receiving BOLs, shift/skid/scrap creation, EDI
 generation, downtime + error logging. This is the single most impactful post-refresh step for the
 modern app, which runs on .230.
+
+**On the DB host (`oeldb01` / .230), as `oracle`** - `codi-ABIS` has no Oracle client (the app uses
+ODP.NET managed), so `sqlplus` there answers `command not found`. Let SQL*Plus prompt for the password
+rather than putting it on the command line, where `ps` would show it to anyone on the box:
+
 ```bash
-sqlplus dbo/<pwd>@//192.168.1.230:1521/abc11 @tools/resync_sequences.sql
+sqlplus -S /nolog
 ```
+```sql
+-- at the SQL*Plus prompt (CONNECT prompts for the password and never echoes it):
+CONNECT dbo@//192.168.1.230:1521/abc11
+@tools/resync_sequences.sql
+```
+
+> Do **not** paste `dbo/<pwd>@...` - bash reads `<pwd>` as a redirect and answers
+> `pwd: No such file or directory` before sqlplus is ever reached.
+
 Idempotent and safe to re-run (a sequence already ahead is skipped). Set `p_apply := FALSE` in the
 script for a read-only dry run that only reports the gaps. Keep the (sequence, table, column) list in
 the script in step with `AbisRepository.NextIdAsync` + the `Database:Sequences` overrides in
@@ -209,15 +224,38 @@ page rather than a missing grant.
 
 **`refresh-nonprod.sh` now does this for you** — it runs the script against the database it is already
 connected to, with no opt-in, because unlike Part 4 this needs no call to the app host. Run it by hand
-only if you refreshed some other way:
+only if you refreshed some other way.
 
-```sh
-sqlplus dbo/<pw>@192.168.1.230:1521/abc11 @tools/grant_it_group.sql
+> **On the DB host (`oeldb01` / .230), as `oracle` — NOT on the app host.** `codi-ABIS` has no Oracle
+> client: the app talks to Oracle through ODP.NET managed, so there is no `sqlplus` there and this
+> fails with `sqlplus: command not found`. If you are on the app host, use the API form below instead.
+
+```bash
+sqlplus -S /nolog
+```
+```sql
+-- at the SQL*Plus prompt (CONNECT prompts for the password and never echoes it):
+CONNECT dbo@//192.168.1.230:1521/abc11
+@tools/grant_it_group.sql
 ```
 
 It is deliberately NOT done at app startup. The sequence self-heal can run on every boot because a
 sequence behind its max is always wrong; a grant is policy. If the plant later narrows what IT holds,
 an app that re-widened it on every restart would silently overrule them.
+
+**From the app host instead (no Oracle client needed).** Same effect through the API — idempotent, sets
+privilege 1, removes nothing. It authenticates with the API key, which bypasses RBAC, so it still works
+when nobody yet holds `User Control`:
+
+```bash
+KEY=$(grep -oP 'ApiKeys__Keys__0="?\K[^"]+' /etc/abis/abis.env); B=http://127.0.0.1:8080
+GID=$(curl -sS -H "X-Api-Key: $KEY" $B/api/security/groups | jq -r '.[]|select((.groupName//""|ascii_upcase|gsub("^ +| +$";""))=="IT")|.userGroupId')
+for AID in $(curl -sS -H "X-Api-Key: $KEY" $B/api/security/applications | jq -r '.[].applicationId'); do
+  printf '%s:%s ' "$AID" "$(curl -sS -o /dev/null -w '%{http_code}' -H "X-Api-Key: $KEY" -H 'Content-Type: application/json' -X PUT $B/api/security/groups/$GID/applications/$AID -d '{"privilege":1}')"
+done; echo
+```
+
+Every feature should print `:204`.
 
 Idempotent: it raises anything below Write, adds anything missing, removes nothing, and touches no
 other group. It resolves the group by NAME rather than id (the id is whatever prod has after a
