@@ -28,12 +28,27 @@ surfaces later as a different-looking bug.
 | **The IT group's MEMBERS** revert to prod's | the same 403, but only for *some* people | Part 5 | **No — and nothing reports it** |
 | **The modern app's feature ROWS** are deleted | 403 on every Parts / maintenance / admin write, for everyone | Part 6 | **Yes** — app startup |
 | **Columns migrations added to LEGACY tables** are dropped | one endpoint 500s with `ORA-00904`; everything else looks fine | Part 7 | **Yes** — app startup |
+| **The whole KeepTrak import** — ~15,300 rows | the maintenance screens go back to being empty/2010 | Part 8 | **Yes** — but only via the exclude below |
 
 **Membership is the one with no automation and no alarm.** Grants and members live in different tables
 and are restored by different means: `grant_it_group.sql` gives the IT *group* everything, and says
 nothing about who is *in* it. On 2026-08-21 IT held Write on all 39 features and had **one member of
 five** — every screen looked correctly configured and four people were still locked out. Who belongs in
 IT is a plant decision, which is exactly why no script decides it.
+
+**The seventh is the largest and the least obvious.** The KeepTrak import writes ~15,300 rows into
+**nine plain DBO tables** — `groupdepartment`, `systemequipment`, `subsystemequipment`, `itemdevice`,
+`titlecraft`, `pmshift`, `pm`, `pm_actions`, `pmcompletions`. Not one of them starts with `ABIS`, so
+the `'ABIS%'` exclude does not cover them and `table_exists_action=replace` puts back prod's dead 2010
+copy. `deploy/refresh-nonprod.sh` now excludes them by name (`KEEPTRAK_TABLES`), which is the only
+thing standing between a routine weekly refresh and sixteen years of maintenance history.
+
+Excluding them costs nothing, and that is worth understanding rather than taking on trust: ABIS's own
+maintenance was abandoned in **August 2010** — newest `maint_log` 2010-08-23, PMs last completed
+2010-08-10, the spares load all dated 2010-08-21 — and the plant has run KeepTrak ever since. Prod's
+copy of those tables is frozen history; .230's copy is now the real thing. **This is the one place
+where deliberately NOT taking prod's version is the point.** If the plant ever moves maintenance back
+into ABIS, delete that exclude or .230 will silently stop seeing it.
 
 **The sixth is structural, and will happen again with the next migration.** Migrations 001–007 only
 `CREATE` ABIS-owned tables (`abis_*`, `sales_*`), which the import excludes or leaves alone. Migration
@@ -48,9 +63,10 @@ denies everyone just as a missing one does.
 
 ## Verify — one command that reports all of it
 
-Each of the six fails **later and separately**, looking like a different bug each time. On 2026-08-21
-all six were true at once on .230 and every one was found by accident while chasing something else —
-the sixth while checking whether a maintenance screen was worth building at all.
+Each of the seven fails **later and separately**, looking like a different bug each time. On 2026-08-21
+six were true at once on .230 and every one was found by accident while chasing something else — the
+sixth while checking whether a maintenance screen was worth building at all, and the seventh only
+because that question led to importing KeepTrak in the first place.
 So check deliberately rather than waiting to be surprised:
 
 ```bash
@@ -407,6 +423,64 @@ invisible to it. That is what makes this safe to do automatically on shared grou
 ```sql
 @docs/data-model/migrations/008_pmcompletion_labor_cost.sql
 ```
+
+
+## Part 8 — the KeepTrak import (protected by an exclude, not by repair)
+
+**What is at risk.** ~15,300 rows imported from the plant's live KeepTrak database on 2026-08-21:
+39 departments, 250 systems, 726 subsystems, 233 item/devices, 4 crafts, 144 PM definitions and
+**13,703 completions** going back to 2018. Everything sits above id offset **100000**, which is both
+what keeps it clear of the legacy 2010 rows and what makes it countable.
+
+**Why a refresh destroys it.** All nine target tables are plain DBO tables. The parfile excludes only
+`LIKE 'ABIS%'`, so without an explicit exclude they are replaced from prod — which has no KeepTrak
+data at all.
+
+**The protection.** `deploy/refresh-nonprod.sh` defines `KEEPTRAK_TABLES` and adds
+`exclude=TABLE:"IN (${KEEPTRAK_TABLES})"` to the parfile. **This is not a repair — there is nothing to
+repair it with on the DB host.** Re-importing needs the Access file, a Windows box with ACE OLEDB, and
+`tools/keeptrak-import.ps1`; none of that exists on `.230`. So unlike Parts 3–7, the exclude is the
+whole defence.
+
+**Check it after every refresh** — `verify_refresh.sql` check 8 counts the imported PMs and completions
+and FAILs if they are gone.
+
+**If it does get wiped**, it is recoverable, just not quickly:
+
+1. Copy `\\192.168.1.45\Maintenance\KeepTrakPro\KData.accdb` to a Windows box (**work on the copy** —
+   Access takes a lock file even for readers).
+2. `./tools/keeptrak-import.ps1 -Path <copy> -OutFile keeptrak_import.sql`
+3. Run `docs/data-model/migrations/008_pmcompletion_labor_cost.sql` **first** if the columns are
+   missing (see Part 7) — the completions section names them, and the import aborts on the first
+   completion row otherwise.
+4. Run `keeptrak_import.sql` as DBO. It clears its own `>= 100000` range first, so a re-run is safe.
+
+> ### ⚠️ Re-importing can delete PM work done in ABIS
+>
+> `pm`, `pm_actions` and `pmcompletions` all mint ids with **MAX(id)+1** (they are in
+> `Database:MaxIdTables`). After the import, `MAX(pm_id)` is ~100144 and `MAX(pmcompletion_id)` is
+> ~113703 — so **a PM created, or a PM completed, through ABIS from now on gets an id above 100000**,
+> i.e. inside the range the import treats as its own.
+>
+> The import starts with `DELETE FROM ... WHERE <id> >= 100000`. Re-running it therefore deletes not
+> just the previous import but **anything ABIS has written since**. Today that is nothing; it stops
+> being nothing the moment somebody completes a PM on the new data.
+>
+> Imported PM rows carry `pmreference = 'KT-<keeptrak id>'`, so the durable fix is to scope the
+> import's deletes to that marker instead of to an id range — and to give `pmcompletions` an
+> equivalent marker, which it currently lacks. **Until that is done, treat a re-import as destructive
+> to in-ABIS PM activity** and check before running one:
+>
+> ```sql
+> SELECT COUNT(*) FROM pm WHERE pm_id >= 100000 AND (pmreference IS NULL OR pmreference NOT LIKE 'KT-%');
+> ```
+>
+> Non-zero means a re-import would delete real work.
+
+**Interaction with Part 7.** Because `PMCOMPLETIONS` is now excluded, a refresh no longer replaces it,
+so migration 008's columns survive on that table by the same exclude. The startup self-heal is still
+right and still needed — it covers any *other* legacy table a future migration alters — but for this
+one table the exclude is what actually protects the data.
 
 
 ## Notes

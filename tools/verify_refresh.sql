@@ -15,7 +15,7 @@
 -- something else - the last one only because someone asked why a count looked wrong. That is what this
 -- script is for: one deliberate check instead of five accidental discoveries.
 --
--- READ-ONLY. It reports; it changes nothing. The repairs are docs/DB_REFRESH.md Parts 3-7.
+-- READ-ONLY. It reports; it changes nothing. The repairs are docs/DB_REFRESH.md Parts 3-8.
 --
 -- RUN ON THE DB HOST (oeldb01 / .230) as DBO - the app host has no Oracle client:
 --   sqlplus -S /nolog
@@ -192,11 +192,31 @@ BEGIN
          || 'docs/data-model/migrations/008_pmcompletion_labor_cost.sql');
   END IF;
 
+  -- 8. The KeepTrak import ---------------------------------------------------------
+  --    ~15,300 rows across NINE plain DBO tables (groupdepartment .. pmcompletions). None of them
+  --    match the 'ABIS%' exclude, so a refresh without the KEEPTRAK_TABLES exclude in
+  --    deploy/refresh-nonprod.sh deletes the lot and restores prod's dead 2010 copy. Everything is
+  --    written above an id offset of 100000, which is what makes it countable here.
+  say('');
+  say('8. the KeepTrak maintenance import (id offset 100000)');
+  SELECT COUNT(*) INTO v_n FROM pm WHERE pm_id >= 100000;
+  SELECT COUNT(*) INTO v_m FROM pmcompletions WHERE pmcompletion_id >= 100000;
+  IF v_n = 0 AND v_m = 0 THEN
+    fail('GONE - no imported PMs or completions; a refresh wiped it',
+         'confirm deploy/refresh-nonprod.sh excludes KEEPTRAK_TABLES, then re-run '
+         || 'tools/keeptrak-import.ps1 against a copy of KData.accdb (DB_REFRESH.md Part 8)');
+  ELSIF v_n = 0 OR v_m = 0 THEN
+    fail('PARTIAL - ' || v_n || ' PMs but ' || v_m || ' completions; an import did not finish',
+         're-run the import; it clears its own id range first, so a second run is safe');
+  ELSE
+    pass('present', v_n || ' PMs, ' || v_m || ' completions');
+  END IF;
+
   -- Verdict -----------------------------------------------------------------------
   say('');
   say('=== ' || v_fail || ' failure(s), ' || v_warn || ' warning(s) ===');
   IF v_fail > 0 THEN
-    say('The app is NOT fully usable until the fixes above are applied. See docs/DB_REFRESH.md Parts 3-7.');
+    say('The app is NOT fully usable until the fixes above are applied. See docs/DB_REFRESH.md Parts 3-8.');
   ELSIF v_warn > 0 THEN
     say('No failures. Read the warnings - they are the things no script can decide for you.');
   ELSE
