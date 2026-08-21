@@ -10,6 +10,71 @@ new ABIS can replace old ABIS and alpha testing begins.
 
 ---
 
+## v0.9.6 — 2026-08-21
+
+One batch, aimed at a single complaint: **the search boxes did not search.** Both of them had been
+shipped as something that looked finished, and neither reached the database.
+
+### The box at the top of every page did nothing at all
+
+It carried a placeholder promising *"Search POs, jobs, coils, EDI…"*, a magnifying-glass icon, and a
+`/` keyboard shortcut that focused it. It had **no handler of any kind** — you typed, pressed Enter,
+and nothing happened. It had been that way since the UI overhaul.
+
+It is now backed by `GET /search/quick` (#434): a jump-to across the identifiers somebody actually has in
+their hand — an order number or the customer PO they quote on the phone, a job number, a coil (ours or
+the customer's), a part number. A single match navigates straight there; several show a list you can
+walk with the arrow keys; none says so instead of sitting silent.
+
+Crucially it hands the term *to the page that can display the record*, via `?q=`, and Jobs, Coils,
+Parts and Order entry now pre-fill their own filter from it. A result that dropped you on an unfiltered
+list would have been the same failure one click later.
+
+The categories offered are the ones **that user's sidebar already shows** — resolved from the same
+permission lookup the nav uses, so the box and the sidebar cannot drift into disagreeing about the same
+person. That is nav parity and **not** a security boundary: reads are ungated across the whole API, so
+any signed-in caller could already fetch those records directly. The code and the test both say so
+rather than implying a guarantee that is not there.
+
+### "0 of 50" for a part that exists
+
+There was no way to look a part up by its number — the Parts page filtered by customer and alloy only.
+The box that looked like a part-number search was the shared table filter, which only ever sees the
+rows already fetched, so it answered **"0 of 50"** for a part sitting on page 3. Reporting *not found*
+when the truth is *not on this page* is the kind of wrong answer people believe, and act on.
+
+`GET /parts` now takes `search`, matching the customer's part number case-insensitively and anywhere in
+the value — a customer part number is the customer's format, not ours — or the ABIS part id when the
+term is digits. The Parts page has a **Part #** field that uses it.
+
+The shared table filter now reads **"0 of 50 loaded"**. One word, and it stops claiming to have looked
+at anything it has not.
+
+### A near miss worth recording
+
+The new search bound a parameter named `:like`. That is an Oracle reserved word: it raises `ORA-01745`
+at parse time on the plant database while passing silently on SQLite, so the statement would never have
+run in production and every test would have stayed green. The bind-name guard in CI caught it before it
+left the branch — the ninth time that class of defect has been caught by a rule written after the first
+one escaped.
+
+### Known limitations
+
+The quick search covers orders, jobs, coils and parts. **It does not cover EDI**, which the old
+placeholder promised; the placeholder now names what it actually searches rather than what somebody
+hoped it would.
+
+Matching is unanchored, which means a short term can return the wrong five rows on a large table. It is
+capped per category and ordered newest-first, which is the right default for a plant looking things up,
+but it is a jump-to and not a report.
+
+Carried forward unchanged: nothing Cleveland-Cliffs is transmittable and two answers gate the rest; the
+end-coil balance gate still warns rather than blocks; the deployed UI still reads the non-prod sandbox;
+no supervisor PIN is enrolled, so the DAS override cannot be used by anyone; and the two 4x6 tags and
+the Certificate of Conformance have never printed.
+
+---
+
 ## v0.9.5 — 2026-08-21
 
 Four commits, no new features, and the most useful day's work in a while. A database refresh and a
