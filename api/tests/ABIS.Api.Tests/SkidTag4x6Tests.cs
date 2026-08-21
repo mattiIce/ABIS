@@ -97,7 +97,7 @@ public sealed class SkidTag4x6Tests
     {
         // The write side and the read side have to agree. HandheldBarcode drops a single leading 'S';
         // if the tag stopped emitting it, every scan would look up the wrong number.
-        Assert.Equal(HandheldBarcode.HeaderPrefix.ToString(), SkidTag4x6.SkidBarcodePrefix);
+        Assert.Equal(SkidTag4x6.SkidBarcodePrefix, HandheldBarcode.HeaderPrefix.ToString());
     }
 
     // ---- Content -------------------------------------------------------------------

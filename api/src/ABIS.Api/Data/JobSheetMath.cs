@@ -45,6 +45,10 @@ public static class JobSheetMath
     /// legacy's three-part guard. Zero is a real answer here: a lot too small to fill one skid at the
     /// planned weight yields no full skid.</para>
     /// </summary>
+    /// <param name="processQuantity">The order line's quantity to process.</param>
+    /// <param name="materialYield">The job's material yield, as a percentage.</param>
+    /// <param name="maxSkidWt">The most a skid may weigh (<c>order_item.max_skid_wt</c>).</param>
+    /// <param name="theoreticalUnitWt">One piece's theoretical weight.</param>
     /// <param name="stacksSkid">Stacks per skid (<c>order_item.stacks_skid</c>); null or 0 means the
     /// item is not stacked and the piece count stands as divided.</param>
     public static int PiecesPerSkid(decimal processQuantity, decimal materialYield, decimal maxSkidWt,

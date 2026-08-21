@@ -1355,7 +1355,8 @@ public sealed class RepositoryTests : IDisposable
         Assert.Contains("ST*846*", payload!.Payload);
         Assert.Contains("N1*MF**1*606072130", payload.Payload);   // Cliffs = material owner (steel producer)
         // BIA06 (action code 4 = Verify) — guide-required, and missing from every file the port produced.
-        Assert.Contains("*1430*4~", payload.Payload.Split(Environment.NewLine.ToCharArray()).First(l => l.StartsWith("BIA*")));
+        var bia = Assert.Single(payload.Payload!.Split(Environment.NewLine.ToCharArray()).Where(l => l.StartsWith("BIA*")));
+        Assert.Contains("*1430*4~", bia);
         // The coil line, with the heat number the ported LIN used to leave off.
         Assert.Contains("LIN*1*VO*VO-B*PO*PO-B*SN*CLF-COIL-B*HN*CLF-LOT-B", payload.Payload);
         Assert.Contains("PID*S*MA*ST*0", payload.Payload);        // coil status 12 → table70 '0'

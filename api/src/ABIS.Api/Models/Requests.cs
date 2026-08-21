@@ -741,12 +741,6 @@ public sealed class SalesProbabilityWrite
     public string? ProbabilityNote { get; set; }
 }
 
-/// <summary>Record a coil-ownership transfer (table <c>coil_ownership_transfer</c>).
-/// <see cref="CoilAbcNumOrig"/> (the coil being transferred) and <see cref="CustomerIdNew"/>
-/// (the new owner) are required. <c>certificate_num</c> is server-assigned, the original
-/// customer is read from the coil's current owner, and <c>transfer_datetime</c> defaults to
-/// now. The transfer also re-points the coil's <c>customer_id</c> to the new owner (its prior
-/// owner is preserved in <c>coil_from_cust_id</c>).</summary>
 /// <summary>Record a posted mechanical test result (table <c>pst_test_result</c>) for a coil — the values off a
 /// tensile/mechanical test at a sample position. The composite PK is (coil_abc_num, position, created_date,
 /// source_id); <see cref="CoilAbcNum"/> and <see cref="Position"/> are required, <c>created_date</c> is stamped
@@ -824,6 +818,12 @@ public sealed class CoilQaReleaseWrite
     public int? ToStatus { get; set; }
 }
 
+/// <summary>Record a coil-ownership transfer (table <c>coil_ownership_transfer</c>).
+/// <see cref="CoilAbcNumOrig"/> (the coil being transferred) and <see cref="CustomerIdNew"/>
+/// (the new owner) are required. <c>certificate_num</c> is server-assigned, the original
+/// customer is read from the coil's current owner, and <c>transfer_datetime</c> defaults to
+/// now. The transfer also re-points the coil's <c>customer_id</c> to the new owner (its prior
+/// owner is preserved in <c>coil_from_cust_id</c>).</summary>
 public sealed class CoilOwnershipTransferWrite
 {
     public long? CoilAbcNumOrig { get; set; }
