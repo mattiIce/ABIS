@@ -10,6 +10,101 @@ new ABIS can replace old ABIS and alpha testing begins.
 
 ---
 
+## v0.9.8 — 2026-08-21
+
+The plant's real maintenance history is in ABIS: **144 PM definitions and 13,703 completions**,
+imported from the live KeepTrak database and now protected from the two separate ways they could have
+silently disappeared.
+
+### Sixteen years of maintenance data, and the discovery that ABIS had none
+
+The maintenance screens were next on the backlog. Checking whether they were worth building found that
+**ABIS's own maintenance data stops in August 2010** — newest `maint_log` 2010-08-23, PMs last
+completed 2010-08-10, the spares load all dated 2010-08-21. Three tables, the same month. That is when
+the plant moved to KeepTrak, and an equipment-hierarchy screen over that data would have been a UI on a
+sixteen-year-old skeleton.
+
+So the hierarchy work was dropped in favour of the import that makes it worth having. The KeepTrak
+schema was re-inspected against the committed inventory and is **unchanged** — same 40 tables, same
+column counts, only row counts grown — so the mapping built earlier still held. Loaded: 39 departments,
+250 systems, 726 subsystems, 233 item/devices, 4 crafts, 144 PMs (18 parked as HOLD) and 13,703
+completions going back to 2018.
+
+### `GET /pms/{id}/completions` had been answering 500 for every PM
+
+`ORA-00904: "COMP_COST": invalid identifier`. Migration 008 adds two columns to `PMCOMPLETIONS`, and
+they were not there.
+
+That turned out to be **structural, not a one-off**. Migrations 001–007 only CREATE ABIS-owned tables,
+which a refresh preserves; 008 was the first to ALTER a table the legacy application also owns — and
+legacy tables are exactly what `table_exists_action=replace` restores from prod, where the columns have
+never existed. **Every refresh drops them, and every future legacy-table migration will do the same.**
+
+The app now re-adds them at startup, the way it already re-syncs drifted sequences and restores deleted
+security features. A script somebody has to remember is not a fix for something a routine refresh
+undoes. `DB_REFRESH.md` gains **Part 7** and the rule for whoever writes the next such migration.
+
+**Nothing caught it** because the SQLite fixture declares both columns — the whole suite was green while
+live Oracle failed. The same shape as the phantom-feature bug: the test environment had what production
+lacked. (#439)
+
+### Two ways the import could have vanished
+
+**The refresh would have deleted all of it.** The import writes nine tables and *not one starts with
+`ABIS`*, so the `'ABIS%'` exclude never covered them. Unlike everything else in that runbook this is
+**not repairable by the app** — re-importing needs the Access file, a Windows box with ACE OLEDB and a
+PowerShell script, none of which exist on the database host. The exclude is the entire defence, and it
+is now explicit.
+
+**A re-import would have deleted PM work done in ABIS.** `pm`, `pm_actions` and `pmcompletions` mint
+ids with MAX(id)+1, so after the import every PM created or completed in ABIS also lands above the
+reserved offset — inside the range the import used to clear by id. Raising the offset only moves the
+collision. **Migration 009** adds a `kt_ref` provenance marker that only the import writes, so a
+re-import deletes exactly what it created and nothing else. It backfills the rows already loaded.
+
+Deliberately *not* keyed on `pm.pmreference`, which already carries `KT-<id>` but is user-editable
+through the API: keying a DELETE on data a user can type is how you get a support call that begins "it
+deleted my PM".
+
+Both guards are **mutation-tested** — dropping a table from the exclude, and reverting a delete to an id
+range, each fail with their own diagnostic. Worth the extra cycle: the first mutation attempt silently
+did not apply, and the test passing then would have proved nothing. (#440)
+
+### Also
+
+The backlog's **step-up re-authentication popup** is not a parity gap: the only call site in the whole
+legacy source is commented out and replaced with a flat refusal, which the modern 403 already matches.
+Its password check opened a second Oracle connection *as that user*, which cannot port to AD plus one
+service account. The **duplicate-key retry** was resized from "~14 create paths" to **46 methods**, one
+of which mints the X12 control number and must not be retried blindly. (#436)
+
+### Known limitations
+
+**The due board works, and the legacy PMs are retired.** Written up here because it was the last step
+and it is not automatic: the 77 pre-KeepTrak definitions still carried 2010 due dates and would have
+appeared ~5,800 days overdue, swamping the real ones. `deploy/keeptrak/retire_legacy_pm.sql` set them
+to status 0 on 2026-08-21 — **106 active PMs now, all KeepTrak, zero legacy.** Nothing was deleted; the
+definitions stay browsable and their 2,051 completions are untouched.
+
+A new `regen_undo_retire_legacy_pm.sql` captures the rollback from the LIVE schema first, because the
+committed one dates from 2026-07-24 and `PM` is a legacy table every refresh overwrites — a stale
+rollback would restore the wrong statuses on the day it was needed. This time the live distribution
+matched the committed snapshot exactly (8×'1', 46×'2', 23×'3'), verified row by row, so the copy in
+version control is a valid undo rather than only the volatile one in `/tmp`.
+
+**The equipment-hierarchy cascade is still unbuilt**, now deliberately: it was deferred *for* this
+import and is worth building on top of it. Imported rows carry `depttype = 'KEEPTRAK'`, and 39 KeepTrak
+departments sit alongside 21 legacy ones with overlapping names, so any picker must filter on that
+discriminator or show everything twice.
+
+Maintenance **logs** and **spares** remain the dead 2010 data; only PMs and the hierarchy were imported.
+
+Carried forward unchanged: nothing Cleveland-Cliffs is transmittable; the end-coil balance gate still
+warns rather than blocks; the deployed UI still reads the non-prod sandbox; no supervisor PIN is
+enrolled; and the two 4x6 tags and the Certificate of Conformance have never printed.
+
+---
+
 ## v0.9.7 — 2026-08-21
 
 Two commits: one feature and one correction. The correction is the more useful half — working down the
