@@ -10,6 +10,85 @@ new ABIS can replace old ABIS and alpha testing begins.
 
 ---
 
+## v0.9.9 — 2026-08-21
+
+The maintenance area, finished. Two commits that close the last of that backlog — and one of the three
+remaining items turned out not to be worth building, which is the third time today that was the honest
+answer.
+
+### The equipment picker now cascades
+
+The PM form's **System** dropdown was fetched unfiltered, and the department beside it was a free-text
+box you typed a raw id number into. That was survivable when ABIS held a handful of equipment rows. The
+KeepTrak import took it to **382 systems in one flat dropdown** — against 25 for a typical department.
+
+Department is now a select of names and drives everything below it: **Department → System → Subsystem →
+Item/device.** Changing a level clears the ones beneath, so a PM cannot be saved against an item that
+does not belong to the equipment above it.
+
+Measured before building, on the imported data: all 250 systems have a department and all 233
+item/devices have a subsystem, so the hierarchy nests cleanly enough for a strict cascade. (5 of 726
+subsystems have no parent — reachable only with no system selected, noted rather than pretended away.)
+
+**The part that would have lost data:** a PM carries its *own* `groupdepartment_id` as well as its
+`sysequipment_id`, and nothing enforces that the system belongs to that department. Filtering naively
+renders a blank System for such a PM — and the next save writes that blank back and strips the
+equipment off the record. So when the saved system is absent from the filtered list the picker falls
+back to the unfiltered one and keeps the value, verified by deliberately writing a mismatched PM and
+confirming its equipment survived a reload. (#442)
+
+### The PM list report, and record navigation
+
+`d_report_pm_list` decoded from the DataWindow rather than guessed at: six columns over five **LEFT
+OUTER** joins, ordered by `pm_id`. It is now CSV and `.xlsx` export on the PM list, over live KeepTrak
+data.
+
+The outer joins are preserved deliberately — 5 of 726 imported subsystems have no parent, and an inner
+join would silently drop PMs from a report whose entire job is to list all of them. The legacy six
+columns come first and in legacy's order so anyone comparing against the old printed report finds what
+they expect; status exports as a word rather than the raw code, and an **Origin** column says KeepTrak
+or legacy, because 221 PMs now sit side by side meaning very different things and the id offset is the
+only tell.
+
+Legacy's *First record / Next / Last Record* returns as **◀ ▶ with an "n of N" position** on the PM
+detail. It walks the loaded list, so it follows the operator's filter rather than the whole table.
+(#443)
+
+### Two reports that would have shipped empty
+
+`d_report_parts_details` and `d_report_parts_full_list` are **not** ported. Both read `parts` /
+`parts_categories` / `suppliers` — the maintenance spares load whose 762 rows all carry
+`parts_entered_date` 2010-08-21, with no order or receive dates and zero stock. The plant's live spares
+are in KeepTrak. Building them would have produced two reports that look broken.
+
+`More-Details` on the maintenance **log** form is left alone for a different reason: `maint_log` stores
+system/subsystem/item as **text**, not ids, so cascading it would change what gets written rather than
+fix anything. That is a plant decision, not a gap.
+
+### Also
+
+A 403 on this page used to read as *"An unexpected server error occurred."* Nothing was broken — the
+account lacked a grant. The page now decodes the ProblemDetails the API already returns and names the
+user, the level and the feature. Same failure as the AD sign-in reporting a certificate problem as a
+bad password: the server said exactly what was wrong and the UI threw it away.
+
+### Known limitations
+
+Maintenance **logs** and **spares** are still the dead 2010 data — only PMs and the equipment hierarchy
+were imported from KeepTrak. The log screens work; they just have nothing recent to show.
+
+The 39 KeepTrak departments sit alongside 21 legacy ones with **overlapping names** — "Maintenance",
+"Production Line" and the three Facilities entries exist in both sets. The cascade is unaffected
+because it filters by the department **id** you picked, but the dropdown does show each of those names
+twice, and anything built on the hierarchy later has to distinguish them: imported rows carry
+`depttype = 'KEEPTRAK'` and ids above 100000.
+
+Carried forward unchanged: nothing Cleveland-Cliffs is transmittable; the end-coil balance gate still
+warns rather than blocks; the deployed UI still reads the non-prod sandbox; no supervisor PIN is
+enrolled; and the two 4x6 tags and the Certificate of Conformance have never printed.
+
+---
+
 ## v0.9.8 — 2026-08-21
 
 The plant's real maintenance history is in ABIS: **144 PM definitions and 13,703 completions**,
