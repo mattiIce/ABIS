@@ -23,13 +23,39 @@ surfaces later as a different-looking bug.
 | What breaks | How it looks | Repaired by | Automatic? |
 |---|---|---|---|
 | **Id sequences** drift behind their table max | every id-minting INSERT fails `ORA-00001` | Part 3 | **Yes** — app startup |
-| **The ABIS admin login** is deleted | sign-in fails "user not found" — looks like an AD/LDAP fault | Part 4 | No — run `bootstrap-admin.sh` |
+| **The ABIS admin login** is deleted | sign-in fails "user not found" — looks like an AD/LDAP fault | Part 4 | No — `bootstrap-admin.sh` |
 | **The IT group's grants** revert to prod's | 403 on a screen that looks available | Part 5 | **Yes** — `refresh-nonprod.sh` |
+| **The IT group's MEMBERS** revert to prod's | the same 403, but only for *some* people | Part 5 | **No — and nothing reports it** |
 | **The modern app's feature ROWS** are deleted | 403 on every Parts / maintenance / admin write, for everyone | Part 6 | **Yes** — app startup |
 
-Two of those repair themselves, one is done by the refresh script, and **only the admin login needs a
-person**. But read Part 6 before assuming the feature rows returning is the end of it: a feature nobody
-holds still denies everyone, and the grants are Part 5.
+**Membership is the one with no automation and no alarm.** Grants and members live in different tables
+and are restored by different means: `grant_it_group.sql` gives the IT *group* everything, and says
+nothing about who is *in* it. On 2026-08-21 IT held Write on all 39 features and had **one member of
+five** — every screen looked correctly configured and four people were still locked out. Who belongs in
+IT is a plant decision, which is exactly why no script decides it.
+
+And read Part 6 before assuming the feature rows returning is the end of it: a feature nobody holds
+denies everyone just as a missing one does.
+
+## Verify — one command that reports all of it
+
+Each of the five fails **later and separately**, looking like a different bug each time. On 2026-08-21
+all five were true at once on .230 and every one was found by accident while chasing something else.
+So check deliberately rather than waiting to be surprised:
+
+```bash
+sqlplus -S /nolog
+```
+```sql
+-- at the SQL*Plus prompt, on the DB host (oeldb01 / .230):
+CONNECT dbo@//192.168.1.230:1521/abc11
+@tools/verify_refresh.sql
+```
+
+Read-only — it reports and changes nothing. It prints OK / WARN / FAIL per item with the fix beside
+each failure, and ends with a count. **Run it after every refresh, before telling anyone the app is
+back.** A WARN is something no script can decide for you (who is in IT; whether anyone has enrolled a
+supervisor PIN); a FAIL means the app is not fully usable yet.
 
 ## Two parts (why)
 Network-mode Data Pump is fast and runs entirely on .230, but it **cannot move `LONG`/`LONG RAW`
@@ -238,6 +264,33 @@ sqlplus -S /nolog
 CONNECT dbo@//192.168.1.230:1521/abc11
 @tools/grant_it_group.sql
 ```
+
+### Members, not just grants
+
+`grant_it_group.sql` gives the **group** every feature. It says nothing about **who is in the group** —
+that is `SECURITY_USER_GROUP`, another DBO table, reverted by the same refresh. Restoring the grants and
+stopping there leaves a group with full rights and the wrong people in it, and every screen looks fine.
+
+List who is actually in IT (id from the query above):
+
+```sql
+SELECT u.user_id, TRIM(u.login_id), TRIM(u.user_first_name)||' '||TRIM(u.user_last_name)
+  FROM security_user_group g JOIN security_user u ON u.user_id = g.user_id
+ WHERE g.user_group_id = 10 ORDER BY u.user_id;
+```
+
+Add anyone missing, from the app host:
+
+```bash
+KEY=$(grep -oP 'ApiKeys__Keys__0="?\K[^"]+' /etc/abis/abis.env)
+curl -sS -o /dev/null -w '%{http_code}\n' -H "X-Api-Key: $KEY" -X POST http://127.0.0.1:8080/api/security/users/<userId>/groups/10
+```
+
+> **Match on the person, not the surname.** .230 carries both `aqiu` (Alanna Qiu) and `tqiu` (Toni Qiu);
+> only one is in IT. A surname match would hand the other write access to everything.
+
+The ABIS admin (Part 4) is a separate case again: a refresh deletes the whole `security_user` row, so
+that login must be recreated by `bootstrap-admin.sh` before it can be put in any group.
 
 It is deliberately NOT done at app startup. The sequence self-heal can run on every boot because a
 sequence behind its max is always wrong; a grant is policy. If the plant later narrows what IT holds,
