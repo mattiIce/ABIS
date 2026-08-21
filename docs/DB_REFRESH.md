@@ -23,13 +23,39 @@ surfaces later as a different-looking bug.
 | What breaks | How it looks | Repaired by | Automatic? |
 |---|---|---|---|
 | **Id sequences** drift behind their table max | every id-minting INSERT fails `ORA-00001` | Part 3 | **Yes** — app startup |
-| **The ABIS admin login** is deleted | sign-in fails "user not found" — looks like an AD/LDAP fault | Part 4 | No — run `bootstrap-admin.sh` |
+| **The ABIS admin login** is deleted | sign-in fails "user not found" — looks like an AD/LDAP fault | Part 4 | No — `bootstrap-admin.sh` |
 | **The IT group's grants** revert to prod's | 403 on a screen that looks available | Part 5 | **Yes** — `refresh-nonprod.sh` |
+| **The IT group's MEMBERS** revert to prod's | the same 403, but only for *some* people | Part 5 | **No — and nothing reports it** |
 | **The modern app's feature ROWS** are deleted | 403 on every Parts / maintenance / admin write, for everyone | Part 6 | **Yes** — app startup |
 
-Two of those repair themselves, one is done by the refresh script, and **only the admin login needs a
-person**. But read Part 6 before assuming the feature rows returning is the end of it: a feature nobody
-holds still denies everyone, and the grants are Part 5.
+**Membership is the one with no automation and no alarm.** Grants and members live in different tables
+and are restored by different means: `grant_it_group.sql` gives the IT *group* everything, and says
+nothing about who is *in* it. On 2026-08-21 IT held Write on all 39 features and had **one member of
+five** — every screen looked correctly configured and four people were still locked out. Who belongs in
+IT is a plant decision, which is exactly why no script decides it.
+
+And read Part 6 before assuming the feature rows returning is the end of it: a feature nobody holds
+denies everyone just as a missing one does.
+
+## Verify — one command that reports all of it
+
+Each of the five fails **later and separately**, looking like a different bug each time. On 2026-08-21
+all five were true at once on .230 and every one was found by accident while chasing something else.
+So check deliberately rather than waiting to be surprised:
+
+```bash
+sqlplus -S /nolog
+```
+```sql
+-- at the SQL*Plus prompt, on the DB host (oeldb01 / .230):
+CONNECT dbo@//192.168.1.230:1521/abc11
+@tools/verify_refresh.sql
+```
+
+Read-only — it reports and changes nothing. It prints OK / WARN / FAIL per item with the fix beside
+each failure, and ends with a count. **Run it after every refresh, before telling anyone the app is
+back.** A WARN is something no script can decide for you (who is in IT; whether anyone has enrolled a
+supervisor PIN); a FAIL means the app is not fully usable yet.
 
 ## Two parts (why)
 Network-mode Data Pump is fast and runs entirely on .230, but it **cannot move `LONG`/`LONG RAW`
@@ -96,8 +122,9 @@ impdp dbo parfile=/u01/app/oracle/dpump/net.par      # enter dbo password
 
 **Part 2 — LONG tables, on prod `db01`** (export → copy → load on .230):
 ```bash
-# on prod:
-expdp dbo/<pwd> directory=DATA_PUMP_DIR dumpfile=long_tabs.dmp logfile=long_exp.log reuse_dumpfiles=yes \
+# on prod: keep the credential QUOTED - unquoted, bash reads <pwd> as a redirect
+# and answers "pwd: No such file or directory" before expdp is reached.
+expdp "dbo/<pwd>" directory=DATA_PUMP_DIR dumpfile=long_tabs.dmp logfile=long_exp.log reuse_dumpfiles=yes \
   tables=OUTBOUND_EDI_TRANSACTION,INBOUND_TRANSACTION,EDI_FILE_863,IMPORTED_FILE_863,SKETCH,SKETCH_JPG
 scp /u01/app_11g/product/11.2.0/home/rdbms/log/long_tabs.dmp oracle@192.168.1.230:/u01/app/oracle/dpump/
 # on .230:
@@ -115,9 +142,23 @@ by 877,220. Until they are advanced, **every id-minting INSERT fails with `ORA-0
 constraint violated): order entry, coil mint, receiving BOLs, shift/skid/scrap creation, EDI
 generation, downtime + error logging. This is the single most impactful post-refresh step for the
 modern app, which runs on .230.
+
+**On the DB host (`oeldb01` / .230), as `oracle`** - `codi-ABIS` has no Oracle client (the app uses
+ODP.NET managed), so `sqlplus` there answers `command not found`. Let SQL*Plus prompt for the password
+rather than putting it on the command line, where `ps` would show it to anyone on the box:
+
 ```bash
-sqlplus dbo/<pwd>@//192.168.1.230:1521/abc11 @tools/resync_sequences.sql
+sqlplus -S /nolog
 ```
+```sql
+-- at the SQL*Plus prompt (CONNECT prompts for the password and never echoes it):
+CONNECT dbo@//192.168.1.230:1521/abc11
+@tools/resync_sequences.sql
+```
+
+> Do **not** paste `dbo/<pwd>@...` - bash reads `<pwd>` as a redirect and answers
+> `pwd: No such file or directory` before sqlplus is ever reached.
+
 Idempotent and safe to re-run (a sequence already ahead is skipped). Set `p_apply := FALSE` in the
 script for a read-only dry run that only reports the gaps. Keep the (sequence, table, column) list in
 the script in step with `AbisRepository.NextIdAsync` + the `Database:Sequences` overrides in
@@ -209,15 +250,65 @@ page rather than a missing grant.
 
 **`refresh-nonprod.sh` now does this for you** — it runs the script against the database it is already
 connected to, with no opt-in, because unlike Part 4 this needs no call to the app host. Run it by hand
-only if you refreshed some other way:
+only if you refreshed some other way.
 
-```sh
-sqlplus dbo/<pw>@192.168.1.230:1521/abc11 @tools/grant_it_group.sql
+> **On the DB host (`oeldb01` / .230), as `oracle` — NOT on the app host.** `codi-ABIS` has no Oracle
+> client: the app talks to Oracle through ODP.NET managed, so there is no `sqlplus` there and this
+> fails with `sqlplus: command not found`. If you are on the app host, use the API form below instead.
+
+```bash
+sqlplus -S /nolog
 ```
+```sql
+-- at the SQL*Plus prompt (CONNECT prompts for the password and never echoes it):
+CONNECT dbo@//192.168.1.230:1521/abc11
+@tools/grant_it_group.sql
+```
+
+### Members, not just grants
+
+`grant_it_group.sql` gives the **group** every feature. It says nothing about **who is in the group** —
+that is `SECURITY_USER_GROUP`, another DBO table, reverted by the same refresh. Restoring the grants and
+stopping there leaves a group with full rights and the wrong people in it, and every screen looks fine.
+
+List who is actually in IT (id from the query above):
+
+```sql
+SELECT u.user_id, TRIM(u.login_id), TRIM(u.user_first_name)||' '||TRIM(u.user_last_name)
+  FROM security_user_group g JOIN security_user u ON u.user_id = g.user_id
+ WHERE g.user_group_id = 10 ORDER BY u.user_id;
+```
+
+Add anyone missing, from the app host:
+
+```bash
+KEY=$(grep -oP 'ApiKeys__Keys__0="?\K[^"]+' /etc/abis/abis.env)
+curl -sS -o /dev/null -w '%{http_code}\n' -H "X-Api-Key: $KEY" -X POST http://127.0.0.1:8080/api/security/users/<userId>/groups/10
+```
+
+> **Match on the person, not the surname.** .230 carries both `aqiu` (Alanna Qiu) and `tqiu` (Toni Qiu);
+> only one is in IT. A surname match would hand the other write access to everything.
+
+The ABIS admin (Part 4) is a separate case again: a refresh deletes the whole `security_user` row, so
+that login must be recreated by `bootstrap-admin.sh` before it can be put in any group.
 
 It is deliberately NOT done at app startup. The sequence self-heal can run on every boot because a
 sequence behind its max is always wrong; a grant is policy. If the plant later narrows what IT holds,
 an app that re-widened it on every restart would silently overrule them.
+
+**From the app host instead (no Oracle client needed).** Same effect through the API — idempotent, sets
+privilege 1, removes nothing. It authenticates with the API key, which bypasses RBAC, so it still works
+when nobody yet holds `User Control`:
+
+```bash
+KEY=$(grep -oP 'ApiKeys__Keys__0="?\K[^"]+' /etc/abis/abis.env); B=http://127.0.0.1:8080
+GID=$(curl -sS -H "X-Api-Key: $KEY" $B/api/security/groups | jq -r '.[]|select((.groupName//""|ascii_upcase|gsub("^ +| +$";""))=="IT")|.userGroupId')
+for AID in $(curl -sS -H "X-Api-Key: $KEY" $B/api/security/applications | jq -r '.[].applicationId'); do
+  printf '%s:%s ' "$AID" "$(curl -sS -o /dev/null -w '%{http_code}' -H "X-Api-Key: $KEY" -H 'Content-Type: application/json' -X PUT $B/api/security/groups/$GID/applications/$AID -d '{"privilege":1}')"
+done; echo
+```
+
+Every feature should print `:204`.
 
 Idempotent: it raises anything below Write, adds anything missing, removes nothing, and touches no
 other group. It resolves the group by NAME rather than id (the id is whatever prod has after a

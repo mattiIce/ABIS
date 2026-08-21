@@ -9,7 +9,14 @@
 -- This is the mandatory post-refresh step. It is idempotent (a sequence already ahead is skipped)
 -- and safe to re-run. Oracle 11g-compatible: it uses the INCREMENT BY jump rather than 12c RESTART.
 --
--- RUN AS DBO on the target DB:  sqlplus dbo/<pw>@//192.168.1.230:1521/abc11 @tools/resync_sequences.sql
+-- RUN AS DBO on the target DB. Read the password from the app host's env rather than typing it -
+-- and do NOT paste `dbo/<pw>@...` literally: bash reads `<pw>` as a redirect and answers
+-- "pw: No such file or directory" before sqlplus is ever reached.
+--   PW=$(sed -n 's/.*[Pp]assword=\([^;"]*\).*/\1/p' /etc/abis/abis.env | head -1)
+--   sqlplus -S /nolog <<EOF
+--   CONNECT dbo/$PW@//192.168.1.230:1521/abc11
+--   @tools/resync_sequences.sql
+--   EOF
 -- READ-ONLY DRY RUN: set p_apply := FALSE below to only report the gaps without altering anything.
 
 SET SERVEROUTPUT ON SIZE UNLIMITED

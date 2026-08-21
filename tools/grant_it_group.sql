@@ -16,7 +16,14 @@
 -- Non-prod (.230) only. Prod (.9) is read-only by policy — do NOT run this there. Legacy owns the
 -- production security tables and changing them is a plant decision made through legacy ABIS.
 --
---   sqlplus dbo/<pw>@192.168.1.230:1521/abc11 @tools/grant_it_group.sql
+--   PW=$(sed -n 's/.*[Pp]assword=\([^;"]*\).*/\1/p' /etc/abis/abis.env | head -1)
+--   sqlplus -S /nolog <<EOF
+--   CONNECT dbo/$PW@192.168.1.230:1521/abc11
+--   @tools/grant_it_group.sql
+--   EOF
+--
+-- Do NOT paste `dbo/<pw>@...` literally: bash reads `<pw>` as a redirect and answers
+-- "pw: No such file or directory" before sqlplus is ever reached.
 
 SET SERVEROUTPUT ON
 
