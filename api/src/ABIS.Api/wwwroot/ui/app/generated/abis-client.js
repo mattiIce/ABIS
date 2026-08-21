@@ -11298,16 +11298,17 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
-     * List part-number master records (paged, sortable; filter by customerId/alloy).
+     * List part-number master records (paged, sortable; filter by customerId/alloy). `search` matches the customer part number (case-insensitive, anywhere in the value) or the ABIS part id when the term is numeric - the identifier a person actually holds.
      * @param page (optional)
      * @param pageSize (optional)
      * @param customerId (optional)
      * @param alloy (optional)
      * @param sort (optional)
      * @param dir (optional)
+     * @param search (optional)
      * @return OK
      */
-    listParts(page, pageSize, customerId, alloy, sort, dir) {
+    listParts(page, pageSize, customerId, alloy, sort, dir, search) {
         let url_ = this.baseUrl + "/api/parts?";
         if (page === null)
             throw new globalThis.Error("The parameter 'page' cannot be null.");
@@ -11333,6 +11334,10 @@ export class AbisClient {
             throw new globalThis.Error("The parameter 'dir' cannot be null.");
         else if (dir !== undefined)
             url_ += "dir=" + encodeURIComponent("" + dir) + "&";
+        if (search === null)
+            throw new globalThis.Error("The parameter 'search' cannot be null.");
+        else if (search !== undefined)
+            url_ += "search=" + encodeURIComponent("" + search) + "&";
         url_ = url_.replace(/[?&]$/, "");
         let options_ = {
             method: "GET",
@@ -16334,6 +16339,67 @@ export class AbisClient {
         else if (status === 404) {
             return response.text().then((_responseText) => {
                 return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * Jump-to search across orders (and their customer POs), jobs, coils and parts, for the shell's search box. Results are limited to the categories the caller's nav shows them.
+     * @param q (optional)
+     * @param perKind (optional)
+     * @return OK
+     */
+    quickSearch(q, perKind) {
+        let url_ = this.baseUrl + "/api/search/quick?";
+        if (q === null)
+            throw new globalThis.Error("The parameter 'q' cannot be null.");
+        else if (q !== undefined)
+            url_ += "q=" + encodeURIComponent("" + q) + "&";
+        if (perKind === null)
+            throw new globalThis.Error("The parameter 'perKind' cannot be null.");
+        else if (perKind !== undefined)
+            url_ += "perKind=" + encodeURIComponent("" + perKind) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processQuickSearch(_response);
+        });
+    }
+    processQuickSearch(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(QuickSearchHit.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
             });
         }
         else if (status !== 200 && status !== 204) {
@@ -30369,6 +30435,38 @@ export class QcCoilRow {
         data["coilTemper"] = this.coilTemper;
         data["processCoilStatus"] = this.processCoilStatus;
         data["processEndWt"] = this.processEndWt;
+        return data;
+    }
+}
+export class QuickSearchHit {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.kind = _data["kind"];
+            this.id = _data["id"];
+            this.label = _data["label"];
+            this.url = _data["url"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new QuickSearchHit();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["kind"] = this.kind;
+        data["id"] = this.id;
+        data["label"] = this.label;
+        data["url"] = this.url;
         return data;
     }
 }

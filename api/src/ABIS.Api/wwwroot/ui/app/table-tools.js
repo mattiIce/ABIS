@@ -111,7 +111,11 @@ export function enhanceTable(table) {
             if (match)
                 shown++;
         }
-        count.textContent = q ? `${shown} of ${total}` : '';
+        // "of N loaded", not "of N": this filter only ever sees the rows the page already fetched. Saying
+        // "0 of 50" for a record that exists on page 3 reads as "it isn't there", and people believe it —
+        // which is exactly the confusion that surfaced on the Parts page. The server-side search boxes in
+        // each page's filter bar are what actually query the whole table.
+        count.textContent = q ? `${shown} of ${total} loaded` : '';
     };
     refilters.set(table, apply);
     input.addEventListener('input', apply);

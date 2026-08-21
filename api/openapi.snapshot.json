@@ -8724,7 +8724,7 @@
         "tags": [
           "Parts"
         ],
-        "summary": "List part-number master records (paged, sortable; filter by customerId/alloy).",
+        "summary": "List part-number master records (paged, sortable; filter by customerId/alloy). `search` matches the customer part number (case-insensitive, anywhere in the value) or the ABIS part id when the term is numeric - the identifier a person actually holds.",
         "operationId": "ListParts",
         "parameters": [
           {
@@ -8769,6 +8769,13 @@
           },
           {
             "name": "dir",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
             "in": "query",
             "schema": {
               "type": "string"
@@ -12618,6 +12625,51 @@
           },
           "404": {
             "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/search/quick": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Jump-to search across orders (and their customer POs), jobs, coils and parts, for the shell's search box. Results are limited to the categories the caller's nav shows them.",
+        "operationId": "QuickSearch",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "perKind",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 5
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuickSearchHit"
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -25940,6 +25992,28 @@
           "processEndWt": {
             "type": "number",
             "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuickSearchHit": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
             "nullable": true
           }
         },

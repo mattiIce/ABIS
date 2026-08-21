@@ -5,7 +5,7 @@
 // Compiled by tsc to wwwroot/ui/app/parts.js; served at /ui/parts.html.
 import { AbisClient, PartWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
-import { initShell } from './shell.js';
+import { initShell, applyDeepLink } from './shell.js';
 import { statusChip } from './status-labels.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
@@ -37,6 +37,7 @@ function scaffold(): string {
 
     <div class="card" style="margin-bottom:16px"><div class="body">
       <form id="searchForm" class="frow">
+        <div class="fld"><label>Part #</label><input id="fSearch" style="width:170px" placeholder="part number or id" /></div>
         <div class="fld"><label>Customer id</label><input id="fCustomer" list="custList" inputmode="numeric" style="width:150px" placeholder="any" /><datalist id="custList"></datalist></div>
         <div class="fld"><label>Alloy</label><input id="fAlloy" style="width:110px" placeholder="e.g. 3003" /></div>
         <button class="btn sm" type="submit">Search</button>
@@ -171,8 +172,9 @@ async function search(): Promise<void> {
   setErr(''); setBusy(true);
   const customerId = v('#fCustomer') ? Number(v('#fCustomer')) : undefined;
   const alloy = v('#fAlloy') || undefined;
+  const term = v('#fSearch') || undefined;
   try {
-    const page = await client().listParts(1, 50, customerId, alloy, undefined, undefined);
+    const page = await client().listParts(1, 50, customerId, alloy, undefined, undefined, term);
     const items = page.items ?? [];
     $('#parts').innerHTML = items.length ? items.map((p) => `
       <tr class="click" data-id="${p.partNumId}">
@@ -390,6 +392,7 @@ async function deletePart(): Promise<void> {
 (async () => {
   const main = await initShell({ active: 'parts' });
   main.innerHTML = scaffold();
+  applyDeepLink('#fSearch');   // ?q= from the global search box
   await loadCustomers();
   $<HTMLFormElement>('#searchForm').addEventListener('submit', (e) => { e.preventDefault(); void search(); });
   $('#btnNew').addEventListener('click', newPart);

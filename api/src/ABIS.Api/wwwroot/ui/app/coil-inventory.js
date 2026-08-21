@@ -7,7 +7,7 @@
 // Compiled by tsc to wwwroot/ui/app/coil-inventory.js; served at /ui/coil-inventory.html.
 import { AbisClient, CoilPatch } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
-import { initShell } from './shell.js';
+import { initShell, applyDeepLink } from './shell.js';
 import { statusChip, buildingLabel } from './status-labels.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
@@ -191,6 +191,7 @@ async function saveCoil() {
 (async () => {
     const main = await initShell({ active: 'coils' });
     main.innerHTML = scaffold();
+    applyDeepLink('#fSearch'); // ?q= from the global search box
     $('#searchForm').addEventListener('submit', (e) => { e.preventDefault(); void search(); });
     $('#btnSummary').addEventListener('click', () => void summary());
     await search();

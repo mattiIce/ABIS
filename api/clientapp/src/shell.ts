@@ -151,6 +151,103 @@ const esc = (s: unknown): string =>
 
 function client(): AbisClient { return new AbisClient('', { fetch: authFetch }); }
 
+/**
+ * The global search box.
+ *
+ * It shipped in the UI overhaul as decoration: a placeholder promising "Search POs, jobs, coils,
+ * EDI…", a `/` shortcut that focused it, and no handler of any kind — you typed, pressed Enter, and
+ * nothing happened. Wired 2026-08-21 against GET /search/quick.
+ *
+ * It is a jump-to, not a full-text search: you type an identifier you are holding (an order or the
+ * customer's PO, a job, a coil, a part) and it takes you to the page that can show it, with that
+ * page's own filter pre-filled via `?q=`. A single hit navigates immediately — making someone click
+ * the only answer is a step that never earns its keep. The server limits the categories to the ones
+ * this user's sidebar shows, so the box can never offer a page they cannot open.
+ */
+function wireSearch(top: HTMLElement): void {
+  const input = top.querySelector('#shSearch') as HTMLInputElement | null;
+  const panel = top.querySelector('#shSearchRes') as HTMLElement | null;
+  if (!input || !panel) return;
+
+  let sel = -1;
+  const links = (): HTMLAnchorElement[] => Array.from(panel.querySelectorAll('a'));
+  const paint = (): void => links().forEach((a, i) => a.classList.toggle('sel', i === sel));
+  const close = (): void => {
+    panel.hidden = true; panel.innerHTML = ''; sel = -1;
+    input.setAttribute('aria-expanded', 'false');
+  };
+  const show = (html: string): void => {
+    panel.innerHTML = html; panel.hidden = false; sel = -1;
+    input.setAttribute('aria-expanded', 'true');
+  };
+
+  // Only the newest query may paint. Without this a slow lookup can land after a newer one and
+  // overwrite it with stale hits — the classic search race.
+  let seq = 0;
+
+  async function run(): Promise<void> {
+    const q = input!.value.trim();
+    if (!q) { close(); return; }
+    const mine = ++seq;
+    show('<div class="msg">Searching…</div>');
+    try {
+      const hits = await client().quickSearch(q, 5);
+      if (mine !== seq) return;
+      if (!hits || hits.length === 0) {
+        show(`<div class="msg">Nothing matched “${esc(q)}”.</div>`);
+        return;
+      }
+      if (hits.length === 1 && hits[0].url) { location.href = hits[0].url; return; }
+      show(hits.map((h) => `<a href="${esc(h.url)}" role="option">`
+        + `<span class="kind">${esc(h.kind)}</span>${esc(h.label)}</a>`).join(''));
+    } catch {
+      if (mine !== seq) return;
+      show('<div class="msg">Search is unavailable right now.</div>');
+    }
+  }
+
+  input.addEventListener('keydown', (ev) => {
+    const e = ev as KeyboardEvent;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const l = links();
+      const target = sel >= 0 ? l[sel] : undefined;
+      if (target) { location.href = target.getAttribute('href') ?? ''; return; }
+      void run();
+    } else if (e.key === 'Escape') {
+      close(); input.blur();
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      const l = links();
+      if (l.length === 0) return;
+      e.preventDefault();
+      sel = e.key === 'ArrowDown' ? (sel + 1) % l.length : (sel <= 0 ? l.length - 1 : sel - 1);
+      paint();
+    }
+  });
+
+  // Dismiss on an outside click. Guarded on the panel because mousedown fires BEFORE the link's own
+  // click, so closing indiscriminately would tear the list down and swallow the navigation.
+  document.addEventListener('mousedown', (e) => {
+    const t = e.target;
+    if (panel.hidden || !(t instanceof Node)) return;
+    if (!panel.contains(t) && !input.contains(t)) close();
+  });
+}
+
+/**
+ * Pre-fill a page's own filter from a `?q=` deep link, then let the page load as it always does.
+ *
+ * This is the receiving half of the global search box: it hands the term to the page that can
+ * actually display the record rather than trying to render every entity itself. A no-op when the
+ * parameter is absent or the selector matches nothing, so a page behaves exactly as before.
+ */
+export function applyDeepLink(selector: string): void {
+  const q = new URLSearchParams(location.search).get('q');
+  if (!q) return;
+  const el = document.querySelector(selector) as HTMLInputElement | null;
+  if (el) el.value = q;
+}
+
 // ---- theme ----
 function applyTheme(t: 'light' | 'dark'): void {
   document.documentElement.setAttribute('data-theme', t);
@@ -182,7 +279,10 @@ function railHtml(active: string): string {
 function topHtml(): string {
   return `
     <button class="icon-btn" id="shMenu" title="Toggle navigation" aria-label="Toggle navigation"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-    <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Search POs, jobs, coils, EDI…" aria-label="Search" /><kbd>/</kbd></label>
+    <div class="searchwrap">
+      <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="shSearch" placeholder="Search orders, POs, jobs, coils, parts…" aria-label="Search" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="shSearchRes" /><kbd>/</kbd></label>
+      <div class="searchres" id="shSearchRes" role="listbox" hidden></div>
+    </div>
     <div class="spacer"></div>
     <button class="icon-btn" id="shNotif" title="Notifications" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><span class="dot" id="shNotifDot" style="display:none"></span></button>
     <button class="icon-btn" id="shTheme" title="Toggle theme" aria-label="Toggle theme"><svg viewBox="0 0 24 24"></svg></button>
@@ -508,6 +608,7 @@ export async function initShell(opts: ShellOptions): Promise<HTMLElement> {
     const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     localStorage.setItem('abis_theme', next); applyTheme(next);
   });
+  wireSearch(top);
   document.addEventListener('keydown', (e) => {
     if ((e as KeyboardEvent).key === '/' && document.activeElement?.tagName !== 'INPUT') {
       e.preventDefault(); (top.querySelector('.search input') as HTMLInputElement).focus();
