@@ -4859,15 +4859,147 @@ public sealed class AbisRepository : IAbisRepository
         return await GetOrderDetailAsync(newId, ct);
     }
 
-    public Task<PagedResult<Part>> GetPartsAsync(int page, int pageSize, long? customerId, string? alloy, string? orderBy, CancellationToken ct)
+    /// <summary>
+    /// Part masters, paged. <paramref name="search"/> matches the identifier a person actually has in
+    /// their hand: the customer's part number, or the ABIS part id if they typed digits.
+    ///
+    /// <para>Until 2026-08-21 there was no way to look a part up by its number at all — only by customer
+    /// and alloy. The Parts page's filter box looked like it did, but it filters the rows already
+    /// fetched, so it answered "0 of 50" for a part that exists. Reporting "not found" when the truth is
+    /// "not on this page" is the kind of wrong answer people believe.</para>
+    ///
+    /// <para>Matching is case-insensitive and unanchored: customer part numbers are the customer's
+    /// format, not ours, and somebody looking for "3003-A" should not have to know whether it is stored
+    /// with a prefix. TRIM because these columns are CHAR-padded on Oracle.</para>
+    /// </summary>
+    public Task<PagedResult<Part>> GetPartsAsync(int page, int pageSize, long? customerId, string? alloy, string? orderBy, CancellationToken ct, string? search = null)
     {
         var p = new DynamicParameters();
         var conditions = new List<string>();
         if (customerId is not null) { conditions.Add("customer_id = :customerId"); p.Add("customerId", customerId); }
         if (alloy is not null) { conditions.Add("alloy = :alloy"); p.Add("alloy", alloy); }
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            // A term of digits could be either the part id or a part number that happens to be numeric,
+            // so try both rather than guessing which the operator meant.
+            if (long.TryParse(term, out var id))
+            {
+                conditions.Add("(part_num_id = :searchId OR UPPER(TRIM(enduser_part_num)) LIKE :searchLike)");
+                p.Add("searchId", id);
+            }
+            else
+            {
+                conditions.Add("UPPER(TRIM(enduser_part_num)) LIKE :searchLike");
+            }
+            p.Add("searchLike", "%" + term.ToUpperInvariant() + "%");
+        }
         var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
         return PageAsync<Part>(PartCols, "part_num", orderBy ?? "part_num_id", where, p, page, pageSize, ct);
     }
+
+    /// <summary>
+    /// The shell search box. It promised "Search POs, jobs, coils, EDI..." from the first release and
+    /// had no backend at all until 2026-08-21 - typing in it and pressing Enter did nothing.
+    ///
+    /// <para>Deliberately a jump-to, not a general text search: it matches the identifiers a person
+    /// actually holds - an order number or the customer PO they quote on the phone, a job number, a coil
+    /// (ours or the customer's), a part number. That is what a box at the top of every page is for.</para>
+    ///
+    /// <para>A term of digits is tried as BOTH an id and a customer-side number, because the two spaces
+    /// overlap and we cannot know which the operator meant. Non-numeric terms skip the id lookups.</para>
+    ///
+    /// <para><paramref name="kinds"/> is which categories the caller may be shown; the endpoint fills it
+    /// from the same features that show or hide the nav entries, so the box never offers a page the user
+    /// cannot see. Each lookup goes through <c>PageAsync</c> for engine-portable row limiting.</para>
+    /// </summary>
+    public async Task<IReadOnlyList<QuickSearchHit>> QuickSearchAsync(
+        string term, int perKind, ISet<string> kinds, CancellationToken ct)
+    {
+        var hits = new List<QuickSearchHit>();
+        if (string.IsNullOrWhiteSpace(term)) return hits;
+
+        var t = term.Trim();
+        perKind = Math.Clamp(perKind, 1, 25);
+        // TRIM in the predicates because these columns are CHAR-padded on Oracle; UPPER so the match is
+        // case-insensitive, and unanchored because a customer part/PO is the customer's format, not ours.
+        var searchLike = "%" + t.ToUpperInvariant() + "%";
+        var isNum = long.TryParse(t, out var num);
+
+        if (kinds.Contains("order"))
+        {
+            var where = isNum
+                ? "(order_abc_num = :num OR UPPER(TRIM(orig_customer_po)) LIKE :searchLike)"
+                : "UPPER(TRIM(orig_customer_po)) LIKE :searchLike";
+            var args = isNum ? new { num, searchLike } : (object)new { searchLike };
+            var rows = await PageAsync<QuickOrderRow>(
+                "order_abc_num AS OrderAbcNum, orig_customer_po AS Po",
+                "customer_order", "order_abc_num DESC", where, args, 1, perKind, ct);
+            foreach (var r in rows.Items)
+            {
+                var po = (r.Po ?? "").Trim();
+                hits.Add(new QuickSearchHit("order", r.OrderAbcNum.ToString(),
+                    po.Length == 0 ? $"Order {r.OrderAbcNum}" : $"Order {r.OrderAbcNum} \u2014 PO {po}",
+                    $"/ui/order-entry.html?q={Uri.EscapeDataString(po.Length == 0 ? t : po)}"));
+            }
+        }
+
+        // A job has no customer-side identifier, so a non-numeric term can never name one.
+        if (isNum && kinds.Contains("job"))
+        {
+            var rows = await PageAsync<QuickJobRow>(
+                "ab_job_num AS AbJobNum", "ab_job", "ab_job_num DESC",
+                "ab_job_num = :num", new { num }, 1, perKind, ct);
+            foreach (var r in rows.Items)
+                hits.Add(new QuickSearchHit("job", r.AbJobNum.ToString(), $"Job {r.AbJobNum}",
+                    $"/ui/jobs.html?q={Uri.EscapeDataString(r.AbJobNum.ToString())}"));
+        }
+
+        if (kinds.Contains("coil"))
+        {
+            var where = isNum
+                ? "(coil_abc_num = :num OR UPPER(TRIM(coil_org_num)) LIKE :searchLike)"
+                : "UPPER(TRIM(coil_org_num)) LIKE :searchLike";
+            var args = isNum ? new { num, searchLike } : (object)new { searchLike };
+            var rows = await PageAsync<QuickCoilRow>(
+                "coil_abc_num AS CoilAbcNum, coil_org_num AS OrgNum",
+                "coil", "coil_abc_num DESC", where, args, 1, perKind, ct);
+            foreach (var r in rows.Items)
+            {
+                var org = (r.OrgNum ?? "").Trim();
+                hits.Add(new QuickSearchHit("coil", r.CoilAbcNum.ToString(),
+                    org.Length == 0 ? $"Coil {r.CoilAbcNum}" : $"Coil {r.CoilAbcNum} \u2014 {org}",
+                    $"/ui/coil-inventory.html?q={Uri.EscapeDataString(t)}"));
+            }
+        }
+
+        if (kinds.Contains("part"))
+        {
+            var where = isNum
+                ? "(part_num_id = :num OR UPPER(TRIM(enduser_part_num)) LIKE :searchLike)"
+                : "UPPER(TRIM(enduser_part_num)) LIKE :searchLike";
+            var args = isNum ? new { num, searchLike } : (object)new { searchLike };
+            var rows = await PageAsync<QuickPartRow>(
+                "part_num_id AS PartNumId, enduser_part_num AS PartNum",
+                "part_num", "part_num_id DESC", where, args, 1, perKind, ct);
+            foreach (var r in rows.Items)
+            {
+                var pn = (r.PartNum ?? "").Trim();
+                hits.Add(new QuickSearchHit("part", r.PartNumId.ToString(),
+                    pn.Length == 0 ? $"Part {r.PartNumId}" : $"Part {r.PartNumId} \u2014 {pn}",
+                    $"/ui/parts.html?q={Uri.EscapeDataString(t)}"));
+            }
+        }
+
+        return hits;
+    }
+
+    // Named row classes, not ValueTuples: Dapper does NOT map columns onto tuple element names and
+    // returns silent zeros/nulls if you try. This project has been bitten by that three times.
+    private sealed class QuickOrderRow { public long OrderAbcNum { get; set; } public string? Po { get; set; } }
+    private sealed class QuickJobRow { public long AbJobNum { get; set; } }
+    private sealed class QuickCoilRow { public long CoilAbcNum { get; set; } public string? OrgNum { get; set; } }
+    private sealed class QuickPartRow { public long PartNumId { get; set; } public string? PartNum { get; set; } }
 
     public async Task<Part?> GetPartAsync(long partNumId, CancellationToken ct)
     {

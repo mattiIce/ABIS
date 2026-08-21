@@ -7,6 +7,13 @@ namespace Abis.Api.Models;
 // decimal(0)); measures/money as decimal; timestamps as DateTime.
 
 /// <summary>A production job — the central shop-floor entity (table <c>ab_job</c>).</summary>
+/// <summary>One hit from the shell's global search box: enough to show a line and go there.</summary>
+/// <param name="Kind">order | job | coil | part - what matched, so the UI can group and label it.</param>
+/// <param name="Id">The record's own identifier.</param>
+/// <param name="Label">A human line, in the terms the plant uses.</param>
+/// <param name="Url">A page that can actually open this record, with its filter pre-filled.</param>
+public sealed record QuickSearchHit(string Kind, string Id, string Label, string Url);
+
 public sealed class AbJob
 {
     public long AbJobNum { get; set; }

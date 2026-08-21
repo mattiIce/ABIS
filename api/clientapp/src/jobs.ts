@@ -8,7 +8,7 @@
 // Compiled by tsc to wwwroot/ui/app/jobs.js; served at /ui/jobs.html.
 import { AbisClient, JobWrite, JobPatch } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
-import { initShell } from './shell.js';
+import { initShell, applyDeepLink } from './shell.js';
 import { statusChip, lineLabel } from './status-labels.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
@@ -271,6 +271,7 @@ function showTab(name: string): void {
 (async () => {
   const main = await initShell({ active: 'jobs' });
   main.innerHTML = scaffold();
+  applyDeepLink('#fSearch');   // ?q= from the global search box
   $<HTMLFormElement>('#completedForm').addEventListener('submit', (e) => { e.preventDefault(); void loadCompleted(); });
   $('#btnRecent').addEventListener('click', () => { setV('#fSearch', ''); void loadCompleted(); });
   $('#btnPatch').addEventListener('click', () => void patch());

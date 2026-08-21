@@ -280,8 +280,14 @@ public interface IAbisRepository
     Task<PagedResult<TempTestResult>> GetTempTestResultsAsync(int page, int pageSize, int? testType, string? position, DateTime? from, DateTime? to, string? orderBy, CancellationToken ct);
 
     // ---- Parts & dies (read) -------------------------------------------
-    Task<PagedResult<Part>> GetPartsAsync(int page, int pageSize, long? customerId, string? alloy, string? orderBy, CancellationToken ct);
+    Task<PagedResult<Part>> GetPartsAsync(int page, int pageSize, long? customerId, string? alloy, string? orderBy, CancellationToken ct, string? search = null);
     Task<Part?> GetPartAsync(long partNumId, CancellationToken ct);
+
+    /// <summary>Jump-to lookup for the shell search box: orders (or their customer PO), jobs, coils
+    /// (ours or the customer's) and parts. <paramref name="kinds"/> limits it to the categories the
+    /// caller is allowed to be shown.</summary>
+    Task<IReadOnlyList<QuickSearchHit>> QuickSearchAsync(string term, int perKind, ISet<string> kinds, CancellationToken ct);
+
     Task<Part> CreatePartAsync(PartWrite body, CancellationToken ct);
     Task<Part?> UpdatePartAsync(long partNumId, PartWrite body, CancellationToken ct);
     Task<Part?> CopyPartAsync(long sourcePartNumId, CancellationToken ct);

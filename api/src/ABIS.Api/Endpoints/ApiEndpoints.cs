@@ -319,6 +319,45 @@ public static class ApiEndpoints
             return await next(fctx);
         });
 
+        // ---- Global search -----------------------------------------------
+
+        // Backs the search box in the shell header, which shipped with a placeholder promising
+        // "Search POs, jobs, coils, EDI..." and no handler at all - pressing Enter did nothing.
+        //
+        // The per-kind filtering below mirrors the SIDEBAR, not a security boundary: reads are ungated
+        // across this entire API (see the authorization filter above), so any authenticated caller can
+        // already GET /coils or /parts directly. The point is that the box must not offer to take
+        // someone to a page their nav does not show them.
+        //
+        // It resolves permissions the same way the nav does - one lookup, gate on the PRESENCE of a
+        // grant rather than its level, and fail open when no user resolves or the user has no grants at
+        // all. Anything else would let the box and the sidebar disagree about the same user.
+        api.MapGet("/search/quick", async (HttpContext http, IAbisRepository repo, CancellationToken ct,
+                string? q = null, int perKind = 5) =>
+            {
+                var login = ResolveLogin(http);
+                var user = login is null ? null : await repo.GetSecurityUserByLoginAsync(login, ct);
+                var perms = user is null ? null : await repo.GetUserEffectivePermissionsAsync(user.UserId, ct);
+
+                HashSet<string>? granted = null;   // null == fail open, exactly as the nav does
+                if (perms is not null && perms.Count > 0)
+                {
+                    granted = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var pm in perms) granted.Add((pm.ApplicationName ?? "").Trim());
+                }
+
+                var kinds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (granted is null || granted.Contains("Order Entry")) kinds.Add("order");
+                if (granted is null || granted.Contains("Production Control")) kinds.Add("job");
+                if (granted is null || granted.Contains("Inventory(Coil)")) kinds.Add("coil");
+                if (granted is null || granted.Contains("Part Number")) kinds.Add("part");
+
+                return Results.Ok(await repo.QuickSearchAsync(q ?? "", perKind, kinds, ct));
+            })
+           .WithName("QuickSearch").WithTags("Search")
+           .WithSummary("Jump-to search across orders (and their customer POs), jobs, coils and parts, for the shell's search box. Results are limited to the categories the caller's nav shows them.")
+           .Produces<IReadOnlyList<QuickSearchHit>>();
+
         // ---- Jobs -------------------------------------------------------
         api.MapGet("/jobs", async (IAbisRepository repo, CancellationToken ct,
                 int page = 1, int pageSize = 25, int? status = null, bool? completed = null, string? search = null, string? sort = null, string? dir = null) =>
@@ -805,15 +844,19 @@ public static class ApiEndpoints
            .Produces<OrderItemShape>().Produces(StatusCodes.Status404NotFound).ProducesValidationProblem();
 
         // ---- Parts (part-number master) --------------------------------
+        // `search` is declared LAST on purpose. NSwag generates positional arguments in declaration
+        // order, so appending keeps every existing caller compiling; inserting it mid-list would break
+        // them silently at the call site - a trap this project has been bitten by before.
         api.MapGet("/parts", async (IAbisRepository repo, CancellationToken ct,
-                int page = 1, int pageSize = 25, long? customerId = null, string? alloy = null, string? sort = null, string? dir = null) =>
+                int page = 1, int pageSize = 25, long? customerId = null, string? alloy = null, string? sort = null, string? dir = null,
+                string? search = null) =>
             {
                 if (!Sort.TryResolve("parts", sort, dir, out var orderBy, out var problems))
                     return Results.ValidationProblem(problems!);
-                return Results.Ok(await repo.GetPartsAsync(page, pageSize, customerId, alloy, orderBy, ct));
+                return Results.Ok(await repo.GetPartsAsync(page, pageSize, customerId, alloy, orderBy, ct, search));
             })
            .WithName("ListParts").WithTags("Parts")
-           .WithSummary("List part-number master records (paged, sortable; filter by customerId/alloy).")
+           .WithSummary("List part-number master records (paged, sortable; filter by customerId/alloy). `search` matches the customer part number (case-insensitive, anywhere in the value) or the ABIS part id when the term is numeric - the identifier a person actually holds.")
            .Produces<PagedResult<Part>>().ProducesValidationProblem();
 
         api.MapGet("/parts/{partNumId:long}", async (long partNumId, IAbisRepository repo, CancellationToken ct) =>

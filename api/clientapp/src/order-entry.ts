@@ -5,7 +5,7 @@
 // Compiled by tsc to wwwroot/ui/app/order-entry.js; served at /ui/order-entry.html.
 import { AbisClient, OrderCreateWithItems, CustomerOrderWrite, OrderItemWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
-import { initShell } from './shell.js';
+import { initShell, applyDeepLink } from './shell.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -49,7 +49,7 @@ async function loadCustomerParts(): Promise<void> {
   const cid = $<HTMLInputElement>('#nCustomer').value.trim();
   if (!cid) return;
   try {
-    const page = await client().listParts(1, 500, Number(cid), undefined, undefined, undefined);
+    const page = await client().listParts(1, 500, Number(cid), undefined, undefined, undefined, undefined);
     const parts = (page.items ?? []).filter((p) => p.enduserPartNum);
     parts.forEach((p) => { if (p.enduserPartNum) custParts.set(p.enduserPartNum, p); });
     if (list) list.innerHTML = parts.map((p) =>
@@ -424,6 +424,7 @@ async function createOrder(): Promise<void> {
   main.innerHTML = scaffold();
   try { alloys = await client().listAlloys(); } catch { alloys = []; }
   try { sectors = await (await authFetch('/api/lookups/sectors')).json(); } catch { sectors = []; }
+  applyDeepLink('#fPo');   // ?q= from the global search box (orders are found by their PO here)
   $('#lines').appendChild(lineRow());
   $<HTMLFormElement>('#searchForm').addEventListener('submit', (e) => { e.preventDefault(); void search(); });
   $('#btnAddLine').addEventListener('click', () => $('#lines').appendChild(lineRow()));
