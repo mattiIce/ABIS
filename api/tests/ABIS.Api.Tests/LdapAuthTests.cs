@@ -22,11 +22,14 @@ public sealed class LdapAuthTests
         public bool Enabled => true;
         public int Calls { get; private set; }
         public string? LastUser { get; private set; }
-        public Task<bool> ValidateAsync(string username, string password, CancellationToken ct)
+        public Task<Abis.Api.Security.LdapOutcome> ValidateAsync(string username, string password, CancellationToken ct)
         {
             Calls++;
             LastUser = username;
-            return Task.FromResult(validate(username, password));
+            // The fake models a REACHABLE DC, so a false verdict is a refusal, not an outage.
+            return Task.FromResult(validate(username, password)
+                ? Abis.Api.Security.LdapOutcome.Authenticated
+                : Abis.Api.Security.LdapOutcome.Rejected);
         }
     }
 

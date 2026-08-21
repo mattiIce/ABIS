@@ -297,10 +297,48 @@ if [[ "$CONFIGURE_ONLY" -eq 0 ]]; then
   chown -R "${SERVICE_USER}:${SERVICE_USER}" "$INSTALL_ROOT"
 fi
 
+# --- systemd EnvironmentFile escaping ----------------------------------------
+# systemd interprets backslash escapes in an EnvironmentFile, INCLUDING inside double
+# quotes, so a value containing a backslash must have it doubled or the service receives
+# the wrong string. This is not theoretical: `Auth__Ldap__UserBindFormat=ALBL\{0}` was read
+# as `ALBL{0}`, so the app bound to AD as "ALBLcmattinson" instead of "ALBL\cmattinson" and
+# every sign-in failed with "the username or password is incorrect". Correct password,
+# malformed identity, and nothing in the UI could tell the difference.
+env_escape() { printf '%s' "${1//\\/\\\\}"; }
+
+# --- settings this script MANAGES (everything else is carried over) ----------
+# install.sh used to write the file with `cat >`, i.e. TRUNCATE, while reading back only
+# these four keys. Every other setting an operator had added was silently deleted on the
+# next run - AD sign-in (locking everyone out, since it falls back to local passwords that
+# may not exist), the label-printer routing, the scheduler switch, and Email__OverrideRecipient,
+# the one thing standing between the test phase and mail reaching real customers.
+MANAGED_KEYS='ASPNETCORE_ENVIRONMENT ASPNETCORE_URLS Database__Provider Database__Seed Database__ConnectionString ApiKeys__Enabled ApiKeys__Keys__0'
+
+# Echo every KEY=VALUE line in the existing file that this script does not manage, so it
+# survives the rewrite verbatim - already-escaped, so it is copied, never re-escaped.
+carry_over_settings() {
+  [[ -f "$ENV_FILE" ]] || return 0
+  local line key
+  while IFS= read -r line; do
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" =~ ^[[:space:]]*$ ]] && continue
+    [[ "$line" == *=* ]] || continue
+    key="${line%%=*}"
+    case " $MANAGED_KEYS " in *" $key "*) continue ;; esac
+    printf '%s\n' "$line"
+  done < "$ENV_FILE"
+}
+
 # --- write config (root-owned, group-readable by the service user) -----------
 info "writing config to ${ENV_FILE}"
 mkdir -p "$CONFIG_DIR"
 umask 027
+# Capture the operator's other settings BEFORE truncating, and keep a timestamped copy of
+# the file so a bad run is always recoverable.
+CARRIED="$(carry_over_settings)"
+if [[ -f "$ENV_FILE" ]]; then
+  cp -a "$ENV_FILE" "${ENV_FILE}.bak-$(date +%Y%m%d-%H%M%S)"
+fi
 cat > "$ENV_FILE" <<EOF
 # ABIS service configuration — written by install.sh. Root-owned, 0640.
 # Re-run install.sh to change these; do not edit binaries under ${APP_DIR}.
@@ -308,10 +346,21 @@ ASPNETCORE_ENVIRONMENT=Production
 ASPNETCORE_URLS="http://127.0.0.1:${ABIS_PORT}"
 Database__Provider=${ABIS_DB_PROVIDER}
 Database__Seed=false
-Database__ConnectionString="${ABIS_DB_CONNECTION}"
+Database__ConnectionString="$(env_escape "${ABIS_DB_CONNECTION}")"
 ApiKeys__Enabled=true
-ApiKeys__Keys__0="${ABIS_API_KEY}"
+ApiKeys__Keys__0="$(env_escape "${ABIS_API_KEY}")"
 EOF
+
+# Everything the operator configured that this script does not manage - AD sign-in, email,
+# printers, scheduler - restored verbatim beneath the managed block.
+if [[ -n "$CARRIED" ]]; then
+  {
+    echo ""
+    echo "# --- settings not managed by install.sh, carried over from the previous file ---"
+    printf '%s\n' "$CARRIED"
+  } >> "$ENV_FILE"
+  info "carried over $(printf '%s\n' "$CARRIED" | grep -c . ) unmanaged setting(s)"
+fi
 chown "root:${SERVICE_USER}" "$ENV_FILE"
 chmod 0640 "$ENV_FILE"
 
