@@ -70,13 +70,13 @@ echo "coil rows on .230 after:  ${after//[[:space:]]/}   (impdp exit $rc; log dp
 # SEQUENCE RE-SYNC — a table-replace leaves the sequences BEHIND their new table max, so every
 # id-minting INSERT would fail ORA-00001 until they are advanced (13 of 18 were behind on
 # 2026-07-24, COIL_ABC_NUM_SEQ by 877k). Idempotent; run from the repo's tools/ if present, else
-# print the manual command. See docs/DB_REFRESH.md "Part 4".
+# print the manual command. See docs/DB_REFRESH.md "Part 3".
 RESYNC="${RESYNC_SQL:-$(dirname "$0")/../tools/resync_sequences.sql}"
 if [ -f "$RESYNC" ]; then
   echo "-- re-syncing sequences via $RESYNC"
   sqlplus -s "$ORA_LOCAL" @"$RESYNC" || echo "WARNING: sequence re-sync FAILED — id-minting writes will ORA-00001 until it is re-run" >&2
 else
-  echo "*** ACTION REQUIRED: re-sync sequences — sqlplus $ORA_LOCAL @tools/resync_sequences.sql (see docs/DB_REFRESH.md Part 4) ***" >&2
+  echo "*** ACTION REQUIRED: re-sync sequences — sqlplus $ORA_LOCAL @tools/resync_sequences.sql (see docs/DB_REFRESH.md Part 3) ***" >&2
 fi
 
 # ---------------------------------------------------------------------------------------------

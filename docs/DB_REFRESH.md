@@ -13,6 +13,24 @@ Copy the live plant schema from **prod `192.168.1.9` / host `db01` / port `1523`
   is not on prod and must survive). They are excluded from the refresh.
 - A DB copy only: it runs **no** legacy EDI / scheduled job, so the no-live-firing guardrail is intact.
 
+## What a refresh breaks — the whole list
+
+The import is `schemas=DBO` with `table_exists_action=replace`, and only `ABIS_*` tables are excluded.
+Everything else on this list is a **DBO table**, so prod's copy replaces .230's — and prod has never
+heard of the modernization, so anything the modern app added is deleted. Nothing warns you; each one
+surfaces later as a different-looking bug.
+
+| What breaks | How it looks | Repaired by | Automatic? |
+|---|---|---|---|
+| **Id sequences** drift behind their table max | every id-minting INSERT fails `ORA-00001` | Part 3 | **Yes** — app startup |
+| **The ABIS admin login** is deleted | sign-in fails "user not found" — looks like an AD/LDAP fault | Part 4 | No — run `bootstrap-admin.sh` |
+| **The IT group's grants** revert to prod's | 403 on a screen that looks available | Part 5 | **Yes** — `refresh-nonprod.sh` |
+| **The modern app's feature ROWS** are deleted | 403 on every Parts / maintenance / admin write, for everyone | Part 6 | **Yes** — app startup |
+
+Two of those repair themselves, one is done by the refresh script, and **only the admin login needs a
+person**. But read Part 6 before assuming the feature rows returning is the end of it: a feature nobody
+holds still denies everyone, and the grants are Part 5.
+
 ## Two parts (why)
 Network-mode Data Pump is fast and runs entirely on .230, but it **cannot move `LONG`/`LONG RAW`
 columns over a DB link** (`ORA-31679`). A handful of legacy tables use `LONG` — including
@@ -90,7 +108,7 @@ Verify: `SELECT COUNT(*) FROM outbound_edi_transaction;` on .230 → 87617 (EDI 
 
 After: `EXEC DBMS_STATS.GATHER_SCHEMA_STATS('DBO', DEGREE=>1);` (optional, refreshes optimizer stats).
 
-**Part 4 — re-sync the sequences (REQUIRED after every refresh).** A Data Pump table-replace imports
+**Part 3 — re-sync the sequences (REQUIRED after every refresh).** A Data Pump table-replace imports
 the row data but leaves the transactional **sequences behind their new table max** — the export is not
 sequence-consistent. Confirmed 2026-07-24 on .230: **13 of 18 id sequences behind**, `COIL_ABC_NUM_SEQ`
 by 877,220. Until they are advanced, **every id-minting INSERT fails with `ORA-00001`** (unique
@@ -134,7 +152,7 @@ stay at their last sync (preserved, not wiped).
 
 ---
 
-## Part 3 — restore the ABIS admin login (REQUIRED after every refresh)
+## Part 4 — restore the ABIS admin login (REQUIRED after every refresh)
 
 **Every refresh wipes the ABIS admin login.** The import is `schemas=DBO` with
 `table_exists_action=replace`, and `SECURITY_USER` / `SECURITY_GROUP` / `SECURITY_APPLICATION` /
@@ -177,9 +195,9 @@ If you would rather .230 keep its **own** user list across refreshes, add
 entirely, at the cost of non-prod no longer mirroring prod's users for RBAC testing.
 
 
-## Part 4 — restore the IT group's full grants (REQUIRED after every refresh)
+## Part 5 — restore the IT group's full grants (REQUIRED after every refresh)
 
-Same cause as Part 3, different table. `SECURITY_GROUP_APPLICATION` is a DBO table and does not match
+Same cause as Part 4, different table. `SECURITY_GROUP_APPLICATION` is a DBO table and does not match
 the `'ABIS%'` exclude, so **prod's copy replaces it** and the IT group reverts to whatever prod has.
 
 The plant's instruction (2026-08-05) is that **IT holds full read/write/modify on every component of
@@ -190,7 +208,7 @@ The symptom if you skip this is a 403 on a screen that looks available, which re
 page rather than a missing grant.
 
 **`refresh-nonprod.sh` now does this for you** — it runs the script against the database it is already
-connected to, with no opt-in, because unlike Part 3 this needs no call to the app host. Run it by hand
+connected to, with no opt-in, because unlike Part 4 this needs no call to the app host. Run it by hand
 only if you refreshed some other way:
 
 ```sh
@@ -207,6 +225,54 @@ refresh) and fails loudly if IT does not end up holding every feature.
 
 > **Prod (.9) is read-only** — do not run it there. Production security is owned by legacy ABIS and
 > changing it is a plant decision made through that application.
+
+## Part 6 — the modern app's feature rows (automatic since 2026-08-21)
+
+`SECURITY_APPLICATION` is the legacy app's vocabulary — 35 names on prod. The modernization gates on
+four that were never in it:
+
+| Feature | What answers 403 without it |
+|---|---|
+| `Part Number` | every write on the Parts page |
+| `Maintenance_logs` | every maintenance / PM write |
+| `Scheduler Admin` | the scheduled-job registry |
+| `Server Admin` | the server console |
+
+Because `SECURITY_APPLICATION` is a DBO table, **every refresh deletes all four**, and the failure is
+particularly misleading: `RequireFeatureAsync` asks for the signed-in user's privilege on the named
+feature, a feature that does not exist has no privilege to return, and the endpoint answers **403**.
+That is not "this user lacks permission" — *nobody can hold a feature that is not in the table.*
+
+**The app now restores them on every startup** (`AbisSchema.EnsureRequiredFeaturesAsync`, Oracle only,
+non-fatal). It only ever INSERTs a name that is missing — nothing is renamed, re-pointed or deleted —
+so a feature the plant has since granted keeps its id and its grants. Each restore logs a **warning**
+naming the feature, because needing to restore one means writes were failing until that moment:
+
+```
+warn: Restored missing security feature Part Number as application_id 37. …
+```
+
+> **Restoring the row is not the same as restoring access.** A feature with no grants denies everyone
+> exactly as a missing one does. On 2026-08-21 the rows came back at ids 37–40 with **zero grants**, and
+> Parts writes stayed 403 until Part 5 ran. Startup fixes the vocabulary; Part 5 fixes who holds it.
+> Do both.
+
+Why the rows self-heal but the grants do not: a feature the app gates on must exist or the app cannot
+work, so recreating it is never wrong. A grant is policy — if the plant narrows what IT holds, an app
+that re-widened it on every restart would silently overrule them.
+
+Verify:
+
+```sql
+SELECT application_id, TRIM(application_name)
+  FROM security_application
+ WHERE TRIM(application_name) IN ('Part Number','Maintenance_logs','Scheduler Admin','Server Admin');
+```
+
+Four rows, and after Part 5 each should carry a grant. The list is kept in step with
+`tools/bootstrap-admin.sh` by a test (`RequiredFeatureTests`), which also refuses any feature the app
+gates on that neither the legacy schema defines nor the app restores — the check that would have caught
+this three incidents ago.
 
 ## Notes
 - The two `ORA-39083` FKs left disabled after a bulk refresh (`AB_JOB→SKETCH_JPG`, a Quest tool FK)
