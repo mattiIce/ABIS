@@ -27,6 +27,7 @@ surfaces later as a different-looking bug.
 | **The IT group's grants** revert to prod's | 403 on a screen that looks available | Part 5 | **Yes** — `refresh-nonprod.sh` |
 | **The IT group's MEMBERS** revert to prod's | the same 403, but only for *some* people | Part 5 | **No — and nothing reports it** |
 | **The modern app's feature ROWS** are deleted | 403 on every Parts / maintenance / admin write, for everyone | Part 6 | **Yes** — app startup |
+| **Columns migrations added to LEGACY tables** are dropped | one endpoint 500s with `ORA-00904`; everything else looks fine | Part 7 | **Yes** — app startup |
 
 **Membership is the one with no automation and no alarm.** Grants and members live in different tables
 and are restored by different means: `grant_it_group.sql` gives the IT *group* everything, and says
@@ -34,13 +35,22 @@ nothing about who is *in* it. On 2026-08-21 IT held Write on all 39 features and
 five** — every screen looked correctly configured and four people were still locked out. Who belongs in
 IT is a plant decision, which is exactly why no script decides it.
 
+**The sixth is structural, and will happen again with the next migration.** Migrations 001–007 only
+`CREATE` ABIS-owned tables (`abis_*`, `sales_*`), which the import excludes or leaves alone. Migration
+008 was the first to `ALTER` a table the legacy application also owns — `PMCOMPLETIONS` — and legacy
+tables are exactly what `table_exists_action=replace` replaces from prod, where those columns have never
+existed. So **any future migration that alters a legacy table joins this list automatically.** When you
+write one, add its columns to `RequiredLegacyColumns` in `AbisSchema.cs` and to check 7 of
+`verify_refresh.sql`; otherwise the next refresh silently reverts it.
+
 And read Part 6 before assuming the feature rows returning is the end of it: a feature nobody holds
 denies everyone just as a missing one does.
 
 ## Verify — one command that reports all of it
 
-Each of the five fails **later and separately**, looking like a different bug each time. On 2026-08-21
-all five were true at once on .230 and every one was found by accident while chasing something else.
+Each of the six fails **later and separately**, looking like a different bug each time. On 2026-08-21
+all six were true at once on .230 and every one was found by accident while chasing something else —
+the sixth while checking whether a maintenance screen was worth building at all.
 So check deliberately rather than waiting to be surprised:
 
 ```bash
@@ -364,6 +374,40 @@ Four rows, and after Part 5 each should carry a grant. The list is kept in step 
 `tools/bootstrap-admin.sh` by a test (`RequiredFeatureTests`), which also refuses any feature the app
 gates on that neither the legacy schema defines nor the app restores — the check that would have caught
 this three incidents ago.
+
+## Part 7 — columns migrations added to legacy tables (automatic since 2026-08-21)
+
+**Symptom.** One endpoint returns 500 and the rest of the app is fine. On .230 it was
+`GET /pms/{id}/completions`, for every PM:
+
+```
+ORA-00904: "COMP_COST": invalid identifier
+```
+
+**Cause.** `docs/data-model/migrations/008_pmcompletion_labor_cost.sql` adds `LABOR_HOURS` and
+`COMP_COST` to `PMCOMPLETIONS` so KeepTrak's per-completion labour and cost survive the import. Those
+columns do not exist in prod, and `PMCOMPLETIONS` is a DBO table, so `table_exists_action=replace`
+brings back prod's copy without them.
+
+**Why nothing caught it.** The SQLite fixture declares both columns, so the API suite is green while
+live Oracle 500s. Same shape as the phantom-feature bug: **the test environment had what production
+lacked.**
+
+**Repair — automatic.** The app re-adds them at startup (`AbisSchema.EnsureLegacyColumnsAsync`),
+guarded on `user_tab_cols` exactly as the migration is, so a run with nothing missing is silent. A
+restart is enough. It logs a warning when it actually adds one, which is your signal that a refresh
+happened.
+
+Additive and NULLable only — nothing is dropped, renamed, retyped or reordered. The legacy
+PowerBuilder app names its columns and its DataWindows bind by name, so an added NULLable column is
+invisible to it. That is what makes this safe to do automatically on shared ground.
+
+**To apply it by hand instead** (on the DB host, as DBO):
+
+```sql
+@docs/data-model/migrations/008_pmcompletion_labor_cost.sql
+```
+
 
 ## Notes
 - The two `ORA-39083` FKs left disabled after a bulk refresh (`AB_JOB→SKETCH_JPG`, a Quest tool FK)

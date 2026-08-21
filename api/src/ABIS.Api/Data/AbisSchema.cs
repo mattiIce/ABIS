@@ -637,6 +637,76 @@ public static class AbisSchema
     /// feature the plant has since granted to people keeps its id and its grants. Oracle only; never
     /// throws - a failure is logged and boot continues.</para>
     /// </summary>
+    /// <summary>
+    /// Columns this app adds to <b>legacy</b> tables, re-applied at startup because a database refresh
+    /// takes them away again.
+    ///
+    /// <para><b>Why this is a standing problem and not a one-off.</b> Migrations 001-007 only CREATE
+    /// ABIS-owned tables (<c>abis_*</c>, <c>sales_*</c>), and the refresh runbook deliberately preserves
+    /// those. Migration 008 was the first to ALTER a table the legacy application also owns
+    /// (<c>PMCOMPLETIONS</c>) - and Data Pump restores legacy tables from prod, where the columns have
+    /// never existed. So the rule is structural: <b>any migration that alters a legacy table is undone by
+    /// every refresh</b>, and will be undone again by the next one.</para>
+    ///
+    /// <para>Found 2026-08-21 the way these always surface - as a bare 500. <c>GET /pms/{id}/completions</c>
+    /// answered <c>ORA-00904: "COMP_COST": invalid identifier</c> on .230 for every PM, because the
+    /// SELECT names a column the migration adds and nothing had re-applied it. Nothing detected it:
+    /// SQLite CI has the column in its fixture, so the suite was green throughout.</para>
+    ///
+    /// <para><b>Additive only, and NULLable.</b> Nothing is dropped, renamed, retyped or reordered - the
+    /// legacy PowerBuilder app names its columns and its DataWindows bind by name, so an added NULLable
+    /// column is invisible to it. That is what makes doing this at startup safe on shared ground.</para>
+    /// </summary>
+    private static readonly (string Table, string Column, string Type, string Why)[] RequiredLegacyColumns =
+    [
+        ("PMCOMPLETIONS", "LABOR_HOURS", "NUMBER",
+            "hours worked on a PM completion (KeepTrak fld_LaborHours) - migration 008"),
+        ("PMCOMPLETIONS", "COMP_COST", "NUMBER",
+            "cost of a PM completion (KeepTrak fc_Cost) - migration 008"),
+    ];
+
+    /// <summary>
+    /// Re-apply <see cref="RequiredLegacyColumns"/>. Idempotent, guarded on <c>user_tab_cols</c> exactly
+    /// as migration 008 is, so a run where nothing is missing is silent and free.
+    ///
+    /// <para>Same reasoning as <see cref="EnsureRequiredFeaturesAsync"/> and <c>ResyncSequencesAsync</c>:
+    /// a script somebody has to remember is not a fix for something a routine refresh undoes. Oracle only
+    /// - the SQLite fixture declares these columns already. Never throws; a failure is logged and boot
+    /// continues, because a missing optional column must not keep the whole API down.</para>
+    /// </summary>
+    public static async Task EnsureLegacyColumnsAsync(IDbConnectionFactory factory, ILogger logger, CancellationToken ct = default)
+    {
+        if (factory.Dialect != SqlDialect.Oracle) return;
+
+        await using var conn = factory.Create();
+        await conn.OpenAsync(ct);
+        foreach (var (table, column, type, why) in RequiredLegacyColumns)
+        {
+            try
+            {
+                var exists = await conn.ExecuteScalarAsync<long>(new CommandDefinition(
+                    "SELECT COUNT(*) FROM user_tab_cols WHERE table_name = :t AND column_name = :c",
+                    new { t = table, c = column }, cancellationToken: ct));
+                if (exists > 0) continue;
+
+                // Identifiers cannot be bound, so they are interpolated - safe here because both come
+                // from the const array above and never from a request.
+                await conn.ExecuteAsync(new CommandDefinition(
+                    $"ALTER TABLE {table} ADD ({column} {type})", cancellationToken: ct));
+                logger.LogWarning(
+                    "Restored missing column {Table}.{Column} ({Why}). It is added by a migration that alters a "
+                    + "LEGACY table, so every database refresh drops it again; reads naming it were failing with "
+                    + "ORA-00904 until now.",
+                    table, column, why);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex,
+                    "Could not ensure column {Table}.{Column}; endpoints selecting it will fail with ORA-00904.",
+                    table, column);
+            }
+        }
+    }
     public static async Task EnsureRequiredFeaturesAsync(IDbConnectionFactory factory, ILogger logger, CancellationToken ct = default)
     {
         if (factory.Dialect != SqlDialect.Oracle) return;
