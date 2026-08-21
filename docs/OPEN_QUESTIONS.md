@@ -182,12 +182,40 @@ customer-specific ones may have outlived their customers.
 *Not blocked, and being built separately: the recovery **data** rules (autoparts filter, office-beats-DAS)
 are fully sourced in the vendored `w_recovery.srw`.*
 
-### C5 🟡 KeepTrak import — blocked on the file and a credential
+### C5 🟡 QA coil photos + QA email — source-complete, infrastructure-blocked
+
+Both halves are fully readable in the vendored source (`qa/w_new_qa_coil.srw`, `qa/w_send_email_qa.srw`).
+Neither can be built without answers about where things live, because **neither touches the database**.
+
+**The photos are files on a Windows share, with no DB record at all.** The operator's PC stages them in
+`C:\COILPHOTO` (`QA_PICTURE.LOCAL_FOLDER_BASE`), then a literal `cmd /c move` pushes them to
+`<FOLDER_BASE>\<coil_abc_num>\` — default `E:\PHOTO`. The "picture list" on screen is a `DirList()` of
+that directory. There is no `coil_pic` table; grep the DDL and nothing comes back.
+
+**The email is MAPI, and its recipients are chosen by the operator at send time.** `w_send_email_qa`
+opens a `mailSession`, attaches every photo in the coil's folder, sets the subject to
+*"Quality issue of Coil ABC# {n}"*, and calls `mailAddress()` — which pops the desktop mail client's
+address book. **There is no recipient list in the code**; a person picks, every time.
+
+**What is needed before this can be built:**
+
+1. **Where is `E:\PHOTO` actually?** It is a drive letter on a PowerBuilder client, so almost certainly a
+   mapped share. The API server is Ubuntu — it needs the UNC path and read access (a CIFS mount), or the
+   photos need migrating into the database / object storage.
+2. **How many photos and how large?** That decides mount-and-serve versus migrate.
+3. **Who should the QA email go to?** In legacy nobody decided — the operator picked from an address book
+   each time. A web app can offer a typed list, a configured list, or both, and that is a plant choice.
+   Note this is **operator-composed outbound mail with attachments**: it stays behind
+   `Email:OverrideRecipient` and an off-by-default switch like every other notification.
+
+Until then the QA console can show everything except the photos, which is what it does today.
+
+### C6 🟡 KeepTrak import — blocked on the file and a credential
 
 The maintenance/PM migration needs the Access file plus a `.230` credential. Must be a Windows-side
 ETL (the server is Ubuntu, ACE is Windows-only). Inspector tool is ready and waiting.
 
-### C6 🟡 WinSPC — needs live-DB discovery
+### C7 🟡 WinSPC — needs live-DB discovery
 
 The candidate unblock for the dimension-check QC gate. Legacy had `w_quality_winspc`.
 
