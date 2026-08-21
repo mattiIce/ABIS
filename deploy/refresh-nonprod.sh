@@ -18,6 +18,20 @@ STAMP="$(date +%Y%m%d_%H%M)"
 # refresh-long-tables.sh. Keep this list in sync with that script.
 LONG_TABLES="'OUTBOUND_EDI_TRANSACTION','INBOUND_TRANSACTION','EDI_FILE_863','IMPORTED_FILE_863','SKETCH','SKETCH_JPG'"
 
+# Maintenance tables carrying the KeepTrak import. These are plain DBO tables — they do NOT match the
+# 'ABIS%' exclude — so without this line `table_exists_action=replace` silently destroys all ~15,300
+# imported rows and puts back prod's dead copy.
+#
+# Excluding them costs nothing. ABIS's own maintenance was abandoned in August 2010: the newest
+# maint_log on prod is 2010-08-23, the PMs were last completed 2010-08-10, and the spares load is all
+# dated 2010-08-21. The plant has run KeepTrak ever since. So prod's copy of these tables holds
+# sixteen-year-old history that never changes, while .230's copy now holds the real thing — this is
+# the one place where NOT taking prod's version is the whole point.
+#
+# If prod ever starts writing maintenance again (i.e. the plant moves off KeepTrak back into ABIS),
+# delete this line — otherwise .230 would silently stop seeing it.
+KEEPTRAK_TABLES="'GROUPDEPARTMENT','SYSTEMEQUIPMENT','SUBSYSTEMEQUIPMENT','ITEMDEVICE','TITLECRAFT','PMSHIFT','PM','PM_ACTIONS','PMCOMPLETIONS'"
+
 echo "== $(date '+%F %T') network refresh starting (SID=$ORACLE_SID) =="
 
 # Pre-flight: prod reachable over the link, or abort WITHOUT touching .230.
@@ -40,14 +54,15 @@ SQL
 )
 echo "coil rows on .230 before: ${before//[[:space:]]/}"
 
-# Network import: all DBO tables EXCEPT the ABIS_* modernization tables and the LONG tables.
-# (Standard Edition -> no parallel; 11g -> no logtime.)
+# Network import: all DBO tables EXCEPT the ABIS_* modernization tables, the LONG tables, and the
+# maintenance tables holding the KeepTrak import. (Standard Edition -> no parallel; 11g -> no logtime.)
 cat > "$DPDIR/net_${STAMP}.par" <<EOF
 network_link=prod_9
 schemas=DBO
 table_exists_action=replace
 exclude=TABLE:"LIKE 'ABIS%'"
 exclude=TABLE:"IN (${LONG_TABLES})"
+exclude=TABLE:"IN (${KEEPTRAK_TABLES})"
 exclude=STATISTICS
 logfile=dpump_dir:net_${STAMP}.log
 EOF

@@ -663,6 +663,16 @@ public static class AbisSchema
             "hours worked on a PM completion (KeepTrak fld_LaborHours) - migration 008"),
         ("PMCOMPLETIONS", "COMP_COST", "NUMBER",
             "cost of a PM completion (KeepTrak fc_Cost) - migration 008"),
+        // The KeepTrak provenance marker (migration 009). NOTHING in the app reads or writes it - it
+        // exists so the import can clear its OWN previous run without deleting PM work done in ABIS.
+        // Those three tables mint ids with MAX+1, so after an import every new row also lands above
+        // the reserved offset and an id-range DELETE would take real work with it.
+        ("PM", "KT_REF", "VARCHAR2(32)",
+            "KeepTrak provenance marker, so a re-import deletes only imported rows - migration 009"),
+        ("PM_ACTIONS", "KT_REF", "VARCHAR2(32)",
+            "KeepTrak provenance marker, so a re-import deletes only imported rows - migration 009"),
+        ("PMCOMPLETIONS", "KT_REF", "VARCHAR2(32)",
+            "KeepTrak provenance marker, so a re-import deletes only imported rows - migration 009"),
     ];
 
     /// <summary>

@@ -124,10 +124,20 @@ W "SET DEFINE OFF"
 W "SET SQLBLANKLINES ON"
 W "WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK"
 W ""
-W "-- Clear any previous run of THIS import (scoped strictly to the reserved id range)."
-W "DELETE FROM pmcompletions WHERE pmcompletion_id >= $IdOffset;"
-W "DELETE FROM pm_actions    WHERE pm_action_id   >= $IdOffset;"
-W "DELETE FROM pm            WHERE pm_id          >= $IdOffset;"
+# Clearing the previous run is scoped by PROVENANCE, not by id range, for the three tables the
+# application can also write. PM / PM_ACTIONS / PMCOMPLETIONS mint ids with MAX(id)+1, so once this
+# import has landed, every PM created or completed in ABIS also gets an id above $IdOffset - and an
+# id-range DELETE would take real maintenance work with it. KT_REF is written only here (migration
+# 009), so `KT_REF IS NOT NULL` means "came from KeepTrak" and nothing else.
+#
+# The hierarchy tables below keep the id-range delete: the application has no INSERT path into any of
+# them, so nothing but this import can occupy that range.
+W "-- Clear any previous run of THIS import."
+W "-- Tables the app can also write: scoped by provenance (kt_ref), never by id range - see migration 009."
+W "DELETE FROM pmcompletions WHERE kt_ref IS NOT NULL;"
+W "DELETE FROM pm_actions    WHERE kt_ref IS NOT NULL;"
+W "DELETE FROM pm            WHERE kt_ref IS NOT NULL;"
+W "-- Hierarchy: the app never inserts here, so the reserved id range holds only imported rows."
 W "DELETE FROM itemdevice    WHERE itemdevice_id  >= $IdOffset;"
 W "DELETE FROM subsystemequipment WHERE subsysequipment_id >= $IdOffset;"
 W "DELETE FROM systemequipment    WHERE sysequipment_id    >= $IdOffset;"
@@ -234,9 +244,9 @@ foreach ($r in $pms.Rows) {
             " sysequipment_id, groupdepartment_id, assignedtogroup, pm_status, pm_notice, mins_per_unit," +
             " num_of_units, daysbetween, pmrange, nextduedate, pm_completed, completed_by, lastreaddate," +
             " lastreading, nextduereading, completedreading, pm_repeat, pm_cost, pm_entered, lastupdate," +
-            " hasimage, pmreference)" +
+            " hasimage, pmreference, kt_ref)" +
             " VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}," +
-            " {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, 0, {26});"
+            " {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, 0, {26}, {27});"
     W ($tmpl -f `
         $pmId, (S $r.fs_PMShift 32), $craft, $freqCode,
         (& $lev $r.fl_Lev4id), (& $lev $r.fl_Lev3id), (& $lev $r.fl_Lev2id), (& $lev $r.fl_Lev1id),
@@ -245,7 +255,8 @@ foreach ($r in $pms.Rows) {
         (D $r.fd_LastCompDate), (S $r.fs_LastCompBy 64 "pm.completed_by"), (D $r.fd_LastReadDate),
         (N $r.fld_LastReading), (N $r.fld_NextDueReading), (N $r.fld_LastCompReading),
         (N $r.fld_HrsMilCycRepeat), (N $r.fc_EstCost), (D $r.fdt_DateAdd), (D $r.fdt_DateEdit),
-        (S ("KT-" + [int]$r.fa_PMid) 128))
+        (S ("KT-" + [int]$r.fa_PMid) 128),
+        (S ("KT-" + [int]$r.fa_PMid) 32))
 
     # KeepTrak keeps the whole procedure in ONE memo, but ABIS models pm_actions as a checklist of
     # rows — and item_details is only VARCHAR2(1024) while 65 of the 143 procedures are longer.
@@ -270,8 +281,9 @@ foreach ($r in $pms.Rows) {
             $part++
             $label = if ($chunks.Count -gt 1) { "PM procedure ($part/$($chunks.Count))" } else { 'PM procedure' }
             $actionId++
-            W ("INSERT INTO pm_actions (pm_action_id, pm_id, action_items, item_details) VALUES ({0}, {1}, {2}, {3});" -f `
-                $actionId, $pmId, (S $label 1024), (S $chunk 1024 "pm_actions.item_details"))
+            W ("INSERT INTO pm_actions (pm_action_id, pm_id, action_items, item_details, kt_ref) VALUES ({0}, {1}, {2}, {3}, {4});" -f `
+                $actionId, $pmId, (S $label 1024), (S $chunk 1024 "pm_actions.item_details"),
+                (S ("KT-" + ($actionId - $IdOffset)) 32))
         }
     }
     $pmCount++
@@ -300,11 +312,12 @@ foreach ($r in $comps.Rows) {
     $by  = [string]$r.fs_CompBy;     if ([string]::IsNullOrWhiteSpace($by))  { $by  = 'unknown' }
     W ("INSERT INTO pmcompletions (pmcompletion_id, pm_id, itemdevice_id, subsysequipment_id, sysequipment_id," +
        " groupdepartment_id, pm_status, completeddate, assignedtogroup, completedby, completed_notes," +
-       " recordeddate, labor_hours, comp_cost) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, 1, {6}, {7}, {8}, {9}, {6}, {10}, {11});" -f `
+       " recordeddate, labor_hours, comp_cost, kt_ref)" +
+       " VALUES ({0}, {1}, {2}, {3}, {4}, {5}, 1, {6}, {7}, {8}, {9}, {6}, {10}, {11}, {12});" -f `
         ($IdOffset + [int]$r.fa_ID), ($IdOffset + $kpm),
         (& $lev $p.fl_Lev4id), (& $lev $p.fl_Lev3id), (& $lev $p.fl_Lev2id), (& $lev $p.fl_Lev1id),
         (D $r.fd_CompletedDate), (S $grp 64 "pmcompletions.assignedtogroup"), (S $by 64 "pmcompletions.completedby"), (S $r.fm_CompNote 1024 "pmcompletions.completed_notes"),
-        (N $r.fld_LaborHours), (N $r.fc_Cost))
+        (N $r.fld_LaborHours), (N $r.fc_Cost), (S ("KT-" + [int]$r.fa_ID) 32))
     $compCount++
 }
 W ""

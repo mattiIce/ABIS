@@ -44,19 +44,28 @@ public class LegacyColumnSelfHealTests
     }
 
     /// <summary>
-    /// Every declared column must be one the repository actually selects. A stale entry would add a
-    /// column nothing reads to a table the legacy application shares — harmless but dishonest, and
-    /// exactly how a repair list rots into folklore.
+    /// Every declared column must be justified by something in the tree — either the repository selects
+    /// it, or the KeepTrak importer writes it. A stale entry would add a column nothing uses to a table
+    /// the legacy application shares: harmless but dishonest, and exactly how a repair list rots into
+    /// folklore.
+    ///
+    /// <para>Both sources count because the two kinds are genuinely different. <c>COMP_COST</c> exists
+    /// to be READ by the app. <c>KT_REF</c> exists so the import can delete its own previous run without
+    /// destroying PM work done in ABIS — no app code path reads or writes it, and it would be wrong to
+    /// make one.</para>
     /// </summary>
     [Fact]
-    public void Every_declared_column_is_one_the_repository_selects()
+    public void Every_declared_column_is_justified_by_a_reader_or_the_importer()
     {
-        var sql = File.ReadAllText(RepositorySourcePath());
+        var repo = File.ReadAllText(RepositorySourcePath());
+        var importer = File.ReadAllText(ImporterSourcePath());
         foreach (var (_, column, _, _) in Declared())
         {
-            Assert.True(sql.Contains(column, StringComparison.OrdinalIgnoreCase),
-                $"{column} is on the legacy-column repair list but no query names it — either the query "
-                + "was removed and the entry is stale, or the column name drifted.");
+            var used = repo.Contains(column, StringComparison.OrdinalIgnoreCase)
+                    || importer.Contains(column, StringComparison.OrdinalIgnoreCase);
+            Assert.True(used,
+                $"{column} is on the legacy-column repair list but neither the repository nor the "
+                + "KeepTrak importer names it — the entry is stale, or the column name drifted.");
         }
     }
 
@@ -115,6 +124,15 @@ public class LegacyColumnSelfHealTests
     }
 
     private static string RepositorySourcePath() => SourcePath("AbisRepository.cs");
+
+    private static string ImporterSourcePath()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "tools")))
+            dir = dir.Parent;
+        Assert.NotNull(dir);
+        return Path.Combine(dir!.FullName, "tools", "keeptrak-import.ps1");
+    }
     private static string FixtureSourcePath() => SourcePath("SqliteFixture.cs");
 
     private static string SourcePath(string fileName)

@@ -728,11 +728,11 @@ public static class SqliteFixture
                 lowrepeat REAL, midrepeat REAL, hignrepeat REAL, pmreference TEXT, pm_cost REAL,
                 author TEXT, scribe TEXT, addedpmhours REAL, pm_entered TEXT NOT NULL, hasimage INTEGER NOT NULL DEFAULT 0,
                 image_path TEXT, sptext TEXT, spyesno INTEGER, spnumber REAL, spdatetime TEXT,
-                display_style INTEGER, pm_action_header TEXT, pm_action_tailer TEXT);
+                display_style INTEGER, pm_action_header TEXT, pm_action_tailer TEXT, kt_ref TEXT);
 
             -- The PM's checklist (ordered action items). item_view is a legacy BLOB — not modelled.
             CREATE TABLE pm_actions (
-                pm_action_id INTEGER PRIMARY KEY, pm_id INTEGER NOT NULL, action_items TEXT, item_details TEXT);
+                pm_action_id INTEGER PRIMARY KEY, pm_id INTEGER NOT NULL, action_items TEXT, item_details TEXT, kt_ref TEXT);
 
             -- Completion history. Snapshots the equipment ids as they were at completion time.
             CREATE TABLE pmcompletions (
@@ -742,7 +742,7 @@ public static class SqliteFixture
                 completed_notes TEXT, recordeddate TEXT,
                 -- Added by migration 008 to carry KeepTrak's per-completion labour/cost history.
                 -- NULL means "not recorded", deliberately distinct from 0 ("free").
-                labor_hours REAL, comp_cost REAL);
+                labor_hours REAL, comp_cost REAL, kt_ref TEXT);
 
             CREATE TABLE dt_cause (
                 id INTEGER PRIMARY KEY, cause_name TEXT NOT NULL, note TEXT);
