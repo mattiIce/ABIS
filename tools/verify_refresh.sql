@@ -15,7 +15,7 @@
 -- something else - the last one only because someone asked why a count looked wrong. That is what this
 -- script is for: one deliberate check instead of five accidental discoveries.
 --
--- READ-ONLY. It reports; it changes nothing. The repairs are docs/DB_REFRESH.md Parts 3-6.
+-- READ-ONLY. It reports; it changes nothing. The repairs are docs/DB_REFRESH.md Parts 3-7.
 --
 -- RUN ON THE DB HOST (oeldb01 / .230) as DBO - the app host has no Oracle client:
 --   sqlplus -S /nolog
@@ -173,11 +173,30 @@ BEGIN
     pass('abis_user_credential', v_n || ' local credential(s)');
   END IF;
 
+  -- 7. Migrations that ALTER a legacy table ---------------------------------------
+  --    Migrations 001-007 only CREATE abis_*/sales_* tables, which the refresh preserves. 008 was the
+  --    first to ALTER a table the legacy app also owns (PMCOMPLETIONS), and Data Pump restores legacy
+  --    tables from prod - where these columns have never existed. So this is structural: EVERY refresh
+  --    drops them, and every future legacy-table migration will land in this same list.
+  --    Missed until 2026-08-21 because it surfaces only as a 500 on one endpoint, and SQLite CI has the
+  --    columns in its fixture, so the whole suite stays green.
+  say('');
+  say('7. columns added to LEGACY tables by migrations (dropped by every refresh)');
+  SELECT COUNT(*) INTO v_n FROM user_tab_cols
+   WHERE table_name = 'PMCOMPLETIONS' AND column_name IN ('LABOR_HOURS','COMP_COST');
+  IF v_n = 2 THEN
+    pass('PMCOMPLETIONS.LABOR_HOURS + .COMP_COST present', 'migration 008');
+  ELSE
+    fail(TO_CHAR(2 - v_n) || ' of 2 missing - GET /pms/{id}/completions 500s with ORA-00904 for every PM',
+         'restart the ABIS service (it re-adds them at startup), or run '
+         || 'docs/data-model/migrations/008_pmcompletion_labor_cost.sql');
+  END IF;
+
   -- Verdict -----------------------------------------------------------------------
   say('');
   say('=== ' || v_fail || ' failure(s), ' || v_warn || ' warning(s) ===');
   IF v_fail > 0 THEN
-    say('The app is NOT fully usable until the fixes above are applied. See docs/DB_REFRESH.md Parts 3-6.');
+    say('The app is NOT fully usable until the fixes above are applied. See docs/DB_REFRESH.md Parts 3-7.');
   ELSIF v_warn > 0 THEN
     say('No failures. Read the warnings - they are the things no script can decide for you.');
   ELSE

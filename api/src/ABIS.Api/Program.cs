@@ -265,6 +265,11 @@ if (dbOptions.Dialect == SqlDialect.Oracle)
     {
         await AbisSchema.EnsureRequiredFeaturesAsync(
             app.Services.GetRequiredService<IDbConnectionFactory>(), app.Logger);
+        // …and the columns a refresh takes off LEGACY tables. Migration 008 adds two to PMCOMPLETIONS;
+        // Data Pump restores that table from prod, which has never had them, so every refresh drops
+        // them again and the PM completion history 500s with ORA-00904 until they are back.
+        await AbisSchema.EnsureLegacyColumnsAsync(
+            app.Services.GetRequiredService<IDbConnectionFactory>(), app.Logger);
     }
     catch (Exception ex)
     {
