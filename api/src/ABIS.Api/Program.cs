@@ -257,6 +257,20 @@ if (dbOptions.Dialect == SqlDialect.Oracle)
         app.Logger.LogError(ex, "ABIS-owned schema ensure failed; admin scheduler endpoints will 500 until it succeeds.");
     }
 
+    // Restore any security features a database refresh removed. security_application is a LEGACY
+    // table, so a Data Pump refresh from prod brings back prod's copy - which has never heard of the
+    // features this app gates on. Without them a signed-in user gets 403 on every Parts write, every
+    // maintenance/PM write and both admin consoles, while the API key bypasses RBAC and looks fine.
+    try
+    {
+        await AbisSchema.EnsureRequiredFeaturesAsync(
+            app.Services.GetRequiredService<IDbConnectionFactory>(), app.Logger);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Security-feature ensure failed; signed-in users may get 403 on Parts/maintenance/admin writes.");
+    }
+
     // Self-heal any id sequences left behind their table max (a Data Pump refresh leaves them drifted,
     // which breaks every id-minting write with ORA-00001). Doing it on startup means a redeploy fixes
     // the drift with no manual step. Idempotent — a no-op when the sequences are already ahead.

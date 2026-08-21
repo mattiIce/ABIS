@@ -604,6 +604,75 @@ public static class AbisSchema
     /// step, no dependence on the refresh script. Idempotent: a healthy sequence is a no-op.</para>
     /// Oracle only; gated by <c>Database:ResyncSequencesOnStartup</c> (default on). Never throws — a
     /// per-sequence failure is logged and skipped so it can't block boot. 11g-safe (INCREMENT BY jump).</summary>
+    /// <summary>
+    /// Feature names the modern app gates on that the LEGACY schema does not define. Each is a row this
+    /// app needs in <c>security_application</c>; without it, <c>GetEffectivePrivilegeAsync</c> can never
+    /// return a privilege and every write behind that feature answers <b>403</b> to a signed-in user.
+    ///
+    /// <para>Kept in sync with <c>tools/bootstrap-admin.sh</c>, which seeds the same four.</para>
+    /// </summary>
+    public static readonly (string Name, string Notes)[] RequiredFeatures =
+    [
+        ("Part Number", "Part master (ABIS). Gates every write on the Parts page."),
+        ("Maintenance_logs", "Maintenance + PM writes (ABIS)."),
+        ("Scheduler Admin", "Scheduled-job registry (ABIS admin)."),
+        ("Server Admin", "Server console (ABIS admin)."),
+    ];
+
+    /// <summary>
+    /// Idempotently ensure <see cref="RequiredFeatures"/> exist in <c>security_application</c>.
+    ///
+    /// <para><b>WHY this has to be automatic.</b> <c>security_application</c> is a LEGACY table, so a Data
+    /// Pump refresh from production restores production's copy of it - and production has never heard of
+    /// these four, because they belong to the modern app. Every refresh therefore deletes them again. That
+    /// is exactly what had happened by 2026-08-21: all four were absent from .230, which meant a signed-in
+    /// user got 403 on every Parts write, every maintenance/PM write, and both admin consoles, while the
+    /// API key sailed through because it bypasses RBAC entirely. API-green did not mean a person could do
+    /// it.</para>
+    ///
+    /// <para>A script that must be remembered is not a fix for something a routine refresh undoes. Same
+    /// reasoning as <see cref="ResyncSequencesAsync"/>: a restart repairs it, with no manual step.</para>
+    ///
+    /// <para><b>It only ever INSERTS a missing name.</b> Nothing is renamed, re-pointed or deleted, so a
+    /// feature the plant has since granted to people keeps its id and its grants. Oracle only; never
+    /// throws - a failure is logged and boot continues.</para>
+    /// </summary>
+    public static async Task EnsureRequiredFeaturesAsync(IDbConnectionFactory factory, ILogger logger, CancellationToken ct = default)
+    {
+        if (factory.Dialect != SqlDialect.Oracle) return;
+
+        await using var conn = factory.Create();
+        await conn.OpenAsync(ct);
+        var added = 0;
+        foreach (var (name, notes) in RequiredFeatures)
+        {
+            try
+            {
+                // TRIM: application_name is CHAR-padded on live, so a bare = would never match.
+                var exists = await conn.ExecuteScalarAsync<long>(new CommandDefinition(
+                    "SELECT COUNT(*) FROM security_application WHERE TRIM(application_name) = :name",
+                    new { name }, cancellationToken: ct));
+                if (exists > 0) continue;
+
+                var id = await conn.ExecuteScalarAsync<long>(new CommandDefinition(
+                    "SELECT NVL(MAX(application_id), 0) + 1 FROM security_application", cancellationToken: ct));
+                await conn.ExecuteAsync(new CommandDefinition(
+                    "INSERT INTO security_application (application_id, application_name, application_notes) VALUES (:id, :name, :notes)",
+                    new { id, name, notes }, cancellationToken: ct));
+                added++;
+                logger.LogWarning(
+                    "Restored missing security feature {Feature} as application_id {Id}. It is required by this app and "
+                    + "absent from the legacy schema, so a database refresh removes it; writes behind it were 403 until now.",
+                    name, id);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Could not ensure security feature {Feature}; writes behind it will 403 for signed-in users.", name);
+            }
+        }
+        if (added == 0)
+            logger.LogInformation("Security features present ({Count} required).", RequiredFeatures.Length);
+    }
     public static async Task ResyncSequencesAsync(IDbConnectionFactory factory, ILogger logger, CancellationToken ct = default)
     {
         if (factory.Dialect != SqlDialect.Oracle) return;
