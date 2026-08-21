@@ -14,6 +14,39 @@ const setErr = (m) => { $('#err').textContent = m; };
 const setOk = (m) => { $('#ok').textContent = m; };
 const setBusy = (b) => document.body.classList.toggle('busy', b);
 const v = (id) => $(id).value.trim();
+/**
+ * What actually went wrong, from an NSwag ApiException.
+ *
+ * The generated client's `message` for a non-2xx is the generic "An unexpected server error
+ * occurred." — so a **403** on a PM write read as though the server had broken, sending the reader to
+ * look at the wrong thing entirely. It is the same failure as the AD sign-in reporting a certificate
+ * problem as a bad password: the server said exactly what was wrong and the UI threw it away.
+ *
+ * The API answers RFC-9110 ProblemDetails, whose `detail` names the user, the level and the feature.
+ * Other pages already decode it (auth.ts, sales.ts, qa-hold.ts); this one did not.
+ */
+function why(e) {
+    const ex = e;
+    if (typeof ex?.response === 'string' && ex.response.length > 0) {
+        try {
+            const p = JSON.parse(ex.response);
+            if (p.errors) {
+                const flat = Object.values(p.errors).flat().join(' ');
+                if (flat)
+                    return flat;
+            }
+            if (p.detail)
+                return p.detail;
+            if (p.title)
+                return p.title;
+        }
+        catch { /* not ProblemDetails — fall through to the raw message */ }
+    }
+    // 403 in particular must never read as a server fault: nothing is broken, the account lacks a grant.
+    if (ex?.status === 403)
+        return 'You do not have permission to do that.';
+    return ex?.message ?? String(e);
+}
 const setV = (id, value) => { $(id).value = value == null ? '' : String(value); };
 // Local-time formatter for datetime-local inputs — toISOString() would emit UTC and shift the value by
 // the whole timezone offset on show/re-save (see downtime.ts).
@@ -139,7 +172,7 @@ async function search() {
         document.querySelectorAll('#logs tr.click').forEach((tr) => tr.addEventListener('click', () => void loadLog(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Search failed: ${e.message}`);
+        setErr(`Search failed: ${why(e)}`);
     }
     finally {
         setBusy(false);
@@ -168,7 +201,7 @@ async function loadLog(id) {
         setV('#mLabor', m.laborHours);
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${why(e)}`);
     }
     finally {
         setBusy(false);
@@ -214,7 +247,7 @@ async function save() {
         await search();
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${why(e)}`);
     }
     finally {
         setBusy(false);
@@ -249,7 +282,7 @@ async function loadDue() {
         document.querySelectorAll('#tDue [data-open]').forEach((b) => b.addEventListener('click', () => { showTab('pms'); void loadPm(Number(b.dataset.open)); }));
     }
     catch (e) {
-        setErr(`Due board failed: ${e.message}`);
+        setErr(`Due board failed: ${why(e)}`);
     }
     finally {
         setBusy(false);
@@ -272,7 +305,7 @@ async function loadPms() {
         document.querySelectorAll('#tPms tr.click').forEach((tr) => tr.addEventListener('click', () => void loadPm(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`PM list failed: ${e.message}`);
+        setErr(`PM list failed: ${why(e)}`);
     }
     finally {
         setBusy(false);
@@ -297,7 +330,7 @@ function pmForm(p) {
       <div class="fld"><label>Item / device</label><select id="xItem" style="min-width:150px"></select></div>
     </div>
     <div class="frow" style="margin-top:8px">
-      <div class="fld"><label>Dept id</label><input id="xDept" list="deptList" style="width:90px" value="${val(p?.groupDepartmentId)}" /></div>
+      <div class="fld"><label>Department</label><select id="xDept" style="min-width:170px"></select></div>
       <div class="fld"><label>Craft</label><select id="xCraft" style="min-width:130px"></select></div>
       <div class="fld"><label>Assigned to</label><input id="xGroup" style="width:130px" value="${val(p?.assignedToGroup)}" /></div>
       <div class="fld"><label>Reference</label><input id="xRef" style="width:130px" value="${val(p?.pmReference)}" /></div>
@@ -364,7 +397,7 @@ async function loadPm(id) {
         }
     }
     catch (e) {
-        setErr(`PM load failed: ${e.message}`);
+        setErr(`PM load failed: ${why(e)}`);
     }
     finally {
         setBusy(false);
@@ -382,19 +415,41 @@ async function fillEquipmentPickers(p) {
             const days = f.freqType === 'HMC' ? 'meter' : `${f.daysBetween ?? '?'}d`;
             return opt(f.maintFreq, `${f.maintFreq} — ${days}`, p?.maintFreq);
         }).join('');
-        const [systems, crafts] = await Promise.all([client().getSystemEquipment(undefined), client().getTitleCrafts()]);
-        $('#xSys').innerHTML = blank + systems.map((s) => opt(s.sysEquipmentId, s.systemEquipmentName, p?.sysEquipmentId)).join('');
+        const [depts, crafts] = await Promise.all([client().listGroupDepartments(), client().getTitleCrafts()]);
+        $('#xDept').innerHTML = blank + depts.map((d) => opt(d.groupDepartmentId, d.groupDepartmentName, p?.groupDepartmentId)).join('');
         $('#xCraft').innerHTML = blank + crafts.map((c) => opt(c.titleCraftId, c.titleCraftName, p?.titleCraftId)).join('');
+        // Department -> System -> Subsystem -> Item. The department level was missing and the system list
+        // was fetched unfiltered, which was survivable when ABIS held a handful of rows; the KeepTrak
+        // import (2026-08-21) took it to **382 systems in one flat dropdown**, against 25 for a typical
+        // department. The hierarchy nests cleanly enough for this to work — measured on the imported data,
+        // every system has a department and every item/device has a subsystem.
+        const fillItems = async (subId, selItem) => {
+            const items = subId ? await client().getItemDevices(Number(subId)) : [];
+            $('#xItem').innerHTML = blank + items.map((i) => opt(i.itemDeviceId, i.itemDeviceName, selItem)).join('');
+        };
         const fillSubs = async (sysId, selSub, selItem) => {
             const subs = sysId ? await client().getSubsystemEquipment(Number(sysId)) : [];
             $('#xSub').innerHTML = blank + subs.map((s) => opt(s.subsysEquipmentId, s.subsystemEquipmentName, selSub)).join('');
             await fillItems($('#xSub').value, selItem);
         };
-        const fillItems = async (subId, selItem) => {
-            const items = subId ? await client().getItemDevices(Number(subId)) : [];
-            $('#xItem').innerHTML = blank + items.map((i) => opt(i.itemDeviceId, i.itemDeviceName, selItem)).join('');
+        const fillSystems = async (deptId, selSys, selSub, selItem) => {
+            let systems = await client().getSystemEquipment(deptId ? Number(deptId) : undefined);
+            // A PM carries its OWN groupdepartment_id as well as its sysequipment_id, and the two can
+            // disagree — nothing enforces that the system belongs to the department the PM names. If the
+            // saved system is not in the filtered list, fall back to the unfiltered one rather than render a
+            // blank: the operator would not see the equipment their PM is for, and the next save would write
+            // that blank back and strip it off the record.
+            const keep = selSys != null && String(selSys) !== '';
+            if (keep && !systems.some((x) => String(x.sysEquipmentId) === String(selSys))) {
+                systems = await client().getSystemEquipment(undefined);
+            }
+            $('#xSys').innerHTML = blank + systems.map((x) => opt(x.sysEquipmentId, x.systemEquipmentName, selSys)).join('');
+            await fillSubs($('#xSys').value, selSub, selItem);
         };
-        await fillSubs(String(p?.sysEquipmentId ?? ''), p?.subsysEquipmentId, p?.itemDeviceId);
+        await fillSystems(String(p?.groupDepartmentId ?? ''), p?.sysEquipmentId, p?.subsysEquipmentId, p?.itemDeviceId);
+        // Changing a level clears the ones below it: keeping a stale child would let a PM be saved against
+        // an item that does not belong to the equipment above it.
+        $('#xDept').addEventListener('change', () => void fillSystems($('#xDept').value));
         $('#xSys').addEventListener('change', () => void fillSubs($('#xSys').value));
         $('#xSub').addEventListener('change', () => void fillItems($('#xSub').value));
     }
@@ -431,7 +486,7 @@ async function savePm() {
         }
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${why(e)}`);
     }
     finally {
         setBusy(false);
@@ -450,7 +505,7 @@ async function deletePm() {
         await Promise.all([loadPms(), loadDue()]);
     }
     catch (e) {
-        setErr(`Delete failed: ${e.message}`);
+        setErr(`Delete failed: ${why(e)}`);
     }
     finally {
         setBusy(false);
@@ -478,7 +533,7 @@ async function completePm() {
         await Promise.all([loadPm(pmEditingId), loadPms(), loadDue()]);
     }
     catch (e) {
-        setErr(`Complete failed: ${e.message}`);
+        setErr(`Complete failed: ${why(e)}`);
     }
     finally {
         setBusy(false);
@@ -505,7 +560,7 @@ async function addAction() {
         await loadActions(pmEditingId);
     }
     catch (e) {
-        setErr(`Add failed: ${e.message}`);
+        setErr(`Add failed: ${why(e)}`);
     }
 }
 async function removeAction(pmId, actionId) {
@@ -514,7 +569,7 @@ async function removeAction(pmId, actionId) {
         await loadActions(pmId);
     }
     catch (e) {
-        setErr(`Remove failed: ${e.message}`);
+        setErr(`Remove failed: ${why(e)}`);
     }
 }
 async function loadHistory(pmId) {
