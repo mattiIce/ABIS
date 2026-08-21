@@ -3535,6 +3535,13 @@ public sealed class AbisRepository : IAbisRepository
             """, new { login }, cancellationToken: ct));
     }
 
+    public async Task<long> CountUserCredentialsAsync(CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return await conn.ExecuteScalarAsync<long>(new CommandDefinition(
+            "SELECT COUNT(*) FROM abis_user_credential", cancellationToken: ct));
+    }
+
     public async Task<UserCredential?> GetUserCredentialAsync(string login, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);

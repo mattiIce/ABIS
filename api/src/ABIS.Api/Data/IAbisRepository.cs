@@ -179,6 +179,10 @@ public interface IAbisRepository
 
     // Password credentials (ABIS-owned abis_user_credential; keyed by login_id, case-insensitive).
     Task<UserCredential?> GetUserCredentialAsync(string login, CancellationToken ct);
+
+    /// <summary>How many accounts hold a local password. Zero, with AD sign-in enabled, means there is
+    /// no break-glass: a directory outage locks everyone out.</summary>
+    Task<long> CountUserCredentialsAsync(CancellationToken ct);
     Task SetUserCredentialAsync(string login, string passwordHash, bool mustChange, string? updatedBy, CancellationToken ct);
 
     // Supervisor override — the shop-floor gate that replaces legacy's shared plaintext PIN.

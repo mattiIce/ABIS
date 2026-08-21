@@ -199,7 +199,8 @@ public static class ApiEndpoints
                     if (string.IsNullOrEmpty(body.Password))
                         return Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Invalid credentials",
                             detail: "The username or password is incorrect.");
-                    if (await ldap.ValidateAsync(login, body.Password, ct))
+                    var outcome = await ldap.ValidateAsync(login, body.Password, ct);
+                    if (outcome == LdapOutcome.Authenticated)
                     {
                         passwordSet = true;                          // authenticated against AD
                     }
@@ -207,8 +208,19 @@ public static class ApiEndpoints
                     {
                         var cred = await repo.GetUserCredentialAsync(user.LoginId ?? login, ct);
                         if (cred is null || !PasswordHashing.Verify(body.Password, cred.PasswordHash))
-                            return Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Invalid credentials",
-                                detail: "The username or password is incorrect.");
+                            // Say WHICH failure this is. "Incorrect password" for "no domain controller
+                            // answered" sends the operator hunting their own password while the real cause
+                            // sits in a server log they cannot see - which is exactly what happened on
+                            // 2026-08-21, when both DCs failed the TLS handshake. Naming an unreachable
+                            // directory leaks nothing an attacker could not learn by watching the network,
+                            // and it is the difference between "retype it" and "call IT".
+                            return outcome == LdapOutcome.Unreachable
+                                ? Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable,
+                                    title: "Directory unavailable",
+                                    detail: "ABIS cannot reach the domain controller, so it cannot verify your password. "
+                                          + "This is not a problem with your account. Please tell IT; the server log names the cause.")
+                                : Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Invalid credentials",
+                                    detail: "The username or password is incorrect.");
                         mustChangePassword = cred.MustChange != 0;   // break-glass local sign-in (AD unavailable)
                         passwordSet = true;
                     }

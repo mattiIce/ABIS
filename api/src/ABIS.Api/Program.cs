@@ -288,6 +288,40 @@ if (dbOptions.Dialect == SqlDialect.Oracle)
     }
 }
 
+// A bind format with no separator can never authenticate anyone - say so at boot rather than
+// letting it present as "wrong password" to every user forever.
+{
+    var ldapOptions = app.Services.GetService<Abis.Api.Security.LdapOptions>();
+    if (ldapOptions?.BindFormatWarning is { } bindWarning)
+        app.Logger.LogWarning("LDAP configuration: {Warning}", bindWarning);
+}
+
+// AD sign-in with NO local credential anywhere is one directory outage away from locking every
+// human out of ABIS. The login path already falls back to a local password when AD cannot be reached
+// — that is the break-glass — but it can only do so for an account that HAS one. On 2026-08-21 both
+// DCs failed their TLS handshake and the credential store was empty, so nobody could sign in at all
+// and the only way back in was the service API key. Say so at boot, while it is still cheap to fix.
+if (dbOptions.Dialect == SqlDialect.Oracle)
+{
+    try
+    {
+        var ldapOpt = app.Services.GetRequiredService<Abis.Api.Security.ILdapAuthenticator>();
+        if (ldapOpt.Enabled)
+        {
+            var repo = app.Services.GetRequiredService<IAbisRepository>();
+            if (await repo.CountUserCredentialsAsync(default) == 0)
+                app.Logger.LogWarning(
+                    "AD sign-in is enabled and NO account has a local break-glass password. If the domain "
+                    + "controllers become unreachable, nobody will be able to sign in. Set one for an admin: "
+                    + "POST /api/security/users/{{id}}/password.");
+        }
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogDebug(ex, "Break-glass credential check skipped.");
+    }
+}
+
 // Opt-in deploy-time email smoke test (Email:SendTestOnStartup). Sends ONE message through the real
 // IEmailSender pipeline so a deploy proves the wiring + the test-recipient override fire. With no
 // Smtp.Host it only logs the redirect; once a relay is set it actually delivers on the next restart.
