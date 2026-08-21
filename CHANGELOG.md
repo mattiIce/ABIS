@@ -80,10 +80,17 @@ of which mints the X12 control number and must not be retried blindly. (#436)
 
 ### Known limitations
 
-**The due board is not usable yet.** The 77 legacy 2010 PM definitions still carry 2010 due dates and
-are not retired, so they appear ~5,800 days overdue and swamp the 144 real ones.
-`deploy/keeptrak/retire_legacy_pm.sql` fixes it — regenerate its undo script first, because those rows
-do not share a single status.
+**The due board works, and the legacy PMs are retired.** Written up here because it was the last step
+and it is not automatic: the 77 pre-KeepTrak definitions still carried 2010 due dates and would have
+appeared ~5,800 days overdue, swamping the real ones. `deploy/keeptrak/retire_legacy_pm.sql` set them
+to status 0 on 2026-08-21 — **106 active PMs now, all KeepTrak, zero legacy.** Nothing was deleted; the
+definitions stay browsable and their 2,051 completions are untouched.
+
+A new `regen_undo_retire_legacy_pm.sql` captures the rollback from the LIVE schema first, because the
+committed one dates from 2026-07-24 and `PM` is a legacy table every refresh overwrites — a stale
+rollback would restore the wrong statuses on the day it was needed. This time the live distribution
+matched the committed snapshot exactly (8×'1', 46×'2', 23×'3'), verified row by row, so the copy in
+version control is a valid undo rather than only the volatile one in `/tmp`.
 
 **The equipment-hierarchy cascade is still unbuilt**, now deliberately: it was deferred *for* this
 import and is worth building on top of it. Imported rows carry `depttype = 'KEEPTRAK'`, and 39 KeepTrak
