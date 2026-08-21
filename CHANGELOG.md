@@ -10,6 +10,93 @@ new ABIS can replace old ABIS and alpha testing begins.
 
 ---
 
+## v0.9.4 — 2026-08-20
+
+Seven commits, and three parity items closed. The other half of the day went into finding out that
+three more **cannot or should not be built yet** — which is recorded rather than left as silent gaps.
+
+### A part can be retired, and superseded by a revision
+
+`POST /parts/{id}/obsolete` and `POST /parts/{id}/revise`, with Obsolete and Revise on the Parts page.
+The Delete button's own error text already said *"Revise it instead"* — pointing at something that did
+not exist.
+
+Two things the legacy source says that its function names do not. **Open order lines are a warning, not
+a refusal**: `wf_check_order_item` returns "not OK to obsolete" and its caller ignores that verdict —
+the `Return -1` is commented out under *"Do not stop processing ... for now"*. And **a revision MOVES a
+routing** (`UPDATE routing SET part_num_id`) where `/copy` duplicates it: right for a successor, wrong
+for a duplicate, so the two cannot share code however alike they look.
+
+Measured before it was called done: 9,213 parts obsolete against 666 active (retiring is the norm);
+**63 of those 666 (9.5%)** would raise the warning, so blocking would refuse about one retirement in
+ten; and **231 of the 892 parts with routings have more than one**, so the "which routing moves?"
+picker is a routine path rather than an edge case. (#422)
+
+### The recovery scrap worksheet
+
+`GET/PUT /recovery/jobs/{job}/coils/{coil}/worksheet`, plus a worksheet card on the Recovery page.
+
+**The quality office supersedes the floor — it does not merge with it.** Legacy counts the office
+worksheet before reading anything, so one office row for one defect suppresses the DAS numbers for all
+of them; the response says which source it used, because a reader otherwise cannot tell. The
+**autoparts filter** narrows a customer's defect list when the job's part is an autopart — live on the
+plant database, where Novelis Kingston is configured twice, once auto-only and once commercial-only.
+
+The save is deliberately asymmetric: a booked line updates to whatever is sent **including zero** (how
+the office retracts a wrong figure), an unbooked line is inserted only when non-zero, and nothing is
+deleted — so a coil the office has touched stays office-sourced even once zeroed. (#423)
+
+### The coil-defect notification
+
+`POST /receiving/scan/defect-notice` — the handheld's "email" action. Legacy hands it to a stored
+procedure that opens SMTP itself and mails six hard-coded addresses. Reimplemented over the app's one
+email seam instead, so it cannot bypass the test-recipient override, and the recipient list is
+configuration rather than something needing a DBA and a proc recompile. The body is word-for-word; a
+subject was added, because the procedure never writes one and every such mail arrived blank-subjected.
+**Off by default.** (#424)
+
+### Also
+
+- **The release pipeline publishes once and packages twice** (#421). `build-release.sh` and
+  `build-deb.sh` each ran the identical `dotnet publish` — so every release compiled the app twice, and
+  the tarball and the `.deb` were two separate builds that merely ought to agree. Restore/build/test are
+  now three steps so a slow one is identifiable, and the job has a 45-minute timeout: `v0.9.3` took
+  22m50s and looked hung, which invites cancelling a release part-way through publishing.
+- **The build is at zero warnings** (#427). Not tidiness — a build printing 17 permanent warnings is one
+  where nobody notices the 18th, and one of the 17 was a real regression from this release: an inserted
+  model had orphaned a class's documentation.
+
+### Three things that turned out not to be buildable
+
+Each is now in [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md) with what would unblock it.
+
+- **The per-customer recovery reports** are all *external* DataWindows: full layout, no SQL, columns are
+  positional slots filled by PowerScript — and the window that fills them is not in the vendored source.
+  Nor in any `.pbl`: all 49 hold compiled objects, not text. They are live (14 recovery customers
+  configured), so inventing the aggregation is the wrong move. An IDE export or one golden output
+  unblocks it. (#425 area, §C4)
+- **QA coil photos and the QA email** never touch the database. Photos are files `cmd /c move`d to a
+  Windows share; the email is MAPI with recipients a person picks each time. Needs the share's real
+  path, its size, and a decision on who the email goes to. (#425, §C5)
+- **The maintenance spares tables are a dead 2010 load.** `PARTS` holds 762 rows and looks buildable
+  until you check the dates: every row carries the same `parts_entered_date` of 2010-08-21, all order
+  and receive dates are NULL, and not one row has stock on hand. Row count alone would have said "worth
+  a screen". The live spares are in KeepTrak, so it folds into that migration. (#426, §C6)
+
+### Known limitations
+
+Unchanged from `v0.9.3`, and the list has not moved. Nothing Cleveland-Cliffs is transmittable and two
+answers gate the rest — which works we process for, and their trading-partner envelope. **The end-coil
+balance gate still warns rather than blocks.** The deployed UI still reads the non-prod `.230` sandbox
+rather than live plant data. The two 4x6 tags and the Certificate of Conformance still have never
+printed. And `#413`'s 409 remains half the fix by design: the collision is reported, not retried.
+
+New here: the truck check-in slots added in `v0.9.3` are **enforced in the UI only** — the CSV importer
+stays permissive so pre-cutover sheets keep loading — and nothing prevents two trucks being booked into
+the same slot at the same destination.
+
+---
+
 ## v0.9.3 — 2026-08-20
 
 One commit, and it closes a parity item that has been open since the backlog was written.
