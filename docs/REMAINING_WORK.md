@@ -805,7 +805,27 @@
   <br>The plant's live spares are in **KeepTrak**, so this is not a CRUD build — it is part of the
   KeepTrak migration, [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) §C6, blocked on the file + a credential.
   Folded there rather than left here looking buildable. Still genuinely open and unrelated to the
-  spares question: equipment hierarchy cascade + More-Details; log record-nav + maintenance reports.
+  spares question. **All of it is now closed (2026-08-21):**
+  <br>**Equipment hierarchy cascade — DONE (#442).** Department is a select of names and drives
+  System → Subsystem → Item/device. It mattered because the KeepTrak import took the flat system list
+  to **382 entries** against 25 for a typical department. A PM carries both a `groupdepartment_id` and
+  a `sysequipment_id` and nothing enforces that they agree, so the picker falls back to the unfiltered
+  list when the saved system is absent from the filtered one — otherwise the field renders blank and
+  the next save strips the equipment off the record.
+  <br>**Record-nav — DONE.** Legacy's *First record / Next / Last Record* on
+  `w_maint_pm_management`, as ◀ ▶ plus an "n of N" position on the PM detail. It walks the loaded list,
+  so it follows the operator's filter rather than the whole table.
+  <br>**Maintenance reports — ONE of three is real.** `d_report_pm_list` is six columns over five LEFT
+  OUTER joins (pm + the four hierarchy tables, ordered by pm_id) and is now the PM list's CSV/xlsx
+  export, over live KeepTrak data. The outer joins are preserved deliberately: 5 of 726 imported
+  subsystems have no parent, and an inner join would drop PMs from a report whose job is to list all of
+  them. **`d_report_parts_details` and `d_report_parts_full_list` are NOT ported** — both read
+  `parts` / `parts_categories` / `suppliers`, the dead 2010 spares load (762 rows, all
+  `parts_entered_date` 2010-08-21, no order/receive dates, zero stock). Building them would ship two
+  empty reports that look broken.
+  <br>**More-Details** was the free-text equipment fields on the maintenance LOG form. Deliberately
+  left: `maint_log` stores system/subsystem/item as TEXT, not ids, so cascading it would change what
+  gets written rather than fix anything. That is a plant decision, not a gap.
 - [~] **M** Uptime reports + downtime pivots — done (#252): `/reporting/uptime` (groupBy line|shift|day; worked-shift uptime = (shift length − dt_total s)/3600 + scheduled/downtime hrs + uptime %, faithful to `w_report_uptime`) and `/reporting/downtime-pivot` (groupBy cause|job|**part** (#268)|line|shift|day|month|year — the by-part pivot walks ab_job→order_item→part_num, labelled by enduser_part_num). Remaining tail: a dedicated dt-vs-production ratio (uptime % already carries downtime-as-%-of-scheduled).
 - [x] **M** Native Excel export — done (#252): dependency-free OOXML `.xlsx` writer (`clientapp/src/xlsx.ts`, STORED zip + CRC32 + inline strings; numbers stay numeric), "Export Excel" on every report next to Export CSV. openpyxl-validated.
 - [~] **C/H** Feature-gate the write tags still auth-only. Done for every tag that maps 1:1 to a nav-gated feature (safe — the user who can reach the page already holds it; kiosks/edge use the API key and bypass): **Jobs**→Production Control, **Shipments**/**Stacker**→Warehouse, **CoilOwnership**→Inventory(Coil), **TestResults**/**Recovery**→Quality Control, **ProdFolder**→Production Control, **Downtime**→Downtime report (added to `FeatureByTag`). **Carriers and Sketches are DONE** (mapped to the live `Carrier Information` / `Production Sketch`) — this line previously still listed them. Still **deferred:** Dies / Sales / Accounting / Trucks / DAS / ScanLog / OpcLog — their nav pages have NO feature gate, so there's no authoritative feature name to gate the API on without risking a lockout; needs live `security_application` verification. **Verified 2026-08-21:** the live table holds **35** features and none of the seven has a name that clearly corresponds — `Trucks` has none at all (a new ABIS subsystem), and inventing one is exactly how four phantom features came about. Needs a plant decision, not a guess. That same check found the four features the app DOES gate on were **missing from `.230` entirely**, 403-ing every Parts and maintenance write for signed-in users; now self-healed at startup.

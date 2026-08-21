@@ -7,6 +7,8 @@
 import { AbisClient, MaintLogWrite, PmWrite, PmActionWrite, PmCompleteWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { exportXlsx } from './xlsx.js';
+import { pmListTable, toCsv } from './maintenance-export.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -90,14 +92,23 @@ function scaffold() {
       </div></div>
       <div class="grid">
         <div class="stack"><div class="card">
-          <header><h2>PM schedules</h2><span class="sub" id="cPms"></span></header>
+          <header><h2>PM schedules</h2><span class="sub" id="cPms"></span>
+            <span class="spacer"></span>
+            <button class="btn sm ghost" id="pmCsv" type="button" disabled>Export CSV</button>
+            <button class="btn sm ghost" id="pmXlsx" type="button" disabled>Export Excel</button>
+          </header>
           <div style="overflow-x:auto"><table class="tbl" style="min-width:520px">
             <thead><tr><th>PM#</th><th>Equipment</th><th>What</th><th>Due</th><th>State</th></tr></thead>
             <tbody id="tPms"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
           </table></div>
         </div></div>
         <div class="stack"><div class="card">
-          <header><h2 id="pmTitle">New PM</h2><span class="sub" id="pmOk" class="ok-note"></span></header>
+          <header><h2 id="pmTitle">New PM</h2><span class="sub" id="pmOk" class="ok-note"></span>
+            <span class="spacer"></span>
+            <span class="sub mono" id="pmPos"></span>
+            <button class="btn sm ghost" id="pmPrev" type="button" title="Previous PM in the list" disabled>&#9664;</button>
+            <button class="btn sm ghost" id="pmNext" type="button" title="Next PM in the list" disabled>&#9654;</button>
+          </header>
           <div class="body" id="pmDetail"></div>
         </div></div>
       </div>
@@ -288,6 +299,10 @@ async function loadDue() {
         setBusy(false);
     }
 }
+// The PM list as last loaded. Exporting reads THIS rather than scraping the table, so a number in
+// the file is the number the server sent; record-nav walks it so Prev/Next follow the order and
+// filters the operator is actually looking at, not the whole table.
+let pmList = [];
 async function loadPms() {
     setErr('');
     setBusy(true);
@@ -296,6 +311,9 @@ async function loadPms() {
         const st = $('#pStatus').value;
         const page = await client().listPms(1, 100, dept, st === '' ? undefined : Number(st), undefined, undefined, undefined);
         const items = page.items ?? [];
+        pmList = items;
+        $('#pmCsv').disabled = items.length === 0;
+        $('#pmXlsx').disabled = items.length === 0;
         $('#tPms').innerHTML = items.length ? items.map((p) => `
       <tr class="click" data-id="${p.pmId}">
         <td class="mono">${esc(p.pmId)}</td><td>${esc(equipPath(p))}</td><td>${esc(p.pmNotice)}</td>
@@ -310,6 +328,30 @@ async function loadPms() {
     finally {
         setBusy(false);
     }
+}
+/**
+ * Record navigation — legacy's "First record / Next / Last Record" buttons on
+ * `w_maint_pm_management`, which exist because reviewing PMs one after another is what this screen is
+ * for. A table you must return to between every record makes that ten clicks instead of two.
+ *
+ * It walks the CURRENTLY LOADED list, so it follows the operator's filter and sort rather than the
+ * whole table — stepping out of the filtered set would be a surprise, not a convenience.
+ */
+function pmNav() {
+    const at = pmEditingId == null ? -1 : pmList.findIndex((x) => x.pmId === pmEditingId);
+    const prev = $('#pmPrev');
+    const next = $('#pmNext');
+    prev.disabled = at <= 0;
+    next.disabled = at < 0 || at >= pmList.length - 1;
+    // Position is worth showing: "3 of 144" tells you where you are and how much is left, which the
+    // buttons alone cannot. Blank for an unsaved PM, which is not in the list at all.
+    $('#pmPos').textContent = at < 0 ? '' : `${at + 1} of ${pmList.length}`;
+}
+function stepPm(delta) {
+    const at = pmEditingId == null ? -1 : pmList.findIndex((x) => x.pmId === pmEditingId);
+    const target = pmList[at + delta];
+    if (at >= 0 && target?.pmId != null)
+        void loadPm(target.pmId);
 }
 // The detail pane is rendered as one block per PM (edit form + checklist + complete + history)
 // so switching PMs can't leave stale rows behind.
@@ -386,6 +428,7 @@ async function loadPm(id) {
         pmEditingId = p?.pmId ?? null;
         $('#pmTitle').textContent = p ? `PM #${p.pmId}` : 'New PM';
         $('#pmDetail').innerHTML = pmForm(p) + (p ? completeAndChecklist(p) : '');
+        pmNav();
         await fillEquipmentPickers(p);
         $('#btnSavePm').addEventListener('click', () => void savePm());
         document.querySelector('#btnDeletePm')?.addEventListener('click', () => void deletePm());
@@ -608,6 +651,26 @@ function showTab(name) {
     $('#dueForm').addEventListener('submit', (e) => { e.preventDefault(); void loadDue(); });
     $('#pmForm').addEventListener('submit', (e) => { e.preventDefault(); void loadPms(); });
     $('#btnNewPm').addEventListener('click', () => void loadPm(null));
+    // The PM list report (legacy d_report_pm_list). Exports what is LOADED, so it matches the filter on
+    // screen — a file that quietly covered more than the table above it would be worse than none.
+    const download = (name, data, mime) => {
+        const url = URL.createObjectURL(new Blob([data], { type: mime }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+    $('#pmCsv').addEventListener('click', () => {
+        const tb = pmListTable(pmList);
+        download(`${tb.name}.csv`, toCsv(tb), 'text/csv');
+    });
+    $('#pmXlsx').addEventListener('click', () => {
+        const tb = pmListTable(pmList);
+        exportXlsx(tb.name, tb.name.slice(0, 31), tb.headers, tb.rows);
+    });
+    $('#pmPrev').addEventListener('click', () => stepPm(-1));
+    $('#pmNext').addEventListener('click', () => stepPm(1));
     $('#btnNew').addEventListener('click', newLog);
     $('#btnSave').addEventListener('click', () => void save());
     newLog();
