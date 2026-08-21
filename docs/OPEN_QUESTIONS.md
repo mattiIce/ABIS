@@ -212,6 +212,12 @@ Until then the QA console can show everything except the photos, which is what i
 
 ### C6 🟡 KeepTrak import — blocked on the file and a credential
 
+This now also owns the **maintenance spares inventory**. The Oracle `PARTS` / `PARTS_SUPPLIERS` tables
+look usable until you check the dates: all 762 parts and 762 supplier links carry the *same*
+`parts_entered_date` of **2010-08-21**, `lastorderdate` / `lastreceiveddate` are NULL on every row,
+and not one has `qtyonhand > 0`. A one-shot 2010 load, never used since. So there is no CRUD screen
+worth building over it — the live spares are in KeepTrak, and they arrive with this import.
+
 The maintenance/PM migration needs the Access file plus a `.230` credential. Must be a Windows-side
 ETL (the server is Ubuntu, ACE is Windows-only). Inspector tool is ready and waiting.
 
