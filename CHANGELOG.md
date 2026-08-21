@@ -10,6 +10,83 @@ new ABIS can replace old ABIS and alpha testing begins.
 
 ---
 
+## v0.9.7 — 2026-08-21
+
+Two commits: one feature and one correction. The correction is the more useful half — working down the
+"can be done alone" backlog, **two of the three items turned out to describe something the plant does
+not have**, and finding that out took as long as building the one that was real.
+
+### Exporting the Recovery page
+
+CSV and native `.xlsx` on all three tables — the daily recovery report, the scrap-by-defect Pareto, and
+the per-coil scrap worksheet — through the `.xlsx` writer already used by every other report.
+
+Choices that matter more than they look:
+
+- **Yield and defect share export as fractions, not `"94.2%"`.** A percent-formatted string is a
+  string, and averaging the yield column is the first thing anyone does with it.
+- **The four 0/1 flag columns collapse into one list** (`rejected, handling`). Four booleans a reader
+  has to decode is worse than one column they can filter.
+- **The coil row carries the customer's own coil number *and* our id**, so both sides of a recovery
+  dispute can match a row up.
+- **The worksheet carries `source` and `autoparts` on every row** rather than as a header note, because
+  they change what the numbers *mean* — "office" figures supersede the floor's entirely, and an
+  autopart narrows the defect list. A spreadsheet has no header to read.
+- **The worksheet exports as loaded, not as edited.** A file quietly disagreeing with the database is
+  worse than no file.
+
+Verified in a browser against the seeded database by intercepting the download rather than trusting the
+wiring: real CRLF CSV with unquoted numerics, and a genuine PK-signed OOXML package carrying
+`workbook.xml` and `sheet1.xml`. 18 unit tests, in their own module because the page mounts the shell
+at import time. (#437)
+
+### Two backlog entries that were wrong about their own scope
+
+**The step-up re-authentication popup is not a parity gap.** `w_security_check.srw` exists as a window,
+but the only call site in the entire vendored legacy source is **commented out** — `w_group_managment`
+offers the elevation prompt only in the "insufficient privilege" branch, where somebody replaced it
+with a flat refusal and a close. That refusal is exactly what the modern 403 already does. The
+mechanism could not port anyway: legacy checked the password by opening a **second Oracle connection as
+that user**, because every ABIS user was an Oracle account. We authenticate against AD through one
+service account.
+
+**The duplicate-key retry is three times bigger than its entry claimed**, and not uniformly safe. Not
+"~14 create paths" — **46 methods** open a transaction and mint an id; the 14 is the count of *tables*,
+and tables were conflated with paths. One of the 46 mints the **ISA13/GS06/ST02 control number** and
+generates the document from it before inserting, so a blanket retry wrapper would regenerate EDI
+documents under new control numbers. That path needs a decision, not a sweep.
+
+Also recorded: the reason that entry's "missing end-to-end test" has stayed missing is that **every
+natural duplicate path is explicitly guarded**, so no single-threaded request can reach the handler at
+all. It fires only on the concurrent MAX+1 race, which cannot happen until legacy and modern write side
+by side at cutover. The missing test is a consequence of good guarding, not an oversight — which also
+makes the retry a cutover-readiness item rather than a now item. (#436)
+
+### The pattern behind both
+
+Five confirmed cases now where a backlog entry cites a **real** legacy identifier for a feature that
+does not exist, because nothing invokes it: the step-up popup, the Recovery page's **Email** button
+(declared, created, destroyed, and carrying no click handler of any kind), `w_da_sheet`'s sketch
+function, the handheld S-header validate, and the edge-trim band. The cheap check that catches the
+whole family: **grep for the call, not the definition.**
+
+### Known limitations
+
+**The other two thirds of the recovery item are not ours to build.** Email is the dead button above.
+Print drives one of the ~10 external DataWindows — layout only, no SQL, positional slots filled by a
+window that is not vendored — so the browser's own print of the page is the stand-in until that is
+answered. Export itself is **new capability, not parity**: legacy had no export at all.
+
+The header search box added in v0.9.6 covers orders, jobs, coils and parts, and still does **not**
+search EDI.
+
+Carried forward unchanged: nothing Cleveland-Cliffs is transmittable and two answers gate the rest; the
+end-coil balance gate still warns rather than blocks; the deployed UI still reads the non-prod sandbox;
+no supervisor PIN is enrolled, so the DAS override cannot be used by anyone; and the two 4x6 tags and
+the Certificate of Conformance have never printed.
+
+---
+
 ## v0.9.6 — 2026-08-21
 
 One batch, aimed at a single complaint: **the search boxes did not search.** Both of them had been
