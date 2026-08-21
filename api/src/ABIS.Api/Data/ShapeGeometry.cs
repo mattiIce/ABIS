@@ -158,6 +158,8 @@ public static class ShapeGeometry
     public sealed record ToleranceDim(string ValueCol, string? PlusCol, string? MinusCol);
 
     /// <summary>The width/length pair the job sheet prints, with tolerances.</summary>
+    /// <param name="Table">The shape's part-level geometry table.</param>
+    /// <param name="Width">The dimension every shape states.</param>
     /// <param name="Length">Null for the shapes that have only one dimension to state.</param>
     public sealed record JobSheetSizeDef(string Table, ToleranceDim Width, ToleranceDim? Length);
 

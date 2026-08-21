@@ -163,8 +163,6 @@ public sealed class RecoveryCustomer
     public string? CommOnly { get; set; }
 }
 
-/// <summary>A scrap/defect type a customer tracks (<c>cust_scrap_type_needed ⋈ scrap_type</c>),
-/// with the ABC/mill scope and autoparts flags.</summary>
 // ---- Recovery scrap worksheet (legacy quality/w_recovery.srw) ----
 
 /// <summary>One defect line on a coil's recovery scrap worksheet: the customer's defect, and the
@@ -195,6 +193,8 @@ public sealed class RecoveryWorksheet
     public IReadOnlyList<RecoveryWorksheetRow> Rows { get; set; } = Array.Empty<RecoveryWorksheetRow>();
 }
 
+/// <summary>A scrap/defect type a customer tracks (<c>cust_scrap_type_needed ⋈ scrap_type</c>),
+/// with the ABC/mill scope and autoparts flags.</summary>
 public sealed class CustomerDefect
 {
     public long CustomerId { get; set; }

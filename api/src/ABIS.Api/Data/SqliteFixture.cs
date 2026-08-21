@@ -1662,7 +1662,7 @@ public static class SqliteFixture
             """,
             new[]
             {
-                new { CustomerId = 4001L, CustomerFullName = "ACME METALS", CustomerShortName = "ACME", CustomerCity = "Detroit", CustomerState = "MI", CustomerZip = "48201", CustomerType = (int?)1, EdiReq = "Y", Create861AtReceiving = "Y", PlantCode = "PLT-01" },
+                new { CustomerId = 4001L, CustomerFullName = "ACME METALS", CustomerShortName = "ACME", CustomerCity = "Detroit", CustomerState = "MI", CustomerZip = "48201", CustomerType = (int?)1, EdiReq = "Y", Create861AtReceiving = "Y", PlantCode = (string?)"PLT-01" },
                 new { CustomerId = 4002L, CustomerFullName = "BETA FAB", CustomerShortName = "BETA", CustomerCity = "Cleveland", CustomerState = "OH", CustomerZip = "44101", CustomerType = (int?)2, EdiReq = "N", Create861AtReceiving = "N", PlantCode = (string?)null }
             });
 
@@ -1672,8 +1672,8 @@ public static class SqliteFixture
             """,
             new[]
             {
-                new { SheetSkidNum = 3001L, AbJobNum = (long?)1001L, SheetSkidDisplayNum = "110-1001-01", SheetNetWt = 1980m, SheetTareWt = 50m, SkidPieces = (int?)100, SkidDate = (DateTime?)d.AddHours(4), SkidLocation = "WH-A-01", SkidSheetStatus = (int?)1, SkidTicketIfWhed = "T-3001" },
-                new { SheetSkidNum = 3002L, AbJobNum = (long?)1001L, SheetSkidDisplayNum = "110-1001-02", SheetNetWt = 1975m, SheetTareWt = 50m, SkidPieces = (int?)100, SkidDate = (DateTime?)d.AddHours(5), SkidLocation = "WH-A-02", SkidSheetStatus = (int?)1, SkidTicketIfWhed = (string?)null },
+                new { SheetSkidNum = 3001L, AbJobNum = (long?)1001L, SheetSkidDisplayNum = "110-1001-01", SheetNetWt = 1980m, SheetTareWt = 50m, SkidPieces = (int?)100, SkidDate = (DateTime?)d.AddHours(4), SkidLocation = (string?)"WH-A-01", SkidSheetStatus = (int?)1, SkidTicketIfWhed = (string?)"T-3001" },
+                new { SheetSkidNum = 3002L, AbJobNum = (long?)1001L, SheetSkidDisplayNum = "110-1001-02", SheetNetWt = 1975m, SheetTareWt = 50m, SkidPieces = (int?)100, SkidDate = (DateTime?)d.AddHours(5), SkidLocation = (string?)"WH-A-02", SkidSheetStatus = (int?)1, SkidTicketIfWhed = (string?)null },
                 new { SheetSkidNum = 3003L, AbJobNum = (long?)1003L, SheetSkidDisplayNum = "120-1003-01", SheetNetWt = 2400m, SheetTareWt = 60m, SkidPieces = (int?)80, SkidDate = (DateTime?)d.AddDays(3), SkidLocation = (string?)null, SkidSheetStatus = (int?)0, SkidTicketIfWhed = (string?)null },
                 // Voided skid (status 6) on job 1002 — must be EXCLUDED from billed/folder skid counts
                 // (legacy w_e_car_folder:701). Zero weights so it doesn't skew the tare/net buckets.
@@ -1820,8 +1820,8 @@ public static class SqliteFixture
                 // retired-line guard is exercised against the number production actually uses rather
                 // than one invented for the fixture.
                 new { LineNum = 3L, LineDesc = "BL 60", LineLocation = (string?)null },
-                new { LineNum = 110L, LineDesc = "Cut-to-length 1", LineLocation = "Bay A" },
-                new { LineNum = 120L, LineDesc = "Cut-to-length 2", LineLocation = "Bay B" }
+                new { LineNum = 110L, LineDesc = "Cut-to-length 1", LineLocation = (string?)"Bay A" },
+                new { LineNum = 120L, LineDesc = "Cut-to-length 2", LineLocation = (string?)"Bay B" }
             });
 
         // Live line board: line 110 is RUNNING (shift 7701, job 1001, coil 5001) with skids on two
@@ -1966,7 +1966,7 @@ public static class SqliteFixture
                       NumOfUnits = (decimal?)1m, NumOfTimesPerYear = (decimal?)12m, DaysBetween = (decimal?)30m,
                       NextDueDate = ds(today.AddDays(-10)), NumOverdue = (decimal?)1m, PmRepeat = (decimal?)1m,
                       PmReference = "PM-BL110-001", PmCost = (decimal?)21.25m, Author = "tech1", PmEntered = ds(d), HasImage = 0,
-                      LastUpdate = ds(today.AddDays(-40)), PmCompleted = ds(today.AddDays(-40)), CompletedBy = "tech1" },
+                      LastUpdate = ds(today.AddDays(-40)), PmCompleted = (string?)ds(today.AddDays(-40)), CompletedBy = (string?)"tech1" },
                 // 7002 DUE SOON (3 days out), weekly, stacker chain.
                 new { PmId = 7002L, Pmshift = "2nd", TitleCraftId = (long?)600L, MaintFreq = "1XW", ItemDeviceId = (long?)501L,
                       SubsysEquipmentId = (long?)401L, SysEquipmentId = (long?)300L, GroupDepartmentId = (long?)10L,
@@ -1974,7 +1974,7 @@ public static class SqliteFixture
                       NumOfUnits = (decimal?)2m, NumOfTimesPerYear = (decimal?)52m, DaysBetween = (decimal?)7m,
                       NextDueDate = ds(today.AddDays(3)), NumOverdue = (decimal?)0m, PmRepeat = (decimal?)1m,
                       PmReference = "PM-BL110-002", PmCost = (decimal?)21.25m, Author = "tech1", PmEntered = ds(d), HasImage = 0,
-                      LastUpdate = ds(today.AddDays(-4)), PmCompleted = ds(today.AddDays(-4)), CompletedBy = "tech2" },
+                      LastUpdate = ds(today.AddDays(-4)), PmCompleted = (string?)ds(today.AddDays(-4)), CompletedBy = (string?)"tech2" },
                 // 7003 FUTURE (90 days out), annual, compressor intake filter, electrical dept.
                 new { PmId = 7003L, Pmshift = "Any", TitleCraftId = (long?)601L, MaintFreq = "1XY", ItemDeviceId = (long?)502L,
                       SubsysEquipmentId = (long?)402L, SysEquipmentId = (long?)301L, GroupDepartmentId = (long?)20L,
@@ -1982,7 +1982,7 @@ public static class SqliteFixture
                       NumOfUnits = (decimal?)1m, NumOfTimesPerYear = (decimal?)1m, DaysBetween = (decimal?)365m,
                       NextDueDate = ds(today.AddDays(90)), NumOverdue = (decimal?)0m, PmRepeat = (decimal?)1m,
                       PmReference = "PM-AIR-001", PmCost = (decimal?)48.00m, Author = "tech3", PmEntered = ds(d), HasImage = 0,
-                      LastUpdate = ds(today.AddDays(-275)), PmCompleted = ds(today.AddDays(-275)), CompletedBy = "tech3" },
+                      LastUpdate = ds(today.AddDays(-275)), PmCompleted = (string?)ds(today.AddDays(-275)), CompletedBy = (string?)"tech3" },
                 // 7004 INACTIVE (status 0) — overdue by date, but must NOT appear on the due board.
                 new { PmId = 7004L, Pmshift = "1st", TitleCraftId = (long?)600L, MaintFreq = "1XM", ItemDeviceId = (long?)500L,
                       SubsysEquipmentId = (long?)400L, SysEquipmentId = (long?)300L, GroupDepartmentId = (long?)10L,
@@ -2395,7 +2395,7 @@ public static class SqliteFixture
                 // truck_status: 0 Pending arrival, 2 Parked out back (see the Excel legend).
                 new { Id = 1L, Direction = "OUTBOUND", CarrierId = (long?)7001L, CarrierName = "Acme Freight", Dock = "D-1",
                       Start = (DateTime?)d.AddHours(8), End = (DateTime?)d.AddHours(9), RefType = "SHIPMENT", RefId = "6001",
-                      Driver = "R. Diaz", Tractor = "TR-114", Trailer = "TL-9902", Seal = "SEAL-4471", Qty = (int?)18, Status = 0,
+                      Driver = "R. Diaz", Tractor = "TR-114", Trailer = "TL-9902", Seal = (string?)"SEAL-4471", Qty = (int?)18, Status = 0,
                       CheckIn = (DateTime?)null, CheckOut = (DateTime?)null, Notes = "Finished skids for cust 4001", Created = (DateTime?)d, Updated = (DateTime?)d, By = "jsmith" },
                 new { Id = 2L, Direction = "INBOUND", CarrierId = (long?)7002L, CarrierName = "Northline Carriers", Dock = "D-2",
                       Start = (DateTime?)d.AddHours(6), End = (DateTime?)d.AddHours(7), RefType = "RECEIVING", RefId = "5501",
