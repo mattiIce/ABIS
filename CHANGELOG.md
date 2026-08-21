@@ -10,6 +10,95 @@ new ABIS can replace old ABIS and alpha testing begins.
 
 ---
 
+## v0.9.5 — 2026-08-21
+
+Four commits, no new features, and the most useful day's work in a while. A database refresh and a
+misconfigured directory had left the plant's own admin unable to sign in and every user unable to save
+a part — and **every one of these failures was found by accident while checking something else.**
+
+### Nobody could sign in, and everything blamed the password
+
+Two faults, stacked, both reported as *"the username or password is incorrect."* The password was
+correct throughout.
+
+The Ubuntu host did not trust the internal CA that issued the domain controllers' LDAPS certificates,
+so both DCs failed the TLS handshake and **no bind was ever attempted**. Fixing that exposed a second
+fault underneath: systemd interprets backslash escapes in an `EnvironmentFile`, so
+`Auth__Ldap__UserBindFormat=ALBL\{0}` reached the app as `ALBL{0}` and every sign-in bound as
+`ALBLsomeone` instead of `ALBL\someone`.
+
+`docs/AD_LOGIN.md` **caused** the second one — it printed the env form with a single backslash. It now
+carries the escaping rule, how to check what the *service* received rather than what the file says, the
+LDAPS CA-trust requirement it never mentioned at all, and the trap that `certutil -ca.cert` returns the
+*subordinate* CA in a two-tier PKI, which installs cleanly and fixes nothing.
+
+Three runtime changes so this cannot hide again: an unreachable directory now answers **503 "Directory
+unavailable — this is not a problem with your account"** rather than 401; a bind format with no `@` or
+backslash separator is **called out at startup**, because it can never authenticate anyone; and AD
+enabled with **no local break-glass credential** is warned about, since that is the condition that turns
+any directory problem into a total lockout. (#432)
+
+### `install.sh` was deleting configuration on every run
+
+It wrote `/etc/abis/abis.env` with `cat >` while reading back only four keys, so a re-run — or
+`abis-configure`, which calls it — silently deleted everything else an operator had added: AD sign-in,
+the label-printer routing, the scheduler switch, and **`Email__OverrideRecipient`**, the one setting
+standing between the test phase and mail reaching real customers.
+
+It now carries every unmanaged setting over verbatim, keeps a timestamped backup, and escapes
+backslashes in what it writes. Carry-over is byte-for-byte verified, so a re-run can never halve or
+double an escape. (#432)
+
+### Parts writes were 403 for everyone, and had been since the last refresh
+
+The four security features the app gates on — `Part Number`, `Maintenance_logs`, `Scheduler Admin`,
+`Server Admin` — **did not exist** on the database. `SECURITY_APPLICATION` is a legacy table, so a Data
+Pump refresh restores production's copy, and production has never heard of them. A feature that does not
+exist has no privilege to return, so the endpoint answers 403 — not *"you lack permission"* but *nobody
+can hold it*. Every Parts write, including the Obsolete/Revise shipped the day before, was unusable.
+
+The app now restores them at startup, the way it already re-syncs drifted sequences. The reason CI never
+caught it is worth keeping: **the test suite authenticates with the API key, and the API key bypasses
+RBAC entirely.** Every test passed while a real user got 403. That is now a test — every feature the app
+gates on must be either one the live legacy schema defines or one the app restores, verified against the
+35 names actually on the plant database. (#429)
+
+### The refresh audit — five casualties, not four
+
+Each fails later and separately, looking like a different bug: sequences drift (`ORA-00001`), the admin
+login is deleted (*"user not found"*, which reads as an AD fault), the modern features vanish (403 for
+everyone), the IT group's grants revert (403 on a screen that looks available), and — the one nothing
+reported — **the IT group's members revert too.** Grants and members are different tables restored by
+different means: the grant script gives the group every feature and says nothing about who is in it. IT
+held Write on all 39 features with **one member of five**; every screen looked correctly configured and
+four people were locked out.
+
+`tools/verify_refresh.sql` now reports all of it in one read-only pass, including the inverse check
+nobody had: whether the `ABIS_*` config the refresh is *supposed* to preserve actually survived. Every
+query in it was validated against the live database first — a verification script that is itself wrong
+is worse than none. (#430, #431)
+
+Also in #431: every command in that runbook now runs. `dbo/<pw>@…` was read by bash as a redirect;
+Parts 3 and 5 said "run sqlplus" without saying on which host (the app host has no Oracle client); and
+the API-key variable named there was the container's, not the service's.
+
+### Known limitations
+
+**Sign-in success is still unconfirmed at the time of tagging.** Both faults above are fixed and
+verified at the configuration level — both DCs verify `0 (ok)`, the bind format reaches the app intact —
+but the app logs nothing per-attempt at Information level, so no run of this release has been observed
+to authenticate a real user.
+
+The internal root CA installed today **expires in May 2030**, and this recurs when it does. A break-glass
+local password now exists for one admin, which is what makes that recoverable rather than a lockout.
+
+Carried forward unchanged: nothing Cleveland-Cliffs is transmittable and two answers gate the rest; the
+end-coil balance gate still warns rather than blocks; the deployed UI still reads the non-prod sandbox;
+no supervisor PIN is enrolled, so the DAS override cannot be used by anyone; and the two 4x6 tags and
+the Certificate of Conformance have never printed.
+
+---
+
 ## v0.9.4 — 2026-08-20
 
 Seven commits, and three parity items closed. The other half of the day went into finding out that
