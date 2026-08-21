@@ -98,10 +98,15 @@ done
 #                     until you try to save)
 #
 # Creating them here rather than as a one-off migration is deliberate: the weekly .230 refresh
-# REPLACES SECURITY_* from prod (see docs/DB_REFRESH.md Part 3), so a manual insert would be wiped
+# REPLACES SECURITY_* from prod (see docs/DB_REFRESH.md Part 4), so a manual insert would be wiped
 # every week exactly like the admin login. Doing it in the same script that already runs after a
 # refresh makes both self-healing. Adding a feature grants nobody anything on its own — step 3 does
 # that — so this is safe to run anywhere.
+#
+# Since 2026-08-21 the APP also restores these four on every startup
+# (AbisSchema.EnsureRequiredFeaturesAsync, DB_REFRESH.md Part 6), so this step is usually a no-op
+# now. It stays because this script must work on a box where the app has not started yet, and
+# because RequiredFeatureTests keeps the two lists from drifting apart.
 REQUIRED_FEATURES=("Part Number" "Scheduler Admin" "Server Admin" "Maintenance_logs")
 echo ">> ensuring modern-app features exist"
 existing=$(get "$BASE/api/security/applications" | jq -r '.[].applicationName')
