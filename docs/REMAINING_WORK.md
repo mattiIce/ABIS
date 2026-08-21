@@ -795,11 +795,34 @@
   values from `/tags`, which is what the viewer existed to show. Building a collector is **new
   capability**, not a parity gap; decide it deliberately like quoting and sketch upload.
   ~~OPC-log collector + item-selection config; source/host/device tree~~
-- [ ] **M** Step-up re-auth popup. **The in-DB job control half is misdirected (audited 2026-08-04):**
-  live `.230` has **0 `DBMS_SCHEDULER` jobs**, so enable/disable/run-now would control nothing. The
-  plant's scheduling is the **crontab on the DB host**, already inventoried in
-  [[abis-230-cron-inventory]] and already surfaced read-only by the server-console cron card. Retarget
-  or drop; do not build DBMS_SCHEDULER controls.
+- [ ] **NOT PARITY — the popup is dead in legacy (audited 2026-08-21).** `w_security_check.srw` exists
+  as a window, but **the only call site in the entire vendored source is commented out.**
+  `w_group_managment.srw:142` reads:
+  <br>`IF f_security_door("User Group Control") < 0 THEN` / `//OpenWithParm(w_security_check, "User
+  Group Control")` / `MessageBox("Info", "Insufficient privileges!")` / `Close(this)`.
+  <br>Somebody deliberately replaced the elevation prompt with a flat refusal — which is exactly what
+  `RequireFeatureAsync` already does (403 naming the user, the level and the feature). **The modern app
+  is at parity with what legacy actually runs**, and building the popup would add behaviour the plant
+  has not had in years.
+  <br>The mechanism could not port anyway. Legacy verified the password by opening a **second Oracle
+  connection as that user** (`lt_dbTrans.LogId`/`LogPass`, `ServerName="@db02_abc01"`), because every
+  ABIS user was an Oracle account. The modern app connects as one service account and authenticates
+  people against **AD** — the "Oracle DB account provisioning tied to app users" row in
+  [PARITY_AUDIT.md](PARITY_AUDIT.md) already records that shift as by-design. `@db02_abc01` is not a
+  current server/SID either.
+  <br>Fourth instance of the §C pattern below: **the identifier was real and the scope was assumed.**
+  Same shape as `w_da_sheet.srw`'s sketch function (body entirely commented out) and the handheld
+  S-header validate (rejection commented out in all 23 CGI copies). The cheap check that catches this
+  family is **grep for the CALL, not the definition.**
+  <br>If step-up is ever actually wanted it is **new capability** — and the shop-floor half already
+  exists as the supervisor override PIN (#400). Decide it deliberately, like quoting.
+  ~~Step-up re-authentication popup (3 tries, live credential check)~~
+- [ ] **M** In-DB job control. **Misdirected (audited 2026-08-04):** live `.230` has **0
+  `DBMS_SCHEDULER` jobs**, so enable/disable/run-now would control nothing. The plant's scheduling is
+  the **crontab on the DB host**, already inventoried in [[abis-230-cron-inventory]] and already
+  surfaced read-only by the server-console cron card. Retarget or drop; do not build DBMS_SCHEDULER
+  controls. (Previously filed on the same line as the step-up popup, which made two unrelated items
+  look like one.)
 
 ### §C audit, 2026-08-04 — how these entries went wrong
 
@@ -858,12 +881,31 @@ function `f_add_system_log_tran`, whose body is not vendored), and the Instron "
   `DuplicateKeyExceptionHandler` matched on the provider error NUMBER (ORA-00001 / SQLITE_CONSTRAINT),
   never on message text. A 500 said the server broke and the request may not be worth retrying — both
   wrong, since nothing was written and retrying verbatim will very likely succeed.
-  <br>**Still open: the retry itself.** Retrying inside the request needs the mint+insert re-run as a
-  unit across ~14 create paths.
-  <br>**Also still open: an end-to-end test.** The obvious one (create a `security_user` twice) passes
-  WITHOUT the handler, because that endpoint has its own duplicate guard (`ApiEndpoints.cs:4042`) —
-  a green test that proves nothing. Proving the pipeline half needs a create path with no explicit
-  guard that can be made to collide.
+  <br>**Still open: the retry itself — and it is 3x bigger than this entry said (sized 2026-08-21).**
+  Not "~14 create paths": **46 methods** in `AbisRepository` open a transaction and call
+  `NextIdAsync(conn, tx, …)`. The 14 is the count of *tables* in `Database:MaxIdTables`, not of the
+  paths that write them, and the two were conflated. Each retry has to re-run the **whole
+  transaction** (the mint reads `MAX` inside it), so the shape is a
+  `WithIdCollisionRetryAsync(Func<DbConnection, DbTransaction, Task<T>>)` wrapper and 46 method bodies
+  restructured to take `(conn, tx)` instead of opening their own.
+  <br>**One of the 46 must not be retried blindly.** `WriteEdiTransactionAsync` mints `edi_file_id`,
+  which **is** the ISA13 / GS06 / ST02 control number, and the document text is generated *from* that
+  id before the insert. A retry mints a different control number and regenerates the payload — fine if
+  nothing outside the transaction kept the first one, wrong if it did. That path needs a deliberate
+  decision, not a blanket wrapper. **Do not sweep all 46 uniformly.**
+  <br>**Timing:** the race needs legacy and modern writing the same table concurrently, which cannot
+  happen until cutover, because the plant still runs legacy alone. So this is a 1.0/cutover-readiness
+  item and the 409 ("nothing was written — try the request again") is honest behaviour until then.
+  <br>**Also still open: an end-to-end test — and it is hard for a good reason.** The obvious one
+  (create a `security_user` twice) passes WITHOUT the handler because that endpoint has its own
+  duplicate guard (`ApiEndpoints.cs:4042`). Audited 2026-08-21: **so does every other natural
+  duplicate.** `AddUserToGroupAsync` pre-checks the membership (`AbisRepository.cs:3511`);
+  `POST /admin/jobs` pre-checks the unique job name with `ScheduledJobNameExistsAsync`. The app guards
+  its caller-supplied duplicates properly, which means **no single-threaded request through the public
+  API can reach the handler** — it exists solely for the concurrent MAX+1 race. The two honest options
+  are a concurrency test (fire N parallel creates; assert no 5xx and that every returned id is
+  distinct — cannot force the collision, but can never falsely pass a 500) or a fault-injection seam.
+  The missing test is a consequence of good guarding, not an oversight.
 
 - [x] **H** **Invoice offal omitted rebanded weight — the larger half** — done (#345).
   `OffalWt` summed processed + scrap + **rejected** + unapplied − net. Legacy's `ll_rejnet`
