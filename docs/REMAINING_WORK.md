@@ -773,7 +773,18 @@
   minted ids via `wf_getnew_id`, else ORA-02289); INSERT params ordered to match placeholders (ODP.NET
   binds positionally); `assignedtogroup` NOT NULL falls back to a non-empty label (Oracle `''` = NULL).
   Still TODO: the Maintenance-page PM UI (due board + list/detail + checklist + Complete).
-- [ ] **M** Maintenance parts/spares inventory (`PARTS`/`PARTS_SUPPLIERS` — the maintenance spares tables, distinct from the product `part_num`); equipment hierarchy cascade + More-Details; log record-nav + maintenance reports
+- [~] **M** Maintenance parts/spares inventory — **the Oracle half is DEAD DATA; do not build CRUD over it.**
+  Measured on `.230` 2026-08-20: `PARTS` holds 762 rows and `PARTS_SUPPLIERS` 762 links across 51
+  suppliers — and **every single row carries the same `parts_entered_date`, 2010-08-21** (min = max).
+  `lastorderdate` and `lastreceiveddate` are **NULL on all 762**, and **not one row has
+  `qtyonhand > 0`**. That is a one-shot bulk load from sixteen years ago that was never used
+  afterwards: nothing ordered, nothing received, no stock tracked.
+  <br>Row count alone would have said "762 parts, worth a screen" — the same trap as `SHIFT_SCHEDULE`,
+  whose calendar stopped in 2009. **Check recency, not row counts.**
+  <br>The plant's live spares are in **KeepTrak**, so this is not a CRUD build — it is part of the
+  KeepTrak migration, [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) §C6, blocked on the file + a credential.
+  Folded there rather than left here looking buildable. Still genuinely open and unrelated to the
+  spares question: equipment hierarchy cascade + More-Details; log record-nav + maintenance reports.
 - [~] **M** Uptime reports + downtime pivots — done (#252): `/reporting/uptime` (groupBy line|shift|day; worked-shift uptime = (shift length − dt_total s)/3600 + scheduled/downtime hrs + uptime %, faithful to `w_report_uptime`) and `/reporting/downtime-pivot` (groupBy cause|job|**part** (#268)|line|shift|day|month|year — the by-part pivot walks ab_job→order_item→part_num, labelled by enduser_part_num). Remaining tail: a dedicated dt-vs-production ratio (uptime % already carries downtime-as-%-of-scheduled).
 - [x] **M** Native Excel export — done (#252): dependency-free OOXML `.xlsx` writer (`clientapp/src/xlsx.ts`, STORED zip + CRC32 + inline strings; numbers stay numeric), "Export Excel" on every report next to Export CSV. openpyxl-validated.
 - [~] **C/H** Feature-gate the write tags still auth-only. Done for every tag that maps 1:1 to a nav-gated feature (safe — the user who can reach the page already holds it; kiosks/edge use the API key and bypass): **Jobs**→Production Control, **Shipments**/**Stacker**→Warehouse, **CoilOwnership**→Inventory(Coil), **TestResults**/**Recovery**→Quality Control, **ProdFolder**→Production Control, **Downtime**→Downtime report (added to `FeatureByTag`). Still **deferred:** Dies / Sketches / Sales / Accounting / Trucks / Carriers / DAS / ScanLog / OpcLog — their nav pages have NO feature gate, so there's no authoritative feature name to gate the API on without risking a lockout; needs live `security_application` verification.
