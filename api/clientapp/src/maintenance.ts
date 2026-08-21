@@ -16,6 +16,35 @@ const setErr = (m: string) => { $('#err').textContent = m; };
 const setOk = (m: string) => { $('#ok').textContent = m; };
 const setBusy = (b: boolean) => document.body.classList.toggle('busy', b);
 const v = (id: string) => $<HTMLInputElement>(id).value.trim();
+
+/**
+ * What actually went wrong, from an NSwag ApiException.
+ *
+ * The generated client's `message` for a non-2xx is the generic "An unexpected server error
+ * occurred." — so a **403** on a PM write read as though the server had broken, sending the reader to
+ * look at the wrong thing entirely. It is the same failure as the AD sign-in reporting a certificate
+ * problem as a bad password: the server said exactly what was wrong and the UI threw it away.
+ *
+ * The API answers RFC-9110 ProblemDetails, whose `detail` names the user, the level and the feature.
+ * Other pages already decode it (auth.ts, sales.ts, qa-hold.ts); this one did not.
+ */
+function why(e: unknown): string {
+  const ex = e as { status?: number; response?: string; message?: string };
+  if (typeof ex?.response === 'string' && ex.response.length > 0) {
+    try {
+      const p = JSON.parse(ex.response) as { detail?: string; title?: string; errors?: Record<string, string[]> };
+      if (p.errors) {
+        const flat = Object.values(p.errors).flat().join(' ');
+        if (flat) return flat;
+      }
+      if (p.detail) return p.detail;
+      if (p.title) return p.title;
+    } catch { /* not ProblemDetails — fall through to the raw message */ }
+  }
+  // 403 in particular must never read as a server fault: nothing is broken, the account lacks a grant.
+  if (ex?.status === 403) return 'You do not have permission to do that.';
+  return ex?.message ?? String(e);
+}
 const setV = (id: string, value: unknown) => { $<HTMLInputElement>(id).value = value == null ? '' : String(value); };
 // Local-time formatter for datetime-local inputs — toISOString() would emit UTC and shift the value by
 // the whole timezone offset on show/re-save (see downtime.ts).
@@ -143,7 +172,7 @@ async function search(): Promise<void> {
     $('#count').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
     document.querySelectorAll<HTMLTableRowElement>('#logs tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadLog(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Search failed: ${why(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -160,7 +189,7 @@ async function loadLog(id: number): Promise<void> {
     setV('#mAuthor', m.author); setV('#mReportedBy', m.reportedBy);
     setV('#mAssignedTo', m.assignedTo); setV('#mCompletedBy', m.completedBy);
     setV('#mLabor', m.laborHours);
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${why(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -199,7 +228,7 @@ async function save(): Promise<void> {
       setOk(`✓ Saved log #${editingId}.`);
     }
     await search();
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${why(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -235,7 +264,7 @@ async function loadDue(): Promise<void> {
     $('#cDue').textContent = `${rows.length} due · ${overdue} overdue`;
     document.querySelectorAll<HTMLButtonElement>('#tDue [data-open]').forEach((b) =>
       b.addEventListener('click', () => { showTab('pms'); void loadPm(Number(b.dataset.open)); }));
-  } catch (e) { setErr(`Due board failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Due board failed: ${why(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -254,7 +283,7 @@ async function loadPms(): Promise<void> {
     $('#cPms').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
     document.querySelectorAll<HTMLTableRowElement>('#tPms tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadPm(Number(tr.dataset.id))));
-  } catch (e) { setErr(`PM list failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`PM list failed: ${why(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -277,7 +306,7 @@ function pmForm(p: PmDefinition | null): string {
       <div class="fld"><label>Item / device</label><select id="xItem" style="min-width:150px"></select></div>
     </div>
     <div class="frow" style="margin-top:8px">
-      <div class="fld"><label>Dept id</label><input id="xDept" list="deptList" style="width:90px" value="${val(p?.groupDepartmentId)}" /></div>
+      <div class="fld"><label>Department</label><select id="xDept" style="min-width:170px"></select></div>
       <div class="fld"><label>Craft</label><select id="xCraft" style="min-width:130px"></select></div>
       <div class="fld"><label>Assigned to</label><input id="xGroup" style="width:130px" value="${val(p?.assignedToGroup)}" /></div>
       <div class="fld"><label>Reference</label><input id="xRef" style="width:130px" value="${val(p?.pmReference)}" /></div>
@@ -343,7 +372,7 @@ async function loadPm(id: number | null): Promise<void> {
       $('#btnAddAction').addEventListener('click', () => void addAction());
       await Promise.all([loadActions(pmId), loadHistory(pmId)]);
     }
-  } catch (e) { setErr(`PM load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`PM load failed: ${why(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -360,19 +389,43 @@ async function fillEquipmentPickers(p: PmDefinition | null): Promise<void> {
       const days = f.freqType === 'HMC' ? 'meter' : `${f.daysBetween ?? '?'}d`;
       return opt(f.maintFreq, `${f.maintFreq} — ${days}`, p?.maintFreq);
     }).join('');
-    const [systems, crafts] = await Promise.all([client().getSystemEquipment(undefined), client().getTitleCrafts()]);
-    $('#xSys').innerHTML = blank + systems.map((s) => opt(s.sysEquipmentId, s.systemEquipmentName, p?.sysEquipmentId)).join('');
+    const [depts, crafts] = await Promise.all([client().listGroupDepartments(), client().getTitleCrafts()]);
+    $('#xDept').innerHTML = blank + depts.map((d) => opt(d.groupDepartmentId, d.groupDepartmentName, p?.groupDepartmentId)).join('');
     $('#xCraft').innerHTML = blank + crafts.map((c) => opt(c.titleCraftId, c.titleCraftName, p?.titleCraftId)).join('');
+
+    // Department -> System -> Subsystem -> Item. The department level was missing and the system list
+    // was fetched unfiltered, which was survivable when ABIS held a handful of rows; the KeepTrak
+    // import (2026-08-21) took it to **382 systems in one flat dropdown**, against 25 for a typical
+    // department. The hierarchy nests cleanly enough for this to work — measured on the imported data,
+    // every system has a department and every item/device has a subsystem.
+    const fillItems = async (subId: string, selItem?: unknown) => {
+      const items = subId ? await client().getItemDevices(Number(subId)) : [];
+      $('#xItem').innerHTML = blank + items.map((i) => opt(i.itemDeviceId, i.itemDeviceName, selItem)).join('');
+    };
     const fillSubs = async (sysId: string, selSub?: unknown, selItem?: unknown) => {
       const subs = sysId ? await client().getSubsystemEquipment(Number(sysId)) : [];
       $('#xSub').innerHTML = blank + subs.map((s) => opt(s.subsysEquipmentId, s.subsystemEquipmentName, selSub)).join('');
       await fillItems($<HTMLSelectElement>('#xSub').value, selItem);
     };
-    const fillItems = async (subId: string, selItem?: unknown) => {
-      const items = subId ? await client().getItemDevices(Number(subId)) : [];
-      $('#xItem').innerHTML = blank + items.map((i) => opt(i.itemDeviceId, i.itemDeviceName, selItem)).join('');
+    const fillSystems = async (deptId: string, selSys?: unknown, selSub?: unknown, selItem?: unknown) => {
+      let systems = await client().getSystemEquipment(deptId ? Number(deptId) : undefined);
+      // A PM carries its OWN groupdepartment_id as well as its sysequipment_id, and the two can
+      // disagree — nothing enforces that the system belongs to the department the PM names. If the
+      // saved system is not in the filtered list, fall back to the unfiltered one rather than render a
+      // blank: the operator would not see the equipment their PM is for, and the next save would write
+      // that blank back and strip it off the record.
+      const keep = selSys != null && String(selSys) !== '';
+      if (keep && !systems.some((x) => String(x.sysEquipmentId) === String(selSys))) {
+        systems = await client().getSystemEquipment(undefined);
+      }
+      $('#xSys').innerHTML = blank + systems.map((x) => opt(x.sysEquipmentId, x.systemEquipmentName, selSys)).join('');
+      await fillSubs($<HTMLSelectElement>('#xSys').value, selSub, selItem);
     };
-    await fillSubs(String(p?.sysEquipmentId ?? ''), p?.subsysEquipmentId, p?.itemDeviceId);
+
+    await fillSystems(String(p?.groupDepartmentId ?? ''), p?.sysEquipmentId, p?.subsysEquipmentId, p?.itemDeviceId);
+    // Changing a level clears the ones below it: keeping a stale child would let a PM be saved against
+    // an item that does not belong to the equipment above it.
+    $('#xDept').addEventListener('change', () => void fillSystems($<HTMLSelectElement>('#xDept').value));
     $('#xSys').addEventListener('change', () => void fillSubs($<HTMLSelectElement>('#xSys').value));
     $('#xSub').addEventListener('change', () => void fillItems($<HTMLSelectElement>('#xSub').value));
   } catch { /* pickers are best-effort; the PM still saves without them */ }
@@ -406,7 +459,7 @@ async function savePm(): Promise<void> {
       $('#pmOk').textContent = `✓ Saved PM #${pmEditingId}.`;
       await Promise.all([loadPms(), loadDue()]);
     }
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${why(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -418,7 +471,7 @@ async function deletePm(): Promise<void> {
     await client().deletePm(pmEditingId);
     await loadPm(null);
     await Promise.all([loadPms(), loadDue()]);
-  } catch (e) { setErr(`Delete failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Delete failed: ${why(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -437,7 +490,7 @@ async function completePm(): Promise<void> {
     const how = r.advanceBasis === 'none' ? 'no interval, date unchanged' : `via ${esc(r.advanceBasis)}`;
     $('#pmOk').textContent = `✓ Completed. Next due ${dOnly(r.nextDueDate) || '—'} (${how}).`;
     await Promise.all([loadPm(pmEditingId), loadPms(), loadDue()]);
-  } catch (e) { setErr(`Complete failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Complete failed: ${why(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -458,12 +511,12 @@ async function addAction(): Promise<void> {
     await client().addPmAction(pmEditingId, new PmActionWrite({ actionItems: v('#aItem'), itemDetails: v('#aDetails') || undefined }));
     setV('#aItem', ''); setV('#aDetails', '');
     await loadActions(pmEditingId);
-  } catch (e) { setErr(`Add failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Add failed: ${why(e)}`); }
 }
 
 async function removeAction(pmId: number, actionId: number): Promise<void> {
   try { await client().deletePmAction(pmId, actionId); await loadActions(pmId); }
-  catch (e) { setErr(`Remove failed: ${(e as Error).message}`); }
+  catch (e) { setErr(`Remove failed: ${why(e)}`); }
 }
 
 async function loadHistory(pmId: number): Promise<void> {
