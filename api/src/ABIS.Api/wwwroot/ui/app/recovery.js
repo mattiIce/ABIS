@@ -7,12 +7,28 @@
 import { AbisClient } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { exportXlsx } from './xlsx.js';
+import { defectTable, reportTable, toCsv, worksheetTable } from './recovery-export.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const numf = (v) => (v == null ? '' : v.toLocaleString());
 const pct = (v) => (v == null ? '—' : (v * 100).toFixed(1) + '%');
 const setErr = (m) => { $('#err').textContent = m; };
+// Hand the browser a file. Kept in one place so the CSV and .xlsx paths cannot drift on the
+// filename, which is the only thing telling two exports of different jobs apart on disk.
+function download(name, data, mime) {
+    const url = URL.createObjectURL(new Blob([data], { type: mime }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+const exportCsv = (tb) => download(`${tb.name}.csv`, toCsv(tb), 'text/csv');
+// The sheet name carries the job/coil too: a tab called "Sheet1" is useless once someone has
+// three of these open, which for a quality office is the normal case.
+const exportExcel = (tb) => exportXlsx(tb.name, tb.name.slice(0, 31), tb.headers, tb.rows);
 const setBusy = (b) => document.body.classList.toggle('busy', b);
 function scaffold() {
     const kpi = (id, lbl) => `<div class="kpi"><div class="k-lbl">${lbl}</div><div class="k-val" id="k-${id}">—</div></div>`;
@@ -36,7 +52,11 @@ function scaffold() {
     <div class="grid">
       <div class="stack">
         <div class="card">
-          <header><h2>Daily recovery report</h2><span class="sub" id="rep-sub"></span></header>
+          <header><h2>Daily recovery report</h2><span class="sub" id="rep-sub"></span>
+            <span class="spacer"></span>
+            <button class="btn sm ghost" id="rep-csv" type="button" disabled>Export CSV</button>
+            <button class="btn sm ghost" id="rep-xlsx" type="button" disabled>Export Excel</button>
+          </header>
           <div style="overflow-x:auto"><table class="tbl" style="min-width:640px">
             <thead><tr><th>Coil</th><th>Lot</th><th>Type</th><th class="num">Coil wt</th><th class="num">Ship</th><th class="num">Scrap</th><th class="num">Rejected</th><th class="num">Yield</th><th>Flags</th></tr></thead>
             <tbody id="rep-rows"><tr><td colspan="9" class="muted">Enter a job and Load.</td></tr></tbody>
@@ -45,7 +65,10 @@ function scaffold() {
       </div>
       <div class="stack">
         <div class="card">
-          <header><h2>Scrap by defect</h2><span class="sub" id="par-sub">Pareto</span></header>
+          <header><h2>Scrap by defect</h2><span class="sub" id="par-sub">Pareto</span>
+            <span class="spacer"></span>
+            <button class="btn sm ghost" id="par-xlsx" type="button" disabled>Export Excel</button>
+          </header>
           <div class="body" id="pareto"><p class="muted">—</p></div>
         </div>
       </div>
@@ -71,6 +94,13 @@ function flagChips(r) {
     return c.join(' ') || '<span class="muted">—</span>';
 }
 let wksJob = 0, wksCoil = 0;
+// The page rendered straight to HTML and kept nothing, so there was no data left to export.
+// These hold the LAST LOADED payloads — exporting re-reads them rather than scraping the DOM,
+// so a number in the file is the number the server sent, not a re-parsed rendering of it.
+let lastReport = [];
+let lastDefects = [];
+let lastWks = null;
+let lastJob = 0;
 // The worksheet is per (job, coil) and per recovery customer: the customer decides WHICH defects are
 // listed, and whether the job runs an autopart narrows that list further. `source` says whether the
 // figures are the quality office's or the floor's - worth showing, because the office supersedes the
@@ -85,6 +115,7 @@ async function loadWorksheet(job, coil) {
     wksCoil = coil;
     try {
         const w = await (await authFetch(`/api/recovery/jobs/${job}/coils/${coil}/worksheet?customerId=${cust}`)).json();
+        lastWks = w;
         const src = w.source === "office"
             ? '<span class="chip info">office</span> <span class="muted">the quality office\u2019s figures</span>'
             : '<span class="chip">DAS</span> <span class="muted">captured on the floor</span>';
@@ -99,9 +130,17 @@ async function loadWorksheet(job, coil) {
       </tbody></table>
       <div class="frow" style="margin-top:10px;align-items:center">
         <button class="btn sm" id="wks-save" type="button">Save worksheet</button>
+        <button class="btn sm ghost" id="wks-csv" type="button">Export CSV</button>
+        <button class="btn sm ghost" id="wks-xlsx" type="button">Export Excel</button>
         <span id="wks-ok" class="ok-note"></span>
       </div>`;
         $("#wks-save")?.addEventListener("click", () => void saveWorksheet());
+        // Export the worksheet as LOADED, not as edited: unsaved edits are not the record, and a file
+        // that quietly disagreed with the database would be worse than no file.
+        $("#wks-csv")?.addEventListener("click", () => { if (lastWks)
+            exportCsv(worksheetTable(lastWks)); });
+        $("#wks-xlsx")?.addEventListener("click", () => { if (lastWks)
+            exportExcel(worksheetTable(lastWks)); });
     }
     catch (e) {
         $("#wks").innerHTML = `<p class="err">Worksheet failed: ${esc(e.message)}</p>`;
@@ -154,6 +193,12 @@ async function load() {
             client().getRecoveryReport(job),
             client().getRecoveryScrapByDefect(job),
         ]);
+        lastReport = report;
+        lastDefects = defects;
+        lastJob = job;
+        $('#rep-csv').disabled = report.length === 0;
+        $('#rep-xlsx').disabled = report.length === 0;
+        $('#par-xlsx').disabled = defects.length === 0;
         // report table + KPI rollup
         let ship = 0, scrap = 0, rej = 0, ySum = 0, yN = 0;
         $('#rep-rows').innerHTML = report.length ? report.map((r) => {
@@ -198,5 +243,8 @@ async function load() {
     main.innerHTML = scaffold();
     await loadRecoveryCustomers();
     $('#jobForm').addEventListener('submit', (e) => { e.preventDefault(); void load(); });
+    $('#rep-csv').addEventListener('click', () => exportCsv(reportTable(lastJob, lastReport)));
+    $('#rep-xlsx').addEventListener('click', () => exportExcel(reportTable(lastJob, lastReport)));
+    $('#par-xlsx').addEventListener('click', () => exportExcel(defectTable(lastJob, lastDefects)));
     await load();
 })();

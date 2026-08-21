@@ -747,7 +747,28 @@
   defect list to the autoparts-flagged ones; every configured defect appears, at zero if unbooked. Save is
   deliberately asymmetric — an existing line updates to whatever is sent **including zero**, an absent one
   is inserted only when non-zero, and nothing is ever deleted (so a coil the office has touched stays
-  office-sourced even once zeroed). Still TODO here: email/print/export.
+  office-sourced even once zeroed).
+  <br>**Export DONE; email and print are NOT ours to build (audited 2026-08-21 against `w_recovery.srw`).**
+  **Export:** CSV + `.xlsx` on the recovery report, the scrap-by-defect Pareto and the per-coil
+  worksheet, via the shared `clientapp/src/xlsx.ts`. Shaping lives in `recovery-export.ts` so it is unit
+  tested (18 tests). Yield and defect share export as **fractions, not "94.2%"** — a percent string
+  cannot be averaged, which is the first thing anyone does with a yield column; the four 0/1 flag
+  columns collapse to one readable list; the coil row carries the customer's org number **and** our id
+  so both sides of a recovery dispute can match rows; and the worksheet carries `source` +
+  `autoparts` **on every row**, because those change what the numbers mean and a spreadsheet has no
+  header note to read. The worksheet exports **as loaded, not as edited** — unsaved edits are not the
+  record.
+  <br>**Email is DEAD in legacy.** `cb_email` on `tabpage_report` is declared, created and destroyed
+  and has **no `event clicked` of any kind** — a button on screen that does nothing. Nothing to port.
+  (Fifth instance of the §C pattern; same family as the commented-out step-up popup.)
+  <br>**Print cannot be ported.** `cb_3` calls `dw_report.Event pfc_print()` over
+  `d_recovery_customer_report_template.srd`, one of the ~10 recovery templates that are EXTERNAL
+  DataWindows — layout only, no SQL, columns filled positionally by PowerScript from a window that is
+  not vendored. Already recorded in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) §C4; the browser's own
+  print of the page is the stand-in until that is answered.
+  <br>Worth knowing separately: the nightly `create_recovery_report.sh` on db01 just calls
+  `dbo.p_recovery_report_a_c(date, customer_id)`. It **generates**, it does not transmit — no customer
+  email anywhere in that path.
 - [x] **M** Dimension-check edit/delete; job-level dim-QC green/red board; good-material in-spec rollup; PC# auto-increment — done (#236 edit/delete + PC# auto-increment; #237 QC board page + GET /coil-eval/jobs/{n}/qc-board with good/out-of-spec roll-ups + WinSPC verdict)
 - [~] **M** QA coil photos; QA email notification — **both are source-complete but INFRASTRUCTURE-BLOCKED,
   now recorded in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) §C5 rather than left as a silent gap.** Neither
