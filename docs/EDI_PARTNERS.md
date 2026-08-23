@@ -30,11 +30,11 @@ off-repo (maintainer's Desktop). The 846 / 856 / 863 / 997 goldens there are the
 | Aleris | EDI_ALERIS_870 / F_EDI_ALERIS_870_PER_JOB | ✅ #187 |
 | **Novelis / Alcan** (Kingston 1153 / Oswego 1459 / Guthrie 2950) (+ scrap) | EDI_ALCAN_870 / F_EDI_NOVELIS_870_4JOB / P_EDI_NOVELIS_SCRAP_870 | ✅ #195 (variant `novelis`, per-job; GS03 override); Guthrie 2950 seeded (shared proc; only N1*SU DUNS differs) |
 | Constellium (2776) (+ reject) | F_EDI_CONSTELLIUM_BG_870_4JOB / F_EDI_CONST_870_REJECT_4JOB | ✅ variant `constellium`, per-COIL (O→I→F, @ sep, ~ terminator, BSR02=PA); fully-scrapped reject 870 still deferred |
-| Arconic | EDI_ARCONIC_870 | ⬜ |
-| Wise | F_EDI_WISE_870 / F_EDI_WISE_870_BY_COIL / P_EDI_WISE_870 | ⬜ |
-| MISA | F_EDI_MISA_870_4JOB | ⬜ |
-| Kaiser | f_edi_kaiser_870 (PB) | ⬜ |
-| Reynolds | f_edi_reynolds_870 (PB) | ⬜ |
+| Arconic | EDI_ARCONIC_870 | ⛔ **do not build** — no caller anywhere; dev file prefix (see below) |
+| Wise | F_EDI_WISE_870 / F_EDI_WISE_870_BY_COIL / P_EDI_WISE_870 | ⛔ **do not build** — commented out in `ediprocess.sh`; newest Wise order **2007-09-07** |
+| MISA | F_EDI_MISA_870_4JOB | ⛔ **do not build** — no caller; MISA has **2 orders ever** |
+| Kaiser | f_edi_kaiser_870 (PB) | ⛔ **do not build** — no caller; newest Kaiser order **2001-01-11** |
+| Reynolds | f_edi_reynolds_870 (PB) | ⛔ **do not build** — no caller; newest Reynolds order **2001-10-17** |
 
 ## 846 — Inventory Advice
 
@@ -75,3 +75,74 @@ backbone (#188) + standard pattern (#189) make each remaining one *a profile row
 is ~16 and 870 is ~8 partners. **Re-estimate 0.5.0** = at minimum the live partners per set; the long tail of
 low-volume 856 destinations may be a fast-follow. Confirm with the plant which partners are still active before
 building the tail (some legacy procs — Budd, Eagle, Hayes, Reynolds, Kaiser — may be dormant customers).
+
+
+---
+
+## What legacy ACTUALLY transmits (audited 2026-08-23)
+
+The remaining 870 and 856 variants were parked as *"confirm with the plant which partners are still
+active first."* That was answerable from the code and the data, without asking.
+
+### Only two 870s can run at all
+
+**Every** invocation path was enumerated — the production cron driver and the PowerBuilder app.
+
+`legacy/cron/db01-prod/scripts/abis_scripts/ediprocess.sh` runs exactly three statements:
+
+```sh
+execute dbo.p_create_edi_861_for_all;      # Novelis 861
+execute dbo.p_create_edi_861_for_aleris;   # Aleris 861
+execute dbo.edi_aleris_870;                # Aleris 870
+```
+
+…with `edi_alcan_870` commented out on 2020-12-07 ("Include Rebanded Coils project"),
+`edi_alcan_870_reband` commented on 2016-11-02, and **`p_edi_wise_870` commented out** entirely.
+
+The app side is every `DECLARE … procedure for …` in `legacy/src/`, which is the complete set of stored
+procedures PowerBuilder can invoke. It contains **exactly one 870**: `f_edi_alcan_870`, aliased locally
+as `p_edi_870` in `w_edi.srw:541` — so the EDI screen's "870" button generates the Alcan/Novelis
+document and nothing else.
+
+**Therefore the only 870s reachable in the entire legacy system are Aleris (cron) and Alcan/Novelis
+(app button).** Arconic, Wise, MISA, Kaiser and Reynolds 870 procedures are defined and never invoked.
+
+`EDI_ARCONIC_870` carries its own warning: the production file prefix is commented out and the
+**development** one is active (`edi_file_prefix := 's_arconic_870_'; --Development`). Seven variants of
+it exist — `_04302019`, `_ALEX`, `_ONE_JOB`, `_REBAND`, `_TEST`, `_TEST2` — which is what unfinished
+experimentation looks like, not a settled production path.
+
+Arconic **does** trade heavily (Davenport 50: 1,757 orders, newest 2026-07-10; TN 2784: 208, newest
+2026-06-15) — and its **861 is built and live** (`f_edi_arconic_861`, invocable from the app). The
+trading relationship is real; the 870 leg of it is not.
+
+### The 856 tail is dormant
+
+`f_edi_856.srf` is a genuine `Choose Case li_customer_id` dispatcher, but its Reynolds branch (customers
+40, 44) and the Ford destination sub-cases under it are inside a `/* … */` block. The branches that are
+live dispatch for customers **34, 35, 10** — and all three are dormant:
+
+| Customer | | Orders | Newest |
+|---|---|---:|---|
+| 34 | ARCONIC-ALTERS | 0 | — |
+| 35 | NOVELIS ROLLED PRODUCTS CO.-WARREN | 328 | **2001-04-09** |
+| 10 | NOVELIS AUTOMOTIVE PRODUCTS | 0 | — |
+
+The "~16-destination tail" is the Ford/GM enduser sub-cases beneath those three. **Porting them would
+build routing for business that stopped 25 years ago.**
+
+### Controls
+
+Measurements were validated against partners known to be live: **Novelis 7,794 orders (newest
+2026-08-19)** and **Constellium 15,044 (newest 2026-08-19)**. A first attempt returned 0 orders for
+every partner including those two — an invalid `sort=createdDate` made the endpoint answer with a
+validation problem, and the loop read `totalCount` as 0. **The controls are what caught it**; without
+them the conclusion would have been "everything is dormant," which is false and would have been
+believed.
+
+### What this does NOT say
+
+This is about **porting more per-customer variants out of legacy**. It says nothing about whether
+modern ABIS should send an 856 or 870 to whoever the plant trades with *now* — that is a live business
+question, and the modern EDI engine already carries the generic 856/870 builders. The finding is only
+that the legacy tail is not worth mining.
