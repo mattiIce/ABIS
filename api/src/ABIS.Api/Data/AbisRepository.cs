@@ -10176,8 +10176,18 @@ public sealed class AbisRepository : IAbisRepository
 
     // Stamp the derived due fields. A PM with no next-due date is "undated" (it never lands on
     // the board); otherwise negative days => overdue, within the horizon => due, else scheduled.
+    //
+    // A RETIRED PM IS NEVER OVERDUE. pm_status 0 means the definition is no longer scheduled, so the
+    // due date is a historical fact rather than an obligation. Computing the bucket from the date
+    // alone made the 77 pre-KeepTrak PMs — retired on 2026-08-21 precisely so they would stop
+    // demanding attention — render as "overdue" against their 2010 dates, which is what a user saw and
+    // reasonably read as the retire not having worked. It had; the label was lying.
+    //
+    // Fixed at the source rather than in the page, so the due board, the PM list and the export cannot
+    // disagree about the same row.
     private static void StampDue(PmDefinition pm, DateTime today, int dueSoonDays)
     {
+        if (pm.PmStatus == 0) { pm.DueBucket = "retired"; return; }
         if (pm.NextDueDate is not { } due) { pm.DueBucket = "undated"; return; }
         var days = (int)(due.Date - today).TotalDays;
         pm.DaysUntilDue = days;

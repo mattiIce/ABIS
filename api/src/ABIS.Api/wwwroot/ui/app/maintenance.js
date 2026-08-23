@@ -85,7 +85,7 @@ function scaffold() {
       <div class="card" style="margin-bottom:16px"><div class="body">
         <form id="pmForm" class="frow" style="align-items:flex-end">
           <div class="fld"><label>Dept id</label><input id="pDept" list="deptList" placeholder="any" style="width:90px" /></div>
-          <div class="fld"><label>Status</label><select id="pStatus" style="width:120px"><option value="">any</option><option value="1">active</option><option value="0">retired</option></select></div>
+          <div class="fld"><label>Status</label><select id="pStatus" style="width:120px"><option value="1" selected>active</option><option value="">any</option><option value="0">retired</option></select></div>
           <button class="btn sm" type="submit">Search</button>
           <button class="btn sm ghost" id="btnNewPm" type="button">New PM</button>
         </form>
@@ -267,6 +267,7 @@ async function save() {
 // ---- Preventive maintenance ----------------------------------------------------------
 // The server derives dueBucket; the UI only picks a tone for it.
 const dueChip = (b) => {
+    // 'retired' falls through to the muted class deliberately: it is a state, not a warning.
     const cls = b === 'overdue' ? 'crit' : b === 'due' ? 'warn' : b === 'scheduled' ? 'ok' : 'mut';
     return `<span class="chip ${cls}">${esc(b ?? '—')}</span>`;
 };
@@ -661,14 +662,41 @@ function showTab(name) {
         a.click();
         URL.revokeObjectURL(url);
     };
-    $('#pmCsv').addEventListener('click', () => {
-        const tb = pmListTable(pmList);
-        download(`${tb.name}.csv`, toCsv(tb), 'text/csv');
-    });
-    $('#pmXlsx').addEventListener('click', () => {
-        const tb = pmListTable(pmList);
-        exportXlsx(tb.name, tb.name.slice(0, 31), tb.headers, tb.rows);
-    });
+    // Export the WHOLE filtered set, not the loaded page. The list fetches 100 at a time, so exporting
+    // `pmList` silently produced a file covering 100 of 221 rows while the header said "221 total" —
+    // a truncation nobody would notice until they trusted the file.
+    const allPms = async () => {
+        const dept = v('#pDept') ? Number(v('#pDept')) : undefined;
+        const st = $('#pStatus').value;
+        const status = st === '' ? undefined : Number(st);
+        const out = [];
+        for (let page = 1; page <= 50; page++) { // 50 x 200 = 10,000, far above any real PM count
+            const r = await client().listPms(page, 200, dept, status, undefined, undefined, undefined);
+            const items = r.items ?? [];
+            out.push(...items);
+            if (out.length >= (r.totalCount ?? 0) || items.length === 0)
+                break;
+        }
+        return out;
+    };
+    const exportPms = async (kind) => {
+        setBusy(true);
+        try {
+            const tb = pmListTable(await allPms());
+            if (kind === 'csv')
+                download(`${tb.name}.csv`, toCsv(tb), 'text/csv');
+            else
+                exportXlsx(tb.name, tb.name.slice(0, 31), tb.headers, tb.rows);
+        }
+        catch (e) {
+            setErr(`Export failed: ${why(e)}`);
+        }
+        finally {
+            setBusy(false);
+        }
+    };
+    $('#pmCsv').addEventListener('click', () => void exportPms('csv'));
+    $('#pmXlsx').addEventListener('click', () => void exportPms('xlsx'));
     $('#pmPrev').addEventListener('click', () => stepPm(-1));
     $('#pmNext').addEventListener('click', () => stepPm(1));
     $('#btnNew').addEventListener('click', newLog);
