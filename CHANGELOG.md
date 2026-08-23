@@ -10,6 +10,80 @@ new ABIS can replace old ABIS and alpha testing begins.
 
 ---
 
+## v0.9.10 — 2026-08-23
+
+A bug the user found by looking at a screen I had only verified sideways, and an audit that closes the
+last item on the buildable backlog.
+
+### A retired PM is never overdue
+
+The 77 pre-KeepTrak PM definitions were retired on 2026-08-21 precisely so they would stop demanding
+attention — their due dates are from 2010 and they would otherwise read as roughly 5,800 days overdue
+against the 144 real ones. **The retire worked.** The screen went on calling them **overdue** anyway.
+
+`StampDue` computed the due bucket from `nextduedate` alone and never looked at `pm_status`, so every
+retired PM kept a red "overdue" chip against its 2010 date. A user saw that and reasonably concluded
+the retire had failed. It had not — the label was lying. That is the same failure as the 403 that read
+*"an unexpected server error occurred"* and the certificate problem that read *"wrong password"*: **the
+system knew the truth and displayed something else.**
+
+Fixed at the source rather than in the page, so the due board, the PM list and the export cannot
+disagree about the same row. An active PM's due state is untouched — a test pins that, because
+silencing a genuinely overdue PM would be a worse bug than the one being fixed.
+
+Two more problems the same screenshot exposed:
+
+- **The PM list defaulted to "any" status**, so the first page was 79 retired 2010 rows out of 100 and
+  the live KeepTrak PMs were buried below them. It now defaults to **active**; "any" and "retired" are
+  one click away.
+- **The export sent the loaded page**, producing a file covering **100 of 221 rows** while the header
+  above it said "221 total". Silent truncation in a file somebody is going to trust. It now pages
+  through the whole filtered set.
+
+Worth recording: the export was otherwise *correct* — those PMs exported as `status = retired`,
+`origin = legacy`. The file told the truth while the screen beside it did not. (#445)
+
+### The remaining EDI partner variants are not worth building
+
+Five 870 variants and an "~16-destination 856 tail" had been parked behind *"confirm with the plant
+which partners are still active first."* That was answerable from the code and the data, without asking
+anyone.
+
+**Only two 870s are reachable in all of legacy.** The production cron driver runs exactly three
+statements — Novelis 861, Aleris 861, Aleris 870 — with `edi_alcan_870` commented out in 2020 and
+**`p_edi_wise_870` commented out entirely**. The complete set of stored procedures PowerBuilder can
+invoke contains exactly one 870, `f_edi_alcan_870`, so the EDI screen's button generates Alcan/Novelis
+and nothing else. Arconic, Wise, MISA, Kaiser and Reynolds 870s are **defined and never invoked**.
+
+Arconic is the interesting one: it trades heavily (Davenport 1,757 orders, newest 2026-07-10) and its
+**861 is built and live** — but `EDI_ARCONIC_870` has its production file prefix commented out, its
+*development* one active, and seven half-finished variants beside it. The trading relationship is real;
+the 870 leg of it is not. Volume alone would have led to building it.
+
+The 856 dispatcher's live branches serve customers with 0 orders, 0 orders, and a newest order from
+**2001**; its Reynolds branch is commented out.
+
+**The controls are what make this trustworthy.** A first pass returned 0 orders for *every* partner,
+including Novelis and Constellium — an invalid sort made the endpoint answer with a validation problem
+and the loop read the count as zero. Novelis (7,794 orders, newest 2026-08-19) and Constellium (15,044,
+newest 2026-08-19) caught it. Without them the conclusion would have been "everything is dormant":
+false, and entirely believable. (#446)
+
+### Known limitations
+
+This is about mining more per-customer variants **out of legacy**. It says nothing about whether modern
+ABIS should send an 856 or 870 to whoever the plant trades with *now* — a live business question, and
+the modern engine already carries the generic builders.
+
+Maintenance **logs** and **spares** remain the dead 2010 data; only PMs and the equipment hierarchy came
+across from KeepTrak.
+
+Carried forward unchanged: nothing Cleveland-Cliffs is transmittable; the end-coil balance gate still
+warns rather than blocks; the deployed UI still reads the non-prod sandbox; no supervisor PIN is
+enrolled; and the two 4x6 tags and the Certificate of Conformance have never printed.
+
+---
+
 ## v0.9.9 — 2026-08-21
 
 The maintenance area, finished. Two commits that close the last of that backlog — and one of the three
