@@ -34,7 +34,52 @@ KEEPTRAK_TABLES="'GROUPDEPARTMENT','SYSTEMEQUIPMENT','SUBSYSTEMEQUIPMENT','ITEMD
 
 echo "== $(date '+%F %T') network refresh starting (SID=$ORACLE_SID) =="
 
-# Pre-flight: prod reachable over the link, or abort WITHOUT touching .230.
+# ---------------------------------------------------------------------------
+# Pre-flight 1: has .230 been declared PRODUCTION? If so, refuse — loudly.
+#
+# .230 is the box that BECOMES production: a final refresh from .9, then it diverges permanently and
+# .9/.11 are retired. Until that day, refreshes are correct and expected (the two systems run in
+# parallel for testing). The day after, this script is `impdp table_exists_action=replace` pointed at
+# live production — it would overwrite real orders, coils, shipments and PM history with the retired
+# box's copy.
+#
+# The dangerous version of that is not somebody mistyping a command. DB_REFRESH.md tells an operator to
+# install this as a Sunday 02:00 cron, so the failure mode is a machine doing months later exactly what
+# it was told. This check is what makes arming that cron safe.
+#
+# The marker lives in ABIS_CUTOVER_STATE (migration 010). The name matters: the parfile below excludes
+# `LIKE 'ABIS%'`, so the marker survives every refresh. A marker a refresh could clear would let the
+# refresh erase its own stop sign.
+# ---------------------------------------------------------------------------
+cutover=$(sqlplus -s "$ORA_LOCAL" <<'SQL' 2>&1
+set heading off feedback off pagesize 0
+SELECT 'CUTOVER=' || is_production FROM abis_cutover_state WHERE cutover_id = 1;
+exit
+SQL
+)
+
+if echo "$cutover" | grep -q 'CUTOVER=1'; then
+  echo "ABORT: .230 has been DECLARED PRODUCTION (abis_cutover_state.is_production = 1)." >&2
+  echo "       This script replaces every non-excluded DBO table from .9 and would destroy live data." >&2
+  echo "       If the cutover was called off, run deploy/undo-declare-cutover.sql first." >&2
+  exit 1
+elif echo "$cutover" | grep -q 'CUTOVER=0'; then
+  : # parallel-running: refreshes are expected, carry on
+elif echo "$cutover" | grep -q 'ORA-00942'; then
+  # Table missing = migration 010 not applied = we are still in the pre-cutover world. Proceed, but say
+  # so: an operator who thinks they are protected and is not should find that out now, not afterwards.
+  echo "WARNING: abis_cutover_state is missing - the cutover guard is NOT installed." >&2
+  echo "         Apply docs/data-model/migrations/010_cutover_state.sql. Continuing." >&2
+else
+  # Anything else (login failure, listener down, unreadable row) is NOT a green light. An unreadable
+  # marker could be a SET marker, and the cost of a false stop is a rerun; the cost of a false go is
+  # production.
+  echo "ABORT: cannot read abis_cutover_state, so cutover status is unknown; refusing to refresh." >&2
+  echo "$cutover" >&2
+  exit 1
+fi
+
+# Pre-flight 2: prod reachable over the link, or abort WITHOUT touching .230.
 probe=$(sqlplus -s "$ORA_LOCAL" <<'SQL'
 set heading off feedback off pagesize 0
 SELECT 'PROBE=' || COUNT(*) FROM coil@prod_9 WHERE ROWNUM = 1;

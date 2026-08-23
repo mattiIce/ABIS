@@ -9,6 +9,11 @@ Copy the live plant schema from **prod `192.168.1.9` / host `db01` / port `1523`
 ## Safety model
 - **Reads prod only** (Data Pump export). Never writes to .9.
 - **Destructive on .230** — that's the point; .230 is the write sandbox.
+- **…until it isn't.** `.230` is also the box that **becomes production**: the plan is a final refresh
+  from `.9`, after which `.230` diverges permanently and `.9`/`.11` are retired. The two run in
+  parallel for testing until then. So this script is correct today and catastrophic the day after
+  cutover — see [Part 9](#part-9--the-cutover-guard-refuses-to-refresh-production) for the guard that
+  enforces the difference.
 - **Preserves the modernization's `ABIS_*` tables** on .230 (their config — EDI partners, job runs —
   is not on prod and must survive). They are excluded from the refresh.
 - A DB copy only: it runs **no** legacy EDI / scheduled job, so the no-live-firing guardrail is intact.
@@ -481,6 +486,54 @@ and FAILs if they are gone.
 so migration 008's columns survive on that table by the same exclude. The startup self-heal is still
 right and still needed — it covers any *other* legacy table a future migration alters — but for this
 one table the exclude is what actually protects the data.
+
+
+## Part 9 — the cutover guard (refuses to refresh production)
+
+**The hazard.** `.230` is the future production database, not a permanent sandbox. Once the final
+refresh from `.9` is done and `.230` starts diverging, running this script again is
+`impdp table_exists_action=replace` pointed at live production: it would overwrite real orders, coils,
+shipments and PM history with the retired box's copy.
+
+The dangerous version is not somebody mistyping a command. **This runbook tells an operator to install
+the refresh as a Sunday 02:00 cron** (see *Weekly automation*), so the failure mode is a machine doing,
+months later, exactly what it was told to do.
+
+> Checked 2026-08-23 through the server console's read-only view of `oracle@192.168.1.230`: that cron is
+> **not currently installed**. The runbook documents automation nobody has armed. Every refresh so far
+> has been run by hand. The guard below is what makes arming it safe.
+
+**The marker.** `ABIS_CUTOVER_STATE` (migration 010) holds one row with `is_production` 0 or 1. The
+`ABIS_` prefix is load-bearing: the parfile excludes `LIKE 'ABIS%'`, so the marker survives every
+refresh. A marker a refresh could clear would let the refresh erase its own stop sign. It is a table
+rather than a flag file because a file is lost in a rebuild, a hardware move or a restore — precisely
+the events after which somebody re-reads this runbook and re-arms the cron.
+
+**What the guard does**, before anything destructive and before even probing prod:
+
+| Marker reads | Action |
+|---|---|
+| `is_production = 1` | **ABORT** — names the reason and points at the undo |
+| `is_production = 0` | proceed (parallel running: refreshes are expected) |
+| table missing (`ORA-00942`) | proceed, but **warn** that the guard is not installed |
+| anything else — login failure, listener down, unreadable row | **ABORT** |
+
+That last row is deliberate. An unreadable marker could be a *set* marker; the cost of a false stop is
+a rerun, the cost of a false go is production.
+
+**Throwing the switch** — once, at cutover, *after* the final refresh is verified and its Part 3–8
+repairs are applied (the last refresh undoes them too):
+
+```sql
+@deploy/declare-cutover.sql
+```
+
+It records who declared it and when. **Reversible** via `deploy/undo-declare-cutover.sql` if the
+cutover is called off — a guard nobody can unwind gets worked around instead of respected. Read the
+warnings in that file first: re-allowing refreshes destroys anything `.230` has taken since.
+
+**Still manual after declaring:** remove the refresh cron entries if they were ever installed. The
+guard stops the script, but a cron that fires every Sunday and mails a failure is noise nobody needs.
 
 
 ## Notes
