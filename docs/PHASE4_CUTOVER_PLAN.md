@@ -1,5 +1,23 @@
 # ABIS — Phase 4 Cutover Plan (module-by-module migration)
 
+> ## The database is not moving — `.230` IS the target
+>
+> Confirmed by the user 2026-08-23. `.230` is today's non-prod sandbox **and** the box that becomes
+> production: a **final refresh** from `.9`, after which `.230` diverges permanently and `.9`/`.11` are
+> retired. The two systems **run in parallel** for testing until that point.
+>
+> Two consequences worth stating plainly, because both invert an earlier assumption:
+>
+> - **"The deployed UI reads the non-prod sandbox" is not a defect to be fixed by re-pointing ABIS at
+>   `.9`.** ABIS is already on the right box. The cutover moves the *data*, not the app.
+> - **Everything already written to `.230` is production data in waiting** — the KeepTrak import (144
+>   PM definitions, 13,703 completions), migrations 008/009, and the legacy-PM retirement. It is not a
+>   test load, and the refresh excludes in `deploy/refresh-nonprod.sh` are protecting real records.
+>
+> The guard that separates "refresh is correct" from "refresh destroys production" is
+> [DB_REFRESH.md Part 9](DB_REFRESH.md).
+
+
 How we move from the legacy PowerBuilder `lion` client to the Path-C stack
 **one module at a time**, with both running side-by-side against the same Oracle
 database and **no big-bang switch**. This operationalizes Phase 4 of the
