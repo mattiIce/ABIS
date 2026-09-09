@@ -404,7 +404,7 @@ async function fetchNotifications(): Promise<Notif[]> {
     const r = await authFetch('/api/das/shifts/open?staleOnly=true&boardOnly=true');
     const stale = r.ok ? (await r.json()) as Array<{ hoursOpen?: number; lineDesc?: string }> : [];
     if (Array.isArray(stale) && stale.length) {
-      items.push({ label: `${stale.length} line${stale.length === 1 ? '' : 's'} on a shift left open (oldest ${Math.max(...stale.map((s) => s.hoursOpen ?? 0))} h)`, tone: 'warn', href: '/ui/shifts.html' });
+      items.push({ label: `${stale.length} line${stale.length === 1 ? '' : 's'} on a shift left open (oldest ${Math.max(...stale.map((s) => s.hoursOpen ?? 0))} h)`, tone: 'warn', href: '/ui/shifts.html?open=stale' });
     }
   } catch { /* non-fatal */ }
 

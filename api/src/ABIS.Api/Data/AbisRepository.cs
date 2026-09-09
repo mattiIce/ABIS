@@ -2,6 +2,7 @@ using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using Abis.Api.Edi;
+using Abis.Api.Middleware;
 using Abis.Api.Models;
 using Abis.Api.Security;
 using Dapper;
@@ -355,6 +356,69 @@ public sealed class AbisRepository : IAbisRepository
         reportedby AS ReportedBy, entereddatetime AS EnteredDateTime, assignedto AS AssignedTo,
         completeddatetime AS CompletedDateTime, completedby AS CompletedBy, laborhours AS LaborHours, prob_cost AS ProbCost
         """;
+
+    /// <summary>
+    /// Re-run a create that lost an id race, instead of handing the caller a 409 to act on.
+    ///
+    /// <para><b>Why the race exists at all.</b> Fourteen tables mint their id with
+    /// <c>SELECT COALESCE(MAX(id),0)+1</c> rather than from a sequence — deliberately, because the legacy
+    /// PowerBuilder application still writes eleven of them the same way, and a sequence would hand out
+    /// ids legacy is about to reuse. Two transactions can therefore read the same MAX before either
+    /// commits. The primary key is what makes that survivable: the loser gets <c>ORA-00001</c> rather
+    /// than two rows quietly sharing an id.</para>
+    ///
+    /// <para><b>Why retrying is the right answer.</b> Nothing was written — the losing transaction rolled
+    /// back — and the request was well-formed. Re-running re-reads MAX and takes the next id. The 409
+    /// added earlier stopped it being mislabelled as a server fault; this stops the operator having to
+    /// act on it at all. It matters at cutover, when legacy and modern write side by side: the difference
+    /// between "press save again" and a support call.</para>
+    ///
+    /// <para><b>Why the whole method and not the INSERT.</b> The mint reads MAX <i>inside</i> the
+    /// transaction, so a retry has to re-run mint and insert as a unit. Wrapping the method — which owns
+    /// its connection and transaction — does that without restructuring forty-odd bodies, and leaves each
+    /// one's transaction handling exactly as it was.</para>
+    ///
+    /// <para><b>What must NOT be wrapped.</b> Anything with an effect outside the database, because a
+    /// retry repeats it. In this repository that is the EDI document sink: it mints
+    /// <c>edi_file_id</c> — the ISA13/GS06/ST02 control number — and generates the document text from it.
+    /// A retry would burn a partner-visible control number. Those paths keep the 409.</para>
+    ///
+    /// <para>Three attempts, no delay: contention here is two writers picking the same integer, not a
+    /// busy resource, so backing off buys nothing. A collision that survives three fresh MAX reads is
+    /// not a race — it is a caller re-inserting a key that already exists, and that must surface.</para>
+    /// </summary>
+    private static async Task<T> RetryOnDuplicateKeyAsync<T>(Func<Task<T>> create, int attempts = 3)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await create();
+            }
+            catch (Exception ex) when (attempt < attempts && DuplicateKeyExceptionHandler.IsDuplicateKey(ex))
+            {
+                // Nothing to undo: the failed transaction rolled back on dispose. Fall through and take
+                // a fresh MAX.
+            }
+        }
+    }
+
+    /// <summary>Non-generic sibling of <see cref="RetryOnDuplicateKeyAsync{T}"/>, for creates that
+    /// return nothing.</summary>
+    private static async Task RetryOnDuplicateKeyAsync(Func<Task> create, int attempts = 3)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await create();
+                return;
+            }
+            catch (Exception ex) when (attempt < attempts && DuplicateKeyExceptionHandler.IsDuplicateKey(ex))
+            {
+            }
+        }
+    }
 
     private async Task<DbConnection> OpenAsync(CancellationToken ct)
     {
@@ -815,7 +879,10 @@ public sealed class AbisRepository : IAbisRepository
         return p;
     }
 
-    public async Task<Customer> CreateCustomerAsync(CustomerWrite body, CancellationToken ct)
+    public Task<Customer> CreateCustomerAsync(CustomerWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateCustomerCoreAsync(body, ct));
+
+    private async Task<Customer> CreateCustomerCoreAsync(CustomerWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -1109,7 +1176,10 @@ public sealed class AbisRepository : IAbisRepository
     // copy the sheet skid + its production items / partial skids / detail into the scraped_* mirror
     // tables (tagged with the new scrap skid), credit each production item as a return_scrap_item,
     // then delete the live sheet-skid rows. One transaction, copy-before-delete.
-    public async Task<MakeScrapResult> MakeScrapSkidAsync(long sheetSkidNum, CancellationToken ct)
+    public Task<MakeScrapResult> MakeScrapSkidAsync(long sheetSkidNum, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => MakeScrapSkidCoreAsync(sheetSkidNum, ct));
+
+    private async Task<MakeScrapResult> MakeScrapSkidCoreAsync(long sheetSkidNum, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         if (await conn.ExecuteScalarAsync<long>(new CommandDefinition(
@@ -1324,7 +1394,10 @@ public sealed class AbisRepository : IAbisRepository
         return n > 0;
     }
 
-    public async Task<CustomerOrder> CreateOrderAsync(CustomerOrderWrite body, CancellationToken ct)
+    public Task<CustomerOrder> CreateOrderAsync(CustomerOrderWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateOrderCoreAsync(body, ct));
+
+    private async Task<CustomerOrder> CreateOrderCoreAsync(CustomerOrderWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -1745,7 +1818,10 @@ public sealed class AbisRepository : IAbisRepository
             source is null ? null : "source LIKE :source",
             new { source = source is null ? null : $"%{source}%" }, page, pageSize, ct);
 
-    public async Task<AbJob> CreateJobAsync(JobWrite body, CancellationToken ct)
+    public Task<AbJob> CreateJobAsync(JobWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateJobCoreAsync(body, ct));
+
+    private async Task<AbJob> CreateJobCoreAsync(JobWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -1773,7 +1849,10 @@ public sealed class AbisRepository : IAbisRepository
     // laxer NULL handling hides this, so it only ever surfaces against live Oracle.
     private static string NonNullText(string? s) => string.IsNullOrWhiteSpace(s) ? " " : s;
 
-    public async Task<Coil> CreateCoilAsync(CoilWrite body, CancellationToken ct)
+    public Task<Coil> CreateCoilAsync(CoilWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateCoilCoreAsync(body, ct));
+
+    private async Task<Coil> CreateCoilCoreAsync(CoilWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -1821,7 +1900,10 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {SheetSkidCols} FROM sheet_skid WHERE sheet_skid_num = :id", new { id = sheetSkidNum }, cancellationToken: ct));
     }
 
-    public async Task<SheetSkid> CreateSheetSkidAsync(SheetSkidWrite body, CancellationToken ct)
+    public Task<SheetSkid> CreateSheetSkidAsync(SheetSkidWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateSheetSkidCoreAsync(body, ct));
+
+    private async Task<SheetSkid> CreateSheetSkidCoreAsync(SheetSkidWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -2508,7 +2590,10 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
-    public async Task<ScheduledJobRun> RecordJobRunAsync(long scheduledJobId, DateTime startedUtc, DateTime finishedUtc, string status, int? affectedCount, string? errorText, CancellationToken ct)
+    public Task<ScheduledJobRun> RecordJobRunAsync(long scheduledJobId, DateTime startedUtc, DateTime finishedUtc, string status, int? affectedCount, string? errorText, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => RecordJobRunCoreAsync(scheduledJobId, startedUtc, finishedUtc, status, affectedCount, errorText, ct));
+
+    private async Task<ScheduledJobRun> RecordJobRunCoreAsync(long scheduledJobId, DateTime startedUtc, DateTime finishedUtc, string status, int? affectedCount, string? errorText, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -2922,7 +3007,10 @@ public sealed class AbisRepository : IAbisRepository
     // Create a new quote (legacy w_new_quote): a fresh quote_id (MAX+1) at revision 1. created_date
     // defaults to now; approval flags stay unset. :len (not :length) keeps the bind name clear of any
     // Oracle reserved-word risk. Positional-safe: the anon members are in the VALUES bind order.
-    public async Task<SalesQuote> CreateSalesQuoteAsync(SalesQuoteWrite body, CancellationToken ct)
+    public Task<SalesQuote> CreateSalesQuoteAsync(SalesQuoteWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateSalesQuoteCoreAsync(body, ct));
+
+    private async Task<SalesQuote> CreateSalesQuoteCoreAsync(SalesQuoteWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -2984,7 +3072,10 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }, []);
 
-    public async Task<SalesReminder> CreateSalesReminderAsync(long quoteId, long revisionId, SalesReminderWrite body, CancellationToken ct)
+    public Task<SalesReminder> CreateSalesReminderAsync(long quoteId, long revisionId, SalesReminderWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateSalesReminderCoreAsync(quoteId, revisionId, body, ct));
+
+    private async Task<SalesReminder> CreateSalesReminderCoreAsync(long quoteId, long revisionId, SalesReminderWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -3019,7 +3110,10 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }, []);
 
-    public async Task<SalesProbability> CreateSalesProbabilityAsync(long quoteId, long revisionId, SalesProbabilityWrite body, CancellationToken ct)
+    public Task<SalesProbability> CreateSalesProbabilityAsync(long quoteId, long revisionId, SalesProbabilityWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateSalesProbabilityCoreAsync(quoteId, revisionId, body, ct));
+
+    private async Task<SalesProbability> CreateSalesProbabilityCoreAsync(long quoteId, long revisionId, SalesProbabilityWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -3125,7 +3219,10 @@ public sealed class AbisRepository : IAbisRepository
     // Record a transfer: read the coil's current owner (orig), insert the certificate, and
     // re-point the coil's customer_id to the new owner (its prior owner kept in
     // coil_from_cust_id). Returns null if the coil does not exist.
-    public async Task<CoilOwnershipTransfer?> CreateCoilOwnershipTransferAsync(CoilOwnershipTransferWrite body, CancellationToken ct)
+    public Task<CoilOwnershipTransfer?> CreateCoilOwnershipTransferAsync(CoilOwnershipTransferWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateCoilOwnershipTransferCoreAsync(body, ct));
+
+    private async Task<CoilOwnershipTransfer?> CreateCoilOwnershipTransferCoreAsync(CoilOwnershipTransferWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -3292,7 +3389,10 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
-    public async Task<SecurityUser> CreateSecurityUserAsync(SecurityUserWrite body, CancellationToken ct)
+    public Task<SecurityUser> CreateSecurityUserAsync(SecurityUserWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateSecurityUserCoreAsync(body, ct));
+
+    private async Task<SecurityUser> CreateSecurityUserCoreAsync(SecurityUserWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -3351,7 +3451,10 @@ public sealed class AbisRepository : IAbisRepository
         return true;
     }
 
-    public async Task<SecurityGroup> CreateSecurityGroupAsync(SecurityGroupWrite body, CancellationToken ct)
+    public Task<SecurityGroup> CreateSecurityGroupAsync(SecurityGroupWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateSecurityGroupCoreAsync(body, ct));
+
+    private async Task<SecurityGroup> CreateSecurityGroupCoreAsync(SecurityGroupWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -3365,7 +3468,10 @@ public sealed class AbisRepository : IAbisRepository
             new { id }, cancellationToken: ct)));
     }
 
-    public async Task<SecurityApplication> CreateSecurityApplicationAsync(SecurityApplicationWrite body, CancellationToken ct)
+    public Task<SecurityApplication> CreateSecurityApplicationAsync(SecurityApplicationWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateSecurityApplicationCoreAsync(body, ct));
+
+    private async Task<SecurityApplication> CreateSecurityApplicationCoreAsync(SecurityApplicationWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -3700,7 +3806,10 @@ public sealed class AbisRepository : IAbisRepository
     /// order, customer id and customer name into the free-text contents; the column is
     /// <c>VARCHAR2(1024)</c>, so the message is capped rather than left to throw.</para>
     /// </summary>
-    public async Task WriteSystemLogAsync(string contents, CancellationToken ct)
+    public Task WriteSystemLogAsync(string contents, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => WriteSystemLogCoreAsync(contents, ct));
+
+    private async Task WriteSystemLogCoreAsync(string contents, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -3815,7 +3924,11 @@ public sealed class AbisRepository : IAbisRepository
     /// computation. Answering "no such supervisor" faster, or differently, would turn the panel into a
     /// way to enumerate who can authorise overrides.</para>
     /// </summary>
-    public async Task<(SupervisorOverrideResult Result, SupervisorOverrideRecord Record)> TrySupervisorOverrideAsync(
+    public Task<(SupervisorOverrideResult Result, SupervisorOverrideRecord Record)> TrySupervisorOverrideAsync(
+        SupervisorOverrideRequest req, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => TrySupervisorOverrideCoreAsync(req, ct));
+
+    private async Task<(SupervisorOverrideResult Result, SupervisorOverrideRecord Record)> TrySupervisorOverrideCoreAsync(
         SupervisorOverrideRequest req, CancellationToken ct)
     {
         var login = (req.LoginId ?? "").Trim();
@@ -4739,7 +4852,10 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {ScrapSkidCols} FROM scrap_skid WHERE scrap_skid_num = :id", new { id = scrapSkidNum }, cancellationToken: ct));
     }
 
-    public async Task<ScrapSkid> CreateScrapSkidAsync(ScrapSkidWrite body, CancellationToken ct)
+    public Task<ScrapSkid> CreateScrapSkidAsync(ScrapSkidWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateScrapSkidCoreAsync(body, ct));
+
+    private async Task<ScrapSkid> CreateScrapSkidCoreAsync(ScrapSkidWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -4781,7 +4897,10 @@ public sealed class AbisRepository : IAbisRepository
         return new OrderDetail { Order = order, Customer = customer, Items = items };
     }
 
-    public async Task<OrderDetail> CreateOrderWithItemsAsync(OrderCreateWithItems body, CancellationToken ct)
+    public Task<OrderDetail> CreateOrderWithItemsAsync(OrderCreateWithItems body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateOrderWithItemsCoreAsync(body, ct));
+
+    private async Task<OrderDetail> CreateOrderWithItemsCoreAsync(OrderCreateWithItems body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -4815,7 +4934,10 @@ public sealed class AbisRepository : IAbisRepository
     // preserved under the new order), and each item's blank geometry. INSERT ... SELECT copies every
     // column verbatim (via the shared insert-column lists + the ShapeGeometry registry) so nothing is
     // silently dropped; only the id + created timestamps are fresh. Null if the source doesn't exist.
-    public async Task<OrderDetail?> CopyOrderAsync(long sourceOrderAbcNum, CancellationToken ct)
+    public Task<OrderDetail?> CopyOrderAsync(long sourceOrderAbcNum, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CopyOrderCoreAsync(sourceOrderAbcNum, ct));
+
+    private async Task<OrderDetail?> CopyOrderCoreAsync(long sourceOrderAbcNum, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         var exists = await conn.ExecuteScalarAsync<long>(new CommandDefinition(
@@ -5008,7 +5130,10 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {PartCols} FROM part_num WHERE part_num_id = :id", new { id = partNumId }, cancellationToken: ct));
     }
 
-    public async Task<Part> CreatePartAsync(PartWrite body, CancellationToken ct)
+    public Task<Part> CreatePartAsync(PartWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreatePartCoreAsync(body, ct));
+
+    private async Task<Part> CreatePartCoreAsync(PartWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -5125,7 +5250,10 @@ public sealed class AbisRepository : IAbisRepository
     // Duplicate a part into a new part_num_id, including its blank geometry (part_num_<shape> tables,
     // dimensions only — no dies at the part level). INSERT ... SELECT copies every column verbatim.
     // Null if the source part doesn't exist.
-    public async Task<Part?> CopyPartAsync(long sourcePartNumId, CancellationToken ct)
+    public Task<Part?> CopyPartAsync(long sourcePartNumId, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CopyPartCoreAsync(sourcePartNumId, ct));
+
+    private async Task<Part?> CopyPartCoreAsync(long sourcePartNumId, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         var exists = await conn.ExecuteScalarAsync<long>(new CommandDefinition(
@@ -5301,7 +5429,10 @@ public sealed class AbisRepository : IAbisRepository
     /// <para>With exactly one routing legacy moves it without asking which; with several it opens a
     /// picker. <see cref="PartLifecycleOutcome.NeedsRoutingChoice"/> is that picker.</para>
     /// </summary>
-    public async Task<PartRevisionResult> RevisePartAsync(long partNumId, bool moveRouting, long? routingSequence, CancellationToken ct)
+    public Task<PartRevisionResult> RevisePartAsync(long partNumId, bool moveRouting, long? routingSequence, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => RevisePartCoreAsync(partNumId, moveRouting, routingSequence, ct));
+
+    private async Task<PartRevisionResult> RevisePartCoreAsync(long partNumId, bool moveRouting, long? routingSequence, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         // A plain scalar, NOT QueryFirstOrDefaultAsync<(long, int)>: Dapper does not map columns onto
@@ -5472,7 +5603,10 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {DieCols} FROM die WHERE die_id = :id", new { id = dieId }, cancellationToken: ct));
     }
 
-    public async Task<Die> CreateDieAsync(DieWrite body, CancellationToken ct)
+    public Task<Die> CreateDieAsync(DieWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateDieCoreAsync(body, ct));
+
+    private async Task<Die> CreateDieCoreAsync(DieWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -5613,7 +5747,10 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
-    public async Task<Shipment> CreateShipmentAsync(ShipmentWrite body, CancellationToken ct)
+    public Task<Shipment> CreateShipmentAsync(ShipmentWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateShipmentCoreAsync(body, ct));
+
+    private async Task<Shipment> CreateShipmentCoreAsync(ShipmentWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -6107,7 +6244,10 @@ public sealed class AbisRepository : IAbisRepository
     /// <c>inbound_coil_status</c> at all — there is nothing to stamp, and minting an id that lands
     /// nowhere would burn a sequence value for no record.</para>
     /// </remarks>
-    public async Task<InboundCoilMintResult> MintInboundCoilAsync(string coilNumber, CancellationToken ct)
+    public Task<InboundCoilMintResult> MintInboundCoilAsync(string coilNumber, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => MintInboundCoilCoreAsync(coilNumber, ct));
+
+    private async Task<InboundCoilMintResult> MintInboundCoilCoreAsync(string coilNumber, CancellationToken ct)
     {
         var result = new InboundCoilMintResult { CoilNumber = coilNumber };
         await using var conn = await OpenAsync(ct);
@@ -6163,7 +6303,10 @@ public sealed class AbisRepository : IAbisRepository
     /// accept. Returned as <c>Warnings</c>; the save still happens. Turning it into a hard error would
     /// block real corrections the floor is entitled to make.</para>
     /// </remarks>
-    public async Task<WarehouseSkidResult> CreateWarehouseSkidAsync(WarehouseSkidWrite body, CancellationToken ct)
+    public Task<WarehouseSkidResult> CreateWarehouseSkidAsync(WarehouseSkidWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateWarehouseSkidCoreAsync(body, ct));
+
+    private async Task<WarehouseSkidResult> CreateWarehouseSkidCoreAsync(WarehouseSkidWrite body, CancellationToken ct)
     {
         var coilOrg = (body.CoilOrgNum ?? "").Trim();
         var lot = (body.LotNum ?? "").Trim();
@@ -6370,7 +6513,10 @@ public sealed class AbisRepository : IAbisRepository
     /// <para>As in the delete path, only a status-20 shell is ever collected — a real coil is never
     /// removed by a warehouse edit.</para>
     /// </remarks>
-    public async Task<WarehouseSkidModifyResult> ModifyWarehouseSkidAsync(long sheetSkidNum, WarehouseSkidWrite body, CancellationToken ct)
+    public Task<WarehouseSkidModifyResult> ModifyWarehouseSkidAsync(long sheetSkidNum, WarehouseSkidWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => ModifyWarehouseSkidCoreAsync(sheetSkidNum, body, ct));
+
+    private async Task<WarehouseSkidModifyResult> ModifyWarehouseSkidCoreAsync(long sheetSkidNum, WarehouseSkidWrite body, CancellationToken ct)
     {
         var coilOrg = (body.CoilOrgNum ?? "").Trim();
         var lot = (body.LotNum ?? "").Trim();
@@ -6562,7 +6708,10 @@ public sealed class AbisRepository : IAbisRepository
     /// corrected — a weighed skid legitimately differs from the arithmetic, which is exactly why legacy
     /// asks "save it anyway?" rather than silently reconciling.</para>
     /// </remarks>
-    public async Task<WarehouseSkidItemResult> AddWarehouseSkidItemAsync(long sheetSkidNum, WarehouseSkidItemWrite body, CancellationToken ct)
+    public Task<WarehouseSkidItemResult> AddWarehouseSkidItemAsync(long sheetSkidNum, WarehouseSkidItemWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => AddWarehouseSkidItemCoreAsync(sheetSkidNum, body, ct));
+
+    private async Task<WarehouseSkidItemResult> AddWarehouseSkidItemCoreAsync(long sheetSkidNum, WarehouseSkidItemWrite body, CancellationToken ct)
     {
         var coilOrg = (body.CoilOrgNum ?? "").Trim();
         var lot = (body.LotNum ?? "").Trim();
@@ -8162,7 +8311,10 @@ public sealed class AbisRepository : IAbisRepository
             new { id = customerId, flag }, cancellationToken: ct)) > 0;
     }
 
-    public async Task<ReceivingBol> CreateReceivingBolAsync(ReceivingBolWrite body, CancellationToken ct)
+    public Task<ReceivingBol> CreateReceivingBolAsync(ReceivingBolWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateReceivingBolCoreAsync(body, ct));
+
+    private async Task<ReceivingBol> CreateReceivingBolCoreAsync(ReceivingBolWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -8271,7 +8423,10 @@ public sealed class AbisRepository : IAbisRepository
     // save). For each line without a coil_abc_num: allocate one, INSERT a COIL inventory
     // row (status 2 = new, or 11 = qa_onhold when damaged), and link it back to the line.
     // One transaction; idempotent (already-minted lines are skipped). null = BOL missing.
-    public async Task<MintResult?> MintBolCoilsAsync(long receivingBolId, CancellationToken ct)
+    public Task<MintResult?> MintBolCoilsAsync(long receivingBolId, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => MintBolCoilsCoreAsync(receivingBolId, ct));
+
+    private async Task<MintResult?> MintBolCoilsCoreAsync(long receivingBolId, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         var customerId = await conn.ExecuteScalarAsync<long?>(new CommandDefinition(
@@ -8344,7 +8499,10 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
-    public async Task<SheetSkidDimensionCheck> CreateDimensionCheckAsync(long sheetSkidNum, DimensionCheckWrite body, CancellationToken ct)
+    public Task<SheetSkidDimensionCheck> CreateDimensionCheckAsync(long sheetSkidNum, DimensionCheckWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateDimensionCheckCoreAsync(sheetSkidNum, body, ct));
+
+    private async Task<SheetSkidDimensionCheck> CreateDimensionCheckCoreAsync(long sheetSkidNum, DimensionCheckWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -9893,7 +10051,10 @@ public sealed class AbisRepository : IAbisRepository
     /// <c>error_evt</c> so the correction is on the record. Refuses a run that has already produced
     /// (any process weight, or a closed run): that is a real pass and must be corrected by weight,
     /// not erased. Null when the line has no coil, shift, or run to reverse.</summary>
-    public async Task<CoilReverseResult?> ReverseCoilRunAsync(long lineNum, string? errorUser, int? errorTypeId, string? note, CancellationToken ct)
+    public Task<CoilReverseResult?> ReverseCoilRunAsync(long lineNum, string? errorUser, int? errorTypeId, string? note, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => ReverseCoilRunCoreAsync(lineNum, errorUser, errorTypeId, note, ct));
+
+    private async Task<CoilReverseResult?> ReverseCoilRunCoreAsync(long lineNum, string? errorUser, int? errorTypeId, string? note, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         var board = await conn.QuerySingleOrDefaultAsync<CoilRunBoardState>(new CommandDefinition(
@@ -10025,7 +10186,10 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
-    public async Task<LineErrorRow> CreateLineErrorAsync(LineErrorWrite body, CancellationToken ct)
+    public Task<LineErrorRow> CreateLineErrorAsync(LineErrorWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateLineErrorCoreAsync(body, ct));
+
+    private async Task<LineErrorRow> CreateLineErrorCoreAsync(LineErrorWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -10057,7 +10221,10 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {ScanLogCols} FROM scan_log WHERE scan_id = :id", new { id = scanId }, cancellationToken: ct));
     }
 
-    public async Task<ScanLog> CreateScanLogAsync(ScanLogWrite body, CancellationToken ct)
+    public Task<ScanLog> CreateScanLogAsync(ScanLogWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateScanLogCoreAsync(body, ct));
+
+    private async Task<ScanLog> CreateScanLogCoreAsync(ScanLogWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -10099,7 +10266,10 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {MaintLogCols} FROM maint_log WHERE maint_log_id = :id", new { id = maintLogId }, cancellationToken: ct));
     }
 
-    public async Task<MaintLog> CreateMaintLogAsync(MaintLogWrite body, CancellationToken ct)
+    public Task<MaintLog> CreateMaintLogAsync(MaintLogWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateMaintLogCoreAsync(body, ct));
+
+    private async Task<MaintLog> CreateMaintLogCoreAsync(MaintLogWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -10286,7 +10456,10 @@ public sealed class AbisRepository : IAbisRepository
         author = b.Author, now
     };
 
-    public async Task<PmDefinition> CreatePmAsync(PmWrite body, CancellationToken ct)
+    public Task<PmDefinition> CreatePmAsync(PmWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreatePmCoreAsync(body, ct));
+
+    private async Task<PmDefinition> CreatePmCoreAsync(PmWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -10399,7 +10572,10 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
-    public async Task<PmAction> AddPmActionAsync(long pmId, PmActionWrite body, CancellationToken ct)
+    public Task<PmAction> AddPmActionAsync(long pmId, PmActionWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => AddPmActionCoreAsync(pmId, body, ct));
+
+    private async Task<PmAction> AddPmActionCoreAsync(long pmId, PmActionWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -10419,7 +10595,10 @@ public sealed class AbisRepository : IAbisRepository
     /// 365/<c>numoftimesperyear</c>) off the completion date, unless the caller supplies an explicit
     /// date. A PM carrying no interval at all keeps its stored date — exactly the legacy behaviour.
     /// The overdue counter resets, since the PM has just been done.</para></summary>
-    public async Task<PmCompleteResult?> CompletePmAsync(long pmId, PmCompleteWrite body, CancellationToken ct)
+    public Task<PmCompleteResult?> CompletePmAsync(long pmId, PmCompleteWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CompletePmCoreAsync(pmId, body, ct));
+
+    private async Task<PmCompleteResult?> CompletePmCoreAsync(long pmId, PmCompleteWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         var pm = await conn.QuerySingleOrDefaultAsync<PmDefinition>(new CommandDefinition(
@@ -10557,7 +10736,10 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {CarrierCols} FROM carrier WHERE carrier_id = :id", new { id = carrierId }, cancellationToken: ct));
     }
 
-    public async Task<Carrier> CreateCarrierAsync(CarrierWrite body, CancellationToken ct)
+    public Task<Carrier> CreateCarrierAsync(CarrierWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateCarrierCoreAsync(body, ct));
+
+    private async Task<Carrier> CreateCarrierCoreAsync(CarrierWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -10605,7 +10787,10 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {ShiftCols} FROM shift WHERE shift_num = :id", new { id = shiftNum }, cancellationToken: ct));
     }
 
-    public async Task<Shift> CreateShiftAsync(ShiftWrite body, CancellationToken ct)
+    public Task<Shift> CreateShiftAsync(ShiftWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateShiftCoreAsync(body, ct));
+
+    private async Task<Shift> CreateShiftCoreAsync(ShiftWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -10672,7 +10857,10 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {DowntimeCols} FROM dt_instance WHERE instance_num = :id", new { id = instanceNum }, cancellationToken: ct));
     }
 
-    public async Task<DowntimeInstance> CreateDowntimeInstanceAsync(DowntimeInstanceWrite body, CancellationToken ct)
+    public Task<DowntimeInstance> CreateDowntimeInstanceAsync(DowntimeInstanceWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateDowntimeInstanceCoreAsync(body, ct));
+
+    private async Task<DowntimeInstance> CreateDowntimeInstanceCoreAsync(DowntimeInstanceWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -10719,7 +10907,10 @@ public sealed class AbisRepository : IAbisRepository
         return rows.AsList();
     }
 
-    public async Task<DowntimeSegment?> AddDowntimeSegmentAsync(long instanceNum, DowntimeSegmentWrite body, CancellationToken ct)
+    public Task<DowntimeSegment?> AddDowntimeSegmentAsync(long instanceNum, DowntimeSegmentWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => AddDowntimeSegmentCoreAsync(instanceNum, body, ct));
+
+    private async Task<DowntimeSegment?> AddDowntimeSegmentCoreAsync(long instanceNum, DowntimeSegmentWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         var exists = await conn.ExecuteScalarAsync<long>(new CommandDefinition(
@@ -10765,7 +10956,10 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {TruckCols} FROM abis_truck_appointment WHERE appointment_id = :id", new { id }, cancellationToken: ct));
     }
 
-    public async Task<TruckAppointment> CreateTruckAppointmentAsync(TruckAppointmentWrite body, string? createdBy, CancellationToken ct)
+    public Task<TruckAppointment> CreateTruckAppointmentAsync(TruckAppointmentWrite body, string? createdBy, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateTruckAppointmentCoreAsync(body, createdBy, ct));
+
+    private async Task<TruckAppointment> CreateTruckAppointmentCoreAsync(TruckAppointmentWrite body, string? createdBy, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -10880,7 +11074,10 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {ContactCols} FROM customer_contact WHERE contact_id = :id", new { id = contactId }, cancellationToken: ct));
     }
 
-    public async Task<CustomerContact> CreateCustomerContactAsync(long customerId, CustomerContactWrite body, CancellationToken ct)
+    public Task<CustomerContact> CreateCustomerContactAsync(long customerId, CustomerContactWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateCustomerContactCoreAsync(customerId, body, ct));
+
+    private async Task<CustomerContact> CreateCustomerContactCoreAsync(long customerId, CustomerContactWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
@@ -10944,7 +11141,10 @@ public sealed class AbisRepository : IAbisRepository
             new { id = sketchId }, cancellationToken: ct));
     }
 
-    public async Task<Sketch> CreateSketchAsync(SketchWrite body, CancellationToken ct)
+    public Task<Sketch> CreateSketchAsync(SketchWrite body, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => CreateSketchCoreAsync(body, ct));
+
+    private async Task<Sketch> CreateSketchCoreAsync(SketchWrite body, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
