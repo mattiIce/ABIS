@@ -10,6 +10,86 @@ new ABIS can replace old ABIS and alpha testing begins.
 
 ---
 
+## v0.9.11 — 2026-09-09
+
+Cutover-readiness plumbing, a notification that pointed at the wrong page, and the guard that stops a
+routine refresh destroying production.
+
+### A create that loses an id race now retries instead of asking you to
+
+Fourteen tables mint their id with `MAX(id)+1` rather than from a sequence — deliberately, because the
+legacy PowerBuilder application still writes eleven of them the same way and a sequence would hand out
+ids legacy is about to reuse. Two transactions can read the same MAX before either commits; the primary
+key turns that into `ORA-00001` rather than two rows quietly sharing an id.
+
+Answering it with a **409** stopped it being mislabelled as a server fault. It still made an operator
+act on something the server can handle: the losing transaction rolled back, **nothing was written**, and
+re-running takes the next id. **45 create paths** now retry. At cutover, with legacy and modern writing
+side by side, that is the difference between "press save again" and a support call.
+
+Each method keeps its body verbatim behind a two-line wrapper rather than being restructured, so no
+transaction handling changed. **The EDI document sink is deliberately excluded** — it mints
+`edi_file_id`, the ISA13/GS06/ST02 control number, and generates the document text from it, so a retry
+would burn a partner-visible number. A test asserts it stays excluded, and another asserts every *other*
+minting path is behind the wrapper, so a future create path cannot silently 409 while the rest retry.
+(#451)
+
+### "3 lines on a shift left open" now shows you those three lines
+
+The notification was right — three shifts on a line board that nobody closed, the oldest open 709 hours.
+It linked to the shifts page, which lists the **newest 50 shifts by start time**. Shifts open for weeks
+are by definition not near the top of that list, so clicking it landed on something else entirely.
+
+It now links to a view that runs **the same query with the same arguments** as the notification itself,
+which is the only way to guarantee the page shows exactly the rows the badge counted. The view swaps the
+DT-total column for **coil runs** — the number that says how much work is being mis-attributed while the
+shift stays open — and explains that a shift left open never gets its `dt_total` roll-up, so its line's
+efficiency stays wrong until someone closes it on the DAS station. (#451)
+
+### `.230` will refuse to be refreshed once it is production
+
+`.230` is not a permanent sandbox: it is the box that **becomes** production, after a final refresh from
+`.9`, with the two running in parallel for testing until then. That makes `refresh-nonprod.sh` correct
+today and catastrophic the day after cutover — it is `impdp table_exists_action=replace`, and against a
+live production `.230` it would overwrite real orders, coils, shipments and PM history with the retired
+box's copy.
+
+The dangerous version was never somebody mistyping a command: the runbook tells an operator to install
+that refresh as a **Sunday 02:00 cron**, so the failure mode is a machine doing months later exactly
+what it was told. (Checked through the server console: that cron is **not** installed — the runbook
+documents automation nobody had armed. This is what makes arming it safe.)
+
+Migration 010 adds `ABIS_CUTOVER_STATE`, and the refresh reads it before touching anything. Declared
+production aborts; parallel-running proceeds; a **missing marker proceeds with a warning**; and
+anything else — login failure, unreadable row — **aborts**, because an unreadable marker could be a set
+one and the cost of a false stop is a rerun while the cost of a false go is production. `ABIS_` in the
+name is load-bearing: the parfile excludes `LIKE 'ABIS%'`, so the marker survives the refreshes it
+governs. (#448, #449)
+
+### Parallel running is testing only
+
+Decided explicitly: work entered through new ABIS into an ordinary table is **destroyed by the next
+refresh**, and that is expected. Written down mainly for the corollary — the instinct on losing a day of
+test orders is to add `CUSTOMER_ORDER` to the refresh excludes, and that would be far worse. The final
+refresh is how prod's real orders reach the box that becomes production; a table excluded to protect
+test data would be skipped by that run too, and `.230` would go live carrying test orders instead of the
+plant's real ones, with nothing flagging it. (#450)
+
+### Known limitations
+
+The retry cannot be proven end-to-end. Every create path a caller could collide with by hand is
+explicitly guarded, so no single-threaded request reaches the duplicate-key handler at all; the
+collision needs two writers picking the same integer. The tests prove the retry behaves correctly when a
+collision is injected, and that every minting path is behind it — not that the race has been observed.
+
+The **EDI** paths keep the 409 by design, so a collision there is still an operator action.
+
+Carried forward unchanged: nothing Cleveland-Cliffs is transmittable; the end-coil balance gate still
+warns rather than blocks; no supervisor PIN is enrolled; and the two 4x6 tags and the Certificate of
+Conformance have never printed.
+
+---
+
 ## v0.9.10 — 2026-08-23
 
 A bug the user found by looking at a screen I had only verified sideways, and an audit that closes the
