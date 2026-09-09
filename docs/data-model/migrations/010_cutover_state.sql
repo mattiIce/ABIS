@@ -58,10 +58,17 @@ BEGIN
 
   -- Seed the single row as NOT production. Never overwrite an existing one: re-running this migration
   -- after cutover must not quietly re-open the door.
-  SELECT COUNT(*) INTO n FROM abis_cutover_state;
+  --
+  -- BOTH statements are dynamic, and that is not stylistic. PL/SQL resolves STATIC SQL at COMPILE
+  -- time, so a block cannot name a table it creates with EXECUTE IMMEDIATE in the same block: on a
+  -- schema where the table does not exist yet, the whole block fails to compile with ORA-06550 /
+  -- ORA-00942 and NOTHING runs - not even the CREATE. That is exactly how the first version of this
+  -- migration failed on .230 (2026-08-23). The error is a compile error, so it is all-or-nothing and
+  -- left no partial state behind.
+  EXECUTE IMMEDIATE 'SELECT COUNT(*) FROM abis_cutover_state' INTO n;
   IF n = 0 THEN
-    INSERT INTO abis_cutover_state (cutover_id, is_production, note)
-    VALUES (1, 0, 'Parallel-running: .230 is the test target, refreshes from .9 are expected.');
+    EXECUTE IMMEDIATE q'[INSERT INTO abis_cutover_state (cutover_id, is_production, note)
+                         VALUES (1, 0, 'Parallel-running: .230 is the test target, refreshes from .9 are expected.')]';
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('seeded ABIS_CUTOVER_STATE as NOT production');
   ELSE
