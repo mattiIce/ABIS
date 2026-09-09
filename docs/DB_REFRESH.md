@@ -488,6 +488,43 @@ right and still needed — it covers any *other* legacy table a future migration
 one table the exclude is what actually protects the data.
 
 
+## Parallel running: what happens to work entered in new ABIS
+
+**Policy, decided by the user 2026-08-23: new ABIS is for TESTING until cutover. Expect wipes.**
+
+Until the final refresh, anything entered through new ABIS into an ordinary table — orders, coils,
+shipments, jobs — is **destroyed by the next refresh**, silently and with no report. That is correct
+and expected: `.230` is a test target that happens to be the future production box, and a refresh's job
+is to make it look like prod again.
+
+Only three groups survive a refresh:
+
+| Survives | Why |
+|---|---|
+| `ABIS_*` tables | excluded by `LIKE 'ABIS%'` — EDI partners, scheduled jobs, credentials, the cutover marker |
+| The nine KeepTrak maintenance tables | excluded by name (`KEEPTRAK_TABLES`) — see Part 8 |
+| The `LONG` tables | excluded and refreshed separately by `refresh-long-tables.sh` |
+
+### Do NOT "fix" this by extending the exclude list
+
+The instinct on losing a day of test orders is to add `CUSTOMER_ORDER` to the excludes. **That would be
+far worse than the wipes.**
+
+At the **final** refresh, `.230` must receive prod's real orders, coils and shipments — that refresh is
+how the live data gets onto the box that becomes production. A table excluded to protect test data
+would be skipped by that final run too, and `.230` would go live carrying **test orders instead of the
+plant's real ones**, with nothing flagging it. The wipes are annoying; that is unrecoverable without
+another full refresh, and by then people are working in it.
+
+The KeepTrak tables are the deliberate exception, and only because prod's copy of them is dead 2010
+data that nobody wants back (Part 8).
+
+### If test data ever does need to survive
+
+Do not exclude the table. Either re-enter it after the refresh, or capture it first — the import/export
+scripts in `tools/` are the pattern. The exclude list is for data prod should never overwrite, not for
+data that is merely inconvenient to lose.
+
 ## Part 9 — the cutover guard (refuses to refresh production)
 
 **The hazard.** `.230` is the future production database, not a permanent sandbox. Once the final
