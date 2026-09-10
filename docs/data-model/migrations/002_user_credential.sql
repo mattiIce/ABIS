@@ -15,6 +15,27 @@
 -- must_change = 1 forces a change on first sign-in after an admin sets an initial password.
 -- Only the derived hash is ever stored — never the plaintext.
 
+
+-- Wrong-schema guard. sqlplus runs the script it was handed even when the CONNECT ahead of it failed,
+-- on whatever connection the session already had — that is how migration 011 created both its tables
+-- in SYS on 2026-09-09 while printing complete success (#455). A stray ABIS_* table in another schema
+-- is also outside the refresh parfile's LIKE 'ABIS%' exclude, which covers the DBO export only, so no
+-- refresh would ever clear it.
+--
+-- This migration is bare DDL with no PL/SQL block of its own, so the guard is a prologue. The
+-- WHENEVER pair is deliberate: EXIT FAILURE makes the RAISE actually stop the script (a raised error
+-- alone does not), and CONTINUE NONE immediately restores sqlplus's default so the DDL below keeps
+-- the error behaviour it has always had — re-running still reports ORA-00955 per object and carries on.
+WHENEVER SQLERROR EXIT FAILURE
+BEGIN
+  IF USER <> 'DBO' THEN
+    RAISE_APPLICATION_ERROR(-20002,
+      'Migration 002 must be applied as DBO, not ' || USER || '. Reconnect with: CONNECT dbo');
+  END IF;
+END;
+/
+WHENEVER SQLERROR CONTINUE NONE
+
 CREATE TABLE abis_user_credential (
   login_id       VARCHAR2(64)   NOT NULL,
   password_hash  VARCHAR2(200)  NOT NULL,
