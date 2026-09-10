@@ -153,6 +153,8 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS security_group;
             DROP TABLE IF EXISTS security_application;
             DROP TABLE IF EXISTS security_user_group;
+            DROP TABLE IF EXISTS abis_edi_transmit_state;
+            DROP TABLE IF EXISTS abis_edi_transmit_arm;
             DROP TABLE IF EXISTS security_user_application;
             DROP TABLE IF EXISTS security_group_application;
             DROP TABLE IF EXISTS sheet_skid_dimension_check;
@@ -980,6 +982,14 @@ public static class SqliteFixture
                 application_id INTEGER PRIMARY KEY, application_name TEXT, application_notes TEXT);
             CREATE TABLE security_user_group (
                 user_id INTEGER NOT NULL, user_group_id INTEGER NOT NULL, PRIMARY KEY (user_id, user_group_id));
+            CREATE TABLE abis_edi_transmit_state (
+                state_id INTEGER PRIMARY KEY, valve_open INTEGER NOT NULL DEFAULT 0,
+                changed_utc TEXT, changed_by TEXT, note TEXT);
+            CREATE TABLE abis_edi_transmit_arm (
+                transaction_type TEXT NOT NULL, customer_id INTEGER NOT NULL, armed INTEGER NOT NULL DEFAULT 0,
+                armed_utc TEXT, armed_by TEXT, note TEXT, PRIMARY KEY (transaction_type, customer_id));
+            INSERT INTO abis_edi_transmit_state (state_id, valve_open, note)
+                VALUES (1, 0, 'Closed. Legacy (ediprocess.sh + GXS.ksh) owns EDI transmission.');
             CREATE TABLE security_user_application (
                 user_id INTEGER NOT NULL, application_id INTEGER NOT NULL, user_application_privilege INTEGER,
                 PRIMARY KEY (user_id, application_id));

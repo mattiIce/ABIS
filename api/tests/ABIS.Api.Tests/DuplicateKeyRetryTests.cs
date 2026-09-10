@@ -33,7 +33,10 @@ public class DuplicateKeyRetryTests
         while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "src", "ABIS.Api")))
             dir = dir.Parent;
         Assert.NotNull(dir);
-        return File.ReadAllText(Path.Combine(dir!.FullName, "src", "ABIS.Api", "Data", RepoFile));
+        // Normalise line endings: these assertions are about code STRUCTURE, and a checkout that
+        // brought the file back as CRLF should not fail a test about where a parameter list sits.
+        return File.ReadAllText(Path.Combine(dir!.FullName, "src", "ABIS.Api", "Data", RepoFile))
+                   .ReplaceLineEndings("\n");
     }
 
     /// <summary>A real provider exception, not a hand-built one: the error code is the thing under test.</summary>

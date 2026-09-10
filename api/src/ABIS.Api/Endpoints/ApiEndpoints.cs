@@ -1,3 +1,4 @@
+using Abis.Api.Edi;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
@@ -3776,6 +3777,7 @@ public static class ApiEndpoints
         // "Server Admin" feature AND Admin:ServerConsole:Enabled (503 when disabled); the mutating restart
         // additionally needs AllowRestart + the sudoers allowlist. Units are validated against a fixed
         // allowlist so nothing user-supplied reaches systemctl.
+
         const string ConsoleFeature = "Server Admin";
         IResult ConsoleDisabled() => Results.Json(new { status = "server console disabled", hint = "set Admin:ServerConsole:Enabled=true" }, statusCode: StatusCodes.Status503ServiceUnavailable);
 
@@ -3812,6 +3814,86 @@ public static class ApiEndpoints
            .WithName("RestartServerService").WithTags("Admin")
            .WithSummary("Server console: restart an allowlisted unit (mutating — needs AllowRestart + the sudoers allowlist). 409 if not permitted / failed.")
            .Produces(StatusCodes.Status200OK).Produces(StatusCodes.Status403Forbidden).Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status409Conflict).Produces(StatusCodes.Status503ServiceUnavailable);
+
+        // ---- EDI transmit valve --------------------------------------------
+        //
+        // NOTHING TRANSMITS TODAY: no generation path hands a document to IEdiTransport, so these
+        // endpoints configure machinery that is not yet connected. That funnel is a separate change.
+        //
+        // Gated on EDI Write, not Server Admin: arming a partner is an EDI decision with a trading
+        // consequence, and the people who understand that consequence are the ones who hold EDI.
+        api.MapGet("/admin/edi/transmit", async (HttpContext ctx, IAbisRepository repo,
+                IEdiTransmitGate gate, CancellationToken ct) =>
+            {
+                if (await RequireFeatureAsync(ctx, repo, "EDI", 0, ct) is { } deny) return deny;
+                var policy = await gate.GetPolicyAsync(ct);
+                return Results.Ok(new
+                {
+                    valveOpen = policy.ValveOpen,
+                    // The armed pairs, as flat rows the UI can list without re-querying.
+                    armed = policy.Armed.Select(a => new { transactionType = a.Type, customerId = a.CustomerId }),
+                    // Say plainly whether anything could actually leave, so a caller does not have to
+                    // infer it from two fields that mean nothing apart.
+                    transmitting = policy.ValveOpen && policy.Armed.Count > 0,
+                });
+            })
+           .WithName("GetEdiTransmitPolicy").WithTags("Admin")
+           .WithSummary("The EDI transmit valve and every armed partner/document pair. Nothing transmits unless the valve is open AND the pair is armed — and no generation path is wired to the transport yet, so nothing transmits at all today.")
+           .Produces(StatusCodes.Status200OK).Produces(StatusCodes.Status403Forbidden);
+
+        api.MapPut("/admin/edi/transmit/valve", async (EdiValveWrite body, HttpContext ctx,
+                IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (await RequireFeatureAsync(ctx, repo, "EDI", 1, ct) is { } deny) return deny;
+                // Opening is the consequential direction, so it must be said explicitly and attributed.
+                // Closing needs no ceremony: it can only ever make things safer.
+                if (body.Open && string.IsNullOrWhiteSpace(body.Note))
+                    return Results.ValidationProblem(new Dictionary<string, string[]>
+                    {
+                        ["note"] = ["Say why the valve is being opened — it is recorded against your name."],
+                    });
+                var who = ResolveLogin(ctx) ?? "api-key";
+                await repo.SetEdiValveAsync(body.Open, who, body.Note, ct);
+                return Results.Ok(new { valveOpen = body.Open, changedBy = who });
+            })
+           .WithName("SetEdiTransmitValve").WithTags("Admin")
+           .WithSummary("Open or close the EDI transmit valve. Closing stops everything ABIS would send, immediately. Opening requires a note and is recorded against the caller.")
+           .Produces(StatusCodes.Status200OK).ProducesValidationProblem().Produces(StatusCodes.Status403Forbidden);
+
+        api.MapPut("/admin/edi/transmit/arm", async (EdiArmWrite body, HttpContext ctx,
+                IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (await RequireFeatureAsync(ctx, repo, "EDI", 1, ct) is { } deny) return deny;
+                var type = (body.TransactionType ?? "").Trim().ToUpperInvariant();
+                if (type.Length == 0 || body.CustomerId is not > 0)
+                    return Results.ValidationProblem(new Dictionary<string, string[]>
+                    {
+                        ["transactionType"] = type.Length == 0 ? ["A document type is required."] : [],
+                        ["customerId"] = body.CustomerId is > 0 ? [] : ["A customer is required — arming is always for a named partner."],
+                    });
+
+                var who = ResolveLogin(ctx) ?? "api-key";
+                await repo.SetEdiArmAsync(type, body.CustomerId!.Value, body.Armed, who, body.Note, ct);
+
+                // The duplicate-EDI check, and the only reason this endpoint is interesting. Legacy's
+                // ediprocess.sh still generates and GXS.ksh still transmits these three; arming ABIS for
+                // one of them without commenting its cron line out sends the partner two copies.
+                var clash = LegacyOwnedEdi.FirstOrDefault(x => x.Type == type && x.CustomerId == body.CustomerId);
+                return Results.Ok(new
+                {
+                    transactionType = type,
+                    customerId = body.CustomerId,
+                    armed = body.Armed,
+                    armedBy = who,
+                    warning = body.Armed && clash is not null
+                        ? $"LEGACY STILL SENDS THIS. `{clash.CronLine}` in ediprocess.sh generates the same "
+                          + "document, and GXS.ksh transmits it. Comment that line out or the partner receives two."
+                        : null,
+                });
+            })
+           .WithName("SetEdiTransmitArm").WithTags("Admin")
+           .WithSummary("Arm or disarm one partner/document pair. Arming a document legacy still sends returns a warning naming the cron line to comment out.")
+           .Produces(StatusCodes.Status200OK).ProducesValidationProblem().Produces(StatusCodes.Status403Forbidden);
 
         api.MapGet("/admin/console/host/cron", async (HttpContext ctx, IAbisRepository repo, ServerConsoleService console, CancellationToken ct) =>
             {
@@ -4932,6 +5014,29 @@ public static class ApiEndpoints
     // Per-feature gate: returns null when allowed, or a 403 result when the resolved user
     // lacks the required privilege. A null login (API-key service account) is allowed —
     // enforcement applies only to real end users (OIDC), matching the rollout policy.
+        // The documents legacy STILL generates and transmits, from the live production driver
+        // abis_scripts/ediprocess.sh (audited 2026-08-23 — it runs exactly three statements). Arming
+        // ABIS for one of these without commenting its line out sends the trading partner two copies,
+        // and partners reconcile receipts and invoices off them.
+        //
+        // Novelis 861 covers Kingston 1153 / Oswego 1459 / Guthrie 2582 — p_create_edi_861_for_all
+        // fans out to all three, so each is listed.
+        //
+        // This is a hardcoded list on purpose: it is a statement about a shell script on another host,
+        // and inferring it from the crontab would only tell us the script is scheduled, not what is
+        // inside it.
+        /// <summary>A document legacy still sends, and the ediprocess.sh line that sends it.</summary>
+        private sealed record LegacyEdi(string Type, long CustomerId, string CronLine);
+
+        private static readonly LegacyEdi[] LegacyOwnedEdi =
+        [
+            new("861", 1153, "execute dbo.p_create_edi_861_for_all;"),
+            new("861", 1459, "execute dbo.p_create_edi_861_for_all;"),
+            new("861", 2582, "execute dbo.p_create_edi_861_for_all;"),
+            new("861", 1980, "execute dbo.p_create_edi_861_for_aleris;"),
+            new("870", 1980, "execute dbo.edi_aleris_870;"),
+        ];
+
     private static async Task<IResult?> RequireFeatureAsync(HttpContext ctx, IAbisRepository repo, string feature, int level, CancellationToken ct)
     {
         var login = ResolveLogin(ctx);

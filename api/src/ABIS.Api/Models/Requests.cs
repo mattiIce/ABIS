@@ -1365,3 +1365,18 @@ public sealed class WarehouseSkidItemWrite
     public decimal? SheetTareWt { get; set; }
     public int? SkidPieces { get; set; }
 }
+
+/// <summary>Open or close the EDI transmit valve.</summary>
+/// <param name="Open">True opens it. Opening requires a <paramref name="Note"/>.</param>
+/// <param name="Note">Why — recorded against the caller. Required when opening, optional when closing:
+/// closing can only make things safer and should never be delayed by paperwork.</param>
+public sealed record EdiValveWrite(bool Open, string? Note);
+
+/// <summary>Arm or disarm one partner/document pair.</summary>
+/// <param name="TransactionType">861, 870, 856, 846 — the document, not a wildcard.</param>
+/// <param name="CustomerId">The partner. Always required: "all partners" is the mistake that
+/// duplicates the documents legacy still sends.</param>
+/// <param name="Armed">True allows this pair through when the valve is open.</param>
+/// <param name="Note">Free text, recorded with the change.</param>
+public sealed record EdiArmWrite(string? TransactionType, long? CustomerId, bool Armed, string? Note);
+
