@@ -1124,7 +1124,14 @@
         "operationId": "GetEdiTransmitPolicy",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EdiTransmitPolicyView"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden"
@@ -1154,7 +1161,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EdiValveResult"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad Request",
@@ -1194,7 +1208,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EdiArmResult"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad Request",
@@ -20676,6 +20697,31 @@
         },
         "additionalProperties": false
       },
+      "EdiArmResult": {
+        "type": "object",
+        "properties": {
+          "transactionType": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "armed": {
+            "type": "boolean"
+          },
+          "armedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "warning": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "EdiArmWrite": {
         "type": "object",
         "properties": {
@@ -20694,6 +20740,20 @@
           "note": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EdiArmedPair": {
+        "type": "object",
+        "properties": {
+          "transactionType": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "additionalProperties": false
@@ -21012,6 +21072,28 @@
         },
         "additionalProperties": false
       },
+      "EdiTransmitPolicyView": {
+        "type": "object",
+        "properties": {
+          "valveOpen": {
+            "type": "boolean"
+          },
+          "armed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EdiArmedPair"
+            },
+            "nullable": true
+          },
+          "transmitting": {
+            "type": "boolean"
+          },
+          "wired": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "EdiType": {
         "type": "object",
         "properties": {
@@ -21042,6 +21124,19 @@
             "nullable": true
           },
           "ediTypeDescription": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EdiValveResult": {
+        "type": "object",
+        "properties": {
+          "valveOpen": {
+            "type": "boolean"
+          },
+          "changedBy": {
             "type": "string",
             "nullable": true
           }

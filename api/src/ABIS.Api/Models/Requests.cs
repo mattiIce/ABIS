@@ -1380,3 +1380,39 @@ public sealed record EdiValveWrite(bool Open, string? Note);
 /// <param name="Note">Free text, recorded with the change.</param>
 public sealed record EdiArmWrite(string? TransactionType, long? CustomerId, bool Armed, string? Note);
 
+
+/// <summary>One armed (or listed) partner/document pair.</summary>
+/// <param name="TransactionType">The document — 861, 870, 856, 846.</param>
+/// <param name="CustomerId">The partner it is armed for.</param>
+public sealed record EdiArmedPair(string TransactionType, long CustomerId);
+
+/// <summary>
+/// The whole transmit policy as the admin UI needs it.
+///
+/// <para><paramref name="Transmitting"/> is the field to render on, not the other two. The valve
+/// being open means nothing on its own — with no armed pair, an open valve still sends nothing — and
+/// a UI that lit up on <paramref name="ValveOpen"/> alone would tell an operator that documents are
+/// leaving when they are not.</para>
+/// </summary>
+/// <param name="ValveOpen">The master switch.</param>
+/// <param name="Armed">Every armed pair.</param>
+/// <param name="Transmitting">Whether anything could actually leave: the valve is open AND at least
+/// one pair is armed.</param>
+/// <param name="Wired">Whether any generation path is connected to the transport at all. False today
+/// — the funnel is a separate change — and while it is false nothing transmits whatever the valve
+/// says. Surfaced so the UI can say which of the two reasons is currently stopping traffic.</param>
+public sealed record EdiTransmitPolicyView(
+    bool ValveOpen, IReadOnlyList<EdiArmedPair> Armed, bool Transmitting, bool Wired);
+
+/// <summary>The outcome of a valve change, echoed back for the UI to confirm against.</summary>
+public sealed record EdiValveResult(bool ValveOpen, string ChangedBy);
+
+/// <summary>The outcome of an arm change.</summary>
+/// <param name="TransactionType">The document, normalised to upper case.</param>
+/// <param name="CustomerId">The partner.</param>
+/// <param name="Armed">Its new state.</param>
+/// <param name="ArmedBy">Who changed it — the resolved login, or <c>api-key</c>.</param>
+/// <param name="Warning">Set when the pair just armed is one legacy still generates and transmits —
+/// the duplicate-EDI case, and the only reason this response is more than an echo. Null otherwise.</param>
+public sealed record EdiArmResult(
+    string TransactionType, long CustomerId, bool Armed, string ArmedBy, string? Warning);

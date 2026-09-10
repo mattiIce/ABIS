@@ -1487,7 +1487,9 @@ export class AbisClient {
         url_ = url_.replace(/[?&]$/, "");
         let options_ = {
             method: "GET",
-            headers: {}
+            headers: {
+                "Accept": "application/json"
+            }
         };
         return this.http.fetch(url_, options_).then((_response) => {
             return this.processGetEdiTransmitPolicy(_response);
@@ -1502,7 +1504,10 @@ export class AbisClient {
         ;
         if (status === 200) {
             return response.text().then((_responseText) => {
-                return;
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = EdiTransmitPolicyView.fromJS(resultData200);
+                return result200;
             });
         }
         else if (status === 401) {
@@ -1535,6 +1540,7 @@ export class AbisClient {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
+                "Accept": "application/json"
             }
         };
         return this.http.fetch(url_, options_).then((_response) => {
@@ -1550,7 +1556,10 @@ export class AbisClient {
         ;
         if (status === 200) {
             return response.text().then((_responseText) => {
-                return;
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = EdiValveResult.fromJS(resultData200);
+                return result200;
             });
         }
         else if (status === 400) {
@@ -1591,6 +1600,7 @@ export class AbisClient {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
+                "Accept": "application/json"
             }
         };
         return this.http.fetch(url_, options_).then((_response) => {
@@ -1606,7 +1616,10 @@ export class AbisClient {
         ;
         if (status === 200) {
             return response.text().then((_responseText) => {
-                return;
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = EdiArmResult.fromJS(resultData200);
+                return result200;
             });
         }
         else if (status === 400) {
@@ -25559,6 +25572,40 @@ export class Edi997WaitingReport {
         return data;
     }
 }
+export class EdiArmResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.transactionType = _data["transactionType"];
+            this.customerId = _data["customerId"];
+            this.armed = _data["armed"];
+            this.armedBy = _data["armedBy"];
+            this.warning = _data["warning"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new EdiArmResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["transactionType"] = this.transactionType;
+        data["customerId"] = this.customerId;
+        data["armed"] = this.armed;
+        data["armedBy"] = this.armedBy;
+        data["warning"] = this.warning;
+        return data;
+    }
+}
 export class EdiArmWrite {
     constructor(data) {
         if (data) {
@@ -25588,6 +25635,34 @@ export class EdiArmWrite {
         data["customerId"] = this.customerId;
         data["armed"] = this.armed;
         data["note"] = this.note;
+        return data;
+    }
+}
+export class EdiArmedPair {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.transactionType = _data["transactionType"];
+            this.customerId = _data["customerId"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new EdiArmedPair();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["transactionType"] = this.transactionType;
+        data["customerId"] = this.customerId;
         return data;
     }
 }
@@ -25875,6 +25950,46 @@ export class EdiTransactionPagedResult {
         return data;
     }
 }
+export class EdiTransmitPolicyView {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.valveOpen = _data["valveOpen"];
+            if (Array.isArray(_data["armed"])) {
+                this.armed = [];
+                for (let item of _data["armed"])
+                    this.armed.push(EdiArmedPair.fromJS(item));
+            }
+            this.transmitting = _data["transmitting"];
+            this.wired = _data["wired"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new EdiTransmitPolicyView();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["valveOpen"] = this.valveOpen;
+        if (Array.isArray(this.armed)) {
+            data["armed"] = [];
+            for (let item of this.armed)
+                data["armed"].push(item ? item.toJSON() : undefined);
+        }
+        data["transmitting"] = this.transmitting;
+        data["wired"] = this.wired;
+        return data;
+    }
+}
 export class EdiType {
     constructor(data) {
         if (data) {
@@ -25932,6 +26047,34 @@ export class EdiTypeWrite {
         data["ediTypeId"] = this.ediTypeId;
         data["ediVersion"] = this.ediVersion;
         data["ediTypeDescription"] = this.ediTypeDescription;
+        return data;
+    }
+}
+export class EdiValveResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.valveOpen = _data["valveOpen"];
+            this.changedBy = _data["changedBy"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new EdiValveResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["valveOpen"] = this.valveOpen;
+        data["changedBy"] = this.changedBy;
         return data;
     }
 }

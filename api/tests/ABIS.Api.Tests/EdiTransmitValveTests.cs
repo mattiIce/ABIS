@@ -1,9 +1,11 @@
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Abis.Api.Edi;
+using Abis.Api.Endpoints;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -331,5 +333,17 @@ public sealed class EdiTransmitValveTests
             "Something now hands a document to IEdiTransport. That is the funnel — it is supposed to be a "
             + "separate, deliberate change, and this test should be updated in the same PR that makes it. "
             + "Files: " + string.Join(", ", callers.Select(Path.GetFileName)));
+
+        // …and the constant the admin UI renders must agree with what the scan just found. The banner
+        // says "no generation path is connected to the transport" on the strength of this constant, so
+        // a stale `true` would tell an operator documents are flowing when none are, and a stale
+        // `false` would tell them nothing is leaving on the day something is. Either direction is a
+        // lie told by the one screen someone checks before touching EDI.
+        var wired = (bool)typeof(ApiEndpoints)
+            .GetField("EdiFunnelWired", BindingFlags.NonPublic | BindingFlags.Static)!
+            .GetRawConstantValue()!;
+        Assert.False(wired,
+            "ApiEndpoints.EdiFunnelWired is true but nothing consumes IEdiTransport. The admin banner "
+            + "would claim ABIS can transmit when it cannot.");
     }
 }
