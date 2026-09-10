@@ -38,6 +38,18 @@
 DECLARE
   n PLS_INTEGER;
 BEGIN
+  -- Wrong-schema guard. sqlplus runs the script it was handed even when the CONNECT ahead of it
+  -- failed, on whatever connection the session already had — that is how migration 011 created its
+  -- tables in SYS on 2026-09-09 while reporting complete success (#455). This one matters more than
+  -- most: ABIS_CUTOVER_STATE is what the refresh pre-flight reads to decide whether it is about to
+  -- overwrite production. A copy in the wrong schema leaves DBO with no marker at all, and while the
+  -- pre-flight does fail safe on an unreadable marker, it aborts the refresh with a message pointing
+  -- at the wrong problem.
+  IF USER <> 'DBO' THEN
+    RAISE_APPLICATION_ERROR(-20010,
+      'Migration 010 must be applied as DBO, not ' || USER || '. Reconnect with: CONNECT dbo');
+  END IF;
+
   SELECT COUNT(*) INTO n FROM user_tables WHERE table_name = 'ABIS_CUTOVER_STATE';
   IF n = 0 THEN
     EXECUTE IMMEDIATE '
