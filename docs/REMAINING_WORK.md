@@ -41,7 +41,16 @@
 - [ ] **DEFERRED (data-blocked)** **Inbound 856 (ASN) ingestion** (parse → `inbound_shipment` / `inbound_coil` / status)
   — the only inbound sample is a 2009 **test 850**; no real inbound business doc to validate against. Needs a real golden.
 - [ ] **DEFERRED (by policy)** EDI VAN transport (GXS / Inovis SFTP) + postpro — legacy-owned, do NOT build (transmit seam stays no-op).
-- [ ] **DEFERRED (operational, → 1.0)** Data-source cutover (codi-ABIS reads the .230 sandbox, not live prod .9) — enables the EDI-stall alert to be meaningful.
+- [ ] **DEFERRED (operational, → 1.0)** Data-source cutover. **Re-framed 2026-08-23 — the earlier
+  wording had it backwards.** This is NOT "codi-ABIS reads the sandbox instead of live prod, so re-point
+  it at `.9`". `.230` **becomes** production: a final refresh from `.9`, after which it diverges
+  permanently and `.9`/`.11` are retired, with the two running in parallel for testing until then.
+  **ABIS is already on the right box — the cutover moves the DATA, not the app.** Re-pointing it at `.9`
+  would aim it at the machine being retired, and `.9` is strictly read-only besides.
+  <br>What actually remains: the final refresh, its Part 3-8 repairs (the last refresh undoes them too,
+  including the KeepTrak import and migrations 008/009), then `deploy/declare-cutover.sql`. Sequence in
+  [DB_REFRESH.md](DB_REFRESH.md) Part 9; the guard that stops a later refresh destroying production is
+  already in place (#448).
 
 - [x] **4x6 skid + scrap tags as ZPL — done (#377).** `SkidTag4x6.SheetSkid` / `.ScrapSkid`, ported
   from the VENDORED DataWindows `legacy/src/da/d_skid_ticket_new.srd` and `d_scrap_skid_ticket_new.srd`
@@ -1243,6 +1252,10 @@ function `f_add_system_log_tran`, whose body is not vendored), and the Instron "
 ## E. Config / turn-on / deploy (user-gated, not code)
 - [x] ~~Redeploy codi-ABIS to **v0.4.18**~~ — **long superseded.** `.110` runs **v0.9.1** as of 2026-08-19, verified end to end (version, health, ready, endpoints, and all four served UI bundles byte-identical to the tag).
 - [ ] Wire BL110 piece-count tag per DAS station via the 🔎 picker (`stacker110.station1/2_stack_counter`)
-- [ ] Enable `Notifications:EdiStall` **after** the data-source cutover (else false alarms on the frozen .230 ledger)
+- [ ] Enable `Notifications:EdiStall` **after** the cutover. The reason is unchanged but worth stating
+  precisely: `.230`'s outbound-EDI ledger is a *copy* of prod's, refreshed periodically, so "nothing
+  sent recently" there reflects when the refresh ran rather than whether EDI is flowing. It only becomes
+  a real signal once `.230` is the live database. Note this does **not** wait on ABIS transmitting
+  anything — the no-live-firing rule stands and the transmit seam stays a no-op.
 - [ ] Server-console restart button — decide on/off (polkit rule per `docs/SERVER_CONSOLE.md`)
 - [ ] BL84 stacker piece-count — **parked ~6 months** (stacker out of service)
