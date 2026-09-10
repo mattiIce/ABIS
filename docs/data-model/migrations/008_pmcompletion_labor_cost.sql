@@ -39,6 +39,18 @@
 DECLARE
   n PLS_INTEGER;
 BEGIN
+  -- Wrong-schema guard, and this migration has the most exposure to it of any of them: 008 is a
+  -- refresh casualty (every Data Pump refresh reverts PMCOMPLETIONS to the prod shape and drops both
+  -- columns), so it is the one migration re-applied by hand on a schedule. sqlplus runs the script it
+  -- was handed even when the CONNECT ahead of it failed, on whatever connection the session already
+  -- had — that is how 011 created its tables in SYS on 2026-09-09 while reporting success (#455).
+  -- Without this, a re-apply into the wrong schema answers ORA-00942, which reads as "PMCOMPLETIONS
+  -- is missing" — indistinguishable from the refresh damage this migration exists to repair.
+  IF USER <> 'DBO' THEN
+    RAISE_APPLICATION_ERROR(-20008,
+      'Migration 008 must be applied as DBO, not ' || USER || '. Reconnect with: CONNECT dbo');
+  END IF;
+
   SELECT COUNT(*) INTO n FROM user_tab_cols
    WHERE table_name = 'PMCOMPLETIONS' AND column_name = 'LABOR_HOURS';
   IF n = 0 THEN

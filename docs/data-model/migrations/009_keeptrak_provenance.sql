@@ -57,6 +57,15 @@ DECLARE
     END IF;
   END;
 BEGIN
+  -- Wrong-schema guard. sqlplus runs the script it was handed even when the CONNECT ahead of it
+  -- failed, on whatever connection the session already had — see migration 011's note and #455. Here
+  -- that would hunt for PM/PM_ACTIONS/PMCOMPLETIONS in the wrong schema and answer ORA-00942, which
+  -- reads as "the legacy tables are missing" rather than "you are not DBO".
+  IF USER <> 'DBO' THEN
+    RAISE_APPLICATION_ERROR(-20009,
+      'Migration 009 must be applied as DBO, not ' || USER || '. Reconnect with: CONNECT dbo');
+  END IF;
+
   add_kt_ref('PM');
   add_kt_ref('PM_ACTIONS');
   add_kt_ref('PMCOMPLETIONS');
