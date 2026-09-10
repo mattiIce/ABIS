@@ -379,29 +379,55 @@ const alertBox = (kind: string, icon: string, title: string, body: string): stri
 const ICON_OFF = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/></svg>';
 const ICON_LIVE = '<svg viewBox="0 0 24 24"><path d="M12 3v10"/><path d="M6.5 7a8 8 0 1 0 11 0"/></svg>';
 
+/** What the banner should say. Pure, so it can be tested without a DOM. */
+export interface BannerText { kind: 'crit' | 'warn'; title: string; body: string; }
+
 /**
  * The banner, shown on every tab.
  *
- * Three states, and the distinction between the first two is the point: "the valve is shut" and
- * "nothing is connected to the valve" are different guarantees. Someone deciding whether it is safe
- * to touch anything needs to know which one is currently holding.
+ * <p>Three reasons transmission can be off, and they are NOT interchangeable: the valve is shut,
+ * nothing is armed, or nothing is connected to the valve at all. Someone deciding whether it is safe
+ * to touch EDI needs to know which one is holding.</p>
+ *
+ * <p><b>The valve position is stated in every message, including the ones where it is not the
+ * operative reason.</b> The first cut short-circuited on `!wired` and never mentioned the valve, so
+ * opening it and closing it again produced an identical banner — the one screen that is on every tab
+ * concealed the one piece of state a person can actually change. Valve state also persists: the
+ * `ABIS_*` tables are excluded from the refresh parfile, so an open valve survives a refresh and
+ * nothing will close it on its own.</p>
  */
-function renderBanner(p: EdiTransmitPolicyView): void {
+export function bannerText(p: EdiTransmitPolicyView): BannerText {
   const n = (p.armed ?? []).length;
+  const tail = 'Documents are still generated and stored &mdash; they are just not sent. Legacy '
+    + '(ediprocess.sh + GXS.ksh) continues to transmit on its own cron regardless.';
+
   if (p.transmitting && p.wired) {
-    $('#xmitBanner').innerHTML = alertBox('crit', ICON_LIVE, 'EDI transmission is LIVE',
-      `The valve is open and ${n} pair${n === 1 ? ' is' : 's are'} armed. Documents ABIS generates for `
-      + 'those partners are written to the VAN outbox and transmitted by the GXS cron.');
-    return;
+    return {
+      kind: 'crit',
+      title: 'EDI transmission is LIVE',
+      body: `The valve is open and ${n} pair${n === 1 ? ' is' : 's are'} armed. Documents ABIS generates `
+        + 'for those partners are written to the VAN outbox and transmitted by the GXS cron.',
+    };
   }
+
+  // Say the operative reason first, then the valve position — always, even when the valve is not
+  // what is stopping traffic.
   const why = !p.wired
-    ? 'No generation path is connected to the transport, so nothing is sent whatever the valve says.'
+    ? 'No generation path is connected to the transport, so nothing is sent whatever the valve says. '
+      + (p.valveOpen
+        ? 'The valve itself is OPEN. That is harmless while nothing is wired to it, but it will not '
+          + 'close on its own and a database refresh will not close it either.'
+        : 'The valve itself is closed.')
     : !p.valveOpen
       ? 'The valve is closed.'
-      : 'The valve is open, but no partner/document pair is armed, so nothing is permitted through.';
-  $('#xmitBanner').innerHTML = alertBox('warn', ICON_OFF, 'EDI transmission is disabled',
-    `${why} Documents are still generated and stored &mdash; they are just not sent. Legacy `
-    + '(ediprocess.sh + GXS.ksh) continues to transmit on its own cron regardless.');
+      : `The valve is open, but no partner/document pair is armed (${n}), so nothing is permitted through.`;
+
+  return { kind: 'warn', title: 'EDI transmission is disabled', body: `${why} ${tail}` };
+}
+
+function renderBanner(p: EdiTransmitPolicyView): void {
+  const t = bannerText(p);
+  $('#xmitBanner').innerHTML = alertBox(t.kind, t.kind === 'crit' ? ICON_LIVE : ICON_OFF, t.title, t.body);
 }
 
 function renderValve(p: EdiTransmitPolicyView): void {
