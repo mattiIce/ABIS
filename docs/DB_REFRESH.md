@@ -79,7 +79,7 @@ sqlplus -S /nolog
 ```
 ```sql
 -- at the SQL*Plus prompt, on the DB host (oeldb01 / .230):
-CONNECT dbo@//192.168.1.230:1521/abc11
+CONNECT dbo
 @tools/verify_refresh.sql
 ```
 
@@ -183,12 +183,26 @@ sqlplus -S /nolog
 ```
 ```sql
 -- at the SQL*Plus prompt (CONNECT prompts for the password and never echoes it):
-CONNECT dbo@//192.168.1.230:1521/abc11
+CONNECT dbo
 @tools/resync_sequences.sql
 ```
 
 > Do **not** paste `dbo/<pwd>@...` - bash reads `<pwd>` as a redirect and answers
 > `pwd: No such file or directory` before sqlplus is ever reached.
+
+> Do **not** use the easy-connect form `CONNECT dbo@//192.168.1.230:1521/abc11` either - it answers
+> `SP2-0306: Invalid option`. `CONNECT` splits username from password on the first `/`, so the `//`
+> derails its parser. This runbook carried that broken line until 2026-09-09. On the DB host the bare
+> `CONNECT dbo` connects locally via `ORACLE_SID` and needs no listener.
+
+> **Confirm which schema you are in before running anything that creates objects.** A script fed to a
+> session whose `CONNECT` failed still runs - on the connection that session already had. On 2026-09-09
+> migration 011 was applied that way and created its two tables in **`SYS`**, reporting complete
+> success; `DBO` did not have them. Start any create script with `SELECT USER FROM dual;`, or run it
+> non-interactively so a failed `CONNECT` cannot be inherited.
+
+> Avoid `-S` when the script contains a `CONNECT`: silent mode suppresses the `Enter password:` prompt
+> too, so the session looks hung when it is just waiting for input.
 
 Idempotent and safe to re-run (a sequence already ahead is skipped). Set `p_apply := FALSE` in the
 script for a read-only dry run that only reports the gaps. Keep the (sequence, table, column) list in
@@ -292,7 +306,7 @@ sqlplus -S /nolog
 ```
 ```sql
 -- at the SQL*Plus prompt (CONNECT prompts for the password and never echoes it):
-CONNECT dbo@//192.168.1.230:1521/abc11
+CONNECT dbo
 @tools/grant_it_group.sql
 ```
 
