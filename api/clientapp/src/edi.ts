@@ -3,7 +3,7 @@
 // (+ detail), the processing log, the per-customer EDI setup, and the transaction-type lookup.
 //
 // Compiled by tsc to wwwroot/ui/app/edi.js; served at /ui/edi.html.
-import { AbisClient, EdiPartnerProfile, EdiPartnerWrite, Edi997IngestWrite } from './generated/abis-client.js';
+import { AbisClient, EdiPartnerProfile, EdiPartnerWrite, Edi997IngestWrite, EdiTransmitPolicyView, EdiValveWrite, EdiArmWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 
@@ -30,7 +30,52 @@ function scaffold(): string {
     <div class="page-head"><div><div class="eyebrow">EDI · Monitor</div><h1>EDI operations</h1></div></div>
     <div id="err" class="err" style="margin-bottom:12px"></div>
 
-    <div class="tabs">${tab('tx', 'Transactions')}${tab('acks', 'Functional acks (997)')}${tab('log', 'Processing log')}${tab('partners', 'Partner profiles')}${tab('cust', 'Customer setup')}${tab('types', 'Types')}</div>
+    <!-- Transmit status. Rendered on EVERY tab, not just the valve one: somebody reading the
+         transaction list needs to know whether those documents left the building. -->
+    <div id="xmitBanner" style="margin-bottom:14px"></div>
+
+    <div class="tabs">${tab('xmit', 'Transmit valve')}${tab('tx', 'Transactions')}${tab('acks', 'Functional acks (997)')}${tab('log', 'Processing log')}${tab('partners', 'Partner profiles')}${tab('cust', 'Customer setup')}${tab('types', 'Types')}</div>
+
+    <div id="pane-xmit" class="grid" style="display:none">
+      <div class="stack">
+        <div class="card">
+          <header><h2>The valve</h2><span class="sub" id="xState"></span></header>
+          <div class="body" id="xValve"><p class="muted">Loading&hellip;</p></div>
+        </div>
+        <div class="card">
+          <header><h2>What the valve does not cover</h2></header>
+          <div class="body">
+            <p class="muted" style="margin:0 0 8px">This switch governs <b>what ABIS sends</b>. It has no
+            effect on the legacy engine: <span class="mono">ediprocess.sh</span> still generates and
+            <span class="mono">GXS.ksh</span> still transmits on the DB host&rsquo;s cron, and those keep
+            running whatever this says.</p>
+            <p class="muted" style="margin:0">That is why arming is per partner and document rather than
+            global. Legacy currently sends <b>861 to Novelis (1153, 1459, 2582)</b>, <b>861 to Aleris
+            (1980)</b> and <b>870 to Aleris (1980)</b>. Arming ABIS for one of those without first
+            commenting its line out of <span class="mono">ediprocess.sh</span> means the partner receives
+            two copies &mdash; and partners reconcile receipts and invoices off these.</p>
+          </div>
+        </div>
+      </div>
+      <div class="stack"><div class="card">
+        <header><h2>Armed pairs</h2><span class="sub" id="cArm"></span></header>
+        <div class="body">
+          <p class="muted" style="margin:0 0 8px">A document leaves only when the valve is open <b>and</b>
+          its (document, customer) pair is armed. Both, always.</p>
+          <form id="armForm" class="frow" style="margin-bottom:10px">
+            <div class="fld"><label>Document</label><select id="aType"><option>861</option><option>870</option><option>846</option><option>856</option><option>810</option><option>863</option></select></div>
+            <div class="fld"><label>Customer id</label><input id="aCust" inputmode="numeric" style="width:110px" required /></div>
+            <div class="fld"><label>Note</label><input id="aNote" style="width:190px" placeholder="optional" /></div>
+            <button class="btn sm" type="submit">Arm</button>
+          </form>
+          <div id="armMsg"></div>
+        </div>
+        <div style="overflow-x:auto"><table class="tbl" style="min-width:420px">
+          <thead><tr><th>Document</th><th>Cust</th><th>Customer</th><th></th></tr></thead>
+          <tbody id="tArm"><tr><td colspan="4" class="muted">Loading&hellip;</td></tr></tbody>
+        </table></div>
+      </div></div>
+    </div>
 
     <div id="pane-tx" class="grid">
       <div class="stack"><div class="card">
@@ -324,8 +369,116 @@ async function deletePartner(customerId: number, set: string): Promise<void> {
   finally { setBusy(false); }
 }
 
+// ---- transmit valve -------------------------------------------------------
+
+let policy: EdiTransmitPolicyView | undefined;
+
+const alertBox = (kind: string, icon: string, title: string, body: string): string =>
+  `<div class="alert ${kind}"><span class="ai">${icon}</span><div class="at"><b>${title}</b><p>${body}</p></div></div>`;
+
+const ICON_OFF = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/></svg>';
+const ICON_LIVE = '<svg viewBox="0 0 24 24"><path d="M12 3v10"/><path d="M6.5 7a8 8 0 1 0 11 0"/></svg>';
+
+/**
+ * The banner, shown on every tab.
+ *
+ * Three states, and the distinction between the first two is the point: "the valve is shut" and
+ * "nothing is connected to the valve" are different guarantees. Someone deciding whether it is safe
+ * to touch anything needs to know which one is currently holding.
+ */
+function renderBanner(p: EdiTransmitPolicyView): void {
+  const n = (p.armed ?? []).length;
+  if (p.transmitting && p.wired) {
+    $('#xmitBanner').innerHTML = alertBox('crit', ICON_LIVE, 'EDI transmission is LIVE',
+      `The valve is open and ${n} pair${n === 1 ? ' is' : 's are'} armed. Documents ABIS generates for `
+      + 'those partners are written to the VAN outbox and transmitted by the GXS cron.');
+    return;
+  }
+  const why = !p.wired
+    ? 'No generation path is connected to the transport, so nothing is sent whatever the valve says.'
+    : !p.valveOpen
+      ? 'The valve is closed.'
+      : 'The valve is open, but no partner/document pair is armed, so nothing is permitted through.';
+  $('#xmitBanner').innerHTML = alertBox('warn', ICON_OFF, 'EDI transmission is disabled',
+    `${why} Documents are still generated and stored &mdash; they are just not sent. Legacy `
+    + '(ediprocess.sh + GXS.ksh) continues to transmit on its own cron regardless.');
+}
+
+function renderValve(p: EdiTransmitPolicyView): void {
+  $('#xState').innerHTML = p.valveOpen
+    ? '<span class="chip crit">open</span>'
+    : '<span class="chip ok">closed</span>';
+  $('#xValve').innerHTML = p.valveOpen
+    ? `<p style="margin:0 0 10px">The valve is <b>open</b>. Armed pairs are permitted to transmit.</p>
+       <button class="btn sm" id="btnClose" type="button">Close the valve</button>
+       <p class="muted" style="margin:8px 0 0">Closing takes effect on the next document. It needs no note
+       and no confirmation &mdash; it can only make things safer.</p>`
+    : `<p style="margin:0 0 10px">The valve is <b>closed</b>. Nothing ABIS generates is transmitted.</p>
+       <div class="fld" style="margin-bottom:8px"><label>Why are you opening it?</label>
+         <input id="vNote" style="width:100%;max-width:340px" placeholder="recorded against your name" /></div>
+       <button class="btn sm" id="btnOpen" type="button">Open the valve</button>
+       <p class="muted" style="margin:8px 0 0">Opening alone sends nothing: each partner/document pair must
+       also be armed.</p>`;
+  if (p.valveOpen) $('#btnClose').addEventListener('click', () => void setValve(false));
+  else $('#btnOpen').addEventListener('click', () => void setValve(true));
+}
+
+function renderArmed(p: EdiTransmitPolicyView): void {
+  const rows = p.armed ?? [];
+  $('#cArm').textContent = rows.length ? `${rows.length} armed` : 'none armed';
+  // customerId is optional in the generated client (NSwag marks value types optional), so this
+  // takes the undefined case rather than asserting it away.
+  const nameOf = (id: number | undefined) => partners.find((x) => x.customerId === id)?.customerName ?? '';
+  $('#tArm').innerHTML = rows.length ? rows.map((a) => `<tr>
+    <td class="mono">${esc(a.transactionType)}</td><td class="mono">${esc(a.customerId)}</td>
+    <td>${esc(nameOf(a.customerId))}</td>
+    <td style="text-align:right"><button class="btn sm ghost aDis" data-t="${esc(a.transactionType)}" data-c="${a.customerId}" type="button">disarm</button></td></tr>`).join('')
+    : '<tr><td colspan="4" class="muted">Nothing is armed &mdash; nothing can transmit.</td></tr>';
+  document.querySelectorAll<HTMLButtonElement>('#tArm .aDis').forEach((b) => b.addEventListener('click', () =>
+    void setArm(b.dataset.t ?? '', Number(b.dataset.c), false, '')));
+}
+
+async function loadTransmit(): Promise<void> {
+  try {
+    policy = await client().getEdiTransmitPolicy();
+    renderBanner(policy);
+    renderValve(policy);
+    renderArmed(policy);
+  } catch (e) {
+    // Failing to READ the policy is not the same as it being off, and printing "disabled" here would
+    // be a guess. Say what is actually known: the server treats an unreadable policy as closed.
+    $('#xmitBanner').innerHTML = alertBox('warn', ICON_OFF, 'Transmit status unavailable',
+      `Could not read the transmit policy: ${esc(ediErr(e))}. The server treats an unreadable policy as `
+      + 'closed, so nothing is being transmitted.');
+    $('#xValve').innerHTML = '<p class="muted">Unavailable.</p>';
+  }
+}
+
+async function setValve(open: boolean): Promise<void> {
+  const note = open ? val('#vNote') : '';
+  if (open && !note) { setErr('Say why the valve is being opened - it is recorded against your name.'); return; }
+  if (open && !confirm('Open the EDI transmit valve?\n\nArmed partner/document pairs will be permitted '
+    + 'to transmit. Anything legacy also sends will reach the partner twice.')) return;
+  setBusy(true); setErr('');
+  try { await client().setEdiTransmitValve(new EdiValveWrite({ open, note })); await loadTransmit(); }
+  catch (e) { setErr(`Valve change failed: ${ediErr(e)}`); }
+  finally { setBusy(false); }
+}
+
+async function setArm(transactionType: string, customerId: number, armed: boolean, note: string): Promise<void> {
+  setBusy(true); setErr(''); $('#armMsg').innerHTML = '';
+  try {
+    const r = await client().setEdiTransmitArm(new EdiArmWrite({ transactionType, customerId, armed, note }));
+    // The duplicate-EDI warning is the whole reason this response is more than an echo - put it where
+    // the person who just armed the pair is already looking, not in a log.
+    if (r?.warning) $('#armMsg').innerHTML = alertBox('crit', ICON_LIVE, 'Legacy still sends this', esc(r.warning));
+    await loadTransmit();
+  } catch (e) { setErr(`Arm change failed: ${ediErr(e)}`); }
+  finally { setBusy(false); }
+}
+
 function showTab(name: string): void {
-  ['tx', 'acks', 'log', 'partners', 'cust', 'types'].forEach((t) => {
+  ['xmit', 'tx', 'acks', 'log', 'partners', 'cust', 'types'].forEach((t) => {
     $(`#pane-${t}`).style.display = t === name ? '' : 'none';
     $(`#tab-${t}`).classList.toggle('active', t === name);
   });
@@ -334,7 +487,7 @@ function showTab(name: string): void {
 (async () => {
   const main = await initShell({ active: 'edi' });
   main.innerHTML = scaffold();
-  ['tx', 'acks', 'log', 'partners', 'cust', 'types'].forEach((t) => $(`#tab-${t}`).addEventListener('click', () => showTab(t)));
+  ['xmit', 'tx', 'acks', 'log', 'partners', 'cust', 'types'].forEach((t) => $(`#tab-${t}`).addEventListener('click', () => showTab(t)));
   $<HTMLFormElement>('#txForm').addEventListener('submit', (e) => { e.preventDefault(); void loadTransactions(); });
   $<HTMLFormElement>('#ingForm').addEventListener('submit', (e) => { e.preventDefault(); void ingest997(); });
   $<HTMLFormElement>('#logForm').addEventListener('submit', (e) => { e.preventDefault(); void loadLog(); });
@@ -342,6 +495,15 @@ function showTab(name: string): void {
   $('#pReset').addEventListener('click', () => clearPartner());
   $('#btnPayload').addEventListener('click', () => void loadPayload());
   $('#btnCopyPayload').addEventListener('click', () => void navigator.clipboard?.writeText($('#txPayload').textContent ?? ''));
+  $<HTMLFormElement>('#armForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const cust = Number(val('#aCust'));
+    if (!(cust > 0)) { setErr('A customer is required - arming is always for a named partner.'); return; }
+    void setArm($<HTMLSelectElement>('#aType').value, cust, true, val('#aNote'));
+  });
   showTab('tx');
-  await Promise.all([loadTransactions(), loadWaiting(), loadLog(), loadPartners(), loadCustomers(), loadTypes()]);
+  // Partners first: the armed table renders customer NAMES out of that list, and a race would leave
+  // the initial paint showing bare ids.
+  await loadPartners();
+  await Promise.all([loadTransmit(), loadTransactions(), loadWaiting(), loadLog(), loadCustomers(), loadTypes()]);
 })();

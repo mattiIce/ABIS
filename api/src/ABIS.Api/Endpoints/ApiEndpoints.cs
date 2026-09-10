@@ -3827,19 +3827,20 @@ public static class ApiEndpoints
             {
                 if (await RequireFeatureAsync(ctx, repo, "EDI", 0, ct) is { } deny) return deny;
                 var policy = await gate.GetPolicyAsync(ct);
-                return Results.Ok(new
-                {
-                    valveOpen = policy.ValveOpen,
+                return Results.Ok(new EdiTransmitPolicyView(
+                    policy.ValveOpen,
                     // The armed pairs, as flat rows the UI can list without re-querying.
-                    armed = policy.Armed.Select(a => new { transactionType = a.Type, customerId = a.CustomerId }),
+                    [.. policy.Armed
+                        .Select(a => new EdiArmedPair(a.Type, a.CustomerId))
+                        .OrderBy(a => a.TransactionType).ThenBy(a => a.CustomerId)],
                     // Say plainly whether anything could actually leave, so a caller does not have to
                     // infer it from two fields that mean nothing apart.
-                    transmitting = policy.ValveOpen && policy.Armed.Count > 0,
-                });
+                    policy.ValveOpen && policy.Armed.Count > 0,
+                    EdiFunnelWired));
             })
            .WithName("GetEdiTransmitPolicy").WithTags("Admin")
            .WithSummary("The EDI transmit valve and every armed partner/document pair. Nothing transmits unless the valve is open AND the pair is armed — and no generation path is wired to the transport yet, so nothing transmits at all today.")
-           .Produces(StatusCodes.Status200OK).Produces(StatusCodes.Status403Forbidden);
+           .Produces<EdiTransmitPolicyView>(StatusCodes.Status200OK).Produces(StatusCodes.Status403Forbidden);
 
         api.MapPut("/admin/edi/transmit/valve", async (EdiValveWrite body, HttpContext ctx,
                 IAbisRepository repo, CancellationToken ct) =>
@@ -3854,11 +3855,11 @@ public static class ApiEndpoints
                     });
                 var who = ResolveLogin(ctx) ?? "api-key";
                 await repo.SetEdiValveAsync(body.Open, who, body.Note, ct);
-                return Results.Ok(new { valveOpen = body.Open, changedBy = who });
+                return Results.Ok(new EdiValveResult(body.Open, who));
             })
            .WithName("SetEdiTransmitValve").WithTags("Admin")
            .WithSummary("Open or close the EDI transmit valve. Closing stops everything ABIS would send, immediately. Opening requires a note and is recorded against the caller.")
-           .Produces(StatusCodes.Status200OK).ProducesValidationProblem().Produces(StatusCodes.Status403Forbidden);
+           .Produces<EdiValveResult>(StatusCodes.Status200OK).ProducesValidationProblem().Produces(StatusCodes.Status403Forbidden);
 
         api.MapPut("/admin/edi/transmit/arm", async (EdiArmWrite body, HttpContext ctx,
                 IAbisRepository repo, CancellationToken ct) =>
@@ -3879,21 +3880,19 @@ public static class ApiEndpoints
                 // ediprocess.sh still generates and GXS.ksh still transmits these three; arming ABIS for
                 // one of them without commenting its cron line out sends the partner two copies.
                 var clash = LegacyOwnedEdi.FirstOrDefault(x => x.Type == type && x.CustomerId == body.CustomerId);
-                return Results.Ok(new
-                {
-                    transactionType = type,
-                    customerId = body.CustomerId,
-                    armed = body.Armed,
-                    armedBy = who,
-                    warning = body.Armed && clash is not null
+                return Results.Ok(new EdiArmResult(
+                    type,
+                    body.CustomerId!.Value,
+                    body.Armed,
+                    who,
+                    body.Armed && clash is not null
                         ? $"LEGACY STILL SENDS THIS. `{clash.CronLine}` in ediprocess.sh generates the same "
                           + "document, and GXS.ksh transmits it. Comment that line out or the partner receives two."
-                        : null,
-                });
+                        : null));
             })
            .WithName("SetEdiTransmitArm").WithTags("Admin")
            .WithSummary("Arm or disarm one partner/document pair. Arming a document legacy still sends returns a warning naming the cron line to comment out.")
-           .Produces(StatusCodes.Status200OK).ProducesValidationProblem().Produces(StatusCodes.Status403Forbidden);
+           .Produces<EdiArmResult>(StatusCodes.Status200OK).ProducesValidationProblem().Produces(StatusCodes.Status403Forbidden);
 
         api.MapGet("/admin/console/host/cron", async (HttpContext ctx, IAbisRepository repo, ServerConsoleService console, CancellationToken ct) =>
             {
@@ -5027,6 +5026,20 @@ public static class ApiEndpoints
         // inside it.
         /// <summary>A document legacy still sends, and the ediprocess.sh line that sends it.</summary>
         private sealed record LegacyEdi(string Type, long CustomerId, string CronLine);
+
+        /// <summary>
+        /// Whether any generation path actually hands a document to <c>IEdiTransport</c>.
+        ///
+        /// <para><b>False, and that is the current design.</b> The valve, the arming table and the
+        /// file-drop transport all exist; nothing calls them. While this is false ABIS transmits
+        /// nothing whatever the valve says, and the admin UI needs to say so — an operator looking at
+        /// a closed valve should not conclude that opening it would start traffic.</para>
+        ///
+        /// <para>Flip it in the same change that wires the funnel. <c>EdiTransmitValveTests</c> scans
+        /// the source for consumers of the interface and fails if this constant disagrees with what it
+        /// finds, so it cannot drift away from the truth in either direction.</para>
+        /// </summary>
+        internal const bool EdiFunnelWired = false;
 
         private static readonly LegacyEdi[] LegacyOwnedEdi =
         [
