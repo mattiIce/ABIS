@@ -283,6 +283,12 @@ public interface IAbisRepository
     Task<PagedResult<Part>> GetPartsAsync(int page, int pageSize, long? customerId, string? alloy, string? orderBy, CancellationToken ct, string? search = null);
     Task<Part?> GetPartAsync(long partNumId, CancellationToken ct);
 
+    /// <summary>Open or close the EDI transmit valve (migration 011). Recorded with who and when.</summary>
+    Task SetEdiValveAsync(bool open, string changedBy, string? note, CancellationToken ct);
+
+    /// <summary>Arm or disarm one partner/document pair. Always a NAMED partner — see migration 011.</summary>
+    Task SetEdiArmAsync(string transactionType, long customerId, bool armed, string armedBy, string? note, CancellationToken ct);
+
     /// <summary>Jump-to lookup for the shell search box: orders (or their customer PO), jobs, coils
     /// (ours or the customer's) and parts. <paramref name="kinds"/> limits it to the categories the
     /// caller is allowed to be shown.</summary>

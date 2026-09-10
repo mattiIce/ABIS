@@ -135,6 +135,17 @@ builder.Services.AddSingleton(coilDefectOptions);
 builder.Services.Configure<Abis.Api.Email.EmailOptions>(builder.Configuration.GetSection(Abis.Api.Email.EmailOptions.SectionName));
 builder.Services.AddSingleton<Abis.Api.Email.IEmailSender, Abis.Api.Email.SmtpEmailSender>();
 
+// EDI transmit. NOTHING CALLS THIS YET - no generation path hands a document to IEdiTransport, so ABIS
+// still transmits nothing whatever the valve says. Wiring that funnel is a separate, deliberate change;
+// this registers the machinery so it can be configured and reviewed before it can ever fire.
+//
+// The valve lives in the database (migration 011), not in configuration, for two reasons: it must be
+// changeable without a redeploy when somebody needs it shut NOW, and it must survive a refresh, which
+// the ABIS_ prefix guarantees. Every failure to read it means CLOSED.
+builder.Services.Configure<Abis.Api.Edi.EdiOutboxOptions>(builder.Configuration.GetSection("Edi:Outbox"));
+builder.Services.AddScoped<Abis.Api.Edi.IEdiTransmitGate, Abis.Api.Edi.DbEdiTransmitGate>();
+builder.Services.AddScoped<Abis.Api.Edi.IEdiTransport, Abis.Api.Edi.FileDropEdiTransport>();
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;

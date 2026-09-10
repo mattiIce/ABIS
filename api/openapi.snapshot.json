@@ -1115,6 +1115,106 @@
         }
       }
     },
+    "/api/admin/edi/transmit": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "The EDI transmit valve and every armed partner/document pair. Nothing transmits unless the valve is open AND the pair is armed — and no generation path is wired to the transport yet, so nothing transmits at all today.",
+        "operationId": "GetEdiTransmitPolicy",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/admin/edi/transmit/valve": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Open or close the EDI transmit valve. Closing stops everything ABIS would send, immediately. Opening requires a note and is recorded against the caller.",
+        "operationId": "SetEdiTransmitValve",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EdiValveWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/admin/edi/transmit/arm": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Arm or disarm one partner/document pair. Arming a document legacy still sends returns a warning naming the cron line to comment out.",
+        "operationId": "SetEdiTransmitArm",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EdiArmWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/admin/console/host/cron": {
       "get": {
         "tags": [
@@ -20576,6 +20676,28 @@
         },
         "additionalProperties": false
       },
+      "EdiArmWrite": {
+        "type": "object",
+        "properties": {
+          "transactionType": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "armed": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "EdiLogEntry": {
         "type": "object",
         "properties": {
@@ -20920,6 +21042,19 @@
             "nullable": true
           },
           "ediTypeDescription": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EdiValveWrite": {
+        "type": "object",
+        "properties": {
+          "open": {
+            "type": "boolean"
+          },
+          "note": {
             "type": "string",
             "nullable": true
           }

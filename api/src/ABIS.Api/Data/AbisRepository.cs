@@ -5123,6 +5123,74 @@ public sealed class AbisRepository : IAbisRepository
     private sealed class QuickCoilRow { public long CoilAbcNum { get; set; } public string? OrgNum { get; set; } }
     private sealed class QuickPartRow { public long PartNumId { get; set; } public string? PartNum { get; set; } }
 
+    /// <summary>
+    /// Open or close the EDI transmit valve. A plain UPDATE of the single row from migration 011 — no
+    /// upsert, because a missing row means migration 011 has not run and the gate already treats that
+    /// as closed. Creating the row here would invent an authorisation nobody granted.
+    /// </summary>
+    public async Task SetEdiValveAsync(bool open, string changedBy, string? note, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE abis_edi_transmit_state
+               SET valve_open = :openFlag, changed_utc = :changedUtc, changed_by = :changedBy, note = :note
+             WHERE state_id = 1
+            """,
+            new
+            {
+                openFlag = open ? 1 : 0, changedUtc = DateTime.UtcNow,
+                changedBy = Trunc(changedBy, 64), note = Trunc(note, 400),
+            },
+            cancellationToken: ct));
+    }
+
+    /// <summary>
+    /// Arm or disarm one partner/document pair. Upsert, because the pair may never have been mentioned
+    /// before — unlike the valve, whose single row the migration creates.
+    /// </summary>
+    public async Task SetEdiArmAsync(
+        string transactionType, long customerId, bool armed, string armedBy, string? note, CancellationToken ct)
+    {
+        var type = transactionType.Trim().ToUpperInvariant();
+        await using var conn = await OpenAsync(ct);
+        var updated = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE abis_edi_transmit_arm
+               SET armed = :armedFlag, armed_utc = :armedUtc, armed_by = :armedBy, note = :note
+             WHERE transaction_type = :txType AND customer_id = :custId
+            """,
+            new
+            {
+                armedFlag = armed ? 1 : 0, armedUtc = DateTime.UtcNow,
+                armedBy = Trunc(armedBy, 64), note = Trunc(note, 400),
+                txType = type, custId = customerId,
+            },
+            cancellationToken: ct));
+
+        if (updated == 0)
+            await conn.ExecuteAsync(new CommandDefinition(
+                """
+                INSERT INTO abis_edi_transmit_arm
+                    (transaction_type, customer_id, armed, armed_utc, armed_by, note)
+                VALUES (:txType, :custId, :armedFlag, :armedUtc, :armedBy, :note)
+                """,
+                new
+                {
+                    txType = type, custId = customerId, armedFlag = armed ? 1 : 0,
+                    armedUtc = DateTime.UtcNow, armedBy = Trunc(armedBy, 64), note = Trunc(note, 400),
+                },
+                cancellationToken: ct));
+    }
+
+    /// <summary>Fit an audit value to its column rather than let Oracle raise ORA-12899 on a note.</summary>
+    private static string? Trunc(string? v, int max)
+    {
+        var t = v?.Trim();
+        if (string.IsNullOrEmpty(t)) return null;
+        return t.Length <= max ? t : t[..max];
+    }
+
     public async Task<Part?> GetPartAsync(long partNumId, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
