@@ -44,6 +44,17 @@
 DECLARE
   n PLS_INTEGER;
 BEGIN
+  -- Refuse to run in the wrong schema. A sqlplus session whose CONNECT failed still executes the
+  -- script it was handed, on whatever connection it already had — so this block can be fed to a
+  -- `/ as sysdba` session and report complete success while creating both tables in SYS, where the
+  -- API cannot see them and the refresh parfile's `LIKE 'ABIS%'` exclude does not cover them. That
+  -- happened on 2026-09-09. Failing here is the difference between a visible error and a valve that
+  -- silently reads closed forever.
+  IF USER <> 'DBO' THEN
+    RAISE_APPLICATION_ERROR(-20011,
+      'Migration 011 must be applied as DBO, not ' || USER || '. Reconnect with: CONNECT dbo');
+  END IF;
+
   SELECT COUNT(*) INTO n FROM user_tables WHERE table_name = 'ABIS_EDI_TRANSMIT_STATE';
   IF n = 0 THEN
     EXECUTE IMMEDIATE '

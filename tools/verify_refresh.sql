@@ -19,7 +19,7 @@
 --
 -- RUN ON THE DB HOST (oeldb01 / .230) as DBO - the app host has no Oracle client:
 --   sqlplus -S /nolog
---   CONNECT dbo@//192.168.1.230:1521/abc11     (prompts for the password; never echoes it)
+--   CONNECT dbo     (prompts for the password; never echoes it)
 --   @tools/verify_refresh.sql
 --
 -- Do NOT paste dbo/<pw>@... - bash reads <pw> as a redirect and answers "pw: No such file or
