@@ -10889,6 +10889,128 @@
         }
       }
     },
+    "/api/inbound-asns": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "summary": "A customer's archived inbound ASN BOLs (legacy w_archived_bol), newest received first; optional BOL-contains filter.",
+        "operationId": "ListInboundAsnBols",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "bol",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboundAsnBolPagedResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/inbound-asns/{ediFileId}/coils": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "summary": "The coils an inbound ASN carries, as the mill notified them (inbound_coil).",
+        "operationId": "ListInboundAsnCoils",
+        "parameters": [
+          {
+            "name": "ediFileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "bol",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InboundCoilDetail"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/receiving-bols/{receivingBolId}/generate-861": {
       "post": {
         "tags": [
@@ -21417,6 +21539,79 @@
           }
         },
         "additionalProperties": { }
+      },
+      "InboundAsnBol": {
+        "type": "object",
+        "properties": {
+          "ediFileId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bol": {
+            "type": "string",
+            "nullable": true
+          },
+          "receivedTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "shipFrom": {
+            "type": "string",
+            "nullable": true
+          },
+          "totalWeight": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coilCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InboundAsnBolPagedResult": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InboundAsnBol"
+            },
+            "nullable": true
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
       },
       "InboundCoilDetail": {
         "type": "object",

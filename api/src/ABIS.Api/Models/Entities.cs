@@ -3575,6 +3575,23 @@ public sealed class InboundCoilDetail
     public string? PackId { get; set; }
 }
 
+/// <summary>
+/// One inbound ASN BOL for a customer — a row of legacy's "Archived BOL" list (<c>w_inv_coil</c> →
+/// <c>w_archived_bol</c> / <c>d_archived_bol</c>): a shipment a mill told us it sent, received as an EDI 856.
+/// </summary>
+public sealed class InboundAsnBol
+{
+    public long EdiFileId { get; set; }
+    public string? Bol { get; set; }
+    /// <summary><c>inbound_shipment_status.received_time</c>. Null on ~1,660 older BOLs legacy still lists.</summary>
+    public DateTime? ReceivedTime { get; set; }
+    public int? Status { get; set; }
+    public string? ShipFrom { get; set; }
+    public decimal? TotalWeight { get; set; }
+    /// <summary>How many coils the ASN carries (<c>inbound_coil</c> rows for this file + BOL).</summary>
+    public int CoilCount { get; set; }
+}
+
 /// <summary>What the handheld should do next with a scanned coil.</summary>
 [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum InboundScanOutcome

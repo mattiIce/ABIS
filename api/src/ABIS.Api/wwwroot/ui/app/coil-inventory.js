@@ -69,6 +69,17 @@ function scaffold() {
             <div id="summary"><p class="muted">Run a rollup.</p></div>
           </div>
         </div>
+        <div class="card">
+          <header><h2>Archived BOLs</h2><span class="sub" id="asnSub">inbound ASNs for the customer above</span></header>
+          <div class="body">
+            <div class="frow" style="margin-bottom:8px">
+              <div class="fld"><label>BOL contains</label><input id="aBol" style="width:140px" placeholder="optional" /></div>
+              <button class="btn sm ghost" id="btnAsn" type="button">Show archived BOLs</button>
+            </div>
+            <div id="asnList"><p class="muted">Enter a customer id in the search above, then show its archived BOLs.</p></div>
+            <div id="asnCoils"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>`;
@@ -167,6 +178,60 @@ async function loadCoil(id) {
         setBusy(false);
     }
 }
+// Archived inbound ASN BOLs for the customer in the search — legacy's "Archived BOL" button on this window.
+async function archivedBols() {
+    const cust = val('#fCustomer');
+    $('#asnCoils').innerHTML = '';
+    if (!cust) {
+        $('#asnList').innerHTML = '<p class="muted">Enter a customer id in the search above first.</p>';
+        return;
+    }
+    setErr('');
+    const qs = new URLSearchParams({ customerId: cust, pageSize: '50' });
+    if (val('#aBol'))
+        qs.set('bol', val('#aBol'));
+    try {
+        const r = await authFetch(`/api/inbound-asns?${qs.toString()}`);
+        if (!r.ok) {
+            setErr(`Archived BOLs failed (${r.status}).`);
+            return;
+        }
+        const page = await r.json();
+        const items = page.items ?? [];
+        $('#asnSub').textContent = `${numf(page.totalCount)} for customer ${cust}${items.length < (page.totalCount ?? 0) ? ` · newest ${items.length} shown` : ''}`;
+        // Legacy's own wording when a customer has none.
+        $('#asnList').innerHTML = items.length ? `<div style="overflow-x:auto"><table class="tbl" style="min-width:420px">
+      <thead><tr><th>BOL</th><th>EDI file</th><th>Received</th><th class="num">Coils</th><th class="num">Total wt</th></tr></thead>
+      <tbody>${items.map((b) => `<tr class="click" data-fid="${esc(b.ediFileId)}" data-bol="${esc(b.bol)}">
+        <td class="mono">${esc(b.bol)}</td><td class="mono">${esc(b.ediFileId)}</td><td class="mono">${esc(b.receivedTime ? String(b.receivedTime).slice(0, 10) : '—')}</td>
+        <td class="num">${numf(b.coilCount)}</td><td class="num">${numf(b.totalWeight)}</td></tr>`).join('')}</tbody></table></div>`
+            : '<p class="muted">No archived BOL for this customer.</p>';
+        document.querySelectorAll('#asnList tr.click').forEach((tr) => tr.addEventListener('click', () => void asnCoils(Number(tr.dataset.fid), tr.dataset.bol ?? '')));
+    }
+    catch (e) {
+        setErr(`Archived BOLs failed: ${e.message}`);
+    }
+}
+async function asnCoils(ediFileId, bol) {
+    setErr('');
+    try {
+        const r = await authFetch(`/api/inbound-asns/${ediFileId}/coils?bol=${encodeURIComponent(bol)}`);
+        if (!r.ok) {
+            setErr(`ASN coils failed (${r.status}).`);
+            return;
+        }
+        const coils = await r.json();
+        $('#asnCoils').innerHTML = `<h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin:14px 0 6px">Coils on BOL ${esc(bol)} — as the mill notified them</h2>
+      <div style="overflow-x:auto"><table class="tbl" style="min-width:560px">
+      <thead><tr><th>Mill coil</th><th>Alloy</th><th>Temper</th><th class="num">Gauge</th><th class="num">Width</th><th class="num">Net</th><th class="num">Gross</th><th>Lot</th><th>Part</th></tr></thead>
+      <tbody>${coils.length ? coils.map((c) => `<tr><td class="mono">${esc(c.coilNumber)}</td><td>${esc(c.alloy)}</td><td>${esc(c.temper)}</td>
+        <td class="num">${esc(c.coilGauge)}</td><td class="num">${esc(c.coilWidth)}</td><td class="num">${numf(c.netWeight)}</td><td class="num">${numf(c.grossWeight)}</td>
+        <td>${esc(c.lot)}</td><td>${esc(c.partNum)}</td></tr>`).join('') : '<tr><td colspan="9" class="muted">No coils on this ASN.</td></tr>'}</tbody></table></div>`;
+    }
+    catch (e) {
+        setErr(`ASN coils failed: ${e.message}`);
+    }
+}
 async function saveCoil() {
     if (selected == null)
         return;
@@ -195,6 +260,7 @@ async function saveCoil() {
     applyDeepLink('#fSearch'); // ?q= from the global search box
     $('#searchForm').addEventListener('submit', (e) => { e.preventDefault(); void search(); });
     $('#btnSummary').addEventListener('click', () => void summary());
+    $('#btnAsn').addEventListener('click', () => void archivedBols());
     await search();
     await summary();
 })();

@@ -6295,6 +6295,64 @@ public sealed class AbisRepository : IAbisRepository
     }
 
     /// <summary>
+    /// A customer's inbound ASN BOLs — legacy's "Archived BOL" list (<c>d_archived_bol</c>): every
+    /// <c>inbound_shipment</c> whose status is not 0, reached through <c>inbound_shipment_customer</c>'s
+    /// ship-from mapping.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Live data:</b> on <c>.230</c> legacy lists 43,948 BOLs back to 2004 — 1,097 received in the last
+    /// 12 months (669 so far in 2026) for Novelis Kingston / Oswego / Guthrie, Arconic, Constellium and Ken-Mac.
+    /// (edi_file_id, bol) is unique in both tables, so the join cannot repeat a BOL for one customer.</para>
+    /// <para><b>One deliberate change:</b> newest received first, not legacy's BOL-number order — a customer can
+    /// hold thousands, and the recent ones are the ones looked up. Legacy's ~1,660 BOLs with no received time
+    /// sort last explicitly (Oracle and SQLite disagree on NULL order).</para>
+    /// </remarks>
+    public Task<PagedResult<InboundAsnBol>> GetInboundAsnBolsAsync(long customerId, string? bol, int page, int pageSize, CancellationToken ct)
+    {
+        var filtered = !string.IsNullOrWhiteSpace(bol);
+        var where = "c.customer_id = :cust AND st.status <> 0" + (filtered ? " AND UPPER(sh.bol) LIKE :bolpat" : "");
+        object args = filtered
+            ? new { cust = customerId, bolpat = "%" + bol!.Trim().ToUpperInvariant() + "%" }
+            : new { cust = customerId };
+        return PageAsync<InboundAsnBol>(
+            """
+            sh.edi_file_id AS EdiFileId, sh.bol AS Bol, st.received_time AS ReceivedTime, st.status AS Status,
+            sh.ship_from AS ShipFrom, sh.total_weight AS TotalWeight,
+            (SELECT COUNT(*) FROM inbound_coil ic WHERE ic.edi_file_id = sh.edi_file_id AND ic.bol = sh.bol) AS CoilCount
+            """,
+            """
+            inbound_shipment sh
+            JOIN inbound_shipment_status st ON st.edi_file_id = sh.edi_file_id AND st.bol = sh.bol
+            JOIN inbound_shipment_customer c ON c.ship_from = sh.ship_from
+            """,
+            "CASE WHEN st.received_time IS NULL THEN 1 ELSE 0 END, st.received_time DESC, sh.bol, sh.edi_file_id",
+            where, args, page, pageSize, ct);
+    }
+
+    /// <summary>
+    /// The coils an inbound ASN carries, as the mill notified them. Legacy's drill-in window
+    /// (<c>w_coil_list_by_archived_bol</c>) is not vendored — and <c>d_coil_list_by_bol_archived</c>, despite the
+    /// name, lists RECEIVING_BOL_COIL for the desktop receiving screen — so this reads the one table keyed by
+    /// edi_file_id + bol. On <c>.230</c> every ASN BOL of the last 12 months has its coils there.
+    /// </summary>
+    public async Task<IReadOnlyList<InboundCoilDetail>> GetInboundAsnCoilsAsync(long ediFileId, string bol, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return (await conn.QueryAsync<InboundCoilDetail>(new CommandDefinition(
+            """
+            SELECT ic.edi_file_id AS EdiFileId, ic.bol AS Bol, ic.item_num AS ItemNum,
+                   ic.coil_number AS CoilNumber, ic.part_num AS PartNum,
+                   ic.net_weight AS NetWeight, ic.gross_weight AS GrossWeight,
+                   ic.alloy AS Alloy, ic.temper AS Temper,
+                   ic.coil_gauge AS CoilGauge, ic.coil_width AS CoilWidth,
+                   ic.lot AS Lot, ic.pack_id AS PackId
+              FROM inbound_coil ic
+             WHERE ic.edi_file_id = :fid AND ic.bol = :bol
+             ORDER BY ic.item_num, ic.coil_number
+            """, new { fid = ediFileId, bol }, cancellationToken: ct))).ToList();
+    }
+
+    /// <summary>
     /// Mint an ABC number for a scanned inbound coil — legacy's <c>COIL_ABC_NUM_SEQ.NEXTVAL</c> followed
     /// by <c>UPDATE INBOUND_COIL_STATUS SET COIL_ABC_NUM = … WHERE COIL_NUMBER = …</c>.
     /// </summary>

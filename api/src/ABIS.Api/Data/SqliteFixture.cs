@@ -136,6 +136,9 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS abis_edi_partner;
             DROP TABLE IF EXISTS split_skid;
             DROP TABLE IF EXISTS inbound_coil;
+            DROP TABLE IF EXISTS inbound_shipment_customer;
+            DROP TABLE IF EXISTS inbound_shipment_status;
+            DROP TABLE IF EXISTS inbound_shipment;
             DROP TABLE IF EXISTS edi_log;
             DROP TABLE IF EXISTS edi_type;
             DROP TABLE IF EXISTS customer_edi;
@@ -231,6 +234,23 @@ public static class SqliteFixture
                 coil_number TEXT, part_num TEXT,
                 net_weight REAL, gross_weight REAL, alloy TEXT, temper TEXT,
                 coil_gauge REAL, coil_width REAL, lot TEXT, pack_id TEXT);
+
+            -- The inbound ASN (EDI 856) header a mill sends per BOL, its receiving state, and which ship-from
+            -- belongs to which customer — what legacy's "Archived BOL" list (d_archived_bol) reads. Keys as on
+            -- .230. Empty in the fixture; the tests that need rows insert them.
+            CREATE TABLE inbound_shipment (
+                edi_file_id INTEGER NOT NULL, bol TEXT NOT NULL, gross REAL, net REAL,
+                ship_to TEXT, ship_from TEXT, part_number TEXT, po TEXT, total_weight REAL, mill_duns_num TEXT,
+                PRIMARY KEY (edi_file_id, bol));
+
+            CREATE TABLE inbound_shipment_status (
+                edi_file_id INTEGER NOT NULL, bol TEXT NOT NULL, status INTEGER, received_time TEXT,
+                filename_861 TEXT, created_861_date_time TEXT,
+                PRIMARY KEY (edi_file_id, bol));
+
+            CREATE TABLE inbound_shipment_customer (
+                customer_id INTEGER NOT NULL, ship_from TEXT NOT NULL,
+                PRIMARY KEY (customer_id, ship_from));
 
             -- Per-inbound-coil receiving state: which customer coil number maps to which minted ABC
             -- number (0/NULL = not yet minted), plus the damage flags and the scanned QR payload.

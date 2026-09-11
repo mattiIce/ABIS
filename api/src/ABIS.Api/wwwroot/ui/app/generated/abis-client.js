@@ -14092,6 +14092,145 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * A customer's archived inbound ASN BOLs (legacy w_archived_bol), newest received first; optional BOL-contains filter.
+     * @param customerId (optional)
+     * @param bol (optional)
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @return OK
+     */
+    listInboundAsnBols(customerId, bol, page, pageSize) {
+        let url_ = this.baseUrl + "/api/inbound-asns?";
+        if (customerId === null)
+            throw new globalThis.Error("The parameter 'customerId' cannot be null.");
+        else if (customerId !== undefined)
+            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        if (bol === null)
+            throw new globalThis.Error("The parameter 'bol' cannot be null.");
+        else if (bol !== undefined)
+            url_ += "bol=" + encodeURIComponent("" + bol) + "&";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListInboundAsnBols(_response);
+        });
+    }
+    processListInboundAsnBols(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = InboundAsnBolPagedResult.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
+     * The coils an inbound ASN carries, as the mill notified them (inbound_coil).
+     * @param bol (optional)
+     * @return OK
+     */
+    listInboundAsnCoils(ediFileId, bol) {
+        let url_ = this.baseUrl + "/api/inbound-asns/{ediFileId}/coils?";
+        if (ediFileId === undefined || ediFileId === null)
+            throw new globalThis.Error("The parameter 'ediFileId' must be defined.");
+        url_ = url_.replace("{ediFileId}", encodeURIComponent("" + ediFileId));
+        if (bol === null)
+            throw new globalThis.Error("The parameter 'bol' cannot be null.");
+        else if (bol !== undefined)
+            url_ += "bol=" + encodeURIComponent("" + bol) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processListInboundAsnCoils(_response);
+        });
+    }
+    processListInboundAsnCoils(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(InboundCoilDetail.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * Generate + persist the 861 (Receiving Advice) X12 for a received BOL — built, integrated and stored, but NEVER transmitted (the VAN SFTP stays the legacy owner). 400 if the BOL has no coils, 422 if the customer isn't a configured 861 partner (Novelis/Aleris), 409 if already generated. View the payload at /edi/transactions/{ediFileId}/payload.
      * @return OK
      */
@@ -26463,6 +26602,86 @@ export class HttpValidationProblemDetails {
                     data["errors"][key] = this.errors[key];
             }
         }
+        return data;
+    }
+}
+export class InboundAsnBol {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.ediFileId = _data["ediFileId"];
+            this.bol = _data["bol"];
+            this.receivedTime = _data["receivedTime"] ? new Date(_data["receivedTime"].toString()) : undefined;
+            this.status = _data["status"];
+            this.shipFrom = _data["shipFrom"];
+            this.totalWeight = _data["totalWeight"];
+            this.coilCount = _data["coilCount"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new InboundAsnBol();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["ediFileId"] = this.ediFileId;
+        data["bol"] = this.bol;
+        data["receivedTime"] = this.receivedTime ? this.receivedTime.toISOString() : undefined;
+        data["status"] = this.status;
+        data["shipFrom"] = this.shipFrom;
+        data["totalWeight"] = this.totalWeight;
+        data["coilCount"] = this.coilCount;
+        return data;
+    }
+}
+export class InboundAsnBolPagedResult {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [];
+                for (let item of _data["items"])
+                    this.items.push(InboundAsnBol.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new InboundAsnBolPagedResult();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined);
+        }
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
         return data;
     }
 }
