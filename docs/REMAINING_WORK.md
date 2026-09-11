@@ -98,15 +98,15 @@
   shift ends is closed at the coil's current balance, and binding the next shift re-opens a fresh run for a coil
   still on the mandrel — so a coil spanning midnight splits across both shifts' production instead of landing in one.
   Console: Load/End coil-run buttons + the live ledger table.
-- [~] **C** Operation Panel workflow (new/end coil, end shift, change job) — done (#283): `POST /das/lines/{n}/current-job`
+- [x] **C** Operation Panel workflow (new/end coil, end shift, change job) — done (#283): `POST /das/lines/{n}/current-job`
   (null clears; re-sequences `LINE_PRIORITY` — the running job drops to status 2, the new one takes 1, in legacy
   order), `POST /das/lines/{n}/current-coil` (null drops; loading zeroes the process rate and sets
   `coil.coil_status_from_line = 1`), `POST /das/lines/{n}/shift/start` (409 if the shift belongs to another line),
   `POST /das/lines/{n}/shift/end` (stamps `end_time` + rolls `dt_instance` up into `dt_total` **in seconds**, then
   clears the board's shift; 409 when nothing is open) + `GET /das/lines/{n}/queue` (`LINE_PRIORITY`, running job
   first). Each mirrors the legacy `w_da_sheet` UPDATE. The DAS console gained an **Operation panel** card
-  (live shift/job/coil + the actions). New/end **coil run** landed in #284 (above); still TODO here: the
-  end-coil recap screen.
+  (live shift/job/coil + the actions). New/end **coil run** landed in #284 (above); the end-coil recap
+  screen is built too (the DAS console's recap card over `GET` end-coil recap — skids, pieces, finished weight, scrap, yield).
 - [~] **C** Live PLC counters (good/reject/stroke/feed-length) posted as coil deltas — **live-display half done**
   (#291): edge `GET /counters` exposes the four running PLC counters (legacy `goodpartcnt`/`rejectpartcnt`/
   `strokecnt`/`feedlength`); the DAS console baselines them when a coil run opens and shows the delta as this
@@ -800,7 +800,7 @@
 
 ### C6. Platform / admin / reports
 - [~] **C** Scheduler EXECUTION engine — DONE: `SchedulerHostedService` (off by default, `Scheduler:Enabled=false`) + `SchedulerService`/`CronSchedule` (5/6-field cron matcher) dispatch enabled+due jobs to an **allowlist** of in-process `IScheduledOperation` handlers (noop/heartbeat seeded); unknown/legacy `target_operation` is recorded "unsupported" and NEVER executed (no shell/legacy path → guardrail intact). `POST /admin/jobs/{id}/run` for manual/on-demand. Still TODO: cron auto-import off the DB host (the server-console DB-host cron card already reads the .230 crontab read-only — see [[abis-230-cron-inventory]]).
-- [~] **M** Preventive-Maintenance (PM) scheduling subsystem — **API COMPLETE** (#273 read, #274 write, #275 completions):
+- [x] **M** Preventive-Maintenance (PM) scheduling subsystem — **API COMPLETE** (#273 read, #274 write, #275 completions):
   models `pm` / `pm_actions` / `pmcompletions` / `pmshift` over the 4-level equipment hierarchy
   (`groupdepartment → systemequipment → subsystemequipment → itemdevice`) + `titlecraft` rates.
   `GET /pms` (paged, hierarchy names, derived `daysUntilDue`/`dueBucket`), `GET /pms/due` (due board),
@@ -815,7 +815,7 @@
   binds positionally); `assignedtogroup` NOT NULL falls back to a non-empty label (Oracle `''` = NULL).
   PM UI — done (#276: due board + schedule editor), followed by the equipment cascade (#442), the PM list
   report and record navigation (#443), and retired PMs no longer reading as overdue (#445).
-- [~] **M** Maintenance parts/spares inventory — **the Oracle half is DEAD DATA; do not build CRUD over it.**
+- [x] **M** Maintenance parts/spares inventory — **the Oracle half is DEAD DATA; do not build CRUD over it.**
   Measured on `.230` 2026-08-20: `PARTS` holds 762 rows and `PARTS_SUPPLIERS` 762 links across 51
   suppliers — and **every single row carries the same `parts_entered_date`, 2010-08-21** (min = max).
   `lastorderdate` and `lastreceiveddate` are **NULL on all 762**, and **not one row has
