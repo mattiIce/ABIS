@@ -6,6 +6,7 @@
 import { AbisClient, EdiPartnerWrite, Edi997IngestWrite, EdiValveWrite, EdiArmWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { bannerText } from './edi-transmit-banner.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -406,27 +407,9 @@ let policy;
 const alertBox = (kind, icon, title, body) => `<div class="alert ${kind}"><span class="ai">${icon}</span><div class="at"><b>${title}</b><p>${body}</p></div></div>`;
 const ICON_OFF = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/></svg>';
 const ICON_LIVE = '<svg viewBox="0 0 24 24"><path d="M12 3v10"/><path d="M6.5 7a8 8 0 1 0 11 0"/></svg>';
-/**
- * The banner, shown on every tab.
- *
- * Three states, and the distinction between the first two is the point: "the valve is shut" and
- * "nothing is connected to the valve" are different guarantees. Someone deciding whether it is safe
- * to touch anything needs to know which one is currently holding.
- */
 function renderBanner(p) {
-    const n = (p.armed ?? []).length;
-    if (p.transmitting && p.wired) {
-        $('#xmitBanner').innerHTML = alertBox('crit', ICON_LIVE, 'EDI transmission is LIVE', `The valve is open and ${n} pair${n === 1 ? ' is' : 's are'} armed. Documents ABIS generates for `
-            + 'those partners are written to the VAN outbox and transmitted by the GXS cron.');
-        return;
-    }
-    const why = !p.wired
-        ? 'No generation path is connected to the transport, so nothing is sent whatever the valve says.'
-        : !p.valveOpen
-            ? 'The valve is closed.'
-            : 'The valve is open, but no partner/document pair is armed, so nothing is permitted through.';
-    $('#xmitBanner').innerHTML = alertBox('warn', ICON_OFF, 'EDI transmission is disabled', `${why} Documents are still generated and stored &mdash; they are just not sent. Legacy `
-        + '(ediprocess.sh + GXS.ksh) continues to transmit on its own cron regardless.');
+    const t = bannerText(p);
+    $('#xmitBanner').innerHTML = alertBox(t.kind, t.kind === 'crit' ? ICON_LIVE : ICON_OFF, t.title, t.body);
 }
 function renderValve(p) {
     $('#xState').innerHTML = p.valveOpen
