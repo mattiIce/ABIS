@@ -26913,6 +26913,12 @@ export class InvoiceComputation {
             this.offalWt = _data["offalWt"];
             this.offalPct = _data["offalPct"];
             this.skidCount = _data["skidCount"];
+            if (Array.isArray(_data["scrapByType"])) {
+                this.scrapByType = [];
+                for (let item of _data["scrapByType"])
+                    this.scrapByType.push(InvoiceScrapType.fromJS(item));
+            }
+            this.scrapNotOnSkidWt = _data["scrapNotOnSkidWt"];
             this.scrapStatus = _data["scrapStatus"];
             if (Array.isArray(_data["coils"])) {
                 this.coils = [];
@@ -26953,12 +26959,50 @@ export class InvoiceComputation {
         data["offalWt"] = this.offalWt;
         data["offalPct"] = this.offalPct;
         data["skidCount"] = this.skidCount;
+        if (Array.isArray(this.scrapByType)) {
+            data["scrapByType"] = [];
+            for (let item of this.scrapByType)
+                data["scrapByType"].push(item ? item.toJSON() : undefined);
+        }
+        data["scrapNotOnSkidWt"] = this.scrapNotOnSkidWt;
         data["scrapStatus"] = this.scrapStatus;
         if (Array.isArray(this.coils)) {
             data["coils"] = [];
             for (let item of this.coils)
                 data["coils"].push(item ? item.toJSON() : undefined);
         }
+        return data;
+    }
+}
+export class InvoiceScrapType {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.scrapType = _data["scrapType"];
+            this.scrapTypeName = _data["scrapTypeName"];
+            this.items = _data["items"];
+            this.netWt = _data["netWt"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new InvoiceScrapType();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["scrapType"] = this.scrapType;
+        data["scrapTypeName"] = this.scrapTypeName;
+        data["items"] = this.items;
+        data["netWt"] = this.netWt;
         return data;
     }
 }

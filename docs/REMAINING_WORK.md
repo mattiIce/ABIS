@@ -108,8 +108,8 @@
   coil run's production, on the same edge primary→fallback path + baseline pattern as the stacker piece count.
   Whole counts round; feed-length keeps decimals. Validated end-to-end against a local mock edge (deltas climb
   live). **Config: `Edge:Opc:GoodCountTag`/`RejectCountTag`/`StrokeCountTag`/`FeedLengthTag` (or per-line `?good=`
-  etc.); needs the real INGEAR item ids wired + the edge on .170/.175 REDEPLOYED (current live build predates
-  `/counters` → 404).** PERSISTENCE deferred: the good/reject piece totals already persist via the skid save
+  etc.); the INGEAR tag ids are known and the edge on .170/.175 was redeployed with `/counters` (verified 2026-08-09;
+  see `docs/EDGE_SERVICE.md`).** PERSISTENCE deferred: the good/reject piece totals already persist via the skid save
   (production_sheet_item); strokes/feed stay a live readout, faithful to legacy (they were display-only there).
 - [x] **C** Coil barcode scan-to-load + actual-weight (`ABCO_COIL_NET_WT`) update — done (#300), ported from
   legacy `w_scan_coil_id`: `GET /das/scan/coil?barcode=&abJobNum=` normalises the label (upper/trim, strips the
@@ -381,7 +381,7 @@
   override **cleared** — without that, a line overridden once keeps the flag forever and the job sheet
   prints "CONTACT FOREMAN BEFORE RUNNING" in red on an item somebody already corrected.
   <br>**Sector-consistency warning — done (#419).**
-- [~] **M** Accounting scrap-type summary; print coil-cert label on order close; **customer delete — done (#261)**: `DELETE /customers/{id}` refused with 409 when referenced by any order/part/coil/shipment, else deletes the customer + its contacts + recovery config; Delete button on the Customers page.
+- [~] **M** **Accounting scrap-type summary — done (#465)**, on the printed invoice: a plain sum, deliberately not legacy's `SUM(DISTINCT …)` (which understated 2,966 job/type groups on `.230`), with unskidded scrap as its own row so it reconciles to the total; print coil-cert label on order close (paper — deprioritised); **customer delete — done (#261)**: `DELETE /customers/{id}` refused with 409 when referenced by any order/part/coil/shipment, else deletes the customer + its contacts + recovery config; Delete button on the Customers page.
 
 ### C2. Logistics / shipping
 - [~] **C** Packing-list line items — ✅ `SHEET` (#217) + `SCRAP` (#219) + `REJECT_COIL` (#220) built (add/list/remove on the shipment, feeding the 856); only `WH_PACKING_ITEM` (9 live rows) deferred
@@ -546,7 +546,7 @@
   corrected line. A coil that is not a status-20 shell is never collected, anywhere in this module.
 - [x] **H** Coil-ownership transfer mint semantics — done (#224): mints a NEW `coil_abc_num` (status 2, from-cust set) + original → status 13; cert carries the new id
 - [x] **H** Bulk "Change status → Ready for transfer" (status 12) — done (#240 `POST /coils/ready-for-transfer` with eligibility guards; #241 picker `readyOnly` filter + coil-ownership mark-ready UI)
-- [~] **H** Scrap-skid + sheet-skid guarded DELETE done (#243). **Return-scrap done** (#XXX): POST /scrap-skids/{n}/return faithfully ports the live F_CONVERT_BACK_TO_SHEET proc — copies the scrapped mirror rows (scraped_sheet_skid/production_sheet_item/process_partial_skid/detail) back to the live tables, deletes the mirrors + scrap_skid(+detail) + credits back the linked return_scrap_item rows. **Sheet-skid modify + weight/piece reconciliation — done (#354)**: `PATCH /sheet-skids/{n}`
+- [~] **H** Scrap-skid + sheet-skid guarded DELETE done (#243). **Return-scrap done** (#250): POST /scrap-skids/{n}/return faithfully ports the live F_CONVERT_BACK_TO_SHEET proc — copies the scrapped mirror rows (scraped_sheet_skid/production_sheet_item/process_partial_skid/detail) back to the live tables, deletes the mirrors + scrap_skid(+detail) + credits back the linked return_scrap_item rows. **Sheet-skid modify + weight/piece reconciliation — done (#354)**: `PATCH /sheet-skids/{n}`
   ports legacy `w_office_skid_entry` CASE 4, setting the seven columns that UPDATE writes — net wt,
   tare, pieces, date, status, theoretical wt, on-hold reason. Two of those (`sheet_theoretical_wt`,
   `onhold_reason_code`) were absent from the model entirely. Correction panel on the Skids page.
@@ -565,7 +565,7 @@
   done/shipped/transferred refusal and a `system_log` row in the same transaction. `PUT /coils/{n}/customer`.
 - [x] **H** Mint carries full coil attributes — already done in #224: the ownership-transfer mint does a `SELECT *` schema read and copies every coil column (cash_date / part_num / material_num / mid_num / damaged_code / …) to the minted coil
 - [x] **H** Coil-quality capture + flaw mapping (#246 GET/PUT /coils/{n}/quality + POST/DELETE .../quality/flaws) + a **Coil quality** capture page (#247). Inbound status-on-receipt is already handled: MintBolCoilsAsync sets `coil.date_received` at receipt and status 11 (QA-hold) when `receiving_bol_coil.damaged_fault=1` (the damage code lives on receiving_bol_coil, not the coil). Remaining tail: QR/barcode capture feeding the flaw map (needs the handheld/barcode integration).
-- [~] **M/L** Import-from-BOL / show-archived-BOL browsers; multi-condition coil search (search term over org/lot/mid/notes + temper filter DONE on GET /coils + coil-inventory UI); manual new-coil + live-scale weigh-in — remaining: BOL browsers, gauge/width ranges, live-scale
+- [~] **M/L** Import-from-BOL / show-archived-BOL browsers; multi-condition coil search (search term over org/lot/mid/notes + temper filter DONE on GET /coils + coil-inventory UI); manual new-coil + live-scale weigh-in — remaining: the **archived-BOL browser** (live: `w_inv_coil` opens `w_archived_bol` over inbound-ASN staging `inbound_shipment`, 65,850 rows on `.230`; its coil drill-in window `w_coil_list_by_archived_bol` is not vendored) and **live-scale** (hardware). **Gauge/width ranges are not a parity gap** (checked 2026-09-11): legacy's coil window has no gauge or width filter — its search control is the 2021 "N years prior" toggle.
 
 ### C4. Handheld scanner (RF coil-receiving)
 - [x] **C** `INBOUND_COIL_STATUS` model + barcode→ABC lookup + mint-decision — done (#311), ported from the
@@ -933,12 +933,12 @@ function `f_add_system_log_tran`, whose body is not vendored), and the Instron "
   failed request, not two rows sharing an id. `MaxIdTableTests` now fails if a table is added to that
   list without one, which is the case that would turn this from a visible error into silent
   corruption.
-- [~] **L** Residual: a concurrent create on any of those 14 tables. **Half done (branch
+- [x] **L** Residual: a concurrent create on any of those 14 tables. **Half done (branch
   `fix/duplicate-key-409`, PR open):** a PK collision now answers **409, not 500**, via a single
   `DuplicateKeyExceptionHandler` matched on the provider error NUMBER (ORA-00001 / SQLITE_CONSTRAINT),
   never on message text. A 500 said the server broke and the request may not be worth retrying — both
   wrong, since nothing was written and retrying verbatim will very likely succeed.
-  <br>**Still open: the retry itself — and it is 3x bigger than this entry said (sized 2026-08-21).**
+  <br>**The retry itself — DONE (#451).** Every minting create path is behind `RetryOnDuplicateKeyAsync`, enforced by a structural test. The sizing notes that follow are kept as the record.
   Not "~14 create paths": **46 methods** in `AbisRepository` open a transaction and call
   `NextIdAsync(conn, tx, …)`. The 14 is the count of *tables* in `Database:MaxIdTables`, not of the
   paths that write them, and the two were conflated. Each retry has to re-run the **whole

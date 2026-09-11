@@ -210,6 +210,8 @@ public static class HtmlDocuments
                 <tr><th>Scrap status</th><td>{Esc(c.ScrapStatus) ?? "—"}</td></tr>
               </table>
 
+              {InvoiceScrapByType(c)}
+
               {coilSection}
 
               {(saved?.Notes is { Length: > 0 } notes ? $"<h2>Notes</h2><div class=\"notes\">{Esc(notes)}</div>" : "")}
@@ -584,6 +586,26 @@ public static class HtmlDocuments
     }
 
     private static string Wt(decimal? v) => v is null ? "—" : $"{v.Value:0.#} lb";
+
+    // Scrap by type — legacy nests d_acct_scrap_type_list in the printed invoice directly under Scrap Status.
+    // It always reconciles to Total Scrap Weight: scrap on no skid gets its own row instead of vanishing.
+    private static string InvoiceScrapByType(InvoiceComputation c)
+    {
+        if (c.ScrapByType.Count == 0 && c.ScrapNotOnSkidWt == 0m) return "";
+
+        static string Label(InvoiceScrapType t) =>
+            t.ScrapTypeName ?? (t.ScrapType is { } code ? "Type " + code : "Unspecified");
+
+        var rows = string.Concat(c.ScrapByType.Select(t =>
+            "<tr><th>" + Esc(Label(t)) + "</th><td class=\"n\">" + t.Items + "</td><td class=\"n\">" + Wt(t.NetWt) + "</td></tr>"));
+        if (c.ScrapNotOnSkidWt != 0m)
+            rows += "<tr><th>Not on a scrap skid</th><td class=\"n\">—</td><td class=\"n\">" + Wt(c.ScrapNotOnSkidWt) + "</td></tr>";
+
+        return "<h2>Scrap by type</h2><table class=\"wts\"><thead><tr><th>Scrap type</th><th class=\"n\">Items</th>"
+             + "<th class=\"n\">Weight</th></tr></thead><tbody>" + rows
+             + "<tr class=\"hi\"><th>Total scrap weight</th><td class=\"n\"></td><td class=\"n\">" + Wt(c.ScrapWt) + "</td></tr>"
+             + "</tbody></table>";
+    }
 
     /// <summary>Weight the way the bill of lading prints it: comma-grouped whole pounds, "lbs" plural —
     /// legacy's <c>String(wt, "###,###,###") + " lbs"</c>. Distinct from <see cref="Wt"/> (used on skid

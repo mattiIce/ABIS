@@ -21889,6 +21889,17 @@
             "type": "integer",
             "format": "int32"
           },
+          "scrapByType": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceScrapType"
+            },
+            "nullable": true
+          },
+          "scrapNotOnSkidWt": {
+            "type": "number",
+            "format": "double"
+          },
           "scrapStatus": {
             "type": "string",
             "nullable": true
@@ -21899,6 +21910,29 @@
               "$ref": "#/components/schemas/InvoiceCoil"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InvoiceScrapType": {
+        "type": "object",
+        "properties": {
+          "scrapType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "scrapTypeName": {
+            "type": "string",
+            "nullable": true
+          },
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "netWt": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
