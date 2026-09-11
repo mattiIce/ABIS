@@ -9,6 +9,7 @@ import { AbisClient, CoilPatch } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell, applyDeepLink } from './shell.js';
 import { statusChip, buildingLabel } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -102,7 +103,7 @@ async function search(): Promise<void> {
     $('#listSub').textContent = `${items.length} shown`;
     document.querySelectorAll<HTMLTableRowElement>('#coils tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadCoil(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Search failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -116,7 +117,7 @@ async function summary(): Promise<void> {
       <tbody>${groups.length ? groups.map((g) => `<tr><td>${esc(groupBy === 'location' ? buildingLabel(g.key) : g.key)}</td><td class="num">${numf(g.count)}</td>
         <td class="num">${numf(g.totalNetWt)}</td><td class="num">${numf(g.totalBalance)}</td></tr>`).join('')
         : '<tr><td colspan="4" class="muted">No data.</td></tr>'}</tbody></table>`;
-  } catch (e) { setErr(`Summary failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Summary failed: ${problemText(e)}`); }
 }
 
 async function loadCoil(id: number): Promise<void> {
@@ -146,7 +147,7 @@ async function loadCoil(id: number): Promise<void> {
         <thead><tr><th>Job</th><th>Status</th><th>Date</th><th class="num">Qty</th><th class="num">End wt</th></tr></thead>
         <tbody>${hist || '<tr><td colspan="5" class="muted">Not yet processed.</td></tr>'}</tbody></table></div>`;
     $('#btnSave').addEventListener('click', () => void saveCoil());
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -162,7 +163,7 @@ async function saveCoil(): Promise<void> {
     await client().patchCoil(selected, patch);
     $('#detail').insertAdjacentHTML('afterbegin', '<div class="ok-note">✓ Saved.</div>');
     await search();
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

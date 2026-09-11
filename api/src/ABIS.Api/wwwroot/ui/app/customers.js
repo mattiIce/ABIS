@@ -6,6 +6,7 @@
 import { AbisClient, CustomerWrite, CustomerContactWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -103,7 +104,7 @@ async function search() {
         document.querySelectorAll('#customers tr.click').forEach((tr) => tr.addEventListener('click', () => void loadCustomer(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Search failed: ${e.message}`);
+        setErr(`Search failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -126,7 +127,7 @@ async function loadCustomer(id) {
         setContactsEnabled(true);
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -169,7 +170,7 @@ async function saveCustomer() {
         await search();
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -202,7 +203,7 @@ async function deleteCustomer() {
         setOk(`✓ Deleted customer #${gone}.`);
     }
     catch (e) {
-        setErr(`Delete failed: ${e.message}`);
+        setErr(`Delete failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -222,7 +223,7 @@ async function loadContacts(customerId) {
         document.querySelectorAll('#contacts tr.click').forEach((tr) => tr.addEventListener('click', () => editContact(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Contacts load failed: ${e.message}`);
+        setErr(`Contacts load failed: ${problemText(e)}`);
     }
 }
 function setContactsEnabled(on) {
@@ -273,7 +274,7 @@ async function saveContact() {
         newContact();
     }
     catch (e) {
-        setErr(`Contact save failed: ${e.message}`);
+        setErr(`Contact save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

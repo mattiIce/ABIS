@@ -7,6 +7,7 @@ import { AbisClient, DieWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -108,7 +109,7 @@ async function renderShapeMap(): Promise<void> {
       : '<tr><td colspan="5" class="muted">No mappings.</td></tr>';
     $('#maps').querySelectorAll<HTMLButtonElement>('[data-del-map]').forEach((b) =>
       b.addEventListener('click', () => void removeShapeMap(b.getAttribute('data-del-map') || '')));
-  } catch (e) { $('#maps').innerHTML = `<tr><td colspan="5" class="err">Load failed: ${esc((e as Error).message)}</td></tr>`; }
+  } catch (e) { $('#maps').innerHTML = `<tr><td colspan="5" class="err">Load failed: ${esc(problemText(e))}</td></tr>`; }
 }
 
 async function addShapeMap(): Promise<void> {
@@ -127,7 +128,7 @@ async function addShapeMap(): Promise<void> {
     msg.textContent = '✓ Mapping added.'; msg.className = 'ok-note';
     setV('#mShape', ''); setV('#mLine', ''); setV('#mDie', '');
     await renderShapeMap();
-  } catch (e) { msg.textContent = `Add failed: ${(e as Error).message}`; msg.className = 'err'; }
+  } catch (e) { msg.textContent = `Add failed: ${problemText(e)}`; msg.className = 'err'; }
 }
 
 async function removeShapeMap(key: string): Promise<void> {
@@ -137,7 +138,7 @@ async function removeShapeMap(key: string): Promise<void> {
     const r = await authFetch(`/api/line-die-shapes/${encodeURIComponent(shape)}/${line}/${die}`, { method: 'DELETE' });
     if (!r.ok) { const m = $('#mapMsg'); m.textContent = `Remove failed (${r.status}).`; m.className = 'err'; return; }
     await renderShapeMap();
-  } catch (e) { const m = $('#mapMsg'); m.textContent = `Remove failed: ${(e as Error).message}`; m.className = 'err'; }
+  } catch (e) { const m = $('#mapMsg'); m.textContent = `Remove failed: ${problemText(e)}`; m.className = 'err'; }
 }
 
 async function search(): Promise<void> {
@@ -155,7 +156,7 @@ async function search(): Promise<void> {
     $('#listSub').textContent = `${items.length} shown`;
     document.querySelectorAll<HTMLTableRowElement>('#dies tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadDie(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Search failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -170,7 +171,7 @@ async function loadDie(id: number): Promise<void> {
     setV('#dLocation', d.location); setV('#dDesc', d.description);
     setV('#dEngScrap', d.engineeredScrapYN); setV('#dPartsHit', d.numOfPartsPerHit);
     setV('#dAngleMin', d.angleChangeMinutes); setV('#dAvgChgMin', d.averageDieChangeMinutes);
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -207,7 +208,7 @@ async function save(): Promise<void> {
       setOk(`✓ Saved die #${editingId}.`);
     }
     await search();
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -221,7 +222,7 @@ async function printReport(): Promise<void> {
     const r = await authFetch(`/api/documents/die-report${qs}`);
     if (!r.ok) { setErr(`Print failed (${r.status}).`); return; }
     window.open(URL.createObjectURL(await r.blob()), '_blank');
-  } catch (e) { setErr(`Print failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Print failed: ${problemText(e)}`); }
 }
 
 (async () => {

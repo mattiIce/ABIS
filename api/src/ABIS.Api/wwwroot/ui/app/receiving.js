@@ -131,7 +131,7 @@ async function search() {
         document.querySelectorAll('#bols tr.click').forEach((tr) => tr.addEventListener('click', () => void loadBol(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Search failed: ${e.message}`);
+        setErr(`Search failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -154,7 +154,7 @@ async function loadBol(id) {
         await loadCoils();
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -198,7 +198,7 @@ async function addCoil() {
         await loadCoils();
     }
     catch (e) {
-        setErr(`Add coil failed: ${e.message}`);
+        setErr(`Add coil failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -214,7 +214,7 @@ async function deleteCoil(coilId) {
         $('#coilOk').textContent = '✓ Coil removed.';
     }
     catch (e) {
-        setErr(`Remove coil failed: ${e.message}`);
+        setErr(`Remove coil failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -234,7 +234,7 @@ async function mintCoils() {
         await loadCoils();
     }
     catch (e) {
-        setErr(`Mint failed: ${e.message}`);
+        setErr(`Mint failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -252,7 +252,7 @@ async function generate861() {
         $('#coilOk').textContent = `861: ${r.status} — ${r.note ?? ''}`;
     }
     catch (e) {
-        setErr(`861 failed: ${e.message}`);
+        setErr(`861 failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -333,7 +333,7 @@ async function save() {
         await search();
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

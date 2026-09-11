@@ -8,6 +8,7 @@
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusText } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const esc = (s: unknown): string =>
@@ -86,7 +87,7 @@ async function loadHeld(): Promise<void> {
       </tr>`).join('') : '<tr><td colspan="7" class="muted">No coils are on QA hold.</td></tr>';
     $('#count').textContent = `${(page.totalCount ?? items.length).toLocaleString()} on hold`;
     $('#listSub').textContent = `${items.length} shown`;
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
 }
 
 async function loadHistory(coil: number): Promise<void> {
@@ -102,7 +103,7 @@ async function loadHistory(coil: number): Promise<void> {
         <td>${esc(statusText('coilStatus', t.coilCurStatus))}</td>
         <td>${esc(t.coilModifiedBy)}</td><td>${esc(t.note)}</td>
       </tr>`).join('') : `<tr><td colspan="5" class="muted">No QA history for coil ${coil}.</td></tr>`;
-  } catch (e) { setErr(`History failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`History failed: ${problemText(e)}`); }
 }
 
 async function transition(kind: 'hold' | 'release'): Promise<void> {
@@ -128,7 +129,7 @@ async function transition(kind: 'hold' | 'release'): Promise<void> {
     setOk(kind === 'hold' ? '✓ Coil placed on QA hold.' : '✓ Coil released.');
     $<HTMLInputElement>('#fNote').value = '';
     await Promise.all([loadHeld(), loadHistory(Number(coil))]);
-  } catch (e) { setErr(`${kind === 'hold' ? 'Hold' : 'Release'} failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`${kind === 'hold' ? 'Hold' : 'Release'} failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

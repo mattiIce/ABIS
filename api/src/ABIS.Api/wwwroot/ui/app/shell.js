@@ -18,6 +18,7 @@ import { initAuth, authFetch, loginWithUser, changePassword, currentUserName, is
 import { observeTables } from './table-tools.js';
 import { loadLineNames } from './status-labels.js';
 import { DEFAULT_EDGE_URLS, parseEdgeUrls, probeEdgeHosts } from './edge.js';
+import { problemText } from './api-errors.js';
 // Icons are inline SVG path/shape markup (stroked via currentColor in theme.css).
 const I = {
     dash: '<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -532,7 +533,7 @@ function loginGate() {
                     done();
                 }
                 catch (e) {
-                    cpErr.textContent = e.message;
+                    cpErr.textContent = problemText(e);
                     cpBtn.disabled = false;
                     cpBtn.textContent = 'Change password & continue';
                 }
@@ -560,7 +561,7 @@ function loginGate() {
                 done();
             }
             catch (e) {
-                const msg = e.message;
+                const msg = problemText(e);
                 if (/not configured/i.test(msg)) {
                     // No server-side sign-in yet — fall back to the dev API key + impersonation so the
                     // app is still usable locally.

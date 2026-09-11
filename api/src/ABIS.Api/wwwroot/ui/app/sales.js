@@ -10,6 +10,7 @@ import { AbisClient, SalesReminderWrite, SalesProbabilityWrite, } from './genera
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { lineLabel } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -140,7 +141,7 @@ async function loadQuotes() {
         document.querySelectorAll('#tQuotes tr.click').forEach((tr) => tr.addEventListener('click', () => void openQuote(Number(tr.dataset.q), Number(tr.dataset.r))));
     }
     catch (e) {
-        setErr(`Quotes failed: ${e.message}`);
+        setErr(`Quotes failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -179,7 +180,7 @@ async function openQuote(quoteId, revisionId) {
         renderHeader(q);
     }
     catch (e) {
-        setErr(`Open quote failed: ${e.message}`);
+        setErr(`Open quote failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -223,7 +224,7 @@ async function addEvent() {
         await loadEvents();
     }
     catch (e) {
-        setErr(`Add follow-up failed: ${e.message}`);
+        setErr(`Add follow-up failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -248,7 +249,7 @@ async function addProbability() {
         await Promise.all([loadProbability(), loadQuotes()]);
     }
     catch (e) {
-        setErr(`Record review failed: ${e.message}`);
+        setErr(`Record review failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -266,7 +267,7 @@ async function loadContacts() {
             : '<tr><td colspan="6" class="muted">No contacts.</td></tr>';
     }
     catch (e) {
-        setErr(`Contacts failed: ${e.message}`);
+        setErr(`Contacts failed: ${problemText(e)}`);
     }
 }
 async function createQuote() {
@@ -313,7 +314,7 @@ async function createQuote() {
         await openQuote(created.quoteId, created.quoteRevisionId);
     }
     catch (e) {
-        setErr(`Create failed: ${e.message}`);
+        setErr(`Create failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

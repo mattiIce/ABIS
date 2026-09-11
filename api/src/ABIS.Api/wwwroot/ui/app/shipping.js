@@ -8,6 +8,7 @@ import { AbisClient, ShipmentStatusPatch } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -58,7 +59,7 @@ async function search() {
         document.querySelectorAll('#shipments tr.click').forEach((tr) => tr.addEventListener('click', () => void loadShipment(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Search failed: ${e.message}`);
+        setErr(`Search failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -123,7 +124,7 @@ async function loadShipment(id) {
         await Promise.all([loadPackingItems(id), loadHistory(id)]);
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -149,7 +150,7 @@ async function loadPackingItems(id) {
         document.querySelectorAll('#packItems button[data-id]').forEach((b) => b.addEventListener('click', () => void removePackItem(String(b.dataset.type), Number(b.dataset.id))));
     }
     catch (e) {
-        setErr(`Items failed: ${e.message}`);
+        setErr(`Items failed: ${problemText(e)}`);
     }
 }
 // Y/N flag as a chip ('' is NULL on Oracle, so blank means "not set", not "no").
@@ -182,7 +183,7 @@ async function loadHistory(id) {
             : '<tr><td colspan="5" class="muted">No recorded status changes.</td></tr>';
     }
     catch (e) {
-        setErr(`History failed: ${e.message}`);
+        setErr(`History failed: ${problemText(e)}`);
     }
 }
 async function addPackItem() {
@@ -209,7 +210,7 @@ async function addPackItem() {
         await loadPackingItems(selected);
     }
     catch (e) {
-        setErr(`Add failed: ${e.message}`);
+        setErr(`Add failed: ${problemText(e)}`);
     }
 }
 // Print a shipping document — fetch the server-rendered HTML with auth, open it as a blob URL for printing
@@ -235,7 +236,7 @@ async function printDoc(url, label) {
         window.open(URL.createObjectURL(await r.blob()), '_blank');
     }
     catch (e) {
-        setErr(`${label} failed: ${e.message}`);
+        setErr(`${label} failed: ${problemText(e)}`);
     }
 }
 async function removePackItem(itemType, itemId) {
@@ -253,7 +254,7 @@ async function removePackItem(itemType, itemId) {
         await loadPackingItems(selected);
     }
     catch (e) {
-        setErr(`Remove failed: ${e.message}`);
+        setErr(`Remove failed: ${problemText(e)}`);
     }
 }
 // Guided close-out: mark the shipment shipped + stamp sent/actual dates in one action
@@ -277,7 +278,7 @@ async function closeBol() {
         $('#closeOk').textContent = '✓ Shipment closed / marked shipped.';
     }
     catch (e) {
-        setErr(`Close failed: ${e.message}`);
+        setErr(`Close failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -301,7 +302,7 @@ async function dispatch() {
         await search();
     }
     catch (e) {
-        setErr(`Dispatch failed: ${e.message}`);
+        setErr(`Dispatch failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

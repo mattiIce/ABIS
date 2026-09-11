@@ -7,6 +7,7 @@
 import { AbisClient, RecoveryCustomerWrite, CustomerScrapTypeWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -89,7 +90,7 @@ async function loadScrapTypes() {
         $('#dScrapType').innerHTML = scrapTypes.map((s) => `<option value="${esc(s.scrapTypeId)}">${esc(s.scrapCode)} — ${esc(s.scrapDefect)}</option>`).join('');
     }
     catch (e) {
-        setErr(`Scrap types failed: ${e.message}`);
+        setErr(`Scrap types failed: ${problemText(e)}`);
     }
 }
 async function loadProductTypes() {
@@ -100,7 +101,7 @@ async function loadProductTypes() {
             : '<tr><td colspan="2" class="muted">No product types.</td></tr>';
     }
     catch (e) {
-        setErr(`Product types failed: ${e.message}`);
+        setErr(`Product types failed: ${problemText(e)}`);
     }
 }
 async function loadRecoveryCustomers() {
@@ -122,7 +123,7 @@ async function loadRecoveryCustomers() {
         document.querySelectorAll('#tCust [data-del]').forEach((b) => b.addEventListener('click', () => void deleteCustomer(Number(b.dataset.del))));
     }
     catch (e) {
-        setErr(`Recovery customers failed: ${e.message}`);
+        setErr(`Recovery customers failed: ${problemText(e)}`);
     }
 }
 async function loadDefects() {
@@ -145,7 +146,7 @@ async function loadDefects() {
         document.querySelectorAll('#tDefects [data-del-defect]').forEach((b) => b.addEventListener('click', () => void removeDefect(Number(id), Number(b.dataset.delDefect))));
     }
     catch (e) {
-        setErr(`Customer defects failed: ${e.message}`);
+        setErr(`Customer defects failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -171,7 +172,7 @@ async function saveCustomer() {
         await loadRecoveryCustomers();
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -187,7 +188,7 @@ async function deleteCustomer(id) {
         await loadRecoveryCustomers();
     }
     catch (e) {
-        setErr(`Delete failed: ${e.message}`);
+        setErr(`Delete failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -213,7 +214,7 @@ async function addDefect() {
         await loadDefects();
     }
     catch (e) {
-        setErr(`Add defect failed: ${e.message}`);
+        setErr(`Add defect failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -229,7 +230,7 @@ async function removeDefect(customerId, scrapTypeId) {
         await loadDefects();
     }
     catch (e) {
-        setErr(`Remove failed: ${e.message}`);
+        setErr(`Remove failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

@@ -12,6 +12,8 @@
 //                  await initAuth();                       // once, at startup
 //                  new AbisClient('', { fetch: authFetch });
 
+import { problemText } from './api-errors.js';
+
 interface AuthConfig {
   oidc: boolean;
   authority?: string;
@@ -215,7 +217,7 @@ async function doInit(): Promise<void> {
     try {
       await handleCallback();
     } catch (e) {
-      renderOidcBar((e as Error).message); // surface the error, don't auto-loop
+      renderOidcBar(problemText(e)); // surface the error, don't auto-loop
       return;
     }
   }

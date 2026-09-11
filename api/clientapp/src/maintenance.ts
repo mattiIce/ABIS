@@ -9,6 +9,7 @@ import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { exportXlsx } from './xlsx.js';
 import { pmListTable, toCsv } from './maintenance-export.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -19,34 +20,6 @@ const setOk = (m: string) => { $('#ok').textContent = m; };
 const setBusy = (b: boolean) => document.body.classList.toggle('busy', b);
 const v = (id: string) => $<HTMLInputElement>(id).value.trim();
 
-/**
- * What actually went wrong, from an NSwag ApiException.
- *
- * The generated client's `message` for a non-2xx is the generic "An unexpected server error
- * occurred." — so a **403** on a PM write read as though the server had broken, sending the reader to
- * look at the wrong thing entirely. It is the same failure as the AD sign-in reporting a certificate
- * problem as a bad password: the server said exactly what was wrong and the UI threw it away.
- *
- * The API answers RFC-9110 ProblemDetails, whose `detail` names the user, the level and the feature.
- * Other pages already decode it (auth.ts, sales.ts, qa-hold.ts); this one did not.
- */
-function why(e: unknown): string {
-  const ex = e as { status?: number; response?: string; message?: string };
-  if (typeof ex?.response === 'string' && ex.response.length > 0) {
-    try {
-      const p = JSON.parse(ex.response) as { detail?: string; title?: string; errors?: Record<string, string[]> };
-      if (p.errors) {
-        const flat = Object.values(p.errors).flat().join(' ');
-        if (flat) return flat;
-      }
-      if (p.detail) return p.detail;
-      if (p.title) return p.title;
-    } catch { /* not ProblemDetails — fall through to the raw message */ }
-  }
-  // 403 in particular must never read as a server fault: nothing is broken, the account lacks a grant.
-  if (ex?.status === 403) return 'You do not have permission to do that.';
-  return ex?.message ?? String(e);
-}
 const setV = (id: string, value: unknown) => { $<HTMLInputElement>(id).value = value == null ? '' : String(value); };
 // Local-time formatter for datetime-local inputs — toISOString() would emit UTC and shift the value by
 // the whole timezone offset on show/re-save (see downtime.ts).
@@ -183,7 +156,7 @@ async function search(): Promise<void> {
     $('#count').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
     document.querySelectorAll<HTMLTableRowElement>('#logs tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadLog(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Search failed: ${why(e)}`); }
+  } catch (e) { setErr(`Search failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -200,7 +173,7 @@ async function loadLog(id: number): Promise<void> {
     setV('#mAuthor', m.author); setV('#mReportedBy', m.reportedBy);
     setV('#mAssignedTo', m.assignedTo); setV('#mCompletedBy', m.completedBy);
     setV('#mLabor', m.laborHours);
-  } catch (e) { setErr(`Load failed: ${why(e)}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -239,7 +212,7 @@ async function save(): Promise<void> {
       setOk(`✓ Saved log #${editingId}.`);
     }
     await search();
-  } catch (e) { setErr(`Save failed: ${why(e)}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -276,7 +249,7 @@ async function loadDue(): Promise<void> {
     $('#cDue').textContent = `${rows.length} due · ${overdue} overdue`;
     document.querySelectorAll<HTMLButtonElement>('#tDue [data-open]').forEach((b) =>
       b.addEventListener('click', () => { showTab('pms'); void loadPm(Number(b.dataset.open)); }));
-  } catch (e) { setErr(`Due board failed: ${why(e)}`); }
+  } catch (e) { setErr(`Due board failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -303,7 +276,7 @@ async function loadPms(): Promise<void> {
     $('#cPms').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
     document.querySelectorAll<HTMLTableRowElement>('#tPms tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadPm(Number(tr.dataset.id))));
-  } catch (e) { setErr(`PM list failed: ${why(e)}`); }
+  } catch (e) { setErr(`PM list failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -418,7 +391,7 @@ async function loadPm(id: number | null): Promise<void> {
       $('#btnAddAction').addEventListener('click', () => void addAction());
       await Promise.all([loadActions(pmId), loadHistory(pmId)]);
     }
-  } catch (e) { setErr(`PM load failed: ${why(e)}`); }
+  } catch (e) { setErr(`PM load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -505,7 +478,7 @@ async function savePm(): Promise<void> {
       $('#pmOk').textContent = `✓ Saved PM #${pmEditingId}.`;
       await Promise.all([loadPms(), loadDue()]);
     }
-  } catch (e) { setErr(`Save failed: ${why(e)}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -517,7 +490,7 @@ async function deletePm(): Promise<void> {
     await client().deletePm(pmEditingId);
     await loadPm(null);
     await Promise.all([loadPms(), loadDue()]);
-  } catch (e) { setErr(`Delete failed: ${why(e)}`); }
+  } catch (e) { setErr(`Delete failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -536,7 +509,7 @@ async function completePm(): Promise<void> {
     const how = r.advanceBasis === 'none' ? 'no interval, date unchanged' : `via ${esc(r.advanceBasis)}`;
     $('#pmOk').textContent = `✓ Completed. Next due ${dOnly(r.nextDueDate) || '—'} (${how}).`;
     await Promise.all([loadPm(pmEditingId), loadPms(), loadDue()]);
-  } catch (e) { setErr(`Complete failed: ${why(e)}`); }
+  } catch (e) { setErr(`Complete failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -557,12 +530,12 @@ async function addAction(): Promise<void> {
     await client().addPmAction(pmEditingId, new PmActionWrite({ actionItems: v('#aItem'), itemDetails: v('#aDetails') || undefined }));
     setV('#aItem', ''); setV('#aDetails', '');
     await loadActions(pmEditingId);
-  } catch (e) { setErr(`Add failed: ${why(e)}`); }
+  } catch (e) { setErr(`Add failed: ${problemText(e)}`); }
 }
 
 async function removeAction(pmId: number, actionId: number): Promise<void> {
   try { await client().deletePmAction(pmId, actionId); await loadActions(pmId); }
-  catch (e) { setErr(`Remove failed: ${why(e)}`); }
+  catch (e) { setErr(`Remove failed: ${problemText(e)}`); }
 }
 
 async function loadHistory(pmId: number): Promise<void> {
@@ -632,7 +605,7 @@ function showTab(name: string): void {
       const tb = pmListTable(await allPms());
       if (kind === 'csv') download(`${tb.name}.csv`, toCsv(tb), 'text/csv');
       else exportXlsx(tb.name, tb.name.slice(0, 31), tb.headers, tb.rows);
-    } catch (e) { setErr(`Export failed: ${why(e)}`); }
+    } catch (e) { setErr(`Export failed: ${problemText(e)}`); }
     finally { setBusy(false); }
   };
   $('#pmCsv').addEventListener('click', () => void exportPms('csv'));

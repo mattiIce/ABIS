@@ -6,6 +6,7 @@
 // Compiled by tsc to wwwroot/ui/app/server-console.js; served at /ui/server-console.html.
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const setErr = (m) => { $('#err').textContent = m; };
@@ -96,7 +97,7 @@ async function loadServices() {
         $('#tSvc').querySelectorAll('button[data-restart]').forEach((b) => b.addEventListener('click', () => void restart(b.dataset.restart)));
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -120,7 +121,7 @@ async function restart(unit) {
         }
     }
     catch (e) {
-        setErr(`Restart failed: ${e.message}`);
+        setErr(`Restart failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -138,7 +139,7 @@ async function loadLogs() {
         $('#logOut').textContent = r.ok ? (body.text || '(no output)') : `Failed (${r.status}).`;
     }
     catch (e) {
-        $('#logOut').textContent = `Failed: ${e.message}`;
+        $('#logOut').textContent = `Failed: ${problemText(e)}`;
     }
 }
 async function loadCron() {
@@ -151,7 +152,7 @@ async function loadCron() {
             : `Not available: ${body.error ?? r.status}`;
     }
     catch (e) {
-        $('#cronOut').textContent = `Failed: ${e.message}`;
+        $('#cronOut').textContent = `Failed: ${problemText(e)}`;
     }
 }
 (async () => {

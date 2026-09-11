@@ -7,6 +7,7 @@ import { AbisClient, ShiftWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip, lineLabel } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -118,7 +119,7 @@ async function showStaleOpen(): Promise<void> {
       : '';
     document.querySelectorAll<HTMLTableRowElement>('#shifts tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadShift(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Open-shift lookup failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Open-shift lookup failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -138,7 +139,7 @@ async function search(): Promise<void> {
     $('#listSub').textContent = `${items.length} shown`;
     document.querySelectorAll<HTMLTableRowElement>('#shifts tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadShift(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Search failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -152,7 +153,7 @@ async function loadShift(id: number): Promise<void> {
     $<HTMLInputElement>('#hEnd').value = dtLocal(s.endTime);
     setV('#hLine', s.lineNum); setV('#hSchedule', s.scheduleType); setV('#hDt', s.dtTotal);
     setV('#hOper', s.operatorInitial); setV('#hStatus', s.shiftDataStatus); setV('#hNote', s.note);
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -185,7 +186,7 @@ async function save(): Promise<void> {
       setOk(`✓ Saved shift #${editingId}.`);
     }
     await search();
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

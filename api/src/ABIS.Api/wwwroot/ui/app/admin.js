@@ -8,6 +8,7 @@
 import { AbisClient, ScheduledJobWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -89,7 +90,7 @@ async function loadJobs() {
         $('#rows').querySelectorAll('tr.click').forEach((tr) => tr.addEventListener('click', () => void loadRuns(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -106,7 +107,7 @@ async function toggle(id, enable) {
         await loadJobs();
     }
     catch (e) {
-        setErr(`Update failed: ${e.message}`);
+        setErr(`Update failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -125,7 +126,7 @@ async function loadRuns(id) {
             : '<tr><td colspan="5" class="muted">No runs recorded (a future execution engine would write these).</td></tr>';
     }
     catch (e) {
-        setErr(`Runs failed: ${e.message}`);
+        setErr(`Runs failed: ${problemText(e)}`);
     }
 }
 async function create() {
@@ -148,7 +149,7 @@ async function create() {
         await loadJobs();
     }
     catch (e) {
-        setErr(`Create failed: ${e.message}`);
+        setErr(`Create failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

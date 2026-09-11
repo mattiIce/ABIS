@@ -7,6 +7,7 @@
 import { AbisClient, ScanLogWrite } from './generated/abis-client.js';
 
 import { initAuth, authFetch } from './auth.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T =>
   document.querySelector(sel) as T;
@@ -39,7 +40,7 @@ async function search(): Promise<void> {
       </tr>`).join('');
     $('#scans').innerHTML = rows || '<tr><td colspan="5" class="muted">No scans.</td></tr>';
     $('#count').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
-  } catch (e) { setErr(`Search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Search failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -57,7 +58,7 @@ async function record(): Promise<void> {
     $<HTMLInputElement>('#sNote').value = '';
     $<HTMLInputElement>('#sNote').focus();
     await search();
-  } catch (e) { setErr(`Record failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Record failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

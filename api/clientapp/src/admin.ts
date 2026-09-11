@@ -8,6 +8,7 @@
 import { AbisClient, ScheduledJobWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -96,7 +97,7 @@ async function loadJobs(): Promise<void> {
       b.addEventListener('click', (e) => { e.stopPropagation(); void loadRuns(Number(b.dataset.runs)); }));
     $('#rows').querySelectorAll<HTMLTableRowElement>('tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadRuns(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -105,7 +106,7 @@ async function toggle(id: number, enable: boolean): Promise<void> {
   try {
     if (enable) await client().enableScheduledJob(id); else await client().disableScheduledJob(id);
     await loadJobs();
-  } catch (e) { setErr(`Update failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Update failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -119,7 +120,7 @@ async function loadRuns(id: number): Promise<void> {
         <td><span class="chip ${r.runStatus === 'ok' ? 'ok' : r.runStatus === 'failed' ? 'crit' : 'mut'}">${esc(r.runStatus ?? '—')}</span></td>
         <td class="num">${esc(r.affectedCount ?? '')}</td><td class="mono">${esc(r.correlationId ?? '')}</td></tr>`).join('')
       : '<tr><td colspan="5" class="muted">No runs recorded (a future execution engine would write these).</td></tr>';
-  } catch (e) { setErr(`Runs failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Runs failed: ${problemText(e)}`); }
 }
 
 async function create(): Promise<void> {
@@ -136,7 +137,7 @@ async function create(): Promise<void> {
     $('#createMsg').textContent = `✓ Defined "${j.jobName}" (fires nothing).`;
     $<HTMLInputElement>('#nName').value = ''; $<HTMLInputElement>('#nCron').value = ''; $<HTMLInputElement>('#nOp').value = '';
     await loadJobs();
-  } catch (e) { setErr(`Create failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Create failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

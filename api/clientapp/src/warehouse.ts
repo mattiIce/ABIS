@@ -8,6 +8,7 @@ import { AbisClient, SheetSkidWarehousePatch } from './generated/abis-client.js'
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -98,7 +99,7 @@ async function search(): Promise<void> {
     $('#count').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
     document.querySelectorAll<HTMLTableRowElement>('#skids tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadSkid(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Search failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -111,7 +112,7 @@ async function loadSkid(id: number): Promise<void> {
     $('#summary').textContent = `Job ${s.abJobNum ?? ''} · ${num(s.sheetNetWt)} net · ${s.skidPieces ?? ''} pcs`;
     setV('#wLocation', s.skidLocation); setV('#wTicket', s.skidTicketIfWhed); setV('#wStatus', s.skidSheetStatus);
     $<HTMLButtonElement>('#btnDelete').disabled = false;
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -127,7 +128,7 @@ async function save(): Promise<void> {
     await client().updateSheetSkidWarehouse(editingNum, body);
     setOk(`✓ Warehouse-updated skid #${editingNum}.`);
     await search();
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -179,7 +180,7 @@ async function createWarehouseSkid(): Promise<void> {
     note(`✓ Skid #${created.sheetSkidNum} on ${shell}.${warn}`);
     ['#nTicket', '#nNet', '#nTare', '#nPieces'].forEach((i) => setV(i, ''));
     await search();
-  } catch (e) { setErr(`Could not warehouse it in: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Could not warehouse it in: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -200,7 +201,7 @@ async function deleteWarehouseSkid(): Promise<void> {
     $<HTMLButtonElement>('#btnDelete').disabled = true;
     $('#formTitle').textContent = 'Warehouse update';
     await search();
-  } catch (e) { setErr(`Delete failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Delete failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

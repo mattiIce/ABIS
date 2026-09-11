@@ -16,6 +16,7 @@
 import { AbisClient, Coil } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -78,7 +79,7 @@ async function lookup(): Promise<void> {
     setMsg('');
     $('#verifyWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (e) {
-    const msg = (e as { status?: number }).status === 404 ? `Coil ${raw} not found in ABIS.` : `Lookup failed: ${(e as Error).message}`;
+    const msg = (e as { status?: number }).status === 404 ? `Coil ${raw} not found in ABIS.` : `Lookup failed: ${problemText(e)}`;
     setMsg(msg, 'err');
     current = null; $('#verifyWrap').hidden = true; $<HTMLButtonElement>('#btnPrintTop').disabled = true;
   } finally { setBusy(false); }
@@ -112,7 +113,7 @@ async function printLabel(): Promise<void> {
     const blob = await r.blob();
     window.open(URL.createObjectURL(blob), '_blank');
     setMsg('✓ Label opened.', 'ok');
-  } catch (e) { setMsg(`Label failed: ${(e as Error).message}`, 'err'); }
+  } catch (e) { setMsg(`Label failed: ${problemText(e)}`, 'err'); }
   finally { setBusy(false); }
 }
 

@@ -10,6 +10,7 @@ import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip, statusText, lineLabel } from './status-labels.js';
 import { exportXlsx } from './xlsx.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 function client() {
     return new AbisClient('', { fetch: authFetch });
@@ -282,7 +283,7 @@ async function run() {
         $('#totals').textContent = `${current.length} row(s)`;
     }
     catch (e) {
-        setErr(`Report failed: ${e.message}`);
+        setErr(`Report failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

@@ -9,6 +9,7 @@ import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip, lineLabel, STACK_PATH } from './status-labels.js';
 import { DEFAULT_EDGE_URLS, parseEdgeUrls, fetchConveyor } from './edge.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -71,7 +72,7 @@ async function load() {
         await Promise.all([loadBoard(), loadPath(), loadErrors()]);
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -203,7 +204,7 @@ async function logError() {
         await loadErrors();
     }
     catch (e) {
-        setErr(`Log error failed: ${e.message}`);
+        setErr(`Log error failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

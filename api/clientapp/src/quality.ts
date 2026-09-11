@@ -7,6 +7,7 @@
 import { AbisClient, RecoveryCustomerWrite, CustomerScrapTypeWrite, ScrapType } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -93,7 +94,7 @@ async function loadScrapTypes(): Promise<void> {
     // Populate the add-defect picker from the same catalog.
     $('#dScrapType').innerHTML = scrapTypes.map((s) =>
       `<option value="${esc(s.scrapTypeId)}">${esc(s.scrapCode)} — ${esc(s.scrapDefect)}</option>`).join('');
-  } catch (e) { setErr(`Scrap types failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Scrap types failed: ${problemText(e)}`); }
 }
 
 async function loadProductTypes(): Promise<void> {
@@ -102,7 +103,7 @@ async function loadProductTypes(): Promise<void> {
     $('#tProd').innerHTML = (list ?? []).length ? (list ?? []).map((p) => `<tr>
       <td class="mono">${esc(p.productTypeId)}</td><td>${esc(p.productTypeName)}</td></tr>`).join('')
       : '<tr><td colspan="2" class="muted">No product types.</td></tr>';
-  } catch (e) { setErr(`Product types failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Product types failed: ${problemText(e)}`); }
 }
 
 async function loadRecoveryCustomers(): Promise<void> {
@@ -121,7 +122,7 @@ async function loadRecoveryCustomers(): Promise<void> {
       }));
     document.querySelectorAll<HTMLButtonElement>('#tCust [data-del]').forEach((b) =>
       b.addEventListener('click', () => void deleteCustomer(Number(b.dataset.del))));
-  } catch (e) { setErr(`Recovery customers failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Recovery customers failed: ${problemText(e)}`); }
 }
 
 async function loadDefects(): Promise<void> {
@@ -138,7 +139,7 @@ async function loadDefects(): Promise<void> {
       : '<tr><td colspan="6" class="muted">No tracked defects for this customer.</td></tr>';
     document.querySelectorAll<HTMLButtonElement>('#tDefects [data-del-defect]').forEach((b) =>
       b.addEventListener('click', () => void removeDefect(Number(id), Number(b.dataset.delDefect))));
-  } catch (e) { setErr(`Customer defects failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Customer defects failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -156,7 +157,7 @@ async function saveCustomer(): Promise<void> {
     }));
     $('#custOk').textContent = `✓ Saved customer ${id}.`;
     await loadRecoveryCustomers();
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -166,7 +167,7 @@ async function deleteCustomer(id: number): Promise<void> {
   try {
     await client().deleteRecoveryCustomer(id);
     await loadRecoveryCustomers();
-  } catch (e) { setErr(`Delete failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Delete failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -184,7 +185,7 @@ async function addDefect(): Promise<void> {
     }));
     $('#defOk').textContent = '✓ Saved.';
     await loadDefects();
-  } catch (e) { setErr(`Add defect failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Add defect failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -194,7 +195,7 @@ async function removeDefect(customerId: number, scrapTypeId: number): Promise<vo
   try {
     await client().deleteCustomerScrapType(customerId, scrapTypeId);
     await loadDefects();
-  } catch (e) { setErr(`Remove failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Remove failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

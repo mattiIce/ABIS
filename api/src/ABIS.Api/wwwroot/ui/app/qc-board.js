@@ -6,6 +6,7 @@
 // Compiled by tsc to wwwroot/ui/app/qc-board.js; served at /ui/qc-board.html.
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const setErr = (m) => { $('#err').textContent = m; };
@@ -102,7 +103,7 @@ async function load() {
         renderBoard(b);
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
         $('#board').innerHTML = '';
     }
 }

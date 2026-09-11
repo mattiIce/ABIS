@@ -6,6 +6,7 @@
 // Compiled by tsc to wwwroot/ui/app/test-results.js; served at /ui/test-results.html.
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const esc = (s: unknown): string =>
@@ -92,7 +93,7 @@ async function loadResults(): Promise<void> {
       </tr>`).join('') : '<tr><td colspan="11" class="muted">No posted results.</td></tr>';
     $('#count').textContent = `${(page.totalCount ?? 0).toLocaleString()} results`;
     $('#listSub').textContent = `${items.length} shown`;
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
 }
 
 async function addResult(): Promise<void> {
@@ -116,7 +117,7 @@ async function addResult(): Promise<void> {
     setOk('✓ Result recorded.');
     ['#fYts', '#fUts', '#fElong', '#fN', '#fR', '#fThick', '#fWidth'].forEach((id) => { $<HTMLInputElement>(id).value = ''; });
     await loadResults();
-  } catch (e) { setErr(`Add failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Add failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

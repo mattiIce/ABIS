@@ -6,6 +6,7 @@
 // Compiled by `tsc` (see ../tsconfig.json) to browser ES modules in
 // wwwroot/ui/app/, so it is served with no runtime build step.
 import { AbisClient, Coil, OrderCreateWithItems, CustomerOrderWrite, OrderItemWrite } from './generated/abis-client.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T =>
   document.querySelector(sel) as T;
@@ -59,7 +60,7 @@ async function search(): Promise<void> {
       .forEach((tr) => (tr.onclick = () => detail(Number(tr.dataset.id))));
     msg.textContent = `${page.totalCount} coil(s) · via generated TypeScript client`;
   } catch (e) {
-    msg.innerHTML = `<span class="err">${(e as Error).message ?? e} — check the API key</span>`;
+    msg.innerHTML = `<span class="err">${esc(problemText(e))} — check the API key</span>`;
   }
 }
 
@@ -71,7 +72,7 @@ async function detail(id: number): Promise<void> {
     box.innerHTML = `<b>Coil ${c.coilAbcNum}</b> · ${c.coilAlloy2 ?? ''} ${c.coilTemper ?? ''} · ${c.coilLocation ?? ''}
       <div class="muted">net ${fmt(c.netWt)} / bal ${fmt(c.netWtBalance)} · status ${c.coilStatus ?? ''}</div>`;
   } catch (e) {
-    box.innerHTML = `<span class="err">${(e as Error).message ?? e}</span>`;
+    box.innerHTML = `<span class="err">${esc(problemText(e))}</span>`;
   }
 }
 
@@ -97,7 +98,7 @@ async function createOrder(): Promise<void> {
     const detail = await client().createOrderWithItems(body);
     msg.innerHTML = `<span class="pill">Created order ${detail.order.orderAbcNum} with ${detail.items?.length ?? 0} item(s)</span>`;
   } catch (e) {
-    msg.innerHTML = `<span class="err">${(e as Error).message ?? e}</span>`;
+    msg.innerHTML = `<span class="err">${esc(problemText(e))}</span>`;
   }
 }
 
