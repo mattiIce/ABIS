@@ -333,6 +333,15 @@ public sealed class InvoiceComputation
     /// <summary>Offal as a percent of net weight (0 when net is 0).</summary>
     public decimal OffalPct { get; set; }
     public int SkidCount { get; set; }
+    /// <summary>
+    /// Scrap weight by scrap type — the one section legacy nests inside the printed invoice
+    /// (<c>d_report_invoice_data</c> → <c>d_acct_scrap_type_list</c> / <c>d_acct_scrap_type_summary</c>). An item
+    /// takes its type from the scrap skid it sits on.
+    /// </summary>
+    public List<InvoiceScrapType> ScrapByType { get; set; } = [];
+    /// <summary>Scrap weight on items that are on no scrap skid, and so have no type. Its own row, so the
+    /// breakdown always adds up to <see cref="ScrapWt"/> — legacy's silently left these out.</summary>
+    public decimal ScrapNotOnSkidWt { get; set; }
     /// <summary>Scrap type name when the job has a single scrap type, "Multiple" for more than one,
     /// null for none (legacy scrap-status derivation).</summary>
     public string? ScrapStatus { get; set; }
@@ -344,6 +353,23 @@ public sealed class InvoiceComputation
 
 /// <summary>Outcome of an invoice save: created, or rejected because the referenced job does not
 /// exist (FK), or because that <c>(ab_job_num, invoice_num)</c> already exists (PK conflict).</summary>
+/// <summary>One scrap type's share of a job's scrap, for the invoice.</summary>
+public sealed class InvoiceScrapType
+{
+    /// <summary><c>scrap_skid.scrap_type</c>; null when the skid carries none.</summary>
+    public int? ScrapType { get; set; }
+    /// <summary>The type's name, or null when the code is unknown.</summary>
+    public string? ScrapTypeName { get; set; }
+    /// <summary>How many scrap items carry this type.</summary>
+    public int Items { get; set; }
+    /// <summary>
+    /// <c>SUM(return_item_net_wt)</c> — a plain sum, deliberately. Legacy's summary selected DISTINCT weights
+    /// before summing, so two items of equal weight counted once: on <c>.230</c> that understated 2,966
+    /// job/type groups by 8,521,803 lb all-time, and 26 jobs in the last 12 months.
+    /// </summary>
+    public decimal NetWt { get; set; }
+}
+
 public enum InvoiceSaveOutcome { Created, JobNotFound, Duplicate }
 
 /// <summary>The result of <c>CreateInvoiceAsync</c>: the <see cref="Outcome"/> plus the created
