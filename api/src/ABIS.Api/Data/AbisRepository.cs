@@ -4600,6 +4600,46 @@ public sealed class AbisRepository : IAbisRepository
             _ => "Multiple",
         };
 
+        // Scrap by type — the section legacy nests in the printed invoice (d_report_invoice_data →
+        // d_acct_scrap_type_list, one row per type, each summed by d_acct_scrap_type_summary). An item takes its
+        // type from the scrap skid it sits on.
+        //
+        // A PLAIN sum, deliberately not a port of legacy's. d_acct_scrap_type_summary selects DISTINCT
+        // return_item_net_wt and then sums what is left, so two items of equal weight count once. Measured on
+        // .230: 2,966 of 90,408 job/type groups understated, 8,521,803 lb all-time; 28 groups on 26 jobs in the
+        // last 12 months. It would also contradict ScrapWt, a plain sum printed on the same page.
+        //
+        // The join cannot double-count: on .230 no scrap item is linked to more than one scrap skid. NULL types
+        // are ordered last explicitly — Oracle and SQLite disagree on where NULL sorts.
+        inv.ScrapByType = (await conn.QueryAsync<ScrapTypeRow>(new CommandDefinition(
+            """
+            SELECT s.scrap_type AS ScrapType, COUNT(*) AS Items, COALESCE(SUM(rsi.return_item_net_wt), 0) AS NetWt
+            FROM return_scrap_item rsi
+            JOIN scrap_skid_detail d ON d.return_scrap_item_num = rsi.return_scrap_item_num
+            JOIN scrap_skid s ON s.scrap_skid_num = d.scrap_skid_num
+            WHERE rsi.ab_job_num = :id
+            GROUP BY s.scrap_type
+            ORDER BY CASE WHEN s.scrap_type IS NULL THEN 1 ELSE 0 END, s.scrap_type
+            """, new { id = abJobNum }, cancellationToken: ct)))
+            .Select(r => new InvoiceScrapType
+            {
+                ScrapType = r.ScrapType,
+                ScrapTypeName = ScrapTypeName(r.ScrapType),
+                Items = r.Items,
+                NetWt = r.NetWt,
+            })
+            .ToList();
+
+        // Items on no scrap skid have no type. Legacy's breakdown just omitted them, so on the 92 (older) jobs
+        // that have any, its rows added up to less than the Total Scrap Weight printed above them.
+        inv.ScrapNotOnSkidWt = await conn.ExecuteScalarAsync<decimal>(new CommandDefinition(
+            """
+            SELECT COALESCE(SUM(rsi.return_item_net_wt), 0)
+            FROM return_scrap_item rsi
+            WHERE rsi.ab_job_num = :id
+              AND NOT EXISTS (SELECT 1 FROM scrap_skid_detail d WHERE d.return_scrap_item_num = rsi.return_scrap_item_num)
+            """, new { id = abJobNum }, cancellationToken: ct));
+
         // Spec string (Width X Length …) from the order line's shape geometry, per the legacy
         // per-shape CHOOSE CASE (w_invoice:173–230). Reuses the shape-geometry read path.
         if (inv.OrderAbcNum is { } ord && inv.OrderItemNum is { } item)
@@ -4610,7 +4650,18 @@ public sealed class AbisRepository : IAbisRepository
         return inv;
     }
 
-    /// <summary>Legacy scrap-type code → label (w_invoice:330–347).</summary>
+    private sealed class ScrapTypeRow
+    {
+        public int? ScrapType { get; set; }
+        public int Items { get; set; }
+        public decimal NetWt { get; set; }
+    }
+
+    /// <summary>
+    /// Scrap-type code → label. 1–8 are legacy's (w_invoice:330–347); 9–11 come from <c>SCRAP_TYPE_DESC</c> on
+    /// <c>.230</c>. Legacy's list stops at 8, so an invoice for a Scrap Credit, Full Sheet or Cut Out skid printed
+    /// its Scrap Status — and its scrap-type row — with no name at all.
+    /// </summary>
     private static string? ScrapTypeName(int? type) => type switch
     {
         1 => "Rej. Sheet-Mill",
@@ -4621,6 +4672,9 @@ public sealed class AbisRepository : IAbisRepository
         6 => "Sample",
         7 => "Tote",
         8 => "Edge Trim",
+        9 => "Scrap Credit",
+        10 => "Full Sheet",
+        11 => "Cut Out",
         _ => null,
     };
 
