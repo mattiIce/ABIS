@@ -132,6 +132,50 @@ its Part 3–8 repairs, then `deploy/declare-cutover.sql`. The guard that stops 
 destroying production is in place (#448). Enabling `Notifications:EdiStall` waits on this, because
 `.230`'s outbound-EDI ledger is a copy of prod's until then.
 
+### B4 🔴 Receiving against the mill's ASN — in scope for 1.0, and who owns the Novelis 861?
+
+**Found 2026-09-11 while porting the archived-BOL list.** Modern receiving works from lines typed in
+or scanned; legacy's receiving screen starts, for the big mills, from the ASN the mill sent. On `.230`,
+**848 of the 1,921** receiving BOLs of the last 12 months match an inbound ASN for the same customer —
+essentially all of Novelis Oswego (253/254), Kingston (61/61), Guthrie (37/37), Constellium BG
+(166/169) and Arconic (112/115). Stellantis, Superior Cam, Sherman and the rest (1,070) have no ASN
+and are unaffected.
+
+**What legacy does that ABIS does not:**
+
+1. `w_coil_receiving` lists the incoming ASNs (`dw_incomingedi`) and pulls one's coils into the BOL.
+2. Saving it sets the ASN to **status 3** with a received time, and each ASN coil to **status 1**
+   (imported) or 2 (damaged).
+3. The 861 then comes from two places. At receiving, for customers flagged
+   `customer.create_861_at_receiving = 'Y'` — on `.230` that is Novelis Kingston, Oswego and Guthrie,
+   Constellium BG, Arconic and Cliffs — unless one already exists for the BOL. And the `ediprocess.sh`
+   cron runs `p_create_edi_861_for_all` every 30 minutes, which **picks up status-3 BOLs for Novelis
+   (1153/1459/2582)** whose coils are all imported or damaged, builds their 861 and sets status 1.
+
+ABIS writes neither ASN status table, and nothing in it ingests an 856 — that parser is deferred as
+data-blocked (`REMAINING_WORK.md` §A). **So after the cutover, the ASN queue would stop filling and
+never drain, and these receipts would be keyed by hand.**
+
+**⚠ A port cannot just write status 3.** `ediprocess.sh` is live on `.230`, so doing that there makes
+legacy generate Novelis 861s into `.230`'s ledger (not transmitted — `GXS.ksh` is commented out), and
+the same write against the production-era database would be a duplicate-861 risk. Whatever ABIS
+writes has to be decided together with who owns the Novelis 861.
+
+**What is needed:**
+
+- **Is ASN-driven receiving in scope for 1.0?**
+  - **Yes** → it needs the 856 parser too. The "no golden" objection may be weaker than it was: `.230`
+    holds the parsed output for 43,948 BOLs back to 2004, so **if any raw inbound `.856` file survives**
+    (none is documented — worth asking whoever runs `db01`), it could be checked against rows that
+    already exist. Then the receiving screen gains an ASN picker.
+  - **No, not at first** → receiving for those mills is typed or scanned after the cutover, and the
+    Novelis 861 needs another trigger, because today it fires off ASN status 3.
+- **Who owns the Novelis 861 at cutover** — the legacy cron (then ABIS must write status 3, and only
+  after the cutover), or ABIS's own 861 (then the cron line is commented out first, per the valve's
+  single-owner rule).
+
+Until then the archived-BOL list on Coil inventory is read-only and changes nothing.
+
 ---
 
 ## C. Blocks a feature

@@ -40,6 +40,11 @@
   Revisit once §C5 exists AND the plant supplies a real 863 golden / confirms it's transmitted.
 - [ ] **DEFERRED (data-blocked)** **Inbound 856 (ASN) ingestion** (parse → `inbound_shipment` / `inbound_coil` / status)
   — the only inbound sample is a 2009 **test 850**; no real inbound business doc to validate against. Needs a real golden.
+  **Now tied to a 1.0 decision (2026-09-11):** receiving for Novelis, Constellium and Arconic starts from
+  the ASN in legacy (848 of 1,921 receiving BOLs in the last 12 months), and the Novelis 861 cron fires off
+  the ASN's status. See `OPEN_QUESTIONS.md` **B4** before building either half. A golden may be closer than
+  this line says: `.230` holds the parsed rows for 43,948 BOLs, so any surviving raw `.856` could be checked
+  against them (none is documented yet).
 - [~] **EDI VAN transport — built, deliberately unwired.** At the user's request the transmit valve, per-partner
   arming and a file-drop transport into legacy's VAN outbox were built (#454; admin UI #458, #460). **No
   generation path calls it, so ABIS still transmits nothing.** Wiring that funnel is a separate decision;
