@@ -524,6 +524,44 @@ public static class ApiEndpoints
            .WithSummary("Update a coil's status, location, or notes (409 if the coil is done/shipped/transferred). Supports If-Match.")
            .Produces<Coil>().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status409Conflict).Produces(StatusCodes.Status412PreconditionFailed);
 
+        // Correct the customer a coil is booked to — legacy's receiving-screen "Change customer"
+        // (w_coil_receiving cb_change_cust -> w_change_cust, ticket 1108, 2021). It is in real use: on
+        // .230, 1,020 minted coils carry a customer different from their receiving BOL's, none of them
+        // via an ownership transfer, the most recent in July 2026.
+        //
+        // A CORRECTION, not a transfer. Moving a coil between customers is a documented event with a
+        // certificate (/coil-ownership/transfers); this re-books a coil keyed to the wrong customer.
+        // Legacy ran one bare UPDATE with no guard and no record. Two deliberate additions:
+        //  - a done/shipped/transferred coil is refused, the same rule PatchCoil applies: re-booking
+        //    one would rewrite whose shipment or transfer it was;
+        //  - who changed it, from what, to what, is written to system_log in the same transaction.
+        // The 861 is unaffected: it is one per BOL and built from the BOL's customer, not the coil's.
+        api.MapPut("/coils/{coilAbcNum:long}/customer", async (long coilAbcNum, CoilCustomerWrite body, HttpContext ctx, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (body.CustomerId is not > 0)
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["customerId"] = ["A customer is required."] });
+                if (body.Note is { Length: > 200 })
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["note"] = ["note must be 200 characters or fewer."] });
+
+                var coil = await repo.GetCoilAsync(coilAbcNum, ct);
+                if (coil is null) return Results.NotFound();
+                if (coil.CoilStatus is 0 or 10 or 13)
+                    return Results.Problem(statusCode: StatusCodes.Status409Conflict, title: "Coil is terminal",
+                        detail: $"Coil {coilAbcNum} is {coil.CoilStatus switch { 0 => "done", 10 => "shipped", _ => "transferred" }}; its customer cannot be changed here.");
+                if (coil.CustomerId == body.CustomerId)
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["customerId"] = [$"Coil {coilAbcNum} is already booked to customer {body.CustomerId}."] });
+                if (await repo.GetCustomerAsync(body.CustomerId.Value, ct) is null)
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["customerId"] = [$"Customer {body.CustomerId} does not exist."] });
+
+                var who = ResolveLogin(ctx) ?? "api-key";
+                return await repo.ChangeCoilCustomerAsync(coilAbcNum, body.CustomerId.Value, who, body.Note, ct) is { } change
+                    ? Results.Ok(change)
+                    : Results.NotFound();
+            })
+           .WithName("ChangeCoilCustomer").WithTags("Coils")
+           .WithSummary("Correct the customer a coil is booked to (legacy receiving-screen Change customer). Refuses done/shipped/transferred coils (409) and records who changed it from what to what in system_log. Not an ownership transfer.")
+           .Produces<CoilCustomerChange>().ProducesValidationProblem().Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status409Conflict);
+
         api.MapPost("/coils/ready-for-transfer", async (CoilBulkStatusWrite body, IAbisRepository repo, CancellationToken ct) =>
             {
                 var ids = body.CoilAbcNums ?? [];

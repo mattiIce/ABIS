@@ -294,6 +294,25 @@ public sealed class CoilPatch
     public string? CoilNotes { get; set; }
 }
 
+/// <summary>
+/// Correct the customer a coil is booked to — legacy's receiving-screen "Change customer".
+/// A correction, not an ownership transfer: see <c>PUT /coils/{coilAbcNum}/customer</c>.
+/// </summary>
+public sealed class CoilCustomerWrite
+{
+    /// <summary>The customer the coil should be booked to.</summary>
+    public long? CustomerId { get; set; }
+    /// <summary>Why — optional, recorded in <c>system_log</c> with the change.</summary>
+    public string? Note { get; set; }
+}
+
+/// <summary>What a customer correction changed, echoed back so the caller can say "from X to Y".</summary>
+/// <param name="CoilAbcNum">The coil.</param>
+/// <param name="CustomerIdFrom">The customer it was booked to before (null if it had none).</param>
+/// <param name="CustomerIdTo">The customer it is booked to now.</param>
+/// <param name="ChangedBy">The resolved login, or <c>api-key</c>.</param>
+public sealed record CoilCustomerChange(long CoilAbcNum, long? CustomerIdFrom, long CustomerIdTo, string ChangedBy);
+
 /// <summary>Create or replace a customer order header (table <c>customer_order</c>).</summary>
 public sealed class CustomerOrderWrite
 {
