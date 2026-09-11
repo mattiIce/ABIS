@@ -4,7 +4,7 @@ One register for everything that is **blocked on a human answer** rather than on
 Each entry says what is blocked, exactly what is needed, and what happens under each answer, so a
 five-minute reply unblocks real work.
 
-Last reviewed **2026-08-20**. Companion to [`REMAINING_WORK.md`](REMAINING_WORK.md) (which tracks work
+Last reviewed **2026-09-11**. Companion to [`REMAINING_WORK.md`](REMAINING_WORK.md) (which tracks work
 that needs no input) and [`EDI_CLIFFS.md`](EDI_CLIFFS.md) (the Cliffs program in full).
 
 **Convention:** 🔴 blocks 1.0.0 · 🟡 blocks a feature · ⚪ nice to settle.
@@ -119,19 +119,18 @@ Restoring the block is a one-line change in `das-console.ts`. Full detail in `do
 
 > Reported not running on 2026-08-20.
 
-### B2 🔴 Data-source cutover — `.110` still reads the sandbox
+### B2 🔴 The cutover — a date for the final refresh
 
-The deployed UI reads non-prod `.230`, not live prod. This is the listed operational blocker for
-1.0.0, and it also gates enabling `Notifications:EdiStall` (which would otherwise fire false alarms
-off a frozen ledger). A scheduling/ops decision, not a code change — the Data Pump runbook and weekly
-refresh script already exist.
+`.230` **becomes** production: a final refresh from `.9`, after which it diverges permanently and
+`.9`/`.11` are retired. Until then the two run in parallel for testing only. **ABIS is already on the
+right box — the cutover moves the data, not the app.** (This entry used to read "`.110` still reads
+the sandbox", which framed the fix as re-pointing ABIS at `.9`, the machine being retired. Corrected
+in #453.)
 
-### B3 🔴 After every `.230` refresh, someone must RUN the sequence resync
-
-13 of 18 id-sequences land **behind** their table max after a Data Pump refresh → `ORA-00001` on every
-id-minting INSERT. The fix is `tools/resync_sequences.sql`, and it is **not automatic** — an operator
-has to run it. (The script itself was silently skipping its three worst-drifting sequences until #414;
-that is fixed, but it still has to be run.)
+What is needed is a date. The sequence is [`DB_REFRESH.md`](DB_REFRESH.md) Part 9: the final refresh,
+its Part 3–8 repairs, then `deploy/declare-cutover.sql`. The guard that stops a later refresh
+destroying production is in place (#448). Enabling `Notifications:EdiStall` waits on this, because
+`.230`'s outbound-EDI ledger is a copy of prod's until then.
 
 ---
 
@@ -210,20 +209,11 @@ address book. **There is no recipient list in the code**; a person picks, every 
 
 Until then the QA console can show everything except the photos, which is what it does today.
 
-### C6 🟡 KeepTrak import — blocked on the file and a credential
-
-This now also owns the **maintenance spares inventory**. The Oracle `PARTS` / `PARTS_SUPPLIERS` tables
-look usable until you check the dates: all 762 parts and 762 supplier links carry the *same*
-`parts_entered_date` of **2010-08-21**, `lastorderdate` / `lastreceiveddate` are NULL on every row,
-and not one has `qtyonhand > 0`. A one-shot 2010 load, never used since. So there is no CRUD screen
-worth building over it — the live spares are in KeepTrak, and they arrive with this import.
-
-The maintenance/PM migration needs the Access file plus a `.230` credential. Must be a Windows-side
-ETL (the server is Ubuntu, ACE is Windows-only). Inspector tool is ready and waiting.
-
 ### C7 🟡 WinSPC — needs live-DB discovery
 
-The candidate unblock for the dimension-check QC gate. Legacy had `w_quality_winspc`.
+Legacy had `w_quality_winspc`. A read-only connector is built and off by default (`WinSpc:Enabled`, see
+`appsettings.json`). This entry used to call WinSPC the unblock for the dimension-check QC gate; that
+premise was wrong — see *Resolved* at the end.
 
 ---
 
@@ -249,3 +239,21 @@ The two 4×6 tags and the Certificate of Conformance have never been put on pape
 - **Never re-run legacy tracking** alongside the modern stacker board — competing writers.
 - **Plant access rides a VPN** that surfaces as a `192.168.8.x` address. No `192.168.8.x` means no
   route to anything plant-side, and it looks exactly like a plant outage.
+
+---
+
+## Resolved since the 2026-08-20 review
+
+Removed from the sections above so the register only holds live questions.
+
+- **B3 — sequence drift after a refresh** no longer needs an operator. The API advances any drifted
+  sequence on every startup (`AbisSchema.ResyncSequencesAsync`), so restarting or redeploying `.110`
+  after a refresh repairs it; `tools/resync_sequences.sql` remains for a manual run.
+- **C6 — the KeepTrak import is done.** On `.230`, 144 of 221 PMs, 236 PM actions and 13,703 of
+  15,754 completions carry a KeepTrak `kt_ref`, and #440 stops a refresh deleting them. The spares
+  finding from that entry still stands: the Oracle `PARTS` tables are a dead 2010 load (see
+  [`REMAINING_WORK.md`](REMAINING_WORK.md)).
+- **The dimension-check "QC gate" was never a gate.** Legacy's `in_spec` is a checkbox the inspector
+  ticks — in both `coil_eval/d_skid_dim_check.srd` and `da/d_skid_dim_check_per_skid.srd`, with no
+  tolerance expression in either — and all 275 checks on `.230` are recorded as pass. There is nothing
+  computed to port.

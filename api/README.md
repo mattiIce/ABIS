@@ -103,10 +103,10 @@ running API with `ABIS_BASE=… ABIS_KEY=… npm --prefix clientapp run e2e`.
 
 ```sh
 cd api
-dotnet test                                # 195 tests: repository + HTTP smoke
+dotnet test                                # ~1,200 tests: repository + HTTP + units
 ```
 
-The typed-client **e2e** suite (`clientapp/e2e/run.mjs`, **58 tests**) drives the
+The typed-client **e2e** suite (`clientapp/e2e/run.mjs`, **~60 tests**) drives the
 generated client against a live seeded API and is run by CI on every PR.
 
 `api/requests.http` has ready-to-run sample calls (VS Code REST Client / JetBrains).

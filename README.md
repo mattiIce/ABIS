@@ -23,22 +23,26 @@ PLCs over OPC).
 >   production folder, and a production/customer/inventory/QA **reporting** suite.
 >   The legacy PowerBuilder source for these areas is vendored under
 >   [`legacy/src/`](legacy/src/README.md) so each was built against the **real**
->   tables/columns. Remaining work is production rollout (Oracle cutover, OIDC
->   rollout, the edge/OPC hardware bridge) — see [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md).
+>   tables/columns. What remains is the cutover:
+>   [`docs/REMAINING_WORK.md`](docs/REMAINING_WORK.md) tracks work that needs no input, and
+>   [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md) what is waiting on a decision.
 
 ## Documentation
 
 | Document | What's in it |
 |---|---|
-| [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md) | **Start here to continue** — handoff guide: current state, prioritized next steps, environment notes, the module-slice recipe, and solved gotchas. |
+| [`docs/REMAINING_WORK.md`](docs/REMAINING_WORK.md) | **Start here to continue** — the backlog: what is built, what is left, and what was investigated and deliberately not built. |
+| [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md) | Everything blocked on a plant decision, each with what it blocks and what happens under each answer. |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Dev setup, the recipe for adding a module, and solved gotchas. |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | As-is architecture: stack, 2-tier topology, the two app targets (`lion` + the `da` data-acquisition app), module map, integration surface, the Aug-2025 PB migration, and build-readiness issues. |
 | [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | **Full database model (412 tables)** recovered from a live Oracle data-dictionary dump of the `DBO` schema — real columns, PKs, FKs, indexes, and sequences. Supersedes the earlier partial DataWindow-inferred model. |
-| [`docs/OBJECT_INVENTORY.md`](docs/OBJECT_INVENTORY.md) | Approximate object inventory (~1,345 DataWindows, ~588 windows, …) recovered from the compiled libraries, per-library and grouped by domain. |
+| [`docs/OBJECT_INVENTORY.md`](docs/OBJECT_INVENTORY.md) | Approximate object inventory (~1,345 DataWindows, ~588 windows, …) recovered from the compiled libraries — names only; read [`legacy/src/`](legacy/src/README.md) for behaviour — per-library and grouped by domain. |
 | [`docs/MODERNIZATION_ROADMAP.md`](docs/MODERNIZATION_ROADMAP.md) | Strategic options, the greenfield/strangler-fig approach, and the phased plan with status. |
 | [`docs/data-model/BACKCHECK.md`](docs/data-model/BACKCHECK.md) | Verification of each built module's schema against the real DataWindow/Oracle columns. |
 | [`docs/ORACLE_VALIDATION.md`](docs/ORACLE_VALIDATION.md) | Oracle data-path validation runbook + the live-only bug classes found and fixed. |
 | [`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md) · [`docs/EDGE_SERVICE.md`](docs/EDGE_SERVICE.md) | External integrations (EDI/serial/OPC) and the shop-floor edge service. |
 | [`docs/INSTALL.md`](docs/INSTALL.md) | **One-command native install** on Ubuntu — systemd service + nginx + HTTPS (Let's Encrypt). The Docker-free path. |
+| [`docs/DEPLOY_DEB.md`](docs/DEPLOY_DEB.md) | Cheat sheet for rebuilding and redeploying the `.deb` on the running server (`.110`). |
 | [`docs/DEPLOY.md`](docs/DEPLOY.md) | Run the API + greenfield UIs on a server (Docker Compose). |
 | [`legacy/src/README.md`](legacy/src/README.md) | The vendored legacy PB source per area + which greenfield module each maps to. |
 

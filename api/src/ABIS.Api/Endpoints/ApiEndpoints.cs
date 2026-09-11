@@ -5302,13 +5302,12 @@ public static class ApiEndpoints
 
     private static Dictionary<string, string[]>? Validate(DimensionCheckWrite body)
     {
-        // Input hygiene for the dimensional QC gate (table sheet_skid_dimension_check).
-        // NOTE: the authoritative pass/fail — comparing each measured value to the skid's
-        // shape nominal ± tolerance — lives in the legacy binary DataWindow d_skid_dim_check
-        // and is NOT reconstructable from the vendored source; it is deferred to a
-        // live-Oracle-verified increment (see docs/NEXT_STEPS.md). Until then in_spec is a
-        // human-entered flag, so we at least refuse to record a garbage or empty check that
-        // the repository would silently default to in_spec=1 (pass).
+        // Input hygiene for the dimensional check (table sheet_skid_dimension_check).
+        // in_spec is the inspector's verdict, not a computed one. Legacy never derived it: both
+        // d_skid_dim_check.srd and da/d_skid_dim_check_per_skid.srd render it as a plain YES
+        // checkbox with no tolerance expression, and all 275 checks on .230 are recorded as pass.
+        // An earlier note here said the tolerance comparison lived in that DataWindow and was
+        // deferred; the vendored .srd shows there is none.
         var e = new Dictionary<string, string[]>();
         Max(e, "checkedBy", body.CheckedBy, 30);
         Max(e, "note", body.Note, 255);

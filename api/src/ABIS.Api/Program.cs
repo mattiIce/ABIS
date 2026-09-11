@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Native Linux service: integrate with systemd (Type=notify readiness, journald
 // log formatting). This is a no-op when the process is not started by systemd, so
 // the Docker container and `dotnet run` console paths are unchanged. See
-// docs/INSTALL_PLAN.md.
+// docs/INSTALL.md.
 builder.Host.UseSystemd();
 
 // Behind the nginx reverse proxy (the native install terminates TLS at nginx and

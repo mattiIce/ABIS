@@ -5,8 +5,8 @@ server next to the plant Oracle DB, fronted by **nginx + HTTPS**. No Docker, no
 .NET runtime to pre-install — the release tarball is self-contained.
 
 > Prefer containers? [`DEPLOY.md`](DEPLOY.md) runs the same app via Docker
-> Compose. This guide is the Docker-free path. The design rationale is in
-> [`INSTALL_PLAN.md`](INSTALL_PLAN.md).
+> Compose. This guide is the Docker-free path. The original design rationale (why a native systemd
+> service, the topology, the phasing) is in git history: `git log --all -- docs/INSTALL_PLAN.md`.
 
 ## Prerequisites
 

@@ -6,7 +6,7 @@
 # it into dist/abis-<version>-linux-x64.tar.gz. The server needs nothing
 # pre-installed: the .NET runtime is bundled and the Oracle driver is managed.
 #
-# Phase 1 (docs/INSTALL_PLAN.md): the tarball carries the published app under
+# Phase 1 (docs/INSTALL.md): the tarball carries the published app under
 # app/. The deploy/ scripts (install.sh, abis.service, nginx config) are copied
 # in automatically once they exist (Phases 2-3) — this script already looks for
 # them, so it keeps working unchanged as those land.

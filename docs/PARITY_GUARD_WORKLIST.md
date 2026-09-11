@@ -67,3 +67,14 @@ api/openapi.snapshot.json` verification from the **repo root**, not `api/` (a wr
 relative path shows a falsely-empty diff). Commit the regenerated snapshot; never restore
 it on a real contract change. CI's "Verify OpenAPI matches the committed snapshot" is the
 backstop.
+
+---
+
+## Closed (2026-09-11)
+
+This worklist is finished and kept as a record (`status-labels.ts` cites its row 2 by line number, so
+this note is appended rather than placed at the top). All 22 ✅ rows landed. None of the 10 ⏸ rows was
+a guard that could be added on its own: each was part of a whole subsystem that needed live Oracle.
+Several of those have since been built as features — order-coil assignment (#253), the warehouse skid
+item editor (#329), handheld receiving (#311, #312) — and whatever remains is tracked in
+[`REMAINING_WORK.md`](REMAINING_WORK.md), not here.

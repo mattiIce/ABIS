@@ -1,7 +1,7 @@
 # ABIS — Admin Subsystem Plan (scheduler, server ops, EDI ownership)
 
 A design plan for a **new Admin area** in ABIS that consolidates three requested
-capabilities that don't exist yet:
+capabilities:
 
 - **#6 Scheduled tasks** — pull the scheduled jobs off the DB server into an
   ABIS-owned scheduler, so they aren't managed on the database host anymore.
@@ -10,12 +10,20 @@ capabilities that don't exist yet:
 - **#8 EDI ownership** — run the full EDI process through the ABIS server, with an
   EDI **setup UI** under the admin pages.
 
+> **Status (2026-09-11): all three are built, so this is now a design record.**
+> - **#6 Scheduler** — the execution engine (#251) is allowlist-gated and **off by default**
+>   (`Scheduler:Enabled=false`); the Admin screen surfaces the registry (#107).
+> - **#7 Server console** — built (#159). Whether the restart button is switched on is still a plant
+>   decision ([`OPEN_QUESTIONS.md`](OPEN_QUESTIONS.md) C3).
+> - **#8 EDI** — the engine generates and stores every document set but **transmits nothing**. A
+>   transmit valve with per-partner arming and its admin UI exist (#454, #458, #460), and no
+>   generation path is wired to it, by decision. Legacy's cron remains the single owner of the VAN.
+
 These interlock: **#6 is the substrate #8's automation rides on**, and both are
 surfaced through the **#7 admin shell**. They extend the existing security /
 `RequireFeatureAsync` authorization (see [`../api/README.md`](../api/README.md)
 §Authentication) and the strangler-fig discipline in
-[`PHASE4_CUTOVER_PLAN.md`](PHASE4_CUTOVER_PLAN.md). This plan slots into
-[`NEXT_STEPS.md`](NEXT_STEPS.md) as workstreams #6–#8.
+[`PHASE4_CUTOVER_PLAN.md`](PHASE4_CUTOVER_PLAN.md). What is left of it is tracked in [`REMAINING_WORK.md`](REMAINING_WORK.md).
 
 ## Decisions on record (2026-07-07)
 
