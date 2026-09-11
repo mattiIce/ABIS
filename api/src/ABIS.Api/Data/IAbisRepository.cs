@@ -31,6 +31,9 @@ public interface IAbisRepository
     Task<Coil> CreateCoilAsync(CoilWrite body, CancellationToken ct);
     Task<bool> CoilExistsByKeyAsync(string coilOrgNum, long? customerId, string? coilMidNum, CancellationToken ct);
     Task<Coil?> PatchCoilAsync(long coilAbcNum, CoilPatch patch, CancellationToken ct);
+    /// <summary>Re-book a coil to another customer and write the audit row in the same transaction.
+    /// Null when the coil does not exist.</summary>
+    Task<CoilCustomerChange?> ChangeCoilCustomerAsync(long coilAbcNum, long customerId, string changedBy, string? note, CancellationToken ct);
     /// <summary>A customer's inbound ASN BOLs (legacy <c>d_archived_bol</c>), newest received first.</summary>
     Task<PagedResult<InboundAsnBol>> GetInboundAsnBolsAsync(long customerId, string? bol, int page, int pageSize, CancellationToken ct);
     /// <summary>The coils an inbound ASN carries, as the mill notified them (<c>inbound_coil</c>).</summary>

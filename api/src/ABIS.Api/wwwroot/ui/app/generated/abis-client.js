@@ -3208,6 +3208,74 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Correct the customer a coil is booked to (legacy receiving-screen Change customer). Refuses done/shipped/transferred coils (409) and records who changed it from what to what in system_log. Not an ownership transfer.
+     * @return OK
+     */
+    changeCoilCustomer(coilAbcNum, body) {
+        let url_ = this.baseUrl + "/api/coils/{coilAbcNum}/customer";
+        if (coilAbcNum === undefined || coilAbcNum === null)
+            throw new globalThis.Error("The parameter 'coilAbcNum' must be defined.");
+        url_ = url_.replace("{coilAbcNum}", encodeURIComponent("" + coilAbcNum));
+        url_ = url_.replace(/[?&]$/, "");
+        const content_ = JSON.stringify(body);
+        let options_ = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processChangeCoilCustomer(_response);
+        });
+    }
+    processChangeCoilCustomer(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = CoilCustomerChange.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 400) {
+            return response.text().then((_responseText) => {
+                let result400 = null;
+                let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = HttpValidationProblemDetails.fromJS(resultData400);
+                return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status === 409) {
+            return response.text().then((_responseText) => {
+                return throwException("Conflict", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * Bulk-mark coils Ready for transfer (status 12) — the precondition for the ownership-transfer picker. Terminal (done/shipped/transferred), already-ready, zero-balance, and unknown coils are skipped with a reason.
      * @return OK
      */
@@ -22922,6 +22990,66 @@ export class CoilBulkStatusWrite {
             for (let item of this.coilAbcNums)
                 data["coilAbcNums"].push(item);
         }
+        return data;
+    }
+}
+export class CoilCustomerChange {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.customerIdFrom = _data["customerIdFrom"];
+            this.customerIdTo = _data["customerIdTo"];
+            this.changedBy = _data["changedBy"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CoilCustomerChange();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["customerIdFrom"] = this.customerIdFrom;
+        data["customerIdTo"] = this.customerIdTo;
+        data["changedBy"] = this.changedBy;
+        return data;
+    }
+}
+export class CoilCustomerWrite {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.customerId = _data["customerId"];
+            this.note = _data["note"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CoilCustomerWrite();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["customerId"] = this.customerId;
+        data["note"] = this.note;
         return data;
     }
 }

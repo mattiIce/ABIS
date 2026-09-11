@@ -996,6 +996,45 @@ public sealed class AbisRepository : IAbisRepository
         return n == 0 ? null : await GetCoilAsync(coilAbcNum, ct);
     }
 
+    private sealed class CoilCustomerRow { public long CoilAbcNum { get; set; } public long? CustomerId { get; set; } }
+
+    public Task<CoilCustomerChange?> ChangeCoilCustomerAsync(long coilAbcNum, long customerId, string changedBy, string? note, CancellationToken ct) =>
+        RetryOnDuplicateKeyAsync(() => ChangeCoilCustomerCoreAsync(coilAbcNum, customerId, changedBy, note, ct));
+
+    /// <summary>
+    /// The update and its audit row commit together or not at all. Legacy ran the UPDATE alone and
+    /// recorded nothing, so a customer correction left no trace of who made it or what it replaced; an
+    /// audit written in a second transaction could still be lost after the change had landed.
+    /// </summary>
+    private async Task<CoilCustomerChange?> ChangeCoilCustomerCoreAsync(long coilAbcNum, long customerId, string changedBy, string? note, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        var row = await conn.QuerySingleOrDefaultAsync<CoilCustomerRow>(new CommandDefinition(
+            "SELECT coil_abc_num AS CoilAbcNum, customer_id AS CustomerId FROM coil WHERE coil_abc_num = :id",
+            new { id = coilAbcNum }, transaction: tx, cancellationToken: ct));
+        if (row is null) return null;
+
+        await conn.ExecuteAsync(new CommandDefinition(
+            "UPDATE coil SET customer_id = :cust WHERE coil_abc_num = :id",
+            new { cust = customerId, id = coilAbcNum }, transaction: tx, cancellationToken: ct));
+
+        var logId = await NextIdAsync(conn, tx, "system_log", "system_log_key_num", ct);
+        var contents = $"Coil {coilAbcNum} customer changed from {row.CustomerId?.ToString() ?? "(none)"} to {customerId} by {changedBy}"
+                       + (string.IsNullOrWhiteSpace(note) ? "" : $": {note.Trim()}");
+        await conn.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO system_log (system_log_key_num, system_log_timestamp, system_log_contents, system_log_flag)
+            VALUES (:id, :ts, :contents, 0)
+            """,
+            new { id = logId, ts = DateTime.UtcNow, contents = contents.Length > 1024 ? contents[..1024] : contents },
+            transaction: tx, cancellationToken: ct));
+
+        await tx.CommitAsync(ct);
+        return new CoilCustomerChange(coilAbcNum, row.CustomerId, customerId, changedBy);
+    }
+
     public async Task<BulkCoilStatusResult> SetCoilsReadyForTransferAsync(IReadOnlyList<long> coilAbcNums, CancellationToken ct)
     {
         const int ReadyForTransfer = 12;
