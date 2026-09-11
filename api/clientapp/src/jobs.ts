@@ -10,6 +10,7 @@ import { AbisClient, JobWrite, JobPatch } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell, applyDeepLink } from './shell.js';
 import { statusChip, lineLabel } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -158,7 +159,7 @@ async function loadUncomplete(): Promise<void> {
     $('#count').textContent = `${(page.totalCount ?? 0).toLocaleString()} active`;
     $('#listSub').textContent = `${items.length} shown`;
     wireRows('#jobs');
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -173,7 +174,7 @@ async function loadCompleted(): Promise<void> {
       || `<tr><td colspan="5" class="muted">${search ? 'No completed job matches that number.' : 'No completed jobs.'}</td></tr>`;
     $('#completedSub').textContent = search ? `${items.length} match` : `${(page.totalCount ?? 0).toLocaleString()} total`;
     wireRows('#completedJobs');
-  } catch (e) { setErr(`Search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Search failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -194,7 +195,7 @@ async function loadJob(id: number): Promise<void> {
     $<HTMLInputElement>('#pFinished').value = dLocal(j.timeDateFinished);
     setV('#pNotes', j.jobNotes);
     await loadChildren(id);
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -235,7 +236,7 @@ async function patch(): Promise<void> {
     await client().patchJob(selectedJob, body);
     setOk(`✓ Updated job #${selectedJob}.`);
     await Promise.all([loadUncomplete(), loadCompleted()]);
-  } catch (e) { setErr(`Update failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Update failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -257,7 +258,7 @@ async function createJob(): Promise<void> {
     setOk(`✓ Created job #${created.abJobNum}.`);
     await loadUncomplete();
     if (created.abJobNum != null) await loadJob(created.abJobNum);
-  } catch (e) { setErr(`Create failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Create failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

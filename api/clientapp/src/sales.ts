@@ -12,6 +12,7 @@ import {
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { lineLabel } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -145,7 +146,7 @@ async function loadQuotes(): Promise<void> {
       : '<tr><td colspan="8" class="muted">No quotes.</td></tr>';
     document.querySelectorAll<HTMLTableRowElement>('#tQuotes tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void openQuote(Number(tr.dataset.q), Number(tr.dataset.r))));
-  } catch (e) { setErr(`Quotes failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Quotes failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -180,7 +181,7 @@ async function openQuote(quoteId: number, revisionId: number): Promise<void> {
     ]);
     $('#detailTitle').textContent = `Quote ${quoteId}-${revisionId}`;
     renderHeader(q);
-  } catch (e) { setErr(`Open quote failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Open quote failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -215,7 +216,7 @@ async function addEvent(): Promise<void> {
     setOk('✓ Follow-up logged.');
     ['#evDate', '#evNotes', '#evStatus', '#evUser'].forEach((i) => setV(i, ''));
     await loadEvents();
-  } catch (e) { setErr(`Add follow-up failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Add follow-up failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -231,7 +232,7 @@ async function addProbability(): Promise<void> {
     setOk('✓ Probability review recorded.');
     ['#prDate', '#prPct', '#prNote'].forEach((i) => setV(i, ''));
     await Promise.all([loadProbability(), loadQuotes()]);
-  } catch (e) { setErr(`Record review failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Record review failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -245,7 +246,7 @@ async function loadContacts(): Promise<void> {
       <td class="mono">${esc(c.customerId)}</td><td>${esc(c.city)}, ${esc(c.state)}</td>
       <td class="mono">${esc(c.phone1)}</td><td>${esc(c.email1)}</td></tr>`).join('')
       : '<tr><td colspan="6" class="muted">No contacts.</td></tr>';
-  } catch (e) { setErr(`Contacts failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Contacts failed: ${problemText(e)}`); }
 }
 
 async function createQuote(): Promise<void> {
@@ -284,7 +285,7 @@ async function createQuote(): Promise<void> {
       '#nqVar', '#nqFixed', '#nqCharge', '#nqRos', '#nqValid', '#nqNotes'].forEach((i) => setV(i, ''));
     await loadQuotes();
     await openQuote(created.quoteId!, created.quoteRevisionId!);
-  } catch (e) { setErr(`Create failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Create failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

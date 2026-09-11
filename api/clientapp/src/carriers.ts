@@ -6,6 +6,7 @@
 import { AbisClient, CarrierWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -85,7 +86,7 @@ async function search(): Promise<void> {
     $('#listSub').textContent = `${items.length} shown`;
     document.querySelectorAll<HTMLTableRowElement>('#carriers tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadCarrier(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Search failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -99,7 +100,7 @@ async function loadCarrier(id: number): Promise<void> {
     setV('#cStreet', c.carrierStreet); setV('#cCity', c.carrierCity); setV('#cState', c.carrierState);
     setV('#cZip', c.carrierZip); setV('#cCountry', c.carrierCountry); setV('#cDuns', c.carrierDunsNumber);
     setV('#cPhone', c.carrierPhoneNumber); setV('#cStatus', c.status);
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -134,7 +135,7 @@ async function save(): Promise<void> {
       setOk(`✓ Saved carrier #${editingId}.`);
     }
     await search();
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

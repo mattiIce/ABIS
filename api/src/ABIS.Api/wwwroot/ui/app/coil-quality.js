@@ -6,6 +6,7 @@
 // Compiled by tsc to wwwroot/ui/app/coil-quality.js; served at /ui/coil-quality.html.
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const setErr = (m) => { $('#err').textContent = m; };
@@ -108,7 +109,7 @@ async function load() {
         renderFlaws(d.flaws ?? []);
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
 }
 function renderFlaws(flaws) {
@@ -147,7 +148,7 @@ async function saveHeader() {
         $('#hsub').textContent = 'recorded';
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
 }
 async function addFlaw() {
@@ -171,7 +172,7 @@ async function addFlaw() {
         await load();
     }
     catch (e) {
-        setErr(`Add failed: ${e.message}`);
+        setErr(`Add failed: ${problemText(e)}`);
     }
 }
 async function delFlaw(key) {
@@ -186,7 +187,7 @@ async function delFlaw(key) {
         await load();
     }
     catch (e) {
-        setErr(`Remove failed: ${e.message}`);
+        setErr(`Remove failed: ${problemText(e)}`);
     }
 }
 (async () => {

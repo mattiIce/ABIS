@@ -7,6 +7,7 @@ import { AbisClient, PartWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell, applyDeepLink } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -123,7 +124,7 @@ async function renderRoutings(partId) {
         $('#btnAddRouting').addEventListener('click', () => void addRouting(partId));
     }
     catch (e) {
-        body.innerHTML = `<p class="err">Routings failed: ${esc(e.message)}</p>`;
+        body.innerHTML = `<p class="err">Routings failed: ${esc(problemText(e))}</p>`;
     }
 }
 async function addRouting(partId) {
@@ -152,7 +153,7 @@ async function addRouting(partId) {
         await renderRoutings(partId);
     }
     catch (e) {
-        msg.textContent = `Add failed: ${e.message}`;
+        msg.textContent = `Add failed: ${problemText(e)}`;
         msg.className = 'err';
     }
 }
@@ -172,7 +173,7 @@ async function removeRouting(partId, key) {
     }
     catch (e) {
         const m = $('#routingMsg');
-        m.textContent = `Remove failed: ${e.message}`;
+        m.textContent = `Remove failed: ${problemText(e)}`;
         m.className = 'err';
     }
 }
@@ -207,7 +208,7 @@ async function search() {
         document.querySelectorAll('#parts tr.click').forEach((tr) => tr.addEventListener('click', () => void loadPart(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Search failed: ${e.message}`);
+        setErr(`Search failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -255,7 +256,7 @@ async function loadPart(id) {
         await renderRoutings(id);
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -323,7 +324,7 @@ async function save() {
         await search();
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -351,7 +352,7 @@ async function copyPart() {
         setOk(`✓ Duplicated to part #${copy?.partNumId}.`);
     }
     catch (e) {
-        setErr(`Duplicate failed: ${e.message}`);
+        setErr(`Duplicate failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -397,7 +398,7 @@ async function obsoletePart() {
         setOk(`✓ Part #${done} is obsolete.` + (warning ? ' Open order lines were left as they are.' : ''));
     }
     catch (e) {
-        setErr(`Obsolete failed: ${e.message}`);
+        setErr(`Obsolete failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -450,7 +451,7 @@ async function revisePart() {
             + (body.movedRoutingSequence != null ? ` Routing ${body.movedRoutingSequence} moved across.` : ''));
     }
     catch (e) {
-        setErr(`Revise failed: ${e.message}`);
+        setErr(`Revise failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -483,7 +484,7 @@ async function deletePart() {
         setOk(`✓ Deleted part #${gone}.`);
     }
     catch (e) {
-        setErr(`Delete failed: ${e.message}`);
+        setErr(`Delete failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

@@ -9,6 +9,7 @@
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { slotStarts, slotLabel, slotWindow } from './truck-slots.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const setErr = (m) => { $('#err').textContent = m; };
@@ -155,7 +156,7 @@ async function importCsv(file) {
         rows = parseCsv(await file.text());
     }
     catch (e) {
-        setErr(`Could not read CSV: ${e.message}`);
+        setErr(`Could not read CSV: ${problemText(e)}`);
         return;
     }
     if (rows.length < 2) {
@@ -232,7 +233,7 @@ async function importCsv(file) {
                     problems.push(`Row ${line}: imported #${created.appointmentId} with warnings — ${warn.join('; ')}.`);
             }
             catch (e) {
-                problems.push(`Row ${line}: ${e.message}`);
+                problems.push(`Row ${line}: ${problemText(e)}`);
             }
         }
     }
@@ -361,7 +362,7 @@ async function load() {
         wireRowActions();
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -410,7 +411,7 @@ async function rowAction(act, id) {
         await load();
     }
     catch (e) {
-        setErr(`Action failed: ${e.message}`);
+        setErr(`Action failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -428,7 +429,7 @@ async function setStatus(id, status) {
         await load();
     }
     catch (e) {
-        setErr(`Status update failed: ${e.message}`);
+        setErr(`Status update failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -516,7 +517,7 @@ async function schedule() {
         await load();
     }
     catch (e) {
-        setErr(`Schedule failed: ${e.message}`);
+        setErr(`Schedule failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

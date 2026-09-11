@@ -11,6 +11,7 @@
 // SPAs use it as:  import { initAuth, authFetch } from './auth.js';
 //                  await initAuth();                       // once, at startup
 //                  new AbisClient('', { fetch: authFetch });
+import { problemText } from './api-errors.js';
 const SS = window.sessionStorage; // tokens are per-tab and cleared when it closes
 const K_TOKEN = 'abis_access_token';
 const K_ID = 'abis_id_token';
@@ -199,7 +200,7 @@ async function doInit() {
             await handleCallback();
         }
         catch (e) {
-            renderOidcBar(e.message); // surface the error, don't auto-loop
+            renderOidcBar(problemText(e)); // surface the error, don't auto-loop
             return;
         }
     }

@@ -9,6 +9,7 @@ import { AbisClient, ReceivingBolWrite, ReceivingBolCoilWrite } from './generate
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -126,7 +127,7 @@ async function search(): Promise<void> {
     $('#count').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
     document.querySelectorAll<HTMLTableRowElement>('#bols tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadBol(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Search failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -141,7 +142,7 @@ async function loadBol(id: number): Promise<void> {
     setV('#rStatus', b.status);
     $('#coilsSection').classList.remove('disabled');
     await loadCoils();
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -171,7 +172,7 @@ async function addCoil(): Promise<void> {
     $('#coilOk').textContent = '✓ Coil added.';
     ['#cOrg', '#cAlloy', '#cTemper', '#cNet', '#cGross', '#cGauge', '#cWidth', '#cLot'].forEach((i) => setV(i, ''));
     await loadCoils();
-  } catch (e) { setErr(`Add coil failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Add coil failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -179,7 +180,7 @@ async function deleteCoil(coilId: number): Promise<void> {
   if (editingId == null) return;
   setBusy(true);
   try { await client().deleteReceivingBolCoil(editingId, coilId); await loadCoils(); $('#coilOk').textContent = '✓ Coil removed.'; }
-  catch (e) { setErr(`Remove coil failed: ${(e as Error).message}`); }
+  catch (e) { setErr(`Remove coil failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -191,7 +192,7 @@ async function mintCoils(): Promise<void> {
     const r = await client().mintBolCoils(editingId);
     $('#coilOk').textContent = `✓ Minted ${r.minted} coil(s) into inventory.`;
     await loadCoils();
-  } catch (e) { setErr(`Mint failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Mint failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -201,7 +202,7 @@ async function generate861(): Promise<void> {
   try {
     const r = await client().generateReceiving861(editingId);
     $('#coilOk').textContent = `861: ${r.status} — ${r.note ?? ''}`;
-  } catch (e) { setErr(`861 failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`861 failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -237,7 +238,7 @@ async function save(): Promise<void> {
       setOk(`✓ Saved BOL #${editingId}.`);
     }
     await search();
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

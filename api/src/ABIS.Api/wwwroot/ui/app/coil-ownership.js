@@ -6,6 +6,7 @@
 import { AbisClient, CoilOwnershipTransferWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -90,7 +91,7 @@ async function loadLedger() {
         document.querySelectorAll('#tLedger tr.click').forEach((tr) => tr.addEventListener('click', () => void openCertificate(Number(tr.dataset.cert))));
     }
     catch (e) {
-        setErr(`Ledger failed: ${e.message}`);
+        setErr(`Ledger failed: ${problemText(e)}`);
     }
 }
 async function openCertificate(certificateNum) {
@@ -118,7 +119,7 @@ async function openCertificate(certificateNum) {
       </tbody></table>`;
     }
     catch (e) {
-        setErr(`Certificate failed: ${e.message}`);
+        setErr(`Certificate failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -157,7 +158,7 @@ async function searchCoils() {
         }));
     }
     catch (e) {
-        setErr(`Coil search failed: ${e.message}`);
+        setErr(`Coil search failed: ${problemText(e)}`);
     }
 }
 async function markReady() {
@@ -183,7 +184,7 @@ async function markReady() {
         await searchCoils();
     }
     catch (e) {
-        setErr(`Mark ready failed: ${e.message}`);
+        setErr(`Mark ready failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -212,7 +213,7 @@ async function submitTransfer() {
         }
     }
     catch (e) {
-        setErr(`Transfer failed: ${e.message}`);
+        setErr(`Transfer failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

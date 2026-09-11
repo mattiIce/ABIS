@@ -9,6 +9,7 @@ import { AbisClient, CoilPatch } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell, applyDeepLink } from './shell.js';
 import { statusChip, buildingLabel } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -108,7 +109,7 @@ async function search() {
         document.querySelectorAll('#coils tr.click').forEach((tr) => tr.addEventListener('click', () => void loadCoil(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Search failed: ${e.message}`);
+        setErr(`Search failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -126,7 +127,7 @@ async function summary() {
             : '<tr><td colspan="4" class="muted">No data.</td></tr>'}</tbody></table>`;
     }
     catch (e) {
-        setErr(`Summary failed: ${e.message}`);
+        setErr(`Summary failed: ${problemText(e)}`);
     }
 }
 async function loadCoil(id) {
@@ -160,7 +161,7 @@ async function loadCoil(id) {
         $('#btnSave').addEventListener('click', () => void saveCoil());
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -182,7 +183,7 @@ async function saveCoil() {
         await search();
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

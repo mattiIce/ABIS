@@ -6,6 +6,7 @@
 import { AbisClient, OrderCreateWithItems, CustomerOrderWrite, OrderItemWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell, applyDeepLink } from './shell.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -125,7 +126,7 @@ async function search() {
         document.querySelectorAll('#orders tr.click').forEach((tr) => tr.addEventListener('click', () => void loadOrder(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Search failed: ${e.message}`);
+        setErr(`Search failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -139,7 +140,7 @@ async function loadOrder(id) {
         renderDetail();
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -192,7 +193,7 @@ async function copyOrder(orderId) {
             await loadOrder(copy.order.orderAbcNum);
     }
     catch (e) {
-        setErr(`Duplicate failed: ${e.message}`);
+        setErr(`Duplicate failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -240,7 +241,7 @@ async function renderCoils(orderId) {
         box.querySelectorAll('[data-assign-coil]').forEach((b) => b.addEventListener('click', () => void assignCoil(orderId, Number(b.getAttribute('data-assign-coil')), b.getAttribute('data-other') || '')));
     }
     catch (e) {
-        box.innerHTML = `<p class="err">Coils failed: ${esc(e.message)}</p>`;
+        box.innerHTML = `<p class="err">Coils failed: ${esc(problemText(e))}</p>`;
     }
 }
 async function assignCoil(orderId, coilNum, otherOrder) {
@@ -264,7 +265,7 @@ async function assignCoil(orderId, coilNum, otherOrder) {
         await renderCoils(orderId);
     }
     catch (e) {
-        setErr(`Assign failed: ${e.message}`);
+        setErr(`Assign failed: ${problemText(e)}`);
     }
 }
 async function removeCoil(orderId, coilNum) {
@@ -279,7 +280,7 @@ async function removeCoil(orderId, coilNum) {
         await renderCoils(orderId);
     }
     catch (e) {
-        setErr(`Remove failed: ${e.message}`);
+        setErr(`Remove failed: ${problemText(e)}`);
     }
 }
 // Editable order header + line items. Saves via full-replace PUTs, reconstructing the whole write
@@ -342,7 +343,7 @@ async function saveHeader() {
         await loadOrder(o.orderAbcNum);
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
 }
 async function saveLine(itemNum) {
@@ -377,7 +378,7 @@ async function saveLine(itemNum) {
         await loadOrder(o.orderAbcNum);
     }
     catch (e) {
-        setErr(`Line save failed: ${e.message}`);
+        setErr(`Line save failed: ${problemText(e)}`);
     }
 }
 function lineRow() {
@@ -469,7 +470,7 @@ async function createOrder() {
             await loadOrder(created.order.orderAbcNum);
     }
     catch (e) {
-        setErr(`Create failed: ${e.message}`);
+        setErr(`Create failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

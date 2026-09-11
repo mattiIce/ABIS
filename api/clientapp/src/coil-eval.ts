@@ -8,6 +8,7 @@ import { AbisClient, DimensionCheckWrite, EvalScrapWrite } from './generated/abi
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -97,7 +98,7 @@ async function loadJob(): Promise<void> {
     $('#workarea').classList.remove('disabled');
     $('#jobHdr').textContent = `Job ${id}`;
     await Promise.all([loadCoils(), loadEvalScrap()]);
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -146,7 +147,7 @@ async function addDimCheck(): Promise<void> {
     setOk('✓ Dimension check recorded.');
     ['#dPc', '#dGauge', '#dWidth', '#dLenOp', '#dLenDr', '#dSquare', '#dBy', '#dNote'].forEach((i) => setV(i, ''));
     await loadDimChecks();
-  } catch (e) { setErr(`Save check failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save check failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -165,7 +166,7 @@ async function addScrap(): Promise<void> {
     setOk('✓ Eval scrap recorded.');
     ['#sCoil', '#sType', '#sPiece', '#sNet', '#sNote'].forEach((i) => setV(i, ''));
     await loadEvalScrap();
-  } catch (e) { setErr(`Save scrap failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save scrap failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

@@ -11,6 +11,7 @@
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const esc = (s: unknown): string =>
@@ -136,7 +137,7 @@ async function load(): Promise<void> {
     await loadSaved(job);
     $('#result').hidden = false;
   } catch (e) {
-    const msg = (e as Error).message;
+    const msg = problemText(e);
     setErr(msg.startsWith('404') ? `No such job ${job}.` : `Load failed: ${msg}`);
     $('#result').hidden = true;
   } finally { setBusy(false); }
@@ -168,7 +169,7 @@ async function save(): Promise<void> {
     $<HTMLInputElement>('#fInv').value = '';
     $<HTMLInputElement>('#fNotes').value = '';
     await loadSaved(current);
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -183,7 +184,7 @@ async function print(invoiceNum: string): Promise<void> {
     if (!r.ok) { setErr(`Document failed: ${r.status}`); return; }
     const blob = await r.blob();
     window.open(URL.createObjectURL(blob), '_blank');
-  } catch (e) { setErr(`Document failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Document failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

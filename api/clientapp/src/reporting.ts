@@ -11,6 +11,7 @@ import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip, statusText, lineLabel } from './status-labels.js';
 import { exportXlsx } from './xlsx.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T =>
   document.querySelector(sel) as T;
@@ -291,7 +292,7 @@ async function run(): Promise<void> {
       `<tr>${rep.cols.map((c) => `<td${c.num ? ' style="text-align:right"' : ''}>${c.f(r)}</td>`).join('')}</tr>`).join('')
       || `<tr><td colspan="${rep.cols.length}" class="muted">No data.</td></tr>`;
     $('#totals').textContent = `${current.length} row(s)`;
-  } catch (e) { setErr(`Report failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Report failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

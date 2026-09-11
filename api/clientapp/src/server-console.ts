@@ -6,6 +6,7 @@
 // Compiled by tsc to wwwroot/ui/app/server-console.js; served at /ui/server-console.html.
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const esc = (s: unknown): string =>
@@ -92,7 +93,7 @@ async function loadServices(): Promise<void> {
     $('#logUnit').innerHTML = svcs.map((s) => `<option value="${esc(s.unit)}">${esc(s.unit)}</option>`).join('');
     $('#tSvc').querySelectorAll<HTMLButtonElement>('button[data-restart]').forEach((b) =>
       b.addEventListener('click', () => void restart(b.dataset.restart!)));
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -104,7 +105,7 @@ async function restart(unit: string): Promise<void> {
     const body = await r.json().catch(() => ({}));
     if (r.ok) { await loadServices(); setOk(`✓ ${unit}: ${(body as { detail?: string }).detail ?? 'restarted'}`); }
     else { setErr(`Restart ${unit} failed: ${(body as { detail?: string }).detail ?? r.status}`); }
-  } catch (e) { setErr(`Restart failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Restart failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -117,7 +118,7 @@ async function loadLogs(): Promise<void> {
     const r = await api(`/api/admin/console/services/${encodeURIComponent(unit)}/logs?tail=${encodeURIComponent(tail)}`);
     const body = await r.json().catch(() => ({}));
     $('#logOut').textContent = r.ok ? ((body as { text?: string }).text || '(no output)') : `Failed (${r.status}).`;
-  } catch (e) { $('#logOut').textContent = `Failed: ${(e as Error).message}`; }
+  } catch (e) { $('#logOut').textContent = `Failed: ${problemText(e)}`; }
 }
 
 async function loadCron(): Promise<void> {
@@ -128,7 +129,7 @@ async function loadCron(): Promise<void> {
     $('#cronOut').textContent = r.ok
       ? ((body as { text?: string }).text || '(empty)')
       : `Not available: ${(body as { error?: string }).error ?? r.status}`;
-  } catch (e) { $('#cronOut').textContent = `Failed: ${(e as Error).message}`; }
+  } catch (e) { $('#cronOut').textContent = `Failed: ${problemText(e)}`; }
 }
 
 (async () => {

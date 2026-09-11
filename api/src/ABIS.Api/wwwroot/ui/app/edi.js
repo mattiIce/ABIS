@@ -7,6 +7,7 @@ import { AbisClient, EdiPartnerWrite, Edi997IngestWrite, EdiValveWrite, EdiArmWr
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { bannerText } from './edi-transmit-banner.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -185,7 +186,7 @@ async function loadTransactions() {
         document.querySelectorAll('#tTx tr.click').forEach((tr) => tr.addEventListener('click', () => void loadTxDetail(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Transactions load failed: ${e.message}`);
+        setErr(`Transactions load failed: ${problemText(e)}`);
     }
 }
 let selectedTxId = null;
@@ -204,7 +205,7 @@ async function loadTxDetail(id) {
         $('#txPayload').textContent = '';
     }
     catch (e) {
-        setErr(`Detail load failed: ${e.message}`);
+        setErr(`Detail load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -224,7 +225,7 @@ async function loadPayload() {
         $('#payloadWrap').style.display = '';
     }
     catch (e) {
-        setErr(`Payload load failed: ${e.message}`);
+        setErr(`Payload load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -245,7 +246,7 @@ async function loadWaiting() {
             `${(r.totalWaiting ?? 0).toLocaleString()} waiting · ${r.waitingCount ?? 0} to chase · ${r.overdueCount ?? 0} overdue`;
     }
     catch (e) {
-        setErr(`997 waiting load failed: ${e.message}`);
+        setErr(`997 waiting load failed: ${problemText(e)}`);
     }
 }
 async function ingest997() {
@@ -267,7 +268,7 @@ async function ingest997() {
         await Promise.all([loadWaiting(), loadTransactions()]);
     }
     catch (e) {
-        setErr(`997 ingest failed: ${ediErr(e)}`);
+        setErr(`997 ingest failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -285,7 +286,7 @@ async function loadLog() {
         $('#cLog').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
     }
     catch (e) {
-        setErr(`Log load failed: ${e.message}`);
+        setErr(`Log load failed: ${problemText(e)}`);
     }
 }
 async function loadCustomers() {
@@ -297,7 +298,7 @@ async function loadCustomers() {
             : '<tr><td colspan="5" class="muted">No customer EDI setups.</td></tr>';
     }
     catch (e) {
-        setErr(`Customer EDI load failed: ${e.message}`);
+        setErr(`Customer EDI load failed: ${problemText(e)}`);
     }
 }
 async function loadTypes() {
@@ -308,7 +309,7 @@ async function loadTypes() {
             : '<tr><td colspan="3" class="muted">No types.</td></tr>';
     }
     catch (e) {
-        setErr(`Types load failed: ${e.message}`);
+        setErr(`Types load failed: ${problemText(e)}`);
     }
 }
 let partners = [];
@@ -329,7 +330,7 @@ async function loadPartners() {
         document.querySelectorAll('#tPart .pDel').forEach((b) => b.addEventListener('click', () => void deletePartner(Number(b.dataset.c), b.dataset.s ?? '')));
     }
     catch (e) {
-        setErr(`Partner profiles load failed: ${e.message}`);
+        setErr(`Partner profiles load failed: ${problemText(e)}`);
     }
 }
 function fillPartner(p) {
@@ -376,16 +377,11 @@ async function savePartner() {
         await loadPartners();
     }
     catch (e) {
-        setErr(`Save failed: ${ediErr(e)}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
     }
-}
-// Surface a 403 from the feature gate clearly (the generated client's default message is unhelpful).
-function ediErr(e) {
-    const ex = e;
-    return ex?.status === 403 ? 'you need the EDI permission for this action.' : (ex?.message ?? String(e));
 }
 async function deletePartner(customerId, set) {
     if (!confirm(`Remove the ${set} profile for customer ${customerId}?`))
@@ -396,7 +392,7 @@ async function deletePartner(customerId, set) {
         await loadPartners();
     }
     catch (e) {
-        setErr(`Delete failed: ${ediErr(e)}`);
+        setErr(`Delete failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -454,7 +450,7 @@ async function loadTransmit() {
     catch (e) {
         // Failing to READ the policy is not the same as it being off, and printing "disabled" here would
         // be a guess. Say what is actually known: the server treats an unreadable policy as closed.
-        $('#xmitBanner').innerHTML = alertBox('warn', ICON_OFF, 'Transmit status unavailable', `Could not read the transmit policy: ${esc(ediErr(e))}. The server treats an unreadable policy as `
+        $('#xmitBanner').innerHTML = alertBox('warn', ICON_OFF, 'Transmit status unavailable', `Could not read the transmit policy: ${esc(problemText(e))}. The server treats an unreadable policy as `
             + 'closed, so nothing is being transmitted.');
         $('#xValve').innerHTML = '<p class="muted">Unavailable.</p>';
     }
@@ -475,7 +471,7 @@ async function setValve(open) {
         await loadTransmit();
     }
     catch (e) {
-        setErr(`Valve change failed: ${ediErr(e)}`);
+        setErr(`Valve change failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -494,7 +490,7 @@ async function setArm(transactionType, customerId, armed, note) {
         await loadTransmit();
     }
     catch (e) {
-        setErr(`Arm change failed: ${ediErr(e)}`);
+        setErr(`Arm change failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

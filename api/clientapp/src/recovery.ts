@@ -9,6 +9,7 @@ import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { exportXlsx } from './xlsx.js';
 import { defectTable, reportTable, toCsv, worksheetTable, type ExportTable } from './recovery-export.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -145,7 +146,7 @@ async function loadWorksheet(job: number, coil: number): Promise<void> {
     // that quietly disagreed with the database would be worse than no file.
     $("#wks-csv")?.addEventListener("click", () => { if (lastWks) exportCsv(worksheetTable(lastWks)); });
     $("#wks-xlsx")?.addEventListener("click", () => { if (lastWks) exportExcel(worksheetTable(lastWks)); });
-  } catch (e) { $("#wks").innerHTML = `<p class="err">Worksheet failed: ${esc((e as Error).message)}</p>`; }
+  } catch (e) { $("#wks").innerHTML = `<p class="err">Worksheet failed: ${esc(problemText(e))}</p>`; }
 }
 
 async function saveWorksheet(): Promise<void> {
@@ -163,7 +164,7 @@ async function saveWorksheet(): Promise<void> {
     await loadWorksheet(wksJob, wksCoil);
     $("#wks-ok").textContent = "\u2713 Saved.";
     await load();   // scrap totals and the Pareto move with it
-  } catch (e) { $("#wks").insertAdjacentHTML("beforeend", `<p class="err">Save failed: ${esc((e as Error).message)}</p>`); }
+  } catch (e) { $("#wks").insertAdjacentHTML("beforeend", `<p class="err">Save failed: ${esc(problemText(e))}</p>`); }
 }
 
 async function loadRecoveryCustomers(): Promise<void> {
@@ -215,7 +216,7 @@ async function load(): Promise<void> {
         <span class="mono" style="font-size:11.5px;text-align:right">${numf(d.netWt)} lb · ${pct(d.pct)}</span>
         <span style="grid-column:1/-1;height:14px;border-radius:5px;background:var(--surface-2);border:1px solid var(--line-2);overflow:hidden"><i style="display:block;height:100%;width:${Math.round((d.netWt ?? 0) / max * 100)}%;background:var(--accent)"></i></span>
       </div>`).join('') : '<p class="muted">No scrap booked for this job.</p>';
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

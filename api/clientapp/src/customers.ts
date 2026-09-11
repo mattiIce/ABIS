@@ -6,6 +6,7 @@
 import { AbisClient, CustomerWrite, CustomerContactWrite, CustomerContact } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -106,7 +107,7 @@ async function search(): Promise<void> {
     $('#listSub').textContent = `${items.length} shown`;
     document.querySelectorAll<HTMLTableRowElement>('#customers tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadCustomer(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Search failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -120,7 +121,7 @@ async function loadCustomer(id: number): Promise<void> {
     setV('#cCity', c.customerCity); setV('#cState', c.customerState); setV('#cZip', c.customerZip);
     await loadContacts(id);
     setContactsEnabled(true);
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -156,7 +157,7 @@ async function saveCustomer(): Promise<void> {
       setOk(`✓ Saved customer #${editingCustomerId}.`);
     }
     await search();
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -173,7 +174,7 @@ async function deleteCustomer(): Promise<void> {
     newCustomer();
     await search();
     setOk(`✓ Deleted customer #${gone}.`);
-  } catch (e) { setErr(`Delete failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Delete failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -189,7 +190,7 @@ async function loadContacts(customerId: number): Promise<void> {
       </tr>`).join('') : '<tr><td colspan="4" class="muted">No contacts yet.</td></tr>';
     document.querySelectorAll<HTMLTableRowElement>('#contacts tr.click').forEach((tr) =>
       tr.addEventListener('click', () => editContact(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Contacts load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Contacts load failed: ${problemText(e)}`); }
 }
 
 function setContactsEnabled(on: boolean): void {
@@ -224,7 +225,7 @@ async function saveContact(): Promise<void> {
     else { await client().updateCustomerContact(editingContactId, body); setOk(`✓ Saved contact #${editingContactId}.`); }
     await loadContacts(editingCustomerId);
     newContact();
-  } catch (e) { setErr(`Contact save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Contact save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

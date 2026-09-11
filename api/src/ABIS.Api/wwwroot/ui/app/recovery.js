@@ -9,6 +9,7 @@ import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { exportXlsx } from './xlsx.js';
 import { defectTable, reportTable, toCsv, worksheetTable } from './recovery-export.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -143,7 +144,7 @@ async function loadWorksheet(job, coil) {
             exportExcel(worksheetTable(lastWks)); });
     }
     catch (e) {
-        $("#wks").innerHTML = `<p class="err">Worksheet failed: ${esc(e.message)}</p>`;
+        $("#wks").innerHTML = `<p class="err">Worksheet failed: ${esc(problemText(e))}</p>`;
     }
 }
 async function saveWorksheet() {
@@ -166,7 +167,7 @@ async function saveWorksheet() {
         await load(); // scrap totals and the Pareto move with it
     }
     catch (e) {
-        $("#wks").insertAdjacentHTML("beforeend", `<p class="err">Save failed: ${esc(e.message)}</p>`);
+        $("#wks").insertAdjacentHTML("beforeend", `<p class="err">Save failed: ${esc(problemText(e))}</p>`);
     }
 }
 async function loadRecoveryCustomers() {
@@ -232,7 +233,7 @@ async function load() {
       </div>`).join('') : '<p class="muted">No scrap booked for this job.</p>';
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

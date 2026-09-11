@@ -20,6 +20,7 @@ import { printJobSheet, renderJobSheet } from './job-sheet.js';
 import { requestSupervisorOverride, endCoilBalancePercent, needsBalanceOverride, END_COIL_BALANCE_TOLERANCE_PERCENT } from './supervisor-pin.js';
 import { decideConveyorWeight } from './skid-weight.js';
 import { piecesThisSkid, nextBaseline } from './piece-count.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -291,7 +292,7 @@ async function loadJob() {
         startRunStatePoll(); // watch this job's line for PLC stops + read its stacker count
     }
     catch (e) {
-        setErr(`Load job failed: ${e.message}`);
+        setErr(`Load job failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -413,7 +414,7 @@ async function queueWrite(path, method, body, okMsg) {
         await loadQueue();
     }
     catch (e) {
-        setErr(`Queue: ${e.message}`);
+        setErr(`Queue: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -465,7 +466,7 @@ async function coilRunAction(path, body, okMsg, then) {
         then?.(res);
     }
     catch (e) {
-        setErr(`Coil run: ${e.message}`);
+        setErr(`Coil run: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -540,7 +541,7 @@ async function opAction(path, body, okMsg) {
         $('#opOk').textContent = okMsg;
     }
     catch (e) {
-        setErr(`Operation panel: ${e.message}`);
+        setErr(`Operation panel: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -567,7 +568,7 @@ async function endShift() {
         $('#opOk').textContent = `Shift ${res.shiftNum} ended · ${Math.round(res.dtTotalSeconds / 60)} min downtime`;
     }
     catch (e) {
-        setErr(`End shift: ${e.message}`);
+        setErr(`End shift: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -712,7 +713,7 @@ async function saveSkid() {
         await loadSkids();
     }
     catch (e) {
-        setErr(`Save skid failed: ${e.message}`);
+        setErr(`Save skid failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -760,7 +761,7 @@ async function printDocument(url, label, noteSel) {
         note(`🖨 Sent ${label} tag to the printer.`);
     }
     catch (e) {
-        note(`Print failed: ${e.message}`);
+        note(`Print failed: ${problemText(e)}`);
     }
 }
 async function saveScrap() {
@@ -784,7 +785,7 @@ async function saveScrap() {
         await loadScrap();
     }
     catch (e) {
-        setErr(`Save scrap failed: ${e.message}`);
+        setErr(`Save scrap failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -1000,7 +1001,7 @@ async function doScan(raw) {
         scanned = await r.json();
     }
     catch (e) {
-        setErr(`Scan failed: ${e.message}`);
+        setErr(`Scan failed: ${problemText(e)}`);
         scanned = null;
     }
     renderScan();
@@ -1194,7 +1195,7 @@ async function openAutoDowntime() {
             dtTickTimer = window.setInterval(renderDtBanner, 1000);
     }
     catch (e) {
-        setErr(`Auto-downtime open failed: ${e.message}`);
+        setErr(`Auto-downtime open failed: ${problemText(e)}`);
     }
 }
 function renderDtBanner() {
@@ -1255,7 +1256,7 @@ async function logAutoDowntime() {
         clearAutoDowntime();
     }
     catch (e) {
-        setErr(`Log auto-downtime failed: ${e.message}`);
+        setErr(`Log auto-downtime failed: ${problemText(e)}`);
     }
 }
 function clearAutoDowntime() {
@@ -1338,7 +1339,7 @@ async function saveDowntime() {
         setV('#dtNote', '');
     }
     catch (e) {
-        setErr(`Log downtime failed: ${e.message}`);
+        setErr(`Log downtime failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

@@ -7,6 +7,7 @@ import { AbisClient, SheetSkidWrite, ScrapSkidWrite } from './generated/abis-cli
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -58,7 +59,7 @@ async function saveCorrection(): Promise<void> {
       : '✓ Saved.';
     $('#editCard').hidden = res.warnings?.length ? false : true;
     await loadSheet();
-  } catch (e) { $('#editMsg').textContent = `Save failed: ${(e as Error).message}`; }
+  } catch (e) { $('#editMsg').textContent = `Save failed: ${problemText(e)}`; }
 }
 
 function scaffold(): string {
@@ -152,7 +153,7 @@ async function loadSheet(): Promise<void> {
       <td><button class="btn xs ghost" type="button" data-edit-skid="${esc(x.sheetSkidNum)}">Edit</button>
           <button class="btn xs ghost" type="button" data-make-scrap="${esc(x.sheetSkidNum)}">Make scrap</button></td></tr>`).join('') : '<tr><td colspan="8" class="muted">No sheet skids.</td></tr>';
     $('#cSheet').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
-  } catch (e) { setErr(`Sheet skids load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Sheet skids load failed: ${problemText(e)}`); }
 }
 
 async function loadScrap(): Promise<void> {
@@ -164,7 +165,7 @@ async function loadScrap(): Promise<void> {
       <td>${esc(x.scrapLocation)}</td><td>${statusChip('skidScrapStatus', x.skidScrapStatus)}</td>
       <td><button class="btn xs ghost" type="button" data-return-scrap="${esc(x.scrapSkidNum)}">Return to sheet</button></td></tr>`).join('') : '<tr><td colspan="9" class="muted">No scrap skids.</td></tr>';
     $('#cScrap').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
-  } catch (e) { setErr(`Scrap skids load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Scrap skids load failed: ${problemText(e)}`); }
 }
 
 async function loadPartials(): Promise<void> {
@@ -175,7 +176,7 @@ async function loadPartials(): Promise<void> {
       <td class="num">${esc(x.partialSkidPieces)}</td><td>${esc(x.partialSkidLocation)}</td>
       <td class="mono">${esc(dShow(x.partialSkidDate))}</td></tr>`).join('') : '<tr><td colspan="6" class="muted">No partial skids.</td></tr>';
     $('#cPartials').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
-  } catch (e) { setErr(`Partial skids load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Partial skids load failed: ${problemText(e)}`); }
 }
 
 async function createSheet(): Promise<void> {
@@ -192,7 +193,7 @@ async function createSheet(): Promise<void> {
     setOk(`✓ Created sheet skid #${created.sheetSkidNum}.`);
     ['#sDisplay', '#sNet', '#sTare', '#sPieces'].forEach((id) => { $<HTMLInputElement>(id).value = ''; });
     await loadSheet();
-  } catch (e) { setErr(`Create failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Create failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -214,7 +215,7 @@ async function createScrap(): Promise<void> {
     setOk(`✓ Created scrap skid #${created.scrapSkidNum}.`);
     ['#kAlloy', '#kTemper', '#kType', '#kNet', '#kTare', '#kLoc', '#kNotes', '#kStatus'].forEach((id) => { $<HTMLInputElement>(id).value = ''; });
     await loadScrap();
-  } catch (e) { setErr(`Create failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Create failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -225,7 +226,7 @@ async function makeScrap(sheetSkidNum: number): Promise<void> {
     const r = await client().makeScrapSkid(sheetSkidNum);
     setOk(`✓ Sheet skid #${sheetSkidNum} converted to scrap skid #${r.scrapSkidNum}.`);
     await Promise.all([loadSheet(), loadScrap()]);
-  } catch (e) { setErr(`Make scrap failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Make scrap failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -236,7 +237,7 @@ async function returnScrap(scrapSkidNum: number): Promise<void> {
     const r = await client().returnScrapSkid(scrapSkidNum);
     setOk(`✓ Scrap skid #${scrapSkidNum} returned to sheet (${r.restoredSkids ?? 0} skid${r.restoredSkids === 1 ? '' : 's'} restored).`);
     await Promise.all([loadSheet(), loadScrap()]);
-  } catch (e) { setErr(`Return failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Return failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

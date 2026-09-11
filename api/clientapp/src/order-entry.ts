@@ -6,6 +6,7 @@
 import { AbisClient, OrderCreateWithItems, CustomerOrderWrite, OrderItemWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell, applyDeepLink } from './shell.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -127,7 +128,7 @@ async function search(): Promise<void> {
     $('#listSub').textContent = `${items.length} shown`;
     document.querySelectorAll<HTMLTableRowElement>('#orders tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadOrder(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Search failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -136,7 +137,7 @@ async function loadOrder(id: number): Promise<void> {
   try {
     currentDetail = await client().getOrderDetail(id);
     renderDetail();
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -178,7 +179,7 @@ async function copyOrder(orderId: number): Promise<void> {
     const copy = await r.json();
     await search();
     if (copy?.order?.orderAbcNum) await loadOrder(copy.order.orderAbcNum);
-  } catch (e) { setErr(`Duplicate failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Duplicate failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -220,7 +221,7 @@ async function renderCoils(orderId: number): Promise<void> {
       b.addEventListener('click', () => void removeCoil(orderId, Number(b.getAttribute('data-remove-coil')))));
     box.querySelectorAll<HTMLButtonElement>('[data-assign-coil]').forEach((b) =>
       b.addEventListener('click', () => void assignCoil(orderId, Number(b.getAttribute('data-assign-coil')), b.getAttribute('data-other') || '')));
-  } catch (e) { box.innerHTML = `<p class="err">Coils failed: ${esc((e as Error).message)}</p>`; }
+  } catch (e) { box.innerHTML = `<p class="err">Coils failed: ${esc(problemText(e))}</p>`; }
 }
 
 async function assignCoil(orderId: number, coilNum: number, otherOrder: string): Promise<void> {
@@ -239,7 +240,7 @@ async function assignCoil(orderId: number, coilNum: number, otherOrder: string):
       return;
     }
     await renderCoils(orderId);
-  } catch (e) { setErr(`Assign failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Assign failed: ${problemText(e)}`); }
 }
 
 async function removeCoil(orderId: number, coilNum: number): Promise<void> {
@@ -248,7 +249,7 @@ async function removeCoil(orderId: number, coilNum: number): Promise<void> {
     const r = await authFetch(`/api/orders/${orderId}/coils/${coilNum}`, { method: 'DELETE' });
     if (!r.ok) { setErr(`Remove failed (${r.status}).`); return; }
     await renderCoils(orderId);
-  } catch (e) { setErr(`Remove failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Remove failed: ${problemText(e)}`); }
 }
 
 // Editable order header + line items. Saves via full-replace PUTs, reconstructing the whole write
@@ -307,7 +308,7 @@ async function saveHeader(): Promise<void> {
     });
     if (!r.ok) { setErr(`Save failed (${r.status}).`); return; }
     await loadOrder(o.orderAbcNum);
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
 }
 
 async function saveLine(itemNum: number): Promise<void> {
@@ -338,7 +339,7 @@ async function saveLine(itemNum: number): Promise<void> {
       return;
     }
     await loadOrder(o.orderAbcNum);
-  } catch (e) { setErr(`Line save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Line save failed: ${problemText(e)}`); }
 }
 
 function lineRow(): HTMLDivElement {
@@ -415,7 +416,7 @@ async function createOrder(): Promise<void> {
     $('#newResult').textContent = `✓ Created order ${created.order?.orderAbcNum} with ${created.items?.length ?? 0} line(s).`;
     await search();
     if (created.order?.orderAbcNum) await loadOrder(created.order.orderAbcNum);
-  } catch (e) { setErr(`Create failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Create failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

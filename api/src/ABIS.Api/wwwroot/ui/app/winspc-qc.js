@@ -7,6 +7,7 @@
 // Compiled by tsc to wwwroot/ui/app/winspc-qc.js; served at /ui/winspc-qc.html.
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const setErr = (m) => { $('#err').textContent = m; };
@@ -209,7 +210,7 @@ async function lookup() {
         populateChart();
     }
     catch (e) {
-        setErr(`Lookup failed: ${e.message}`);
+        setErr(`Lookup failed: ${problemText(e)}`);
         $('#rows').innerHTML = '';
     }
 }

@@ -7,6 +7,7 @@ import { AbisClient, SheetSkidWrite, ScrapSkidWrite } from './generated/abis-cli
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -62,7 +63,7 @@ async function saveCorrection() {
         await loadSheet();
     }
     catch (e) {
-        $('#editMsg').textContent = `Save failed: ${e.message}`;
+        $('#editMsg').textContent = `Save failed: ${problemText(e)}`;
     }
 }
 function scaffold() {
@@ -157,7 +158,7 @@ async function loadSheet() {
         $('#cSheet').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
     }
     catch (e) {
-        setErr(`Sheet skids load failed: ${e.message}`);
+        setErr(`Sheet skids load failed: ${problemText(e)}`);
     }
 }
 async function loadScrap() {
@@ -171,7 +172,7 @@ async function loadScrap() {
         $('#cScrap').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
     }
     catch (e) {
-        setErr(`Scrap skids load failed: ${e.message}`);
+        setErr(`Scrap skids load failed: ${problemText(e)}`);
     }
 }
 async function loadPartials() {
@@ -184,7 +185,7 @@ async function loadPartials() {
         $('#cPartials').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
     }
     catch (e) {
-        setErr(`Partial skids load failed: ${e.message}`);
+        setErr(`Partial skids load failed: ${problemText(e)}`);
     }
 }
 async function createSheet() {
@@ -205,7 +206,7 @@ async function createSheet() {
         await loadSheet();
     }
     catch (e) {
-        setErr(`Create failed: ${e.message}`);
+        setErr(`Create failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -233,7 +234,7 @@ async function createScrap() {
         await loadScrap();
     }
     catch (e) {
-        setErr(`Create failed: ${e.message}`);
+        setErr(`Create failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -251,7 +252,7 @@ async function makeScrap(sheetSkidNum) {
         await Promise.all([loadSheet(), loadScrap()]);
     }
     catch (e) {
-        setErr(`Make scrap failed: ${e.message}`);
+        setErr(`Make scrap failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -269,7 +270,7 @@ async function returnScrap(scrapSkidNum) {
         await Promise.all([loadSheet(), loadScrap()]);
     }
     catch (e) {
-        setErr(`Return failed: ${e.message}`);
+        setErr(`Return failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

@@ -6,6 +6,7 @@
 // Compiled by tsc to wwwroot/ui/app/test-results.js; served at /ui/test-results.html.
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const setErr = (m) => { $('#err').textContent = m; };
@@ -90,7 +91,7 @@ async function loadResults() {
         $('#listSub').textContent = `${items.length} shown`;
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
 }
 async function addResult() {
@@ -122,7 +123,7 @@ async function addResult() {
         await loadResults();
     }
     catch (e) {
-        setErr(`Add failed: ${e.message}`);
+        setErr(`Add failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
