@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { bannerText } from '../src/edi.js';
-import { EdiTransmitPolicyView, EdiArmedPair } from '../src/generated/abis-client.js';
+import { bannerText } from '../src/edi-transmit-banner.js';
+import type { EdiTransmitPolicyView, EdiArmedPair } from '../src/generated/abis-client.js';
 
 /**
  * The EDI transmit banner.
