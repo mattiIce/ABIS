@@ -40,6 +40,11 @@
   Revisit once §C5 exists AND the plant supplies a real 863 golden / confirms it's transmitted.
 - [ ] **DEFERRED (data-blocked)** **Inbound 856 (ASN) ingestion** (parse → `inbound_shipment` / `inbound_coil` / status)
   — the only inbound sample is a 2009 **test 850**; no real inbound business doc to validate against. Needs a real golden.
+  **Now tied to a 1.0 decision (2026-09-11):** receiving for Novelis, Constellium and Arconic starts from
+  the ASN in legacy (848 of 1,921 receiving BOLs in the last 12 months), and the Novelis 861 cron fires off
+  the ASN's status. See `OPEN_QUESTIONS.md` **B4** before building either half. A golden may be closer than
+  this line says: `.230` holds the parsed rows for 43,948 BOLs, so any surviving raw `.856` could be checked
+  against them (none is documented yet).
 - [~] **EDI VAN transport — built, deliberately unwired.** At the user's request the transmit valve, per-partner
   arming and a file-drop transport into legacy's VAN outbox were built (#454; admin UI #458, #460). **No
   generation path calls it, so ABIS still transmits nothing.** Wiring that funnel is a separate decision;
@@ -93,15 +98,15 @@
   shift ends is closed at the coil's current balance, and binding the next shift re-opens a fresh run for a coil
   still on the mandrel — so a coil spanning midnight splits across both shifts' production instead of landing in one.
   Console: Load/End coil-run buttons + the live ledger table.
-- [~] **C** Operation Panel workflow (new/end coil, end shift, change job) — done (#283): `POST /das/lines/{n}/current-job`
+- [x] **C** Operation Panel workflow (new/end coil, end shift, change job) — done (#283): `POST /das/lines/{n}/current-job`
   (null clears; re-sequences `LINE_PRIORITY` — the running job drops to status 2, the new one takes 1, in legacy
   order), `POST /das/lines/{n}/current-coil` (null drops; loading zeroes the process rate and sets
   `coil.coil_status_from_line = 1`), `POST /das/lines/{n}/shift/start` (409 if the shift belongs to another line),
   `POST /das/lines/{n}/shift/end` (stamps `end_time` + rolls `dt_instance` up into `dt_total` **in seconds**, then
   clears the board's shift; 409 when nothing is open) + `GET /das/lines/{n}/queue` (`LINE_PRIORITY`, running job
   first). Each mirrors the legacy `w_da_sheet` UPDATE. The DAS console gained an **Operation panel** card
-  (live shift/job/coil + the actions). New/end **coil run** landed in #284 (above); still TODO here: the
-  end-coil recap screen.
+  (live shift/job/coil + the actions). New/end **coil run** landed in #284 (above); the end-coil recap
+  screen is built too (the DAS console's recap card over `GET` end-coil recap — skids, pieces, finished weight, scrap, yield).
 - [~] **C** Live PLC counters (good/reject/stroke/feed-length) posted as coil deltas — **live-display half done**
   (#291): edge `GET /counters` exposes the four running PLC counters (legacy `goodpartcnt`/`rejectpartcnt`/
   `strokecnt`/`feedlength`); the DAS console baselines them when a coil run opens and shows the delta as this
@@ -359,7 +364,7 @@
   one**, so the "which routing moves?" picker is a routine path, not an edge case. 0 order lines
   carry a NULL `item_status`, so the `NOT IN (0,3)` three-valued-logic exclusion is moot on real data.
   <br>Previously noted here and still true: **routing sequences per part — done (#258)**: `GET/POST /parts/{id}/routings` + `DELETE /parts/{id}/routings/{seq}/{line}/{die}/{shape}` over legacy `ROUTING` (line/die/shape + SPM & efficiency standards + edge-trim/stacker; all-column PK → edit = delete + re-add). Routings travel with a part copy and are cleared on part delete. Routing panel on the Parts page.
-- [~] **M** **Part copy/delete + obsolete-in-use guard — done (#256)**: `POST /parts/{id}/copy` (part + blank geometry, INSERT…SELECT) + `DELETE /parts/{id}` refused with 409 when referenced by any order line (order_item.part_num_id), with Duplicate/Delete buttons on the Parts page. **Order copy/duplicate — done (#255)**: `POST /orders/{id}/copy` clones header + items + geometry. **Order-entry part picker — done (#265)**: the New-order line's Part # field autocompletes from the customer's parts (datalist) and, on selection, prefills alloy/sheet/gauge/pieces + tags the line with its part_num_id. Still TODO here: end-user change cascade (largely covered by order-edit's enduserId)
+- [x] **M** **Part copy/delete + obsolete-in-use guard — done (#256)**: `POST /parts/{id}/copy` (part + blank geometry, INSERT…SELECT) + `DELETE /parts/{id}` refused with 409 when referenced by any order line (order_item.part_num_id), with Duplicate/Delete buttons on the Parts page. **Order copy/duplicate — done (#255)**: `POST /orders/{id}/copy` clones header + items + geometry. **Order-entry part picker — done (#265)**: the New-order line's Part # field autocompletes from the customer's parts (datalist) and, on selection, prefills alloy/sheet/gauge/pieces + tags the line with its part_num_id. **End-user change — closed by investigation (2026-09-11), nothing to build:** legacy's `w_end_user_change` is one `UPDATE customer_order SET enduser_id` with no cascade, and **nothing in `legacy/` opens it** — a dead window. Order edit already writes `enduser_id`.
 - [x] **H/M** Sector consistency validation; edge-trim tolerance gate + override + `f_add_system_log_tran` audit.
   **Both halves now DONE.**
   <br>**Sector (#—, 2026-08-20).** Legacy states the whole rule in one comment: *"Column sector must be
@@ -384,7 +389,7 @@
 - [~] **M** **Accounting scrap-type summary — done (#465)**, on the printed invoice: a plain sum, deliberately not legacy's `SUM(DISTINCT …)` (which understated 2,966 job/type groups on `.230`), with unskidded scrap as its own row so it reconciles to the total; print coil-cert label on order close (paper — deprioritised); **customer delete — done (#261)**: `DELETE /customers/{id}` refused with 409 when referenced by any order/part/coil/shipment, else deletes the customer + its contacts + recovery config; Delete button on the Customers page.
 
 ### C2. Logistics / shipping
-- [~] **C** Packing-list line items — ✅ `SHEET` (#217) + `SCRAP` (#219) + `REJECT_COIL` (#220) built (add/list/remove on the shipment, feeding the 856); only `WH_PACKING_ITEM` (9 live rows) deferred
+- [x] **C** Packing-list line items — ✅ `SHEET` (#217) + `SCRAP` (#219) + `REJECT_COIL` (#220) built (add/list/remove on the shipment, feeding the 856). **`WH_PACKING_ITEM` is not a gap (checked 2026-09-11):** its 9 rows sit on three packing lists shipped June–September **1999**, and nothing has written it since.
 - [x] **C** BOL / combi-form / packing-ticket printing (the `rpabco` document engine) — **all three
   DONE**: BOL (#307, #308), packing tickets (#309), combi form (#355, #357).
   - **BOL totals** (#307): `f_get_bol_totals` ported — single- vs multi-stop detection, the per-BOL
@@ -493,7 +498,7 @@
   trap above is not rediscovered per screen. It also revokes the previous object URL, which matters
   most on the kiosk: a console left open all shift would otherwise hold 417 KB for every job looked at.
   **Sketches are parity-complete.** What is left is upload, which is new capability, not parity.
-- [~] **H** Die → shape mapping — done (#254): `GET/POST /line-die-shapes` + `DELETE /line-die-shapes/{shape}/{line}/{die}` over `LINE_DIE_4SHEET_TYPE` (composite PK), so scheduling can resolve the eligible line/die for a shape (filter by sheetType/lineNum/dieId; add guards line/die-exist + dup). Dies page gained a mapping panel. **Die report print — done (#353)**: `GET /documents/die-report`
+- [x] **H** Die → shape mapping — done (#254): `GET/POST /line-die-shapes` + `DELETE /line-die-shapes/{shape}/{line}/{die}` over `LINE_DIE_4SHEET_TYPE` (composite PK), so scheduling can resolve the eligible line/die for a shape (filter by sheetType/lineNum/dieId; add guards line/die-exist + dup). Dies page gained a mapping panel. **Die report print — done (#353)**: `GET /documents/die-report`
   renders the legacy `d_die_print` report (opened from `w_report_die_tool`) with its columns exactly,
   including the two a DataWindow comment records as added in 2022 — `engineered_scrap_y_n` and
   `num_of_parts_per_hit` — plus a 🖨 button on the Dies page that carries the page's status filter
@@ -504,10 +509,10 @@
   single die.
 - [x] **M** Shipment header EDI-trigger fields — done (#259): the shipment read now carries `edi_req`/`edi_triggered`/`edi_file_id_856`/`edi_file_id_desadv` + the 856/desadv/des-856 dates, and `POST /shipments/{pl}/edi-trigger` (docType 856|desadv + optional file id) stamps them (bookkeeping only — never transmits). Surfacing on the shipping UI is a follow-up.
 - [~] **M** **View archived EDI payload — done (#270)**: the EDI monitor's Transaction-detail card has a "View X12 payload" button that fetches the stored X12 (`GET /edi/transactions/{id}/payload`) into a scrollable pre + Copy. Still TODO (both deliberately deferred): manual EDI **send/resend** from UI (blocked by the no-transmit guardrail — legacy owns the VAN); X12 map maintenance.
-- [~] **L** **Shipment status-change history — done (#264)**: `GET /shipments/{pl}/history` reads `SHIPMENT_TRACK` (before/after shipment+vehicle status + customer/ship-to + who/when, newest first); **UI done (#271)**: a newest-first status-history table on the Shipment detail card (pre→cur transitions). **carrier DUNS/street/zip/country fields — done (#261)**: added `carrier_street`/`carrier_zip`/`carrier_country`/`carrier_duns_number` to the carrier read+write + Carriers form inputs.
+- [x] **L** **Shipment status-change history — done (#264)**: `GET /shipments/{pl}/history` reads `SHIPMENT_TRACK` (before/after shipment+vehicle status + customer/ship-to + who/when, newest first); **UI done (#271)**: a newest-first status-history table on the Shipment detail card (pre→cur transitions). **carrier DUNS/street/zip/country fields — done (#261)**: added `carrier_street`/`carrier_zip`/`carrier_country`/`carrier_duns_number` to the carrier read+write + Carriers form inputs.
 
 ### C3. Coils / receiving
-- [~] **C** Warehouse skid CRUD + status-20 warehouse-coil mint — **create path done (#317)**, ported from
+- [x] **C** Warehouse skid CRUD + status-20 warehouse-coil mint — **create path done (#317)**, ported from
   the legacy warehouse module (`w_wh_business` action 1). `POST /warehouse/skids` runs the whole chain in one
   transaction: resolve the reference order from the job → **resolve-or-mint the status-20 warehouse coil**
   keyed on (customer coil number, lot) → `sheet_skid` + `production_sheet_item` + `sheet_skid_detail` →
@@ -565,7 +570,7 @@
   done/shipped/transferred refusal and a `system_log` row in the same transaction. `PUT /coils/{n}/customer`.
 - [x] **H** Mint carries full coil attributes — already done in #224: the ownership-transfer mint does a `SELECT *` schema read and copies every coil column (cash_date / part_num / material_num / mid_num / damaged_code / …) to the minted coil
 - [x] **H** Coil-quality capture + flaw mapping (#246 GET/PUT /coils/{n}/quality + POST/DELETE .../quality/flaws) + a **Coil quality** capture page (#247). Inbound status-on-receipt is already handled: MintBolCoilsAsync sets `coil.date_received` at receipt and status 11 (QA-hold) when `receiving_bol_coil.damaged_fault=1` (the damage code lives on receiving_bol_coil, not the coil). Remaining tail: QR/barcode capture feeding the flaw map (needs the handheld/barcode integration).
-- [~] **M/L** Import-from-BOL / show-archived-BOL browsers; multi-condition coil search (search term over org/lot/mid/notes + temper filter DONE on GET /coils + coil-inventory UI); manual new-coil + live-scale weigh-in — remaining: the **archived-BOL browser** (live: `w_inv_coil` opens `w_archived_bol` over inbound-ASN staging `inbound_shipment`, 65,850 rows on `.230`; its coil drill-in window `w_coil_list_by_archived_bol` is not vendored) and **live-scale** (hardware). **Gauge/width ranges are not a parity gap** (checked 2026-09-11): legacy's coil window has no gauge or width filter — its search control is the 2021 "N years prior" toggle.
+- [~] **M/L** Import-from-BOL / show-archived-BOL browsers; multi-condition coil search (search term over org/lot/mid/notes + temper filter DONE on GET /coils + coil-inventory UI); manual new-coil + live-scale weigh-in — **archived-BOL browser done (#466)**: a card on Coil inventory over `w_archived_bol`'s query, with the coil drill-in inferred from `inbound_coil` (legacy's drill-in window is not vendored). **Import from BOL is NOT a browser** — it is ASN-driven receiving and waits on `OPEN_QUESTIONS.md` **B4**. Remaining: **live-scale** (hardware). **Gauge/width ranges are not a parity gap** (checked 2026-09-11): legacy's coil window has no gauge or width filter — its search control is the 2021 "N years prior" toggle.
 
 ### C4. Handheld scanner (RF coil-receiving)
 - [x] **C** `INBOUND_COIL_STATUS` model + barcode→ABC lookup + mint-decision — done (#311), ported from the
@@ -703,7 +708,7 @@
   sequence value burned. Legacy's UPDATE is unscoped (`WHERE COIL_NUMBER = …`) so minting again
   OVERWRITES and orphans the earlier label — preserved faithfully, but `replacedAbcNum` reports it
   instead of it being silent.
-- [~] **H** Lookup by scanned customer coil (`coil_org_num`); QR capture → `BARCODE_STRING` upsert.
+- [x] **H** Lookup by scanned customer coil (`coil_org_num`); QR capture → `BARCODE_STRING` upsert.
   **QR capture DONE:** `POST/GET /receiving/scan/qr` stores and reads the mill's QR against an inbound
   coil (legacy `addqrcode`, `coil_receiving.pl:495`). The barcode goes through the SAME parse as the
   coil scan, so one gun read serves both.
@@ -795,7 +800,7 @@
 
 ### C6. Platform / admin / reports
 - [~] **C** Scheduler EXECUTION engine — DONE: `SchedulerHostedService` (off by default, `Scheduler:Enabled=false`) + `SchedulerService`/`CronSchedule` (5/6-field cron matcher) dispatch enabled+due jobs to an **allowlist** of in-process `IScheduledOperation` handlers (noop/heartbeat seeded); unknown/legacy `target_operation` is recorded "unsupported" and NEVER executed (no shell/legacy path → guardrail intact). `POST /admin/jobs/{id}/run` for manual/on-demand. Still TODO: cron auto-import off the DB host (the server-console DB-host cron card already reads the .230 crontab read-only — see [[abis-230-cron-inventory]]).
-- [~] **M** Preventive-Maintenance (PM) scheduling subsystem — **API COMPLETE** (#273 read, #274 write, #275 completions):
+- [x] **M** Preventive-Maintenance (PM) scheduling subsystem — **API COMPLETE** (#273 read, #274 write, #275 completions):
   models `pm` / `pm_actions` / `pmcompletions` / `pmshift` over the 4-level equipment hierarchy
   (`groupdepartment → systemequipment → subsystemequipment → itemdevice`) + `titlecraft` rates.
   `GET /pms` (paged, hierarchy names, derived `daysUntilDue`/`dueBucket`), `GET /pms/due` (due board),
@@ -810,7 +815,7 @@
   binds positionally); `assignedtogroup` NOT NULL falls back to a non-empty label (Oracle `''` = NULL).
   PM UI — done (#276: due board + schedule editor), followed by the equipment cascade (#442), the PM list
   report and record navigation (#443), and retired PMs no longer reading as overdue (#445).
-- [~] **M** Maintenance parts/spares inventory — **the Oracle half is DEAD DATA; do not build CRUD over it.**
+- [x] **M** Maintenance parts/spares inventory — **the Oracle half is DEAD DATA; do not build CRUD over it.**
   Measured on `.230` 2026-08-20: `PARTS` holds 762 rows and `PARTS_SUPPLIERS` 762 links across 51
   suppliers — and **every single row carries the same `parts_entered_date`, 2010-08-21** (min = max).
   `lastorderdate` and `lastreceiveddate` are **NULL on all 762**, and **not one row has
@@ -842,7 +847,7 @@
   <br>**More-Details** was the free-text equipment fields on the maintenance LOG form. Deliberately
   left: `maint_log` stores system/subsystem/item as TEXT, not ids, so cascading it would change what
   gets written rather than fix anything. That is a plant decision, not a gap.
-- [~] **M** Uptime reports + downtime pivots — done (#252): `/reporting/uptime` (groupBy line|shift|day; worked-shift uptime = (shift length − dt_total s)/3600 + scheduled/downtime hrs + uptime %, faithful to `w_report_uptime`) and `/reporting/downtime-pivot` (groupBy cause|job|**part** (#268)|line|shift|day|month|year — the by-part pivot walks ab_job→order_item→part_num, labelled by enduser_part_num). Remaining tail: a dedicated dt-vs-production ratio (uptime % already carries downtime-as-%-of-scheduled).
+- [x] **M** Uptime reports + downtime pivots — done (#252): `/reporting/uptime` (groupBy line|shift|day; worked-shift uptime = (shift length − dt_total s)/3600 + scheduled/downtime hrs + uptime %, faithful to `w_report_uptime`) and `/reporting/downtime-pivot` (groupBy cause|job|**part** (#268)|line|shift|day|month|year — the by-part pivot walks ab_job→order_item→part_num, labelled by enduser_part_num). **The "dt-vs-production ratio" tail is already covered (checked 2026-09-11):** legacy's only such figure is `d_daily_prod_dt_efficiency` — (shift time − downtime) / shift time — and it is ported as the line efficiency in `LineLiveMetrics`, alongside uptime % here.
 - [x] **M** Native Excel export — done (#252): dependency-free OOXML `.xlsx` writer (`clientapp/src/xlsx.ts`, STORED zip + CRC32 + inline strings; numbers stay numeric), "Export Excel" on every report next to Export CSV. openpyxl-validated.
 - [~] **C/H** Feature-gate the write tags still auth-only. Done for every tag that maps 1:1 to a nav-gated feature (safe — the user who can reach the page already holds it; kiosks/edge use the API key and bypass): **Jobs**→Production Control, **Shipments**/**Stacker**→Warehouse, **CoilOwnership**→Inventory(Coil), **TestResults**/**Recovery**→Quality Control, **ProdFolder**→Production Control, **Downtime**→Downtime report (added to `FeatureByTag`). **Carriers and Sketches are DONE** (mapped to the live `Carrier Information` / `Production Sketch`) — this line previously still listed them. Still **deferred:** Dies / Sales / Accounting / Trucks / DAS / ScanLog / OpcLog — their nav pages have NO feature gate, so there's no authoritative feature name to gate the API on without risking a lockout; needs live `security_application` verification. **Verified 2026-08-21:** the live table holds **35** features and none of the seven has a name that clearly corresponds — `Trucks` has none at all (a new ABIS subsystem), and inventing one is exactly how four phantom features came about. Needs a plant decision, not a guess. That same check found the four features the app DOES gate on were **missing from `.230` entirely**, 403-ing every Parts and maintenance write for signed-in users; now self-healed at startup.
 - [ ] **NOT PARITY — there is no data to view (audited 2026-08-04).** The legacy OPC-log module reads a

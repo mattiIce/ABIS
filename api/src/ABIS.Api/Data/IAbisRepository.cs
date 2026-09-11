@@ -34,6 +34,10 @@ public interface IAbisRepository
     /// <summary>Re-book a coil to another customer and write the audit row in the same transaction.
     /// Null when the coil does not exist.</summary>
     Task<CoilCustomerChange?> ChangeCoilCustomerAsync(long coilAbcNum, long customerId, string changedBy, string? note, CancellationToken ct);
+    /// <summary>A customer's inbound ASN BOLs (legacy <c>d_archived_bol</c>), newest received first.</summary>
+    Task<PagedResult<InboundAsnBol>> GetInboundAsnBolsAsync(long customerId, string? bol, int page, int pageSize, CancellationToken ct);
+    /// <summary>The coils an inbound ASN carries, as the mill notified them (<c>inbound_coil</c>).</summary>
+    Task<IReadOnlyList<InboundCoilDetail>> GetInboundAsnCoilsAsync(long ediFileId, string bol, CancellationToken ct);
     /// <summary>Bulk-mark coils Ready for transfer (status 12). Skips terminal (0/10/13), already-12,
     /// zero-balance, and unknown coils, reporting the reason for each.</summary>
     Task<BulkCoilStatusResult> SetCoilsReadyForTransferAsync(IReadOnlyList<long> coilAbcNums, CancellationToken ct);

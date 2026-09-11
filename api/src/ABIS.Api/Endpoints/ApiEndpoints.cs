@@ -1582,6 +1582,32 @@ public static class ApiEndpoints
            .WithSummary("Mint coil inventory for the BOL's lines (legacy w_coil_receiving save) — creates COIL rows (status 2/new, 11/on-hold if damaged) and links them. Idempotent; 400 if the BOL has no coils.")
            .Produces<MintResult>().Produces(StatusCodes.Status400BadRequest).Produces(StatusCodes.Status404NotFound);
 
+        // Archived inbound ASN BOLs — legacy's "Archived BOL" button on the coil inventory window
+        // (w_inv_coil → w_archived_bol / d_archived_bol): the shipments a mill told us it sent, received as EDI
+        // 856s, for one customer. Read-only; legacy's commented-out f_create_inbound_sh_status call stays unported.
+        // Parameters are validated by hand rather than bound as required: in Development a missing required
+        // query parameter throws (a 500) instead of answering 400.
+        api.MapGet("/inbound-asns", async (long? customerId, string? bol, int? page, int? pageSize,
+                IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (customerId is not > 0)
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["customerId"] = ["A customer is required."] });
+                return Results.Ok(await repo.GetInboundAsnBolsAsync(customerId.Value, bol, page ?? 1, pageSize ?? 50, ct));
+            })
+           .WithName("ListInboundAsnBols").WithTags("Receiving")
+           .WithSummary("A customer's archived inbound ASN BOLs (legacy w_archived_bol), newest received first; optional BOL-contains filter.")
+           .Produces<PagedResult<InboundAsnBol>>().ProducesValidationProblem();
+
+        api.MapGet("/inbound-asns/{ediFileId:long}/coils", async (long ediFileId, string? bol, IAbisRepository repo, CancellationToken ct) =>
+            {
+                if (string.IsNullOrWhiteSpace(bol))
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["bol"] = ["A BOL is required."] });
+                return Results.Ok(await repo.GetInboundAsnCoilsAsync(ediFileId, bol, ct));
+            })
+           .WithName("ListInboundAsnCoils").WithTags("Receiving")
+           .WithSummary("The coils an inbound ASN carries, as the mill notified them (inbound_coil).")
+           .Produces<IReadOnlyList<InboundCoilDetail>>().ProducesValidationProblem();
+
         api.MapPost("/receiving-bols/{receivingBolId:long}/generate-861", async (long receivingBolId, HttpContext ctx, IAbisRepository repo, CancellationToken ct) =>
             {
                 // Generation is an EDI write — gate on the EDI feature (service accounts pass through).
