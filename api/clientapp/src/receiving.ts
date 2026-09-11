@@ -5,7 +5,7 @@
 // 861 generate action. Through the NSwag-generated, compiler-checked client.
 //
 // Compiled by tsc to wwwroot/ui/app/receiving.js; served at /ui/receiving.html.
-import { AbisClient, ReceivingBolWrite, ReceivingBolCoilWrite } from './generated/abis-client.js';
+import { AbisClient, ReceivingBolWrite, ReceivingBolCoilWrite, CoilCustomerWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
@@ -93,6 +93,13 @@ function scaffold(): string {
           <button class="btn sm ghost" id="btnGen861" type="button">Generate 861</button>
           <span class="muted" style="font-size:12px">Mint creates COIL inventory rows for lines not yet minted (status 2/new, 11/on-hold if damaged).</span>
         </div>
+        <div class="frow" id="custFixRow" style="margin-top:12px;align-items:flex-end">
+          <div class="fld"><label>Correct a coil's customer</label><select id="fixCoil"><option value="">minted coil…</option></select></div>
+          <div class="fld"><label>Booked to (customer)</label><input id="fixCust" list="custList" placeholder="customer id" style="width:130px" /></div>
+          <div class="fld"><label>Why</label><input id="fixNote" maxlength="200" placeholder="optional" style="width:180px" /></div>
+          <button class="btn sm ghost" id="btnFixCust" type="button">Change customer</button>
+        </div>
+        <p class="muted" style="font-size:12px;margin:6px 0 0">For a coil keyed to the wrong customer at receiving. Moving a coil between customers is an <a href="/ui/coil-ownership.html">ownership transfer</a>.</p>
         <div id="coilOk" class="ok-note"></div>
       </div>
     </div>
@@ -156,6 +163,11 @@ async function loadCoils(): Promise<void> {
     : '<tr><td colspan="10" class="muted">No coils on this BOL.</td></tr>';
   document.querySelectorAll<HTMLButtonElement>('#tCoils .rmCoil').forEach((b) =>
     b.addEventListener('click', () => void deleteCoil(Number(b.dataset.c))));
+  // Only a minted coil has a customer of its own to correct — an unminted line is just a row on the BOL.
+  const minted = (coils ?? []).filter((c) => c.coilAbcNum != null);
+  $('#fixCoil').innerHTML = '<option value="">minted coil…</option>'
+    + minted.map((c) => `<option value="${c.coilAbcNum}">${esc(c.coilAbcNum)} · ${esc(c.coilOrgNum)}</option>`).join('');
+  $('#custFixRow').classList.toggle('disabled', minted.length === 0);
 }
 
 async function addCoil(): Promise<void> {
@@ -206,6 +218,29 @@ async function generate861(): Promise<void> {
   finally { setBusy(false); }
 }
 
+async function changeCoilCustomer(): Promise<void> {
+  const coil = Number(v('#fixCoil'));
+  const cust = Number(v('#fixCust'));
+  if (!(coil > 0)) { setErr('Pick the minted coil to correct.'); return; }
+  if (!(cust > 0)) { setErr('Enter the customer the coil should be booked to.'); return; }
+  setErr('');
+  try {
+    const current = await client().getCoil(coil);
+    // Don't ask someone to confirm a change that changes nothing — the dialog would read "From: X  To: X".
+    // The server refuses it too; this just says so before the prompt rather than after it.
+    if (current.customerId === cust) { setErr(`Coil ${coil} is already booked to ${custLabel(cust)}.`); return; }
+    // Legacy's window showed the coil, its current customer and the new one before OK. Keep that, and
+    // say what this is not, because the transfer page exists for the other case.
+    if (!confirm(`Correct the customer for ABC coil ${coil}?\n\nFrom: ${custLabel(current.customerId)}\nTo:   ${custLabel(cust)}\n\n`
+      + 'This re-books a coil keyed to the wrong customer. Moving a coil between customers is an ownership transfer.')) return;
+    setBusy(true);
+    const r = await client().changeCoilCustomer(coil, new CoilCustomerWrite({ customerId: cust, note: v('#fixNote') || undefined }));
+    $('#coilOk').textContent = `✓ Coil ${r.coilAbcNum} re-booked from ${custLabel(r.customerIdFrom)} to ${custLabel(r.customerIdTo)}.`;
+    setV('#fixCust', ''); setV('#fixNote', '');
+  } catch (e) { setErr(`Customer change failed: ${problemText(e)}`); }
+  finally { setBusy(false); }
+}
+
 function newBol(): void {
   editingId = null;
   $('#formTitle').textContent = 'New receiving BOL';
@@ -252,6 +287,7 @@ async function save(): Promise<void> {
   $('#btnAddCoil').addEventListener('click', () => void addCoil());
   $('#btnMint').addEventListener('click', () => void mintCoils());
   $('#btnGen861').addEventListener('click', () => void generate861());
+  $('#btnFixCust').addEventListener('click', () => void changeCoilCustomer());
   newBol();
   await search();
 })();

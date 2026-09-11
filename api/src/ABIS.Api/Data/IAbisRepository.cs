@@ -31,6 +31,9 @@ public interface IAbisRepository
     Task<Coil> CreateCoilAsync(CoilWrite body, CancellationToken ct);
     Task<bool> CoilExistsByKeyAsync(string coilOrgNum, long? customerId, string? coilMidNum, CancellationToken ct);
     Task<Coil?> PatchCoilAsync(long coilAbcNum, CoilPatch patch, CancellationToken ct);
+    /// <summary>Re-book a coil to another customer and write the audit row in the same transaction.
+    /// Null when the coil does not exist.</summary>
+    Task<CoilCustomerChange?> ChangeCoilCustomerAsync(long coilAbcNum, long customerId, string changedBy, string? note, CancellationToken ct);
     /// <summary>Bulk-mark coils Ready for transfer (status 12). Skips terminal (0/10/13), already-12,
     /// zero-balance, and unknown coils, reporting the reason for each.</summary>
     Task<BulkCoilStatusResult> SetCoilsReadyForTransferAsync(IReadOnlyList<long> coilAbcNums, CancellationToken ct);

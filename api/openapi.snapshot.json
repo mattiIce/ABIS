@@ -2483,6 +2483,67 @@
         }
       }
     },
+    "/api/coils/{coilAbcNum}/customer": {
+      "put": {
+        "tags": [
+          "Coils"
+        ],
+        "summary": "Correct the customer a coil is booked to (legacy receiving-screen Change customer). Refuses done/shipped/transferred coils (409) and records who changed it from what to what in system_log. Not an ownership transfer.",
+        "operationId": "ChangeCoilCustomer",
+        "parameters": [
+          {
+            "name": "coilAbcNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoilCustomerWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoilCustomerChange"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/coils/ready-for-transfer": {
       "post": {
         "tags": [
@@ -17839,6 +17900,44 @@
               "type": "integer",
               "format": "int64"
             },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CoilCustomerChange": {
+        "type": "object",
+        "properties": {
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "customerIdFrom": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "customerIdTo": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "changedBy": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CoilCustomerWrite": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
             "nullable": true
           }
         },

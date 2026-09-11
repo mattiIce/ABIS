@@ -559,9 +559,10 @@
   **Deliberately not ported:** legacy's CASE 4 also updates the selected `production_sheet_item` in the
   same transaction. Doing both from one call would make it impossible to fix a mis-keyed skid weight
   without also restating an item, and the item paths already exist separately.
-- [~] **H** Guarded coil delete — done (DELETE /coils/{n}, refuses coils applied to a job or done/shipped/transferred); **changing a coil's customer at receiving is still TODO — and there is no cascade to build.** Legacy's
-  `cb_change_cust` on `w_coil_receiving` (ticket 1108, 2021) runs one `UPDATE coil SET customer_id` on the
-  selected coil — no status guard, no audit, nothing downstream. `CoilPatch` does not accept a customer today.
+- [~] **H** Guarded coil delete — done (DELETE /coils/{n}, refuses coils applied to a job or done/shipped/transferred); **correcting a coil's customer at receiving — done (#463).** There was no cascade: legacy's `cb_change_cust`
+  on `w_coil_receiving` (ticket 1108, 2021) runs one `UPDATE coil SET customer_id`. Measured in use on `.230` (1,020
+  coils differ from their BOL's customer, none via transfer, latest 2026-07-09). The port adds what legacy lacked: a
+  done/shipped/transferred refusal and a `system_log` row in the same transaction. `PUT /coils/{n}/customer`.
 - [x] **H** Mint carries full coil attributes — already done in #224: the ownership-transfer mint does a `SELECT *` schema read and copies every coil column (cash_date / part_num / material_num / mid_num / damaged_code / …) to the minted coil
 - [x] **H** Coil-quality capture + flaw mapping (#246 GET/PUT /coils/{n}/quality + POST/DELETE .../quality/flaws) + a **Coil quality** capture page (#247). Inbound status-on-receipt is already handled: MintBolCoilsAsync sets `coil.date_received` at receipt and status 11 (QA-hold) when `receiving_bol_coil.damaged_fault=1` (the damage code lives on receiving_bol_coil, not the coil). Remaining tail: QR/barcode capture feeding the flaw map (needs the handheld/barcode integration).
 - [~] **M/L** Import-from-BOL / show-archived-BOL browsers; multi-condition coil search (search term over org/lot/mid/notes + temper filter DONE on GET /coils + coil-inventory UI); manual new-coil + live-scale weigh-in — remaining: BOL browsers, gauge/width ranges, live-scale
