@@ -997,6 +997,11 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
         // in_spec outside {0,1} -> 400; non-positive measurement -> 400.
         Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync(url, new { checkedBy = "qa", width = 48.0, inSpec = 5 })).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync(url, new { checkedBy = "qa", width = 0.0 })).StatusCode);
+        // A well-formed check with no verdict -> 400. The repository used to store that as in_spec=1,
+        // a PASS nobody recorded. WinSPC is off in this factory, so nothing else can supply the verdict.
+        var noVerdict = await _client.PostAsJsonAsync(url, new { checkedBy = "qa", pcNumber = 2, width = 48.0 });
+        Assert.Equal(HttpStatusCode.BadRequest, noVerdict.StatusCode);
+        Assert.Contains("inSpec", await noVerdict.Content.ReadAsStringAsync());
         // Valid fail record -> 201, and the entered in_spec (0) is honored (not defaulted to pass).
         var ok = await _client.PostAsJsonAsync(url, new { checkedBy = "qa", pcNumber = 1, gauge = 0.125, width = 48.0, inSpec = 0 });
         Assert.Equal(HttpStatusCode.Created, ok.StatusCode);

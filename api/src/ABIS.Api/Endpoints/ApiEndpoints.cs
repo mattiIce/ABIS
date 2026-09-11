@@ -1598,6 +1598,16 @@ public static class ApiEndpoints
                 if (Validate(body) is { } problems)
                     return Results.ValidationProblem(problems);
                 await ApplyWinSpcGateAsync(body, sheetSkidNum, repo, win, ct);
+                // A check must carry a verdict, and it can come from either of two places: the
+                // inspector, or WinSPC's spec limits (the gate above fills it in when it can decide).
+                // This is checked AFTER the gate on purpose — requiring it up front would reject every
+                // check WinSPC was about to decide. Without it the repository stored a missing verdict
+                // as in_spec = 1: a PASS that nobody recorded.
+                if (body.InSpec is null)
+                    return Results.ValidationProblem(new Dictionary<string, string[]>
+                    {
+                        ["inSpec"] = ["Record the inspector's verdict: 0 (fail) or 1 (pass). WinSPC had no spec limits to decide it for this skid."],
+                    });
                 var created = await repo.CreateDimensionCheckAsync(sheetSkidNum, body, ct);
                 return Results.Created($"/api/coil-eval/skids/{sheetSkidNum}/dimension-checks/{created.DimensionCheckNum}", created);
             })
