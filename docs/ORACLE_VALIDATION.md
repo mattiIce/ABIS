@@ -3,10 +3,9 @@
 CI only exercises the seeded **SQLite** fixture, so the production **Oracle** path
 (driver, dialect SQL, sequences) needs validating against a real database. The
 **original** core surface was validated live (read + write — see results below) and
-fixed three live-only bug classes. Modules built since have only run on SQLite + the
-gated smoke, so a **re-sweep of the newer read/write paths** is the top remaining item
-in [`NEXT_STEPS.md`](NEXT_STEPS.md). This runbook makes that turnkey once you can
-provide a connection.
+fixed three live-only bug classes. A later re-sweep of the newer read/write paths was done and **closed 2026-08-04** — see
+[`ORACLE_DEFECT_SWEEP.md`](ORACLE_DEFECT_SWEEP.md). This runbook remains the way to re-validate
+against a connection.
 
 > Use a **non-production** Oracle (a test/staging copy of the ABIS schema). The API
 > issues real SQL; point it at prod only with explicit sign-off.
@@ -274,7 +273,7 @@ classes found and fixed, 1 environment gap, plus performance findings.**
 Recommended: rewrite the correlated `SUM`/`COUNT` subqueries as `GROUP BY` joins,
 add indexes on the `ab_job_num` FK columns of `process_coil`/`sheet_skid`, and default
 the reporting date window to something narrower than 7 years. Tracked in
-[`NEXT_STEPS.md`](NEXT_STEPS.md).
+[`REPORTING_PERFORMANCE.md`](REPORTING_PERFORMANCE.md).
 
 > Everything else in the sweep — the other 14 reporting endpoints, accounting,
 > quality/recovery, coil-eval, prod-folder, stacker line-errors, parts, carriers,

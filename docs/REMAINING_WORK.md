@@ -40,7 +40,10 @@
   Revisit once §C5 exists AND the plant supplies a real 863 golden / confirms it's transmitted.
 - [ ] **DEFERRED (data-blocked)** **Inbound 856 (ASN) ingestion** (parse → `inbound_shipment` / `inbound_coil` / status)
   — the only inbound sample is a 2009 **test 850**; no real inbound business doc to validate against. Needs a real golden.
-- [ ] **DEFERRED (by policy)** EDI VAN transport (GXS / Inovis SFTP) + postpro — legacy-owned, do NOT build (transmit seam stays no-op).
+- [~] **EDI VAN transport — built, deliberately unwired.** At the user's request the transmit valve, per-partner
+  arming and a file-drop transport into legacy's VAN outbox were built (#454; admin UI #458, #460). **No
+  generation path calls it, so ABIS still transmits nothing.** Wiring that funnel is a separate decision;
+  legacy's cron stays the single owner of the VAN until then.
 - [ ] **DEFERRED (operational, → 1.0)** Data-source cutover. **Re-framed 2026-08-23 — the earlier
   wording had it backwards.** This is NOT "codi-ABIS reads the sandbox instead of live prod, so re-point
   it at `.9`". `.230` **becomes** production: a final refresh from `.9`, after which it diverges
@@ -377,14 +380,13 @@
   naming who, how far out, and against which order; and a line coming **back inside** the band has its
   override **cleared** — without that, a line overridden once keeps the flag forever and the job sheet
   prints "CONTACT FOREMAN BEFORE RUNNING" in red on an item somebody already corrected.
-  <br>**Still open:** the sector-consistency warning ("Unusual combination of sectors detected" — a mix
-  of sectors in one order, Yes/No to continue).
+  <br>**Sector-consistency warning — done (#419).**
 - [~] **M** Accounting scrap-type summary; print coil-cert label on order close; **customer delete — done (#261)**: `DELETE /customers/{id}` refused with 409 when referenced by any order/part/coil/shipment, else deletes the customer + its contacts + recovery config; Delete button on the Customers page.
 
 ### C2. Logistics / shipping
 - [~] **C** Packing-list line items — ✅ `SHEET` (#217) + `SCRAP` (#219) + `REJECT_COIL` (#220) built (add/list/remove on the shipment, feeding the 856); only `WH_PACKING_ITEM` (9 live rows) deferred
-- [~] **C** BOL / combi-form / packing-ticket printing (the `rpabco` document engine) — **BOL + packing
-  tickets DONE; combi form sized, not built.**
+- [x] **C** BOL / combi-form / packing-ticket printing (the `rpabco` document engine) — **all three
+  DONE**: BOL (#307, #308), packing tickets (#309), combi form (#355, #357).
   - **BOL totals** (#307): `f_get_bol_totals` ported — single- vs multi-stop detection, the per-BOL
     sheet/scrap/reject rollups, and the "Shipping with BOL …" package note (multi-stop only; a stored
     note in `shipment_reference_codes` wins over a recount so paperwork already in a driver's hand
@@ -557,7 +559,9 @@
   **Deliberately not ported:** legacy's CASE 4 also updates the selected `production_sheet_item` in the
   same transaction. Doing both from one call would make it impossible to fix a mis-keyed skid weight
   without also restating an item, and the item paths already exist separately.
-- [~] **H** Guarded coil delete — done (DELETE /coils/{n}, refuses coils applied to a job or done/shipped/transferred); change-coil-customer-on-BOL cascade still TODO
+- [~] **H** Guarded coil delete — done (DELETE /coils/{n}, refuses coils applied to a job or done/shipped/transferred); **changing a coil's customer at receiving is still TODO — and there is no cascade to build.** Legacy's
+  `cb_change_cust` on `w_coil_receiving` (ticket 1108, 2021) runs one `UPDATE coil SET customer_id` on the
+  selected coil — no status guard, no audit, nothing downstream. `CoilPatch` does not accept a customer today.
 - [x] **H** Mint carries full coil attributes — already done in #224: the ownership-transfer mint does a `SELECT *` schema read and copies every coil column (cash_date / part_num / material_num / mid_num / damaged_code / …) to the minted coil
 - [x] **H** Coil-quality capture + flaw mapping (#246 GET/PUT /coils/{n}/quality + POST/DELETE .../quality/flaws) + a **Coil quality** capture page (#247). Inbound status-on-receipt is already handled: MintBolCoilsAsync sets `coil.date_received` at receipt and status 11 (QA-hold) when `receiving_bol_coil.damaged_fault=1` (the damage code lives on receiving_bol_coil, not the coil). Remaining tail: QR/barcode capture feeding the flaw map (needs the handheld/barcode integration).
 - [~] **M/L** Import-from-BOL / show-archived-BOL browsers; multi-condition coil search (search term over org/lot/mid/notes + temper filter DONE on GET /coils + coil-inventory UI); manual new-coil + live-scale weigh-in — remaining: BOL browsers, gauge/width ranges, live-scale
@@ -628,8 +632,9 @@
   <br>**STILL NOT PRINTED in its corrected form.** Prints 1–4 were the old body. The lot table's column
   scale is derived rather than read (the sub-report uses different units from the outer label) and is
   the first thing to check on the next test print.
-  <br>**The CERT is specified but NOT built** — see `docs/CERT_LABEL.md`. It needs the duplicate-863
-  narrowing resolved first: 483 coils on `.230` have more than one 863 row and legacy errors on >1.
+  <br>**The CERT is built (#390)**, with the 863 gate that guards it; its data path was first verified
+  against live Oracle in #396. It has not been printed on paper yet ([OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) D1).
+  See `docs/CERT_LABEL.md`.
 - [x] **H** ~~Rework the 6x10 as a per-customer VARIANT system~~ — **the premise was wrong** (#382).
   There is no variant system to build: the 6x10 has ONE layout. The artwork carries two caption sets
   under the same control names, but across all five barcode user objects `theo_t` is populated 15 times
@@ -802,7 +807,8 @@
   Oracle care: `pm`/`pm_actions`/`pmcompletions` added to `Database:MaxIdTables` (no sequence — legacy
   minted ids via `wf_getnew_id`, else ORA-02289); INSERT params ordered to match placeholders (ODP.NET
   binds positionally); `assignedtogroup` NOT NULL falls back to a non-empty label (Oracle `''` = NULL).
-  Still TODO: the Maintenance-page PM UI (due board + list/detail + checklist + Complete).
+  PM UI — done (#276: due board + schedule editor), followed by the equipment cascade (#442), the PM list
+  report and record navigation (#443), and retired PMs no longer reading as overdue (#445).
 - [~] **M** Maintenance parts/spares inventory — **the Oracle half is DEAD DATA; do not build CRUD over it.**
   Measured on `.230` 2026-08-20: `PARTS` holds 762 rows and `PARTS_SUPPLIERS` 762 links across 51
   suppliers — and **every single row carries the same `parts_entered_date`, 2010-08-21** (min = max).
