@@ -10,6 +10,7 @@ import { AbisClient, GrantWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -221,7 +222,7 @@ async function loadUsers() {
         document.querySelectorAll('#tUsers tr.click').forEach((tr) => tr.addEventListener('click', () => void openUser(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Users failed: ${e.message}`);
+        setErr(`Users failed: ${problemText(e)}`);
     }
 }
 async function openUser(userId) {
@@ -258,7 +259,7 @@ async function openUser(userId) {
         document.querySelectorAll('#tPerms .rmGrant').forEach((b) => b.addEventListener('click', () => void removeUserGrant(Number(b.dataset.a))));
     }
     catch (e) {
-        setErr(`Open user failed: ${e.message}`);
+        setErr(`Open user failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -274,7 +275,7 @@ async function removeGroup(groupId) {
         setOk('✓ Removed from group.');
     }
     catch (e) {
-        setErr(`Remove failed: ${e.message}`);
+        setErr(`Remove failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -296,7 +297,7 @@ async function addGroup() {
         $('#addGroupId').value = '';
     }
     catch (e) {
-        setErr(`Add failed: ${e.message}`);
+        setErr(`Add failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -317,7 +318,7 @@ async function grantUserApp() {
         setOk('✓ Grant set.');
     }
     catch (e) {
-        setErr(`Grant failed: ${e.message}`);
+        setErr(`Grant failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -582,7 +583,7 @@ async function loadGroups() {
         document.querySelectorAll('#tAllGroups .delGrp').forEach((b) => b.addEventListener('click', () => void deleteGroup(Number(b.dataset.id), b.dataset.name || '')));
     }
     catch (e) {
-        setErr(`Groups failed: ${e.message}`);
+        setErr(`Groups failed: ${problemText(e)}`);
     }
 }
 async function openGroup(groupId) {
@@ -608,7 +609,7 @@ async function openGroup(groupId) {
             : '<tr><td colspan="3" class="muted">No members.</td></tr>';
     }
     catch (e) {
-        setErr(`Open group failed: ${e.message}`);
+        setErr(`Open group failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -701,7 +702,7 @@ async function loadApps() {
         document.querySelectorAll('#tApps .delApp').forEach((b) => b.addEventListener('click', () => void deleteFeature(Number(b.dataset.id), b.dataset.name || '')));
     }
     catch (e) {
-        setErr(`Features failed: ${e.message}`);
+        setErr(`Features failed: ${problemText(e)}`);
     }
 }
 async function createFeature() {

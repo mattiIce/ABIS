@@ -8,6 +8,7 @@ import { AbisClient, ShipmentStatusPatch } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -61,7 +62,7 @@ async function search(): Promise<void> {
     $('#listSub').textContent = `${items.length} shown`;
     document.querySelectorAll<HTMLTableRowElement>('#shipments tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadShipment(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Search failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -120,7 +121,7 @@ async function loadShipment(id: number): Promise<void> {
     $('#btnPrintBol').addEventListener('click', () => void printDoc(`/api/documents/bol/${id}`, 'BOL'));
     $('#btnPrintCombi').addEventListener('click', () => void printDoc(`/api/documents/combi/${id}`, 'Combi form'));
     await Promise.all([loadPackingItems(id), loadHistory(id)]);
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -146,7 +147,7 @@ async function loadPackingItems(id: number): Promise<void> {
       </tr>`).join('') : '<tr><td colspan="9" class="muted">No skids on this packing list yet.</td></tr>';
     document.querySelectorAll<HTMLButtonElement>('#packItems button[data-id]').forEach((b) =>
       b.addEventListener('click', () => void removePackItem(String(b.dataset.type), Number(b.dataset.id))));
-  } catch (e) { setErr(`Items failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Items failed: ${problemText(e)}`); }
 }
 
 // Y/N flag as a chip ('' is NULL on Oracle, so blank means "not set", not "no").
@@ -182,7 +183,7 @@ async function loadHistory(id: number): Promise<void> {
       <td>${transition('vehicleStatus', h.preVehicleStatus, h.curVehicleStatus)}</td>
       <td class="mono">${shipTo(h.preShipToId, h.curShipToId)}</td></tr>`).join('')
       : '<tr><td colspan="5" class="muted">No recorded status changes.</td></tr>';
-  } catch (e) { setErr(`History failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`History failed: ${problemText(e)}`); }
 }
 
 async function addPackItem(): Promise<void> {
@@ -204,7 +205,7 @@ async function addPackItem(): Promise<void> {
     $<HTMLInputElement>('#addSkid').value = '';
     $('#itemOk').textContent = '✓ Skid added.';
     await loadPackingItems(selected);
-  } catch (e) { setErr(`Add failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Add failed: ${problemText(e)}`); }
 }
 
 // Print a shipping document — fetch the server-rendered HTML with auth, open it as a blob URL for printing
@@ -226,7 +227,7 @@ async function printDoc(url: string, label: string): Promise<void> {
       return;
     }
     window.open(URL.createObjectURL(await r.blob()), '_blank');
-  } catch (e) { setErr(`${label} failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`${label} failed: ${problemText(e)}`); }
 }
 
 async function removePackItem(itemType: string, itemId: number): Promise<void> {
@@ -237,7 +238,7 @@ async function removePackItem(itemType: string, itemId: number): Promise<void> {
     const r = await authFetch(`/api/shipments/${selected}/items/${itemType}/${itemId}`, { method: 'DELETE' });
     if (!r.ok && r.status !== 404) { setErr(`Remove failed (${r.status}).`); return; }
     await loadPackingItems(selected);
-  } catch (e) { setErr(`Remove failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Remove failed: ${problemText(e)}`); }
 }
 
 // Guided close-out: mark the shipment shipped + stamp sent/actual dates in one action
@@ -253,7 +254,7 @@ async function closeBol(): Promise<void> {
     await loadShipment(closedId);   // re-renders the panel (rebuilds #closeOk), so set the note after
     await search();
     $('#closeOk').textContent = '✓ Shipment closed / marked shipped.';
-  } catch (e) { setErr(`Close failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Close failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -271,7 +272,7 @@ async function dispatch(): Promise<void> {
     await client().patchShipment(selected, patch);
     $('#dispOk').textContent = '✓ Dispatch saved.';
     await search();
-  } catch (e) { setErr(`Dispatch failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Dispatch failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

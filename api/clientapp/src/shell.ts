@@ -18,6 +18,7 @@ import { initAuth, authFetch, loginWithUser, changePassword, currentUserName, is
 import { observeTables } from './table-tools.js';
 import { loadLineNames } from './status-labels.js';
 import { DEFAULT_EDGE_URLS, parseEdgeUrls, probeEdgeHosts } from './edge.js';
+import { problemText } from './api-errors.js';
 
 export interface ShellOptions {
   active: string;
@@ -496,7 +497,7 @@ function loginGate(): Promise<void> {
         if (np !== cf) { cpErr.textContent = 'The two passwords do not match.'; return; }
         cpBtn.disabled = true; cpErr.textContent = ''; cpBtn.textContent = 'Saving…';
         try { await changePassword(current, np); localStorage.removeItem('abis_act_as'); done(); }
-        catch (e) { cpErr.textContent = (e as Error).message; cpBtn.disabled = false; cpBtn.textContent = 'Change password & continue'; }
+        catch (e) { cpErr.textContent = problemText(e); cpBtn.disabled = false; cpBtn.textContent = 'Change password & continue'; }
       };
       cpBtn.addEventListener('click', () => void submit());
       (gate.querySelector('#cpNew') as HTMLInputElement).focus();
@@ -513,7 +514,7 @@ function loginGate(): Promise<void> {
         if (res.mustChangePassword) { forceChange(user, pass); return; }
         done();
       } catch (e) {
-        const msg = (e as Error).message;
+        const msg = problemText(e);
         if (/not configured/i.test(msg)) {
           // No server-side sign-in yet — fall back to the dev API key + impersonation so the
           // app is still usable locally.

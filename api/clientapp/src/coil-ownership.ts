@@ -6,6 +6,7 @@
 import { AbisClient, CoilOwnershipTransferWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -93,7 +94,7 @@ async function loadLedger(): Promise<void> {
       : '<tr><td colspan="7" class="muted">No transfers.</td></tr>';
     document.querySelectorAll<HTMLTableRowElement>('#tLedger tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void openCertificate(Number(tr.dataset.cert))));
-  } catch (e) { setErr(`Ledger failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Ledger failed: ${problemText(e)}`); }
 }
 
 async function openCertificate(certificateNum: number): Promise<void> {
@@ -119,7 +120,7 @@ async function openCertificate(certificateNum: number): Promise<void> {
         <tr><th style="text-transform:none">Authorization</th><td>${esc(c.authorizationNote)}</td></tr>
         <tr><th style="text-transform:none">Notes</th><td>${esc(c.notes)}</td></tr>
       </tbody></table>`;
-  } catch (e) { setErr(`Certificate failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Certificate failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -148,7 +149,7 @@ async function searchCoils(): Promise<void> {
         setV('#tCoilOrig', tr.dataset.coil);
         $('#pickedOwner').textContent = tr.dataset.owner ? `current owner: customer ${tr.dataset.owner}` : '';
       }));
-  } catch (e) { setErr(`Coil search failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Coil search failed: ${problemText(e)}`); }
 }
 
 async function markReady(): Promise<void> {
@@ -164,7 +165,7 @@ async function markReady(): Promise<void> {
     const skipped = (res.skipped ?? []).length;
     $('#okReady').textContent = `✓ ${res.updated} marked ready${skipped ? `, ${skipped} skipped` : ''}.`;
     await searchCoils();
-  } catch (e) { setErr(`Mark ready failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Mark ready failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -184,7 +185,7 @@ async function submitTransfer(): Promise<void> {
     $('#pickedOwner').textContent = '';
     await loadLedger();
     if (created.certificateNum != null) { showTab('ledger'); await openCertificate(created.certificateNum); }
-  } catch (e) { setErr(`Transfer failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Transfer failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

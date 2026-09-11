@@ -10,6 +10,7 @@ import { AbisClient, GrantWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -223,7 +224,7 @@ async function loadUsers(): Promise<void> {
       : '<tr><td colspan="4" class="muted">No users.</td></tr>';
     document.querySelectorAll<HTMLTableRowElement>('#tUsers tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void openUser(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Users failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Users failed: ${problemText(e)}`); }
 }
 
 async function openUser(userId: number): Promise<void> {
@@ -253,7 +254,7 @@ async function openUser(userId: number): Promise<void> {
       : '<tr><td colspan="4" class="muted">No permissions — user has no feature grants.</td></tr>';
     document.querySelectorAll<HTMLButtonElement>('#tPerms .rmGrant').forEach((b) =>
       b.addEventListener('click', () => void removeUserGrant(Number(b.dataset.a))));
-  } catch (e) { setErr(`Open user failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Open user failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -261,7 +262,7 @@ async function removeGroup(groupId: number): Promise<void> {
   if (curUser == null) return;
   setBusy(true);
   try { await client().removeUserFromGroup(curUser, groupId); await openUser(curUser); setOk('✓ Removed from group.'); }
-  catch (e) { setErr(`Remove failed: ${(e as Error).message}`); }
+  catch (e) { setErr(`Remove failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -270,7 +271,7 @@ async function addGroup(): Promise<void> {
   const gid = v('#addGroupId'); if (!gid) return;
   setBusy(true);
   try { await client().addUserToGroup(curUser, Number(gid)); await openUser(curUser); setOk('✓ Added to group.'); $<HTMLInputElement>('#addGroupId').value = ''; }
-  catch (e) { setErr(`Add failed: ${(e as Error).message}`); }
+  catch (e) { setErr(`Add failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -281,7 +282,7 @@ async function grantUserApp(): Promise<void> {
   try {
     await client().setUserApplicationGrant(curUser, Number(aid), new GrantWrite({ privilege: Number(v('#grantPriv')) || 0 }));
     await openUser(curUser); setOk('✓ Grant set.');
-  } catch (e) { setErr(`Grant failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Grant failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -473,7 +474,7 @@ async function loadGroups(): Promise<void> {
       el.addEventListener('click', () => void openGroup(Number(el.dataset.id))));
     document.querySelectorAll<HTMLButtonElement>('#tAllGroups .delGrp').forEach((b) =>
       b.addEventListener('click', () => void deleteGroup(Number(b.dataset.id), b.dataset.name || '')));
-  } catch (e) { setErr(`Groups failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Groups failed: ${problemText(e)}`); }
 }
 
 async function openGroup(groupId: number): Promise<void> {
@@ -496,7 +497,7 @@ async function openGroup(groupId: number): Promise<void> {
       <td class="mono">${esc(m.userId)}</td><td class="mono">${esc(m.loginId)}</td>
       <td>${esc(m.userFirstName)} ${esc(m.userLastName)}</td></tr>`).join('')
       : '<tr><td colspan="3" class="muted">No members.</td></tr>';
-  } catch (e) { setErr(`Open group failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Open group failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -560,7 +561,7 @@ async function loadApps(): Promise<void> {
       : '<tr><td colspan="4" class="muted">No features.</td></tr>';
     document.querySelectorAll<HTMLButtonElement>('#tApps .delApp').forEach((b) =>
       b.addEventListener('click', () => void deleteFeature(Number(b.dataset.id), b.dataset.name || '')));
-  } catch (e) { setErr(`Features failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Features failed: ${problemText(e)}`); }
 }
 
 async function createFeature(): Promise<void> {

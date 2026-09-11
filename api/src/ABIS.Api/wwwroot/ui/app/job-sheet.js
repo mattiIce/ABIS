@@ -14,6 +14,7 @@
 // take, so it lands on whatever printer the shop-floor PC has mapped without server-side plumbing.
 import { AbisClient } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
+import { problemText } from './api-errors.js';
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 /** An em dash for anything absent. Never a zero — see the note at the top of this file. */
 const dash = '—';
@@ -210,7 +211,7 @@ export async function renderJobSheet(container, jobNum) {
     catch (e) {
         const msg = e.status === 404
             ? `No job sheet for job ${jobNum}.`
-            : `Job sheet unavailable: ${e.message}`;
+            : `Job sheet unavailable: ${problemText(e)}`;
         container.innerHTML = `<p class="muted">${esc(msg)}</p>`;
         return null;
     }

@@ -15,6 +15,7 @@
 import { AbisClient } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { statusChip, lineLabel, loadLineNames, isProductionLine, lineBoardRank, isDecommissionedLine } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -251,7 +252,7 @@ async function load() {
         bar.style.animation = '';
     }
     catch (e) {
-        $('#grid').innerHTML = `<div class="das-empty">Board unavailable: ${esc(e.message)}</div>`;
+        $('#grid').innerHTML = `<div class="das-empty">Board unavailable: ${esc(problemText(e))}</div>`;
     }
 }
 function tick() { $('#clock').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }

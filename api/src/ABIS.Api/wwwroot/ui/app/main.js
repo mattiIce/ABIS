@@ -6,6 +6,7 @@
 // Compiled by `tsc` (see ../tsconfig.json) to browser ES modules in
 // wwwroot/ui/app/, so it is served with no runtime build step.
 import { AbisClient, OrderCreateWithItems, CustomerOrderWrite, OrderItemWrite } from './generated/abis-client.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const keyInput = $('#apiKey');
 keyInput.value = localStorage.getItem('abis_api_key') ?? 'dev-local-key';
@@ -49,7 +50,7 @@ async function search() {
         msg.textContent = `${page.totalCount} coil(s) · via generated TypeScript client`;
     }
     catch (e) {
-        msg.innerHTML = `<span class="err">${e.message ?? e} — check the API key</span>`;
+        msg.innerHTML = `<span class="err">${esc(problemText(e))} — check the API key</span>`;
     }
 }
 async function detail(id) {
@@ -61,7 +62,7 @@ async function detail(id) {
       <div class="muted">net ${fmt(c.netWt)} / bal ${fmt(c.netWtBalance)} · status ${c.coilStatus ?? ''}</div>`;
     }
     catch (e) {
-        box.innerHTML = `<span class="err">${e.message ?? e}</span>`;
+        box.innerHTML = `<span class="err">${esc(problemText(e))}</span>`;
     }
 }
 // Typed write path: create an order + line item through the generated client.
@@ -87,7 +88,7 @@ async function createOrder() {
         msg.innerHTML = `<span class="pill">Created order ${detail.order.orderAbcNum} with ${detail.items?.length ?? 0} item(s)</span>`;
     }
     catch (e) {
-        msg.innerHTML = `<span class="err">${e.message ?? e}</span>`;
+        msg.innerHTML = `<span class="err">${esc(problemText(e))}</span>`;
     }
 }
 $('#btnSearch').addEventListener('click', search);

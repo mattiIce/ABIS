@@ -6,6 +6,7 @@
 // Compiled by tsc to wwwroot/ui/app/coil-quality.js; served at /ui/coil-quality.html.
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const esc = (s: unknown): string =>
@@ -98,7 +99,7 @@ async function load(): Promise<void> {
     $('#hsub').textContent = h ? 'recorded' : 'not yet recorded';
     $('#headerCard').style.display = ''; $('#flawCard').style.display = '';
     renderFlaws(d.flaws ?? []);
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
 }
 
 function renderFlaws(flaws: Flaw[]): void {
@@ -128,7 +129,7 @@ async function saveHeader(): Promise<void> {
     const r = await authFetch(`/api/coils/${coil}/quality`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     if (!r.ok) { setErr(r.status === 404 ? `Coil ${coil} not found.` : `Save failed (${r.status}).`); return; }
     setOk('✓ Header saved.'); $('#hsub').textContent = 'recorded';
-  } catch (e) { setErr(`Save failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
 }
 
 async function addFlaw(): Promise<void> {
@@ -145,7 +146,7 @@ async function addFlaw(): Promise<void> {
     }
     ['#nStart', '#nEnd', '#nCode', '#nHand'].forEach((i) => setV(i, ''));
     await load();
-  } catch (e) { setErr(`Add failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Add failed: ${problemText(e)}`); }
 }
 
 async function delFlaw(key: string): Promise<void> {
@@ -155,7 +156,7 @@ async function delFlaw(key: string): Promise<void> {
     const r = await authFetch(`/api/coils/${coil}/quality/flaws?${qs.toString()}`, { method: 'DELETE' });
     if (!r.ok && r.status !== 404) { setErr(`Remove failed (${r.status}).`); return; }
     await load();
-  } catch (e) { setErr(`Remove failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Remove failed: ${problemText(e)}`); }
 }
 
 (async () => {

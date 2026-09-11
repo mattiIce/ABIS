@@ -15,6 +15,7 @@
 import { AbisClient } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { statusChip, lineLabel, loadLineNames, isProductionLine, lineBoardRank, isDecommissionedLine } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -266,7 +267,7 @@ async function load(): Promise<void> {
     // restart the refresh-countdown bar
     const bar = $('#bar'); bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
   } catch (e) {
-    $('#grid').innerHTML = `<div class="das-empty">Board unavailable: ${esc((e as Error).message)}</div>`;
+    $('#grid').innerHTML = `<div class="das-empty">Board unavailable: ${esc(problemText(e))}</div>`;
   }
 }
 

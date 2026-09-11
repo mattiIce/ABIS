@@ -8,6 +8,7 @@
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusText } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const setErr = (m) => { $('#err').textContent = m; };
@@ -79,7 +80,7 @@ async function loadHeld() {
         $('#listSub').textContent = `${items.length} shown`;
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
 }
 async function loadHistory(coil) {
@@ -100,7 +101,7 @@ async function loadHistory(coil) {
       </tr>`).join('') : `<tr><td colspan="5" class="muted">No QA history for coil ${coil}.</td></tr>`;
     }
     catch (e) {
-        setErr(`History failed: ${e.message}`);
+        setErr(`History failed: ${problemText(e)}`);
     }
 }
 async function transition(kind) {
@@ -141,7 +142,7 @@ async function transition(kind) {
         await Promise.all([loadHeld(), loadHistory(Number(coil))]);
     }
     catch (e) {
-        setErr(`${kind === 'hold' ? 'Hold' : 'Release'} failed: ${e.message}`);
+        setErr(`${kind === 'hold' ? 'Hold' : 'Release'} failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

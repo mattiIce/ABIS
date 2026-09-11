@@ -18,6 +18,7 @@
 //     the caller must not retry silently or swallow a refusal.
 import { AbisClient, SupervisorOverrideRequest } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
+import { problemText } from './api-errors.js';
 
 /** The balance discrepancy above which legacy refuses to close a coil without a supervisor
  *  (`ir_hl_percent > 0.5`, u_tabpg_end_coil.sru:757). Mirrors SupervisorOverride.EndCoilBalanceTolerancePercent. */
@@ -175,7 +176,7 @@ export function requestSupervisorOverride(ctx: OverrideContext): Promise<number 
           : r.message || 'That PIN was not accepted.');
       } catch (e) {
         pin = ''; draw();
-        say(`Could not check the PIN: ${(e as Error).message}`);
+        say(`Could not check the PIN: ${problemText(e)}`);
       }
     }
 

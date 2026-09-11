@@ -11,6 +11,7 @@
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const setErr = (m) => { $('#err').textContent = m; };
@@ -115,7 +116,7 @@ async function load() {
         $('#result').hidden = false;
     }
     catch (e) {
-        const msg = e.message;
+        const msg = problemText(e);
         setErr(msg.startsWith('404') ? `No such job ${job}.` : `Load failed: ${msg}`);
         $('#result').hidden = true;
     }
@@ -161,7 +162,7 @@ async function save() {
         await loadSaved(current);
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -184,7 +185,7 @@ async function print(invoiceNum) {
         window.open(URL.createObjectURL(blob), '_blank');
     }
     catch (e) {
-        setErr(`Document failed: ${e.message}`);
+        setErr(`Document failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

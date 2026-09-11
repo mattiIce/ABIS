@@ -9,6 +9,7 @@ import { printJobSheet, renderJobSheet } from './job-sheet.js';
 import { renderSketch } from './sketch.js';
 import { initShell } from './shell.js';
 import { lineLabel } from './status-labels.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -97,7 +98,7 @@ async function loadFolder(): Promise<void> {
     sheet = await renderJobSheet($('#sheetBody'), id);
     await loadNotes();
   } catch (e) {
-    setErr(`Load folder failed: ${(e as Error).message}`);
+    setErr(`Load folder failed: ${problemText(e)}`);
     job = null; sheet = null;
     $('#sheetCard').hidden = true;      // never leave the previous job's sheet on screen
     $('#workarea').classList.add('disabled');
@@ -125,7 +126,7 @@ async function addNote(): Promise<void> {
     setOk('✓ Note added.');
     setV('#nNotes', '');
     await loadNotes();
-  } catch (e) { setErr(`Add note failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Add note failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

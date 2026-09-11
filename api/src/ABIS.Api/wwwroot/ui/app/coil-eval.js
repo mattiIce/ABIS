@@ -8,6 +8,7 @@ import { AbisClient, DimensionCheckWrite, EvalScrapWrite } from './generated/abi
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -99,7 +100,7 @@ async function loadJob() {
         await Promise.all([loadCoils(), loadEvalScrap()]);
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -159,7 +160,7 @@ async function addDimCheck() {
         await loadDimChecks();
     }
     catch (e) {
-        setErr(`Save check failed: ${e.message}`);
+        setErr(`Save check failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -185,7 +186,7 @@ async function addScrap() {
         await loadEvalScrap();
     }
     catch (e) {
-        setErr(`Save scrap failed: ${e.message}`);
+        setErr(`Save scrap failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

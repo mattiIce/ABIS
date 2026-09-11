@@ -10,6 +10,7 @@ import { AbisClient, JobWrite, JobPatch } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell, applyDeepLink } from './shell.js';
 import { statusChip, lineLabel } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -146,7 +147,7 @@ async function loadUncomplete() {
         wireRows('#jobs');
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -166,7 +167,7 @@ async function loadCompleted() {
         wireRows('#completedJobs');
     }
     catch (e) {
-        setErr(`Search failed: ${e.message}`);
+        setErr(`Search failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -194,7 +195,7 @@ async function loadJob(id) {
         await loadChildren(id);
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -239,7 +240,7 @@ async function patch() {
         await Promise.all([loadUncomplete(), loadCompleted()]);
     }
     catch (e) {
-        setErr(`Update failed: ${e.message}`);
+        setErr(`Update failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -268,7 +269,7 @@ async function createJob() {
             await loadJob(created.abJobNum);
     }
     catch (e) {
-        setErr(`Create failed: ${e.message}`);
+        setErr(`Create failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

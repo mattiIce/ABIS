@@ -7,6 +7,7 @@ import { AbisClient, ShiftWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip, lineLabel } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -111,7 +112,7 @@ async function showStaleOpen() {
         document.querySelectorAll('#shifts tr.click').forEach((tr) => tr.addEventListener('click', () => void loadShift(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Open-shift lookup failed: ${e.message}`);
+        setErr(`Open-shift lookup failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -135,7 +136,7 @@ async function search() {
         document.querySelectorAll('#shifts tr.click').forEach((tr) => tr.addEventListener('click', () => void loadShift(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Search failed: ${e.message}`);
+        setErr(`Search failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -159,7 +160,7 @@ async function loadShift(id) {
         setV('#hNote', s.note);
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -200,7 +201,7 @@ async function save() {
         await search();
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

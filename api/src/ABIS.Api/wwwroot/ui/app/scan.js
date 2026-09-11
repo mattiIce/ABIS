@@ -6,6 +6,7 @@
 // Compiled by `tsc` to wwwroot/ui/app/scan.js; served at /ui/scan.html.
 import { AbisClient, ScanLogWrite } from './generated/abis-client.js';
 import { initAuth, authFetch } from './auth.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 // Auth — a Bearer token (OIDC) or the X-Api-Key field — is attached by ./auth.
 function client() {
@@ -35,7 +36,7 @@ async function search() {
         $('#count').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
     }
     catch (e) {
-        setErr(`Search failed: ${e.message}`);
+        setErr(`Search failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -59,7 +60,7 @@ async function record() {
         await search();
     }
     catch (e) {
-        setErr(`Record failed: ${e.message}`);
+        setErr(`Record failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

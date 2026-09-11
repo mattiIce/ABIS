@@ -9,6 +9,7 @@ import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip, lineLabel, STACK_PATH } from './status-labels.js';
 import { DEFAULT_EDGE_URLS, parseEdgeUrls, fetchConveyor, ConveyorResult } from './edge.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -73,7 +74,7 @@ async function load(): Promise<void> {
   setBusy(true);
   try {
     await Promise.all([loadBoard(), loadPath(), loadErrors()]);
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -221,7 +222,7 @@ async function logError(): Promise<void> {
     setOk('✓ Error logged.');
     ['#eTitle', '#eComment'].forEach((i) => setV(i, ''));
     await loadErrors();
-  } catch (e) { setErr(`Log error failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Log error failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

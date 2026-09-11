@@ -7,6 +7,7 @@ import { AbisClient, EdiPartnerProfile, EdiPartnerWrite, Edi997IngestWrite, EdiT
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { bannerText } from './edi-transmit-banner.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const client = (): AbisClient => new AbisClient('', { fetch: authFetch });
@@ -189,7 +190,7 @@ async function loadTransactions(): Promise<void> {
     $('#cTx').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
     document.querySelectorAll<HTMLTableRowElement>('#tTx tr.click').forEach((tr) =>
       tr.addEventListener('click', () => void loadTxDetail(Number(tr.dataset.id))));
-  } catch (e) { setErr(`Transactions load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Transactions load failed: ${problemText(e)}`); }
 }
 
 let selectedTxId: number | null = null;
@@ -207,7 +208,7 @@ async function loadTxDetail(id: number): Promise<void> {
     $('#btnPayload').style.display = '';
     $('#payloadWrap').style.display = 'none';
     $('#txPayload').textContent = '';
-  } catch (e) { setErr(`Detail load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Detail load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -220,7 +221,7 @@ async function loadPayload(): Promise<void> {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     $('#txPayload').textContent = await r.text();
     $('#payloadWrap').style.display = '';
-  } catch (e) { setErr(`Payload load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Payload load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -237,7 +238,7 @@ async function loadWaiting(): Promise<void> {
       : '<tr><td colspan="7" class="muted">Nothing waiting on a 997.</td></tr>';
     $('#cWait').textContent =
       `${(r.totalWaiting ?? 0).toLocaleString()} waiting · ${r.waitingCount ?? 0} to chase · ${r.overdueCount ?? 0} overdue`;
-  } catch (e) { setErr(`997 waiting load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`997 waiting load failed: ${problemText(e)}`); }
 }
 
 async function ingest997(): Promise<void> {
@@ -254,7 +255,7 @@ async function ingest997(): Promise<void> {
       row('accepted', r.accepted) + row('rejected', r.rejected) + row('partial', r.partial) +
       row('already acked', r.alreadyAcked) + warn;
     await Promise.all([loadWaiting(), loadTransactions()]);
-  } catch (e) { setErr(`997 ingest failed: ${ediErr(e)}`); }
+  } catch (e) { setErr(`997 ingest failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -268,7 +269,7 @@ async function loadLog(): Promise<void> {
       <td class="mono">${esc(x.ediLogFlag)}</td><td class="mono">${esc(x.ediFileId)}</td><td>${esc(x.ediLogContents)}</td></tr>`).join('')
       : '<tr><td colspan="6" class="muted">No log entries.</td></tr>';
     $('#cLog').textContent = `${(page.totalCount ?? 0).toLocaleString()} total`;
-  } catch (e) { setErr(`Log load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Log load failed: ${problemText(e)}`); }
 }
 
 async function loadCustomers(): Promise<void> {
@@ -278,7 +279,7 @@ async function loadCustomers(): Promise<void> {
       <td class="mono">${esc(x.customerId)}</td><td>${esc(x.customerEdiName)}</td><td class="mono">${esc(x.ediTypeId)}</td>
       <td class="mono">${esc(x.ediVersion)}</td><td>${esc(x.customerEdiDesc)}</td></tr>`).join('')
       : '<tr><td colspan="5" class="muted">No customer EDI setups.</td></tr>';
-  } catch (e) { setErr(`Customer EDI load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Customer EDI load failed: ${problemText(e)}`); }
 }
 
 async function loadTypes(): Promise<void> {
@@ -287,7 +288,7 @@ async function loadTypes(): Promise<void> {
     $('#tTypes').innerHTML = (list ?? []).length ? (list ?? []).map((x) => `<tr>
       <td class="mono">${esc(x.ediTypeId)}</td><td class="mono">${esc(x.ediVersion)}</td><td>${esc(x.ediTypeDescription)}</td></tr>`).join('')
       : '<tr><td colspan="3" class="muted">No types.</td></tr>';
-  } catch (e) { setErr(`Types load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Types load failed: ${problemText(e)}`); }
 }
 
 let partners: EdiPartnerProfile[] = [];
@@ -309,7 +310,7 @@ async function loadPartners(): Promise<void> {
       fillPartner(partners.find((x) => String(x.customerId) === b.dataset.c && x.transactionSet === b.dataset.s))));
     document.querySelectorAll<HTMLButtonElement>('#tPart .pDel').forEach((b) => b.addEventListener('click', () =>
       void deletePartner(Number(b.dataset.c), b.dataset.s ?? '')));
-  } catch (e) { setErr(`Partner profiles load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Partner profiles load failed: ${problemText(e)}`); }
 }
 
 function fillPartner(p: EdiPartnerProfile | undefined): void {
@@ -352,21 +353,15 @@ async function savePartner(): Promise<void> {
       filePrefix: opt('#pPrefix'), itemReference: opt('#pItemRef'),
     }));
     await loadPartners();
-  } catch (e) { setErr(`Save failed: ${ediErr(e)}`); }
+  } catch (e) { setErr(`Save failed: ${problemText(e)}`); }
   finally { setBusy(false); }
-}
-
-// Surface a 403 from the feature gate clearly (the generated client's default message is unhelpful).
-function ediErr(e: unknown): string {
-  const ex = e as { status?: number; message?: string };
-  return ex?.status === 403 ? 'you need the EDI permission for this action.' : (ex?.message ?? String(e));
 }
 
 async function deletePartner(customerId: number, set: string): Promise<void> {
   if (!confirm(`Remove the ${set} profile for customer ${customerId}?`)) return;
   setBusy(true);
   try { await client().deleteEdiPartner(customerId, set); await loadPartners(); }
-  catch (e) { setErr(`Delete failed: ${ediErr(e)}`); }
+  catch (e) { setErr(`Delete failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -429,7 +424,7 @@ async function loadTransmit(): Promise<void> {
     // Failing to READ the policy is not the same as it being off, and printing "disabled" here would
     // be a guess. Say what is actually known: the server treats an unreadable policy as closed.
     $('#xmitBanner').innerHTML = alertBox('warn', ICON_OFF, 'Transmit status unavailable',
-      `Could not read the transmit policy: ${esc(ediErr(e))}. The server treats an unreadable policy as `
+      `Could not read the transmit policy: ${esc(problemText(e))}. The server treats an unreadable policy as `
       + 'closed, so nothing is being transmitted.');
     $('#xValve').innerHTML = '<p class="muted">Unavailable.</p>';
   }
@@ -442,7 +437,7 @@ async function setValve(open: boolean): Promise<void> {
     + 'to transmit. Anything legacy also sends will reach the partner twice.')) return;
   setBusy(true); setErr('');
   try { await client().setEdiTransmitValve(new EdiValveWrite({ open, note })); await loadTransmit(); }
-  catch (e) { setErr(`Valve change failed: ${ediErr(e)}`); }
+  catch (e) { setErr(`Valve change failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -454,7 +449,7 @@ async function setArm(transactionType: string, customerId: number, armed: boolea
     // the person who just armed the pair is already looking, not in a log.
     if (r?.warning) $('#armMsg').innerHTML = alertBox('crit', ICON_LIVE, 'Legacy still sends this', esc(r.warning));
     await loadTransmit();
-  } catch (e) { setErr(`Arm change failed: ${ediErr(e)}`); }
+  } catch (e) { setErr(`Arm change failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

@@ -9,6 +9,7 @@
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { slotStarts, slotLabel, slotWindow } from './truck-slots.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const esc = (s: unknown): string =>
@@ -139,7 +140,7 @@ async function importCsv(file: File): Promise<void> {
   setErr(''); setOk(''); $('#impLog').innerHTML = '';
   let rows: string[][];
   try { rows = parseCsv(await file.text()); }
-  catch (e) { setErr(`Could not read CSV: ${(e as Error).message}`); return; }
+  catch (e) { setErr(`Could not read CSV: ${problemText(e)}`); return; }
   if (rows.length < 2) { setErr('CSV needs a header row and at least one data row.'); return; }
 
   const header = rows[0].map(normHdr);
@@ -196,7 +197,7 @@ async function importCsv(file: File): Promise<void> {
           await api(`/api/truck-appointments/${created.appointmentId}/status`, 'PATCH', { status: st });
         ok++;
         if (warn.length) problems.push(`Row ${line}: imported #${created.appointmentId} with warnings — ${warn.join('; ')}.`);
-      } catch (e) { problems.push(`Row ${line}: ${(e as Error).message}`); }
+      } catch (e) { problems.push(`Row ${line}: ${problemText(e)}`); }
     }
   } finally { setBusy(false); }
 
@@ -315,7 +316,7 @@ async function load(): Promise<void> {
     $('#count').textContent = `${(page.totalCount ?? 0).toLocaleString()} appts`;
     $('#listSub').textContent = `${items.length} shown`;
     wireRowActions();
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -359,7 +360,7 @@ async function rowAction(act: string, id: number): Promise<void> {
         setOk(`✓ Signed out — linked BOL / packing list ${a.refId} closed.`);
     }
     await load();
-  } catch (e) { setErr(`Action failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Action failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -369,7 +370,7 @@ async function setStatus(id: number, status: number): Promise<void> {
     const r = await api(`/api/truck-appointments/${id}/status`, 'PATCH', { status });
     if (!r.ok) { setErr(`Status update failed (${r.status}).`); return; }
     await load();
-  } catch (e) { setErr(`Status update failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Status update failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 
@@ -435,7 +436,7 @@ async function schedule(): Promise<void> {
     // The date stays put: a scheduler booking a day's trucks books several in a row.
     ['#nSlot', '#nDriver', '#nTractor', '#nTrailer', '#nSeal', '#nQty', '#nRefId', '#nNotes'].forEach((i) => setV(i, ''));
     await load();
-  } catch (e) { setErr(`Schedule failed: ${(e as Error).message}`); }
+  } catch (e) { setErr(`Schedule failed: ${problemText(e)}`); }
   finally { setBusy(false); }
 }
 

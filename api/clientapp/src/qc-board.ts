@@ -6,6 +6,7 @@
 // Compiled by tsc to wwwroot/ui/app/qc-board.js; served at /ui/qc-board.html.
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const esc = (s: unknown): string =>
@@ -107,7 +108,7 @@ async function load(): Promise<void> {
     $('#jobtag').textContent = `job ${b.abJobNum}`;
     renderSummary(b);
     renderBoard(b);
-  } catch (e) { setErr(`Load failed: ${(e as Error).message}`); $('#board').innerHTML = ''; }
+  } catch (e) { setErr(`Load failed: ${problemText(e)}`); $('#board').innerHTML = ''; }
 }
 
 (async () => {

@@ -9,6 +9,7 @@ import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { exportXlsx } from './xlsx.js';
 import { pmListTable, toCsv } from './maintenance-export.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -16,39 +17,6 @@ const setErr = (m) => { $('#err').textContent = m; };
 const setOk = (m) => { $('#ok').textContent = m; };
 const setBusy = (b) => document.body.classList.toggle('busy', b);
 const v = (id) => $(id).value.trim();
-/**
- * What actually went wrong, from an NSwag ApiException.
- *
- * The generated client's `message` for a non-2xx is the generic "An unexpected server error
- * occurred." — so a **403** on a PM write read as though the server had broken, sending the reader to
- * look at the wrong thing entirely. It is the same failure as the AD sign-in reporting a certificate
- * problem as a bad password: the server said exactly what was wrong and the UI threw it away.
- *
- * The API answers RFC-9110 ProblemDetails, whose `detail` names the user, the level and the feature.
- * Other pages already decode it (auth.ts, sales.ts, qa-hold.ts); this one did not.
- */
-function why(e) {
-    const ex = e;
-    if (typeof ex?.response === 'string' && ex.response.length > 0) {
-        try {
-            const p = JSON.parse(ex.response);
-            if (p.errors) {
-                const flat = Object.values(p.errors).flat().join(' ');
-                if (flat)
-                    return flat;
-            }
-            if (p.detail)
-                return p.detail;
-            if (p.title)
-                return p.title;
-        }
-        catch { /* not ProblemDetails — fall through to the raw message */ }
-    }
-    // 403 in particular must never read as a server fault: nothing is broken, the account lacks a grant.
-    if (ex?.status === 403)
-        return 'You do not have permission to do that.';
-    return ex?.message ?? String(e);
-}
 const setV = (id, value) => { $(id).value = value == null ? '' : String(value); };
 // Local-time formatter for datetime-local inputs — toISOString() would emit UTC and shift the value by
 // the whole timezone offset on show/re-save (see downtime.ts).
@@ -183,7 +151,7 @@ async function search() {
         document.querySelectorAll('#logs tr.click').forEach((tr) => tr.addEventListener('click', () => void loadLog(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Search failed: ${why(e)}`);
+        setErr(`Search failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -212,7 +180,7 @@ async function loadLog(id) {
         setV('#mLabor', m.laborHours);
     }
     catch (e) {
-        setErr(`Load failed: ${why(e)}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -258,7 +226,7 @@ async function save() {
         await search();
     }
     catch (e) {
-        setErr(`Save failed: ${why(e)}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -294,7 +262,7 @@ async function loadDue() {
         document.querySelectorAll('#tDue [data-open]').forEach((b) => b.addEventListener('click', () => { showTab('pms'); void loadPm(Number(b.dataset.open)); }));
     }
     catch (e) {
-        setErr(`Due board failed: ${why(e)}`);
+        setErr(`Due board failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -324,7 +292,7 @@ async function loadPms() {
         document.querySelectorAll('#tPms tr.click').forEach((tr) => tr.addEventListener('click', () => void loadPm(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`PM list failed: ${why(e)}`);
+        setErr(`PM list failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -441,7 +409,7 @@ async function loadPm(id) {
         }
     }
     catch (e) {
-        setErr(`PM load failed: ${why(e)}`);
+        setErr(`PM load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -530,7 +498,7 @@ async function savePm() {
         }
     }
     catch (e) {
-        setErr(`Save failed: ${why(e)}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -549,7 +517,7 @@ async function deletePm() {
         await Promise.all([loadPms(), loadDue()]);
     }
     catch (e) {
-        setErr(`Delete failed: ${why(e)}`);
+        setErr(`Delete failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -577,7 +545,7 @@ async function completePm() {
         await Promise.all([loadPm(pmEditingId), loadPms(), loadDue()]);
     }
     catch (e) {
-        setErr(`Complete failed: ${why(e)}`);
+        setErr(`Complete failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -604,7 +572,7 @@ async function addAction() {
         await loadActions(pmEditingId);
     }
     catch (e) {
-        setErr(`Add failed: ${why(e)}`);
+        setErr(`Add failed: ${problemText(e)}`);
     }
 }
 async function removeAction(pmId, actionId) {
@@ -613,7 +581,7 @@ async function removeAction(pmId, actionId) {
         await loadActions(pmId);
     }
     catch (e) {
-        setErr(`Remove failed: ${why(e)}`);
+        setErr(`Remove failed: ${problemText(e)}`);
     }
 }
 async function loadHistory(pmId) {
@@ -689,7 +657,7 @@ function showTab(name) {
                 exportXlsx(tb.name, tb.name.slice(0, 31), tb.headers, tb.rows);
         }
         catch (e) {
-            setErr(`Export failed: ${why(e)}`);
+            setErr(`Export failed: ${problemText(e)}`);
         }
         finally {
             setBusy(false);

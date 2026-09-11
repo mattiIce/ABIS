@@ -7,6 +7,7 @@
 // Compiled by tsc to wwwroot/ui/app/winspc-qc.js; served at /ui/winspc-qc.html.
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
+import { problemText } from './api-errors.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 const esc = (s: unknown): string =>
@@ -198,7 +199,7 @@ async function lookup(): Promise<void> {
         <td>${specChip(t.inSpec)}</td>
       </tr>`).join('') : `<tr><td colspan="9" class="muted">No WinSPC measurements found for ${esc(kind)} ${esc(key)}.</td></tr>`;
     populateChart();
-  } catch (e) { setErr(`Lookup failed: ${(e as Error).message}`); $('#rows').innerHTML = ''; }
+  } catch (e) { setErr(`Lookup failed: ${problemText(e)}`); $('#rows').innerHTML = ''; }
 }
 
 (async () => {

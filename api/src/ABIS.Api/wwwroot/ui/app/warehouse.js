@@ -8,6 +8,7 @@ import { AbisClient, SheetSkidWarehousePatch } from './generated/abis-client.js'
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -95,7 +96,7 @@ async function search() {
         document.querySelectorAll('#skids tr.click').forEach((tr) => tr.addEventListener('click', () => void loadSkid(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Search failed: ${e.message}`);
+        setErr(`Search failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -116,7 +117,7 @@ async function loadSkid(id) {
         $('#btnDelete').disabled = false;
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -141,7 +142,7 @@ async function save() {
         await search();
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -202,7 +203,7 @@ async function createWarehouseSkid() {
         await search();
     }
     catch (e) {
-        setErr(`Could not warehouse it in: ${e.message}`);
+        setErr(`Could not warehouse it in: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -239,7 +240,7 @@ async function deleteWarehouseSkid() {
         await search();
     }
     catch (e) {
-        setErr(`Delete failed: ${e.message}`);
+        setErr(`Delete failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);

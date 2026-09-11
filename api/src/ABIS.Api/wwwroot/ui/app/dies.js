@@ -7,6 +7,7 @@ import { AbisClient, DieWrite } from './generated/abis-client.js';
 import { authFetch } from './auth.js';
 import { initShell } from './shell.js';
 import { statusChip } from './status-labels.js';
+import { problemText } from './api-errors.js';
 const $ = (sel) => document.querySelector(sel);
 const client = () => new AbisClient('', { fetch: authFetch });
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -104,7 +105,7 @@ async function renderShapeMap() {
         $('#maps').querySelectorAll('[data-del-map]').forEach((b) => b.addEventListener('click', () => void removeShapeMap(b.getAttribute('data-del-map') || '')));
     }
     catch (e) {
-        $('#maps').innerHTML = `<tr><td colspan="5" class="err">Load failed: ${esc(e.message)}</td></tr>`;
+        $('#maps').innerHTML = `<tr><td colspan="5" class="err">Load failed: ${esc(problemText(e))}</td></tr>`;
     }
 }
 async function addShapeMap() {
@@ -136,7 +137,7 @@ async function addShapeMap() {
         await renderShapeMap();
     }
     catch (e) {
-        msg.textContent = `Add failed: ${e.message}`;
+        msg.textContent = `Add failed: ${problemText(e)}`;
         msg.className = 'err';
     }
 }
@@ -156,7 +157,7 @@ async function removeShapeMap(key) {
     }
     catch (e) {
         const m = $('#mapMsg');
-        m.textContent = `Remove failed: ${e.message}`;
+        m.textContent = `Remove failed: ${problemText(e)}`;
         m.className = 'err';
     }
 }
@@ -177,7 +178,7 @@ async function search() {
         document.querySelectorAll('#dies tr.click').forEach((tr) => tr.addEventListener('click', () => void loadDie(Number(tr.dataset.id))));
     }
     catch (e) {
-        setErr(`Search failed: ${e.message}`);
+        setErr(`Search failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -205,7 +206,7 @@ async function loadDie(id) {
         setV('#dAvgChgMin', d.averageDieChangeMinutes);
     }
     catch (e) {
-        setErr(`Load failed: ${e.message}`);
+        setErr(`Load failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -249,7 +250,7 @@ async function save() {
         await search();
     }
     catch (e) {
-        setErr(`Save failed: ${e.message}`);
+        setErr(`Save failed: ${problemText(e)}`);
     }
     finally {
         setBusy(false);
@@ -270,7 +271,7 @@ async function printReport() {
         window.open(URL.createObjectURL(await r.blob()), '_blank');
     }
     catch (e) {
-        setErr(`Print failed: ${e.message}`);
+        setErr(`Print failed: ${problemText(e)}`);
     }
 }
 (async () => {
