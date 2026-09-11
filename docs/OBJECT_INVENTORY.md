@@ -3,7 +3,9 @@
 > **Status:** approximate. Object **names** were recovered from the compiled
 > `.pbl` libraries by scanning for printable strings in both ANSI and UTF-16LE
 > (the live libraries are Unicode after the 2025 migration). PowerScript bodies
-> are **not** recoverable here. Regenerate with
+> are **not** recoverable from the binaries — but the full exported source now lives
+> under [`legacy/src/`](../legacy/src/README.md), which is what to read for behaviour. Treat these
+> counts as a map, not as the source of truth. Regenerate with
 > `python3 tools/extract_inventory.py .` (writes
 > [`docs/inventory/objects.json`](inventory/objects.json)).
 

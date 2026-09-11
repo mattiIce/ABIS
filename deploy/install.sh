@@ -32,7 +32,7 @@
 #
 # Kestrel always binds 127.0.0.1 only; nginx is the sole public listener. With no
 # ABIS_SERVER_NAME the service is reachable on loopback only (verify with curl on
-# the box). See docs/INSTALL_PLAN.md.
+# the box). See docs/INSTALL.md.
 #
 set -euo pipefail
 

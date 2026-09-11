@@ -5,9 +5,9 @@ ERP/MES). It is grounded in the analysis in
 [`ARCHITECTURE.md`](ARCHITECTURE.md), [`DATA_MODEL.md`](DATA_MODEL.md), and
 [`OBJECT_INVENTORY.md`](OBJECT_INVENTORY.md).
 
-> **Continuing the work?** See [`NEXT_STEPS.md`](NEXT_STEPS.md) for a pickup guide
-> (current state, prioritized next steps, environment setup, and the recipe for
-> adding a module slice).
+> **Continuing the work?** The backlog is [`REMAINING_WORK.md`](REMAINING_WORK.md), decisions
+> waiting on the plant are in [`OPEN_QUESTIONS.md`](OPEN_QUESTIONS.md), and the recipe for adding a
+> module is in [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
 
 ## Goals & guiding principles
 
@@ -30,19 +30,22 @@ ERP/MES). It is grounded in the analysis in
 - ✅ **Buildable as committed**: the 7 previously-missing PFE/PFD libraries were
   located and committed — all 50 libraries in `lion.pbt`'s LibList are present.
 - ✅ **Phase 2 seam — complete**: an ASP.NET Core 8 + Dapper API over the database
-  (Oracle prod, seeded SQLite for dev/CI), ~160 endpoints, a fully-typed OpenAPI
-  contract + generated TS/Python clients, auth, audit, rate-limit, health probes,
-  Docker — with **167 xUnit tests + 58 typed e2e tests**, CI green. See
+  (Oracle in production, seeded SQLite for dev/CI) — 289 routes, a fully typed OpenAPI contract with
+  generated clients, auth (AD LDAP sign-in + server-enforced RBAC), audit and health probes — with
+  ~1,200 API tests, ~60 typed e2e tests and client unit tests, CI green. See
   [`../api/`](../api/README.md).
-- ✅ **Oracle path validated** end-to-end (read + write) against the live non-prod DB
-  — see [`ORACLE_VALIDATION.md`](ORACLE_VALIDATION.md).
-- ✅ **Phase 3/4 greenfield build — far along**: every business library in
-  `lion.pbt`'s LibList is rebuilt as a typed web module on the API (~34 screens),
-  each from the **real** vendored PB source ([`../legacy/src/`](../legacy/src/README.md))
-  and cross-checked against the Oracle columns ([`data-model/BACKCHECK.md`](data-model/BACKCHECK.md)).
-- ◻ **Remaining = production rollout**: Oracle cutover per module, OIDC rollout +
-  broadening per-feature enforcement, the per-customer 861 EDI Oracle wiring, and
-  the edge/OPC hardware bridge. See [`NEXT_STEPS.md`](NEXT_STEPS.md).
+- ✅ **Oracle path validated** end-to-end (read + write) against the live non-prod DB, and the newer
+  modules re-swept (closed 2026-08-04) — see [`ORACLE_VALIDATION.md`](ORACLE_VALIDATION.md) and
+  [`ORACLE_DEFECT_SWEEP.md`](ORACLE_DEFECT_SWEEP.md).
+- ✅ **Phase 3/4 greenfield build — done**: every business library in `lion.pbt`'s LibList is rebuilt
+  as a typed web module on the API (47 pages), each from the **real** vendored PB source
+  ([`../legacy/src/`](../legacy/src/README.md)) and cross-checked against the Oracle columns
+  ([`data-model/BACKCHECK.md`](data-model/BACKCHECK.md)). Latest release `v0.9.11`.
+- ◻ **Remaining = the cutover.** `.230` becomes production: a final refresh from `.9`, then it
+  diverges permanently and `.9`/`.11` are retired. ABIS already runs against `.230`, so the cutover
+  moves the data, not the app. Sequence: [`DB_REFRESH.md`](DB_REFRESH.md) Part 9. What is left in code
+  is in [`REMAINING_WORK.md`](REMAINING_WORK.md); what waits on the plant is in
+  [`OPEN_QUESTIONS.md`](OPEN_QUESTIONS.md).
 
 ## Strategic options considered
 
@@ -58,7 +61,7 @@ ERP/MES). It is grounded in the analysis in
 > **Decision (2026-06-26): commit to Path C (greenfield) and drop Path B
 > (PowerServer).** After Phases 0–2 delivered and validated the API seam, and the
 > Path C `order_entry` pilot ran successfully against the live DB
-> ([`PHASE3_PILOT_LOG.md`](PHASE3_PILOT_LOG.md)), the team chose to build and own a
+> — the team chose to build and own a
 > modern stack rather than evaluate Appeon's auto-migration. **PowerServer is no
 > longer needed** (no license, no Appeon lock-in, no DataWindow-shaped UI). The
 > Windows **PB IDE is now optional** — useful only as a *reference* for recovering
@@ -161,8 +164,8 @@ ERP/MES). It is grounded in the analysis in
 
 ### Phase 3 — Choose the path; build greenfield  *(done)*
 
-> Detailed plan: [`PHASE3_PILOT_PLAN.md`](PHASE3_PILOT_PLAN.md). **Live results:
-> [`PHASE3_PILOT_LOG.md`](PHASE3_PILOT_LOG.md).**
+> The bake-off plan and its scoring log were retired on 2026-09-11, long after the decision
+> settled; both remain in git history (`git log --all -- docs/PHASE3_PILOT_PLAN.md`).
 
 - [x] **Decision (2026-06-26): Path C (greenfield), Path B (PowerServer) dropped.**
       The `order_entry` Path C pilot ran against live Oracle and scored well; the
@@ -205,16 +208,16 @@ The `.pbl` binaries can't be diffed or merged. Options:
 2. Keep `.pbl` in git as opaque blobs (status quo) — simplest but gives up real
    version control. Acceptable only until Phase 1 export lands.
 
-## Immediate next steps (now that the build is feature-complete)
+## Immediate next steps
 
-The greenfield feature surface is complete; what remains is taking it to production.
-See [`NEXT_STEPS.md`](NEXT_STEPS.md) for the detailed, prioritized list. In short:
+The feature build is done; what remains is taking `.230` to production.
 
-1. **Oracle non-prod validation sweep** of the newer modules' read/write paths
-   (everything past the original pilot has only been exercised on SQLite + the
-   gated smoke) — the top remaining risk.
-2. **OIDC rollout**: register the provider, map logins → `security_user`, and
-   broaden the per-feature enforcement beyond the security-admin endpoints.
-3. **Wire the 861 EDI** trigger point to the per-customer Oracle functions.
-4. **Edge/OPC**: the Softing DA→UA bridge + per-device serial formats (needs hardware).
-5. **Per-module production cutover** (Phase 4) with monitoring, then decommission legacy.
+1. **Settle the 1.0.0 blockers** in [`OPEN_QUESTIONS.md`](OPEN_QUESTIONS.md) §B — above all the
+   end-coil balance gate.
+2. **Run the cutover**: the final refresh and its repairs, then `deploy/declare-cutover.sql`
+   ([`DB_REFRESH.md`](DB_REFRESH.md) Part 9). A guard already stops any later refresh from
+   overwriting production (#448).
+3. **Turn on what waits on the cutover** ([`REMAINING_WORK.md`](REMAINING_WORK.md) §E), such as the
+   EDI-stall alert.
+4. **Decommission legacy** per [`PHASE4_CUTOVER_PLAN.md`](PHASE4_CUTOVER_PLAN.md), keeping the legacy
+   cron as the single owner of EDI transmission until that is deliberately handed over.
