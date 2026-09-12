@@ -386,7 +386,7 @@
   override **cleared** — without that, a line overridden once keeps the flag forever and the job sheet
   prints "CONTACT FOREMAN BEFORE RUNNING" in red on an item somebody already corrected.
   <br>**Sector-consistency warning — done (#419).**
-- [~] **M** **Accounting scrap-type summary — done (#465)**, on the printed invoice: a plain sum, deliberately not legacy's `SUM(DISTINCT …)` (which understated 2,966 job/type groups on `.230`), with unskidded scrap as its own row so it reconciles to the total; print coil-cert label on order close (paper — deprioritised); **customer delete — done (#261)**: `DELETE /customers/{id}` refused with 409 when referenced by any order/part/coil/shipment, else deletes the customer + its contacts + recovery config; Delete button on the Customers page.
+- [~] **M** **Accounting scrap-type summary — done (#465); verified on live Oracle 2026-09-12.** Job 124500 returns Edge Trim 710 / Full Sheet 9,695 / Cut Out 2,510 lb — matching an independent SQL measurement, with the type 10 and 11 names legacy could not produce. And the departure pays on real data: job 124478's Cut Out is **9,110 lb** where legacy's `SUM(DISTINCT …)` prints **7,750**, while the rows still reconcile exactly to the 16,465 lb total, on the printed invoice: a plain sum, deliberately not legacy's `SUM(DISTINCT …)` (which understated 2,966 job/type groups on `.230`), with unskidded scrap as its own row so it reconciles to the total; print coil-cert label on order close (paper — deprioritised); **customer delete — done (#261)**: `DELETE /customers/{id}` refused with 409 when referenced by any order/part/coil/shipment, else deletes the customer + its contacts + recovery config; Delete button on the Customers page.
 
 ### C2. Logistics / shipping
 - [x] **C** Packing-list line items — ✅ `SHEET` (#217) + `SCRAP` (#219) + `REJECT_COIL` (#220) built (add/list/remove on the shipment, feeding the 856). **`WH_PACKING_ITEM` is not a gap (checked 2026-09-11):** its 9 rows sit on three packing lists shipped June–September **1999**, and nothing has written it since.
@@ -899,8 +899,9 @@
   rate is **7,063–8,560** against a 12,500 goal — i.e. roughly half. **The weekly ALPH needs no code (checked 2026-09-12):** `w_daily_prod_report_weekly_alph` runs the SAME
   per-shift/per-day computation over `start_date .. start_date + 6` and shows the week's average — which is
   `/reporting/lbs-per-hour` over a 7-day window, where `rangeAverage` IS that week's average. Remaining from
-  the same hub: `_ds` / `_dtpw` / `_dtpwps` / `_general` / `_summary`, which are
-  groupings of weight and downtime the modern reports already serve under other names. **Downtime/Production
+  the same hub: `_ds` / `_dtpw` / `_dtpwps` / `_general` / `_summary` — **checked 2026-09-12: all covered.**
+  Each is `SUM(shift_coil.process_wt)` grouped by day and/or line (or the downtime totals), which
+  `/reporting/shift-production`, `/reporting/production-summary` and the downtime pivots already serve. **Downtime/Production
   ratio** (`w_downtime_shift_downtime_prod_ratio`) is a two-bar graph of one shift; both its numbers are already
   in `/reporting/uptime`, so only the chart is missing.
 - [x] **L** **Three dead radios on `w_report_downtime` (checked 2026-09-12).** Its *Operator*, *Coil* and
