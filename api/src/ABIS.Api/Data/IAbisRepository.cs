@@ -31,6 +31,9 @@ public interface IAbisRepository
     Task<Coil> CreateCoilAsync(CoilWrite body, CancellationToken ct);
     Task<bool> CoilExistsByKeyAsync(string coilOrgNum, long? customerId, string? coilMidNum, CancellationToken ct);
     Task<Coil?> PatchCoilAsync(long coilAbcNum, CoilPatch patch, CancellationToken ct);
+    /// <summary>A coil's COIL_TRACK history, with the duration + first-rejected/on-hold/rebanded dates
+    /// legacy derives from it. Null when the coil does not exist.</summary>
+    Task<CoilHistoryView?> GetCoilHistoryAsync(long coilAbcNum, CancellationToken ct);
     /// <summary>Re-book a coil to another customer and write the audit row in the same transaction.
     /// Null when the coil does not exist.</summary>
     Task<CoilCustomerChange?> ChangeCoilCustomerAsync(long coilAbcNum, long customerId, string changedBy, string? note, CancellationToken ct);

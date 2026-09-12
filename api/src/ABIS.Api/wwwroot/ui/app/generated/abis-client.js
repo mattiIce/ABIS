@@ -3331,6 +3331,58 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * A coil's COIL_TRACK history (newest first) with the days it has sat and when it was first rejected / put on hold / rebanded.
+     * @return OK
+     */
+    getCoilHistory(coilAbcNum) {
+        let url_ = this.baseUrl + "/api/coils/{coilAbcNum}/history";
+        if (coilAbcNum === undefined || coilAbcNum === null)
+            throw new globalThis.Error("The parameter 'coilAbcNum' must be defined.");
+        url_ = url_.replace("{coilAbcNum}", encodeURIComponent("" + coilAbcNum));
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetCoilHistory(_response);
+        });
+    }
+    processGetCoilHistory(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = CoilHistoryView.fromJS(resultData200);
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status === 404) {
+            return response.text().then((_responseText) => {
+                return throwException("Not Found", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * A coil's quality capture: the header (material grade / dimensions / mill / PCC) + its flaw map.
      * @return OK
      */
@@ -23079,6 +23131,50 @@ export class CoilDefectNoticeRequest {
         return data;
     }
 }
+export class CoilHistoryView {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.durationDays = _data["durationDays"];
+            this.rejectedDate = _data["rejectedDate"] ? new Date(_data["rejectedDate"].toString()) : undefined;
+            this.onHoldDate = _data["onHoldDate"] ? new Date(_data["onHoldDate"].toString()) : undefined;
+            this.rebandedDate = _data["rebandedDate"] ? new Date(_data["rebandedDate"].toString()) : undefined;
+            if (Array.isArray(_data["entries"])) {
+                this.entries = [];
+                for (let item of _data["entries"])
+                    this.entries.push(CoilTrackEntry.fromJS(item));
+            }
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CoilHistoryView();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["durationDays"] = this.durationDays;
+        data["rejectedDate"] = this.rejectedDate ? this.rejectedDate.toISOString() : undefined;
+        data["onHoldDate"] = this.onHoldDate ? this.onHoldDate.toISOString() : undefined;
+        data["rebandedDate"] = this.rebandedDate ? this.rebandedDate.toISOString() : undefined;
+        if (Array.isArray(this.entries)) {
+            data["entries"] = [];
+            for (let item of this.entries)
+                data["entries"].push(item ? item.toJSON() : undefined);
+        }
+        return data;
+    }
+}
 export class CoilInventoryGroup {
     constructor(data) {
         if (data) {
@@ -24038,6 +24134,48 @@ export class CoilScanResult {
         data["coilAlloy2"] = this.coilAlloy2;
         data["netWtBalance"] = this.netWtBalance;
         data["abcoCoilNetWt"] = this.abcoCoilNetWt;
+        return data;
+    }
+}
+export class CoilTrackEntry {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.trackDate = _data["trackDate"] ? new Date(_data["trackDate"].toString()) : undefined;
+            this.preStatus = _data["preStatus"];
+            this.curStatus = _data["curStatus"];
+            this.preNetWt = _data["preNetWt"];
+            this.curNetWt = _data["curNetWt"];
+            this.modifiedBy = _data["modifiedBy"];
+            this.preLocation = _data["preLocation"];
+            this.curLocation = _data["curLocation"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new CoilTrackEntry();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["trackDate"] = this.trackDate ? this.trackDate.toISOString() : undefined;
+        data["preStatus"] = this.preStatus;
+        data["curStatus"] = this.curStatus;
+        data["preNetWt"] = this.preNetWt;
+        data["curNetWt"] = this.curNetWt;
+        data["modifiedBy"] = this.modifiedBy;
+        data["preLocation"] = this.preLocation;
+        data["curLocation"] = this.curLocation;
         return data;
     }
 }

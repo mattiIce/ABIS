@@ -2127,6 +2127,44 @@ public sealed class UptimeRow
     public double? UptimePct { get; set; }
 }
 
+/// <summary>One change in a coil's life — a row of <c>COIL_TRACK</c>, which legacy writes on every status,
+/// weight or location change (<c>f_insert_coil_track</c>) and shows as the coil history panel on its coil
+/// inventory window (<c>d_coil_history</c>).</summary>
+public sealed class CoilTrackEntry
+{
+    public long CoilAbcNum { get; set; }
+    public DateTime? TrackDate { get; set; }
+    public int? PreStatus { get; set; }
+    public int? CurStatus { get; set; }
+    public decimal? PreNetWt { get; set; }
+    public decimal? CurNetWt { get; set; }
+    public string? ModifiedBy { get; set; }
+    public string? PreLocation { get; set; }
+    public string? CurLocation { get; set; }
+}
+
+/// <summary>
+/// A coil's history plus the four figures legacy derives from it on the coil inventory screen
+/// (<c>f_get_coil_duration</c> / <c>f_get_rejected_date</c> / <c>f_get_onhold_date</c> /
+/// <c>f_get_rebanded_date</c>).
+/// </summary>
+public sealed class CoilHistoryView
+{
+    public long CoilAbcNum { get; set; }
+    /// <summary>Days since the coil's last tracked change, or since it was received when it has none.
+    /// <b>0 once the coil has left inventory</b> (status 0 Done / 10 Shipped) — legacy's own rule, so a
+    /// shipped coil never reads as "sat for 400 days". Null when the coil does not exist.</summary>
+    public int? DurationDays { get; set; }
+    /// <summary>When the coil was FIRST rejected (status 3) — <c>MIN(coil_track_date)</c>, as legacy takes it.</summary>
+    public DateTime? RejectedDate { get; set; }
+    /// <summary>When the coil was FIRST put on hold (status 4).</summary>
+    public DateTime? OnHoldDate { get; set; }
+    /// <summary>When the coil was FIRST rebanded (status 7).</summary>
+    public DateTime? RebandedDate { get; set; }
+    /// <summary>The changes themselves, newest first.</summary>
+    public List<CoilTrackEntry> Entries { get; set; } = [];
+}
+
 /// <summary>Downtime rolled up along one dimension (legacy daily-prod downtime pivots
 /// <c>d_daily_prod_dt_*</c> + <c>d_report_dt_summary</c>): occurrences + minutes grouped by
 /// job / day / month / year / shift / line / cause. Minutes = SUM(<c>dt_instance_detail.duration</c>)/60,

@@ -2588,6 +2588,44 @@
         }
       }
     },
+    "/api/coils/{coilAbcNum}/history": {
+      "get": {
+        "tags": [
+          "Coils"
+        ],
+        "summary": "A coil's COIL_TRACK history (newest first) with the days it has sat and when it was first rejected / put on hold / rebanded.",
+        "operationId": "GetCoilHistory",
+        "parameters": [
+          {
+            "name": "coilAbcNum",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoilHistoryView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/coils/{coilAbcNum}/quality": {
       "get": {
         "tags": [
@@ -18075,6 +18113,43 @@
         },
         "additionalProperties": false
       },
+      "CoilHistoryView": {
+        "type": "object",
+        "properties": {
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "durationDays": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "rejectedDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "onHoldDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "rebandedDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoilTrackEntry"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CoilInventoryGroup": {
         "type": "object",
         "properties": {
@@ -19016,6 +19091,53 @@
           "abcoCoilNetWt": {
             "type": "number",
             "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CoilTrackEntry": {
+        "type": "object",
+        "properties": {
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "trackDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "preStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "curStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "preNetWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "curNetWt": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "modifiedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "preLocation": {
+            "type": "string",
+            "nullable": true
+          },
+          "curLocation": {
+            "type": "string",
             "nullable": true
           }
         },

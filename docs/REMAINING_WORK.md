@@ -570,6 +570,16 @@
   done/shipped/transferred refusal and a `system_log` row in the same transaction. `PUT /coils/{n}/customer`.
 - [x] **H** Mint carries full coil attributes — already done in #224: the ownership-transfer mint does a `SELECT *` schema read and copies every coil column (cash_date / part_num / material_num / mid_num / damaged_code / …) to the minted coil
 - [x] **H** Coil-quality capture + flaw mapping (#246 GET/PUT /coils/{n}/quality + POST/DELETE .../quality/flaws) + a **Coil quality** capture page (#247). Inbound status-on-receipt is already handled: MintBolCoilsAsync sets `coil.date_received` at receipt and status 11 (QA-hold) when `receiving_bol_coil.damaged_fault=1` (the damage code lives on receiving_bol_coil, not the coil). Remaining tail: QR/barcode capture feeding the flaw map (needs the handheld/barcode integration).
+- [x] **M** **Coil history + the four derived columns — done (#PR).** `GET /coils/{n}/history` reads
+  `COIL_TRACK` (93,468 rows live: every status / weight / location change, with who made it) and returns it
+  newest first, plus the figures legacy's coil window derives from the same table per row:
+  `f_get_coil_duration` (days since the last change, falling back to `date_received`, and **0** once the coil
+  is Done/Shipped), and the FIRST date the coil was rejected (3) / put on hold (4) / rebanded (7). Rendered on
+  the Coil-inventory detail card as a **Coil history** table plus a "Sitting N days" figure. Found by the
+  unreferenced-object scan: `d_coil_history` is a live panel on `w_inv_coil` and nothing in the port had ever
+  read that table. ⚠ **`f_get_coil_duration_2`** (2019, transfer-aware) is defined on `.230` but **called by
+  nothing** — not ported. Live recency of `COIL_TRACK` still to be confirmed on `.230` (it was unreachable
+  when this was built).
 - [~] **M/L** Import-from-BOL / show-archived-BOL browsers; multi-condition coil search (search term over org/lot/mid/notes + temper filter DONE on GET /coils + coil-inventory UI); manual new-coil + live-scale weigh-in — **archived-BOL browser done (#466)**: a card on Coil inventory over `w_archived_bol`'s query, with the coil drill-in inferred from `inbound_coil` (legacy's drill-in window is not vendored). **Import from BOL is NOT a browser** — it is ASN-driven receiving and waits on `OPEN_QUESTIONS.md` **B4**. Remaining: **live-scale** (hardware). **Gauge/width ranges are not a parity gap** (checked 2026-09-11): legacy's coil window has no gauge or width filter — its search control is the 2021 "N years prior" toggle.
 
 ### C4. Handheld scanner (RF coil-receiving)
