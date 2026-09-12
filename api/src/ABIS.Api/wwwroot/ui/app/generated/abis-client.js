@@ -15264,13 +15264,14 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
-     * Average LBs per hour (legacy ALPH): each shift's processed weight over its hours, a Daily roll-up, and the line's goal (line.avg_lb_per_hr) plus its window average on every row. A shift with no usable length is reported as open/invalid rather than abandoning the report as legacy does.
+     * Average LBs per hour (legacy ALPH): each shift's processed weight over its hours, a Daily roll-up, and the line's goal (line.avg_lb_per_hr) plus its window average on every row. groupBy=month gives legacy's monthly MSR view instead, without its double-counted hours. A shift with no usable length is reported as open/invalid rather than abandoning the report as legacy does.
      * @param from (optional)
      * @param to (optional)
      * @param lineNum (optional)
+     * @param groupBy (optional)
      * @return OK
      */
-    getLbsPerHour(from, to, lineNum) {
+    getLbsPerHour(from, to, lineNum, groupBy) {
         let url_ = this.baseUrl + "/api/reporting/lbs-per-hour?";
         if (from === null)
             throw new globalThis.Error("The parameter 'from' cannot be null.");
@@ -15284,6 +15285,10 @@ export class AbisClient {
             throw new globalThis.Error("The parameter 'lineNum' cannot be null.");
         else if (lineNum !== undefined)
             url_ += "lineNum=" + encodeURIComponent("" + lineNum) + "&";
+        if (groupBy === null)
+            throw new globalThis.Error("The parameter 'groupBy' cannot be null.");
+        else if (groupBy !== undefined)
+            url_ += "groupBy=" + encodeURIComponent("" + groupBy) + "&";
         url_ = url_.replace(/[?&]$/, "");
         let options_ = {
             method: "GET",

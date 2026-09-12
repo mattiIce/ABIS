@@ -189,20 +189,42 @@ public sealed class PrinterDiagnosticsTests
     {
         // Six routes onto a powered-off box would otherwise multiply the wait by six, and this runs
         // while someone is standing at a dock.
+        //
+        // This counts the connections the printer actually receives rather than timing the call. The
+        // timing form (elapsed < 3 probe timeouts) failed once on a loaded machine at 1216ms against a
+        // 1200ms budget — a false alarm about real behaviour, which is worse than no test.
+        var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+        var connections = 0;
+        var accepting = Task.Run(async () =>
+        {
+            try
+            {
+                while (true)
+                {
+                    using var client = await listener.AcceptTcpClientAsync();
+                    Interlocked.Increment(ref connections);
+                }
+            }
+            catch (ObjectDisposedException) { /* listener stopped */ }
+            catch (System.Net.Sockets.SocketException) { /* listener stopped */ }
+        });
+
         var o = new LabelPrinterOptions
         {
-            Printers = { ["p"] = "192.0.2.1" },
+            Printers = { ["p"] = $"127.0.0.1:{port}" },
             LineRouting = { ["1"] = "p", ["2"] = "p", ["3"] = "p" },
-            ProbeTimeoutMs = 400,
+            ProbeTimeoutMs = 2000,
         };
 
-        var started = DateTime.UtcNow;
         var rows = await Printer(o).DiagnoseAsync(probe: true, CancellationToken.None);
-        var elapsed = DateTime.UtcNow - started;
+        await Task.Delay(250);                              // let any extra connect land before counting
+        listener.Stop();
+        await accepting;
 
         Assert.Equal(4, rows.Count);                        // the printer + three routes
-        Assert.All(rows, r => Assert.False(r.Reachable));
-        Assert.True(elapsed < TimeSpan.FromMilliseconds(400 * 3),
-            $"four entries on one dead printer took {elapsed.TotalMilliseconds:F0}ms — they are not sharing a probe");
+        Assert.All(rows, r => Assert.True(r.Reachable));
+        Assert.Equal(1, Volatile.Read(ref connections));    // one probe, shared by all four entries
     }
 }
