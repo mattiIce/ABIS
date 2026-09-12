@@ -622,6 +622,13 @@ public sealed class CoilQualityFlaw
 {
     public long? CoilAbcNum { get; set; }
     public string? CoilOrgNum { get; set; }
+    /// <summary>What the flaw code means (<c>flaw_codes.reason</c>) — "Surface - Scratches" for code 2.
+    /// Null only if the code is absent from the mill's own list, in which case the raw code is all there is
+    /// and no label is invented for it.</summary>
+    public string? FlawReason { get; set; }
+    /// <summary>What the handling code instructs (<c>handling_codes.handling_code_name</c>) — code A is
+    /// "Visually Inspect Top &amp; Bottom. Crop Out or FF as Necessary".</summary>
+    public string? HandlingCodeName { get; set; }
     public decimal? StartingPosition { get; set; }
     public decimal? EndingPosition { get; set; }
     public string? FlawCode { get; set; }

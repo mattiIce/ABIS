@@ -23890,6 +23890,8 @@ export class CoilQualityFlaw {
         if (_data) {
             this.coilAbcNum = _data["coilAbcNum"];
             this.coilOrgNum = _data["coilOrgNum"];
+            this.flawReason = _data["flawReason"];
+            this.handlingCodeName = _data["handlingCodeName"];
             this.startingPosition = _data["startingPosition"];
             this.endingPosition = _data["endingPosition"];
             this.flawCode = _data["flawCode"];
@@ -23908,6 +23910,8 @@ export class CoilQualityFlaw {
         data = typeof data === 'object' ? data : {};
         data["coilAbcNum"] = this.coilAbcNum;
         data["coilOrgNum"] = this.coilOrgNum;
+        data["flawReason"] = this.flawReason;
+        data["handlingCodeName"] = this.handlingCodeName;
         data["startingPosition"] = this.startingPosition;
         data["endingPosition"] = this.endingPosition;
         data["flawCode"] = this.flawCode;

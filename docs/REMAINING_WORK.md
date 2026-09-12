@@ -570,6 +570,15 @@
   done/shipped/transferred refusal and a `system_log` row in the same transaction. `PUT /coils/{n}/customer`.
 - [x] **H** Mint carries full coil attributes — already done in #224: the ownership-transfer mint does a `SELECT *` schema read and copies every coil column (cash_date / part_num / material_num / mid_num / damaged_code / …) to the minted coil
 - [x] **H** Coil-quality capture + flaw mapping (#246 GET/PUT /coils/{n}/quality + POST/DELETE .../quality/flaws) + a **Coil quality** capture page (#247). Inbound status-on-receipt is already handled: MintBolCoilsAsync sets `coil.date_received` at receipt and status 11 (QA-hold) when `receiving_bol_coil.damaged_fault=1` (the damage code lives on receiving_bol_coil, not the coil). Remaining tail: QR/barcode capture feeding the flaw map (needs the handheld/barcode integration).
+- [x] **H** **Coil-quality flaws now say what their codes mean — done (#PR).** Legacy's quality window
+  (`w_inv_coil` → `w_ff_data_4coil` / `d_ff_data_4coil`, the "FF data" button) joins `flaw_codes` and
+  `handling_codes`; ABIS showed the bare code, so an inspector read `2` / `A` instead of "Surface - Scratches" /
+  "Visually Inspect Top & Bottom. Crop Out or FF as Necessary". **Live: 6,172 flaw rows over 9 codes on `.230`,
+  nearly all carrying a handling code, and every code resolves** (no orphans). Both vocabularies (10 + 3 rows)
+  are seeded into the fixture verbatim, as reference data rather than invented labels; an unlisted code keeps
+  its raw value and gains no text. **Positions are stored in INCHES** (`starting_position_uom` = "inches" on
+  all 6,172, running to ~146,000 on a coil) and legacy divides by 12 — the flaw table now shows feet with the
+  stored inches beneath, so the number is the one the plant reads. Found by the unreferenced-object scan.
 - [x] **L** **Verifying a deployed build against the real database — `tools/verify_live_endpoints.sh` (2026-09-12).**
   The suite runs on the SQLite fixture, so a class of defect survives a green run. Two real ones were found by
   running the deployed endpoints against Oracle: `COIL_TRACK`'s location columns are never written (a UI column

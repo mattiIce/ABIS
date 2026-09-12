@@ -18841,6 +18841,14 @@
             "type": "string",
             "nullable": true
           },
+          "flawReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "handlingCodeName": {
+            "type": "string",
+            "nullable": true
+          },
           "startingPosition": {
             "type": "number",
             "format": "double",

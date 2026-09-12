@@ -78,7 +78,19 @@ function scaffold(): string {
   </div>`;
 }
 
-interface Flaw { startingPosition?: number; endingPosition?: number; flawCode?: string; handlingCode?: string; }
+interface Flaw {
+  startingPosition?: number; endingPosition?: number; flawCode?: string; handlingCode?: string;
+  // What the mill's own code lists say those codes mean (flaw_codes / handling_codes). Absent only for a
+  // code the mill does not list, where the raw code is all there is to show.
+  flawReason?: string; handlingCodeName?: string;
+}
+
+// Flaw positions are stored in INCHES (every row on .230 carries starting_position_uom = "inches") and a
+// coil runs to ~146,000 of them. Legacy's quality window divides by 12 before display, so the plant reads
+// these in feet; both are shown, the foot figure first, so the number is recognisable and the stored value
+// is still there.
+const feet = (inches: unknown): string =>
+  inches == null ? '' : `${(Number(inches) / 12).toLocaleString(undefined, { maximumFractionDigits: 1 })} ft`;
 
 async function load(): Promise<void> {
   const c = val('#fCoil');
@@ -106,9 +118,10 @@ function renderFlaws(flaws: Flaw[]): void {
   $('#fsub').textContent = flaws.length ? `${flaws.length} flaw${flaws.length === 1 ? '' : 's'}` : '';
   $('#flaws').innerHTML = flaws.length ? flaws.map((f) => `
     <tr>
-      <td class="mono" style="text-align:right">${esc(f.startingPosition)}</td>
-      <td class="mono" style="text-align:right">${esc(f.endingPosition)}</td>
-      <td class="mono">${esc(f.flawCode)}</td><td>${esc(f.handlingCode)}</td>
+      <td class="mono" style="text-align:right">${esc(feet(f.startingPosition))}<br><span class="muted" style="font-size:11px">${esc(f.startingPosition)} in</span></td>
+      <td class="mono" style="text-align:right">${esc(feet(f.endingPosition))}<br><span class="muted" style="font-size:11px">${esc(f.endingPosition)} in</span></td>
+      <td>${esc(f.flawCode)}${f.flawReason ? ` — ${esc(f.flawReason)}` : ''}</td>
+      <td>${esc(f.handlingCode)}${f.handlingCodeName ? ` — ${esc(f.handlingCodeName)}` : ''}</td>
       <td><button class="btn sm ghost" data-del="${esc(f.startingPosition)}|${esc(f.endingPosition)}|${esc(f.flawCode)}" type="button">Remove</button></td>
     </tr>`).join('') : '<tr><td colspan="5" class="muted">No flaws recorded.</td></tr>';
   $('#flaws').querySelectorAll<HTMLButtonElement>('[data-del]').forEach((b) =>

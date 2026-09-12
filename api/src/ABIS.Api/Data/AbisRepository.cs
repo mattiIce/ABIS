@@ -1446,11 +1446,15 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {CoilQualityCols} FROM coil_quality WHERE coil_abc_num = :id", new { id = coilAbcNum }, cancellationToken: ct));
         var flaws = await conn.QueryAsync<CoilQualityFlaw>(new CommandDefinition(
             """
-            SELECT coil_abc_num AS CoilAbcNum, coil_org_num AS CoilOrgNum, starting_position AS StartingPosition,
-                   ending_position AS EndingPosition, flaw_code AS FlawCode, starting_position_uom AS StartingPositionUom,
-                   ending_position_uom AS EndingPositionUom, handling_code AS HandlingCode
-            FROM coil_quality_flaw_mapping WHERE coil_abc_num = :id
-            ORDER BY starting_position, ending_position, flaw_code
+            SELECT m.coil_abc_num AS CoilAbcNum, m.coil_org_num AS CoilOrgNum, m.starting_position AS StartingPosition,
+                   m.ending_position AS EndingPosition, m.flaw_code AS FlawCode, m.starting_position_uom AS StartingPositionUom,
+                   m.ending_position_uom AS EndingPositionUom, m.handling_code AS HandlingCode,
+                   f.reason AS FlawReason, h.handling_code_name AS HandlingCodeName
+            FROM coil_quality_flaw_mapping m
+            LEFT JOIN flaw_codes f ON f.flaw_code = m.flaw_code
+            LEFT JOIN handling_codes h ON h.handling_code = m.handling_code
+            WHERE m.coil_abc_num = :id
+            ORDER BY m.starting_position, m.ending_position, m.flaw_code
             """, new { id = coilAbcNum }, cancellationToken: ct));
         return new CoilQualityDetail { Header = header, Flaws = flaws.AsList() };
     }
