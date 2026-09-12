@@ -219,6 +219,25 @@ const REPORTS: Record<string, { note: string; load: (from?: Date, to?: Date) => 
     ],
   },
   // ---- Uptime (legacy w_report_uptime): worked shifts only, uptime = (shift length − dt_total)/3600 ----
+  'lbs-per-hour': {
+    note:
+      "The plant's ALPH report (legacy w_daily_prod_report_alph): each shift's processed weight over its hours, " +
+      'a Daily roll-up, the line\'s goal (line.avg_lb_per_hr) and its average across the window. A shift still ' +
+      'open has no hours to divide by — it is listed as "open" and left out of the averages.',
+    load: (f, t) => loadJson(`/api/reporting/lbs-per-hour${qwin(f, t)}`),
+    cols: [
+      { h: 'Line', f: (r) => esc(lineLabel(r.lineNum)) },
+      { h: 'Day', f: (r) => esc(r.day) },
+      { h: 'Shift', f: (r) => esc(r.shift) },
+      { h: 'Hours', num: true, f: (r) => num(r.hours, 2), raw: (r) => r.hours },
+      { h: 'Processed wt', num: true, f: (r) => num(r.processedWt), raw: (r) => r.processedWt },
+      { h: 'LBs/hr', num: true, f: (r) => num(r.lbsPerHour, 1), raw: (r) => r.lbsPerHour },
+      { h: 'Goal', num: true, f: (r) => num(r.goal), raw: (r) => r.goal },
+      { h: 'Window avg', num: true, f: (r) => num(r.rangeAverage, 1), raw: (r) => r.rangeAverage },
+      // Blank on the ordinary rows: only an open/invalid shift needs explaining.
+      { h: 'Note', f: (r) => (r.status === 'ok' || r.isDailyTotal ? '' : r.status === 'open' ? 'open — no end time yet' : 'invalid — end not after start') },
+    ],
+  },
   'uptime-line': {
     note: 'Line uptime over worked shifts: scheduled vs downtime hours + uptime %. (legacy w_report_uptime, by line)',
     load: (f, t) => loadJson(`/api/reporting/uptime${qwin(f, t, { groupBy: 'line' })}`),
