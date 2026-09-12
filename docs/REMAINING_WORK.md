@@ -570,6 +570,18 @@
   done/shipped/transferred refusal and a `system_log` row in the same transaction. `PUT /coils/{n}/customer`.
 - [x] **H** Mint carries full coil attributes — already done in #224: the ownership-transfer mint does a `SELECT *` schema read and copies every coil column (cash_date / part_num / material_num / mid_num / damaged_code / …) to the minted coil
 - [x] **H** Coil-quality capture + flaw mapping (#246 GET/PUT /coils/{n}/quality + POST/DELETE .../quality/flaws) + a **Coil quality** capture page (#247). Inbound status-on-receipt is already handled: MintBolCoilsAsync sets `coil.date_received` at receipt and status 11 (QA-hold) when `receiving_bol_coil.damaged_fault=1` (the damage code lives on receiving_bol_coil, not the coil). Remaining tail: QR/barcode capture feeding the flaw map (needs the handheld/barcode integration).
+- [x] **L** **Verifying a deployed build against the real database — `tools/verify_live_endpoints.sh` (2026-09-12).**
+  The suite runs on the SQLite fixture, so a class of defect survives a green run. Two real ones were found by
+  running the deployed endpoints against Oracle: `COIL_TRACK`'s location columns are never written (a UI column
+  that could only be blank, #469), and **the default `ORDER BY` never received its tie-breaker** (#473) — tied
+  rows came back unordered on `.110` while 1,260 tests passed. The script asserts INVARIANTS rather than figures
+  (the data moves, the relationships do not), is read-only, and reads the API key from `/etc/abis/abis.env` on
+  the server so the secret never leaves it. **9/9 against `.110`**; pointed at a wrong key it fails 8 and exits
+  non-zero — checked, because the first version reported three false PASSes over the 401 payload.
+  <br>Also verified live and matching independent SQL: ALPH (306.8 h / 2,166,985 lb / 7,063.5 lb-per-hour for
+  BL 84 in June), uptime (19 shifts, 187.91 scheduled, 104.84 uptime, 55.8%), weight on hand (19 alloy groups),
+  the printed invoice (Edge Trim 710 + Full Sheet 9,695 + Cut Out 2,510 = 12,915 lb, reconciling), and the BOL
+  document (ship-to Stellantis Sterling, bill-to Constellium — the toll-processing split).
 - [x] **L** **Unreferenced-legacy-object scan — done 2026-09-12, and this is what it left.** Listing all 991
   legacy windows/DataWindows and grepping them against the port + docs showed **~150 windows mentioned
   nowhere**. Ranking those by how many places actually open them, and checking the top of the list:
