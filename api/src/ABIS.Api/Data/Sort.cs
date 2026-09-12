@@ -139,12 +139,15 @@ public static class Sort
         ["testResults"] = new(Cols(
             ("createdDate", "created_date"), ("testType", "test_type"), ("position", "position"),
             ("ytsVal", "yts_val"), ("utsVal", "uts_val"), ("elongVal", "elong_val")),
-            DefaultOrderBy: "created_date DESC", TieBreaker: null),
+            // 47,516 rows over 8,317 distinct created_date values on .230, so the date alone cannot decide a
+            // page boundary. The PK's other columns settle it.
+            DefaultOrderBy: "created_date DESC", TieBreaker: "coil_abc_num, position, source_id"),
 
         ["tempTestResults"] = new(Cols(
             ("createdDate", "created_date"), ("testType", "test_type"), ("position", "position"),
             ("yts", "yts"), ("uts", "uts"), ("elongation", "elongation")),
-            DefaultOrderBy: "created_date DESC", TieBreaker: null),
+            // No primary key on this table; (coil, position) is the closest thing to one.
+            DefaultOrderBy: "created_date DESC", TieBreaker: "coil_org_num, position"),
 
         ["partialSkids"] = new(Cols(
             ("sheetSkidNum", "sheet_skid_num"), ("abJobNum", "ab_job_num"),
@@ -174,7 +177,16 @@ public static class Sort
         orderBy = spec.DefaultOrderBy;
 
         if (string.IsNullOrWhiteSpace(sort))
+        {
+            // The default needs the tie-breaker as much as an explicit sort does. Without this, a resource
+            // whose default sorts on a non-unique column (test results by created_date) pages by an undefined
+            // order — which is what `.230` showed: four results sharing one timestamp came back unordered.
+            orderBy = spec.TieBreaker is { } dtb
+                      && !spec.DefaultOrderBy.Contains(dtb, StringComparison.OrdinalIgnoreCase)
+                ? $"{spec.DefaultOrderBy}, {dtb}"
+                : spec.DefaultOrderBy;
             return true;
+        }
 
         if (!spec.Columns.TryGetValue(sort.Trim(), out var column))
         {
