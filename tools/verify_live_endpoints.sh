@@ -95,6 +95,23 @@ check "a shipped coil reports no sitting time" "/api/coils/235684/history" \
 check "weight on hand has no negative balance" "/api/coils/summary?groupBy=alloy" \
   "(all((r.get('totalBalance') or 0) >= 0 for r in d), '%d alloy groups' % len(d))"
 
+# ---- the standing guardrail: ABIS transmits nothing ------------------------------------------------
+# Legacy's cron is the single owner of the VAN until a deliberate cutover, so a duplicate transmission would
+# reach a real trading partner. Three independent mechanisms keep ABIS silent and this asserts all of them:
+# the valve is shut, no (document, customer) pair is armed, and no generation path is wired to a transport.
+check "the EDI transmit valve is shut and nothing is armed" "/api/admin/edi/transmit"   "(d.get('valveOpen') is False and not d.get('armed') and d.get('transmitting') is False and d.get('wired') is False,
+    'valveOpen=%s armed=%d transmitting=%s wired=%s' % (d.get('valveOpen'), len(d.get('armed') or []), d.get('transmitting'), d.get('wired')))"
+
+# And the file-drop transport has nowhere to write even if something were armed. Only checkable where the
+# service config is readable, so it is skipped rather than faked when running from elsewhere.
+if [ -r /etc/abis/abis.env ]; then
+  if grep -qiE '^Edi__Outbox__Path=.+' /etc/abis/abis.env; then
+    echo "  FAIL  no EDI outbox path is configured — one IS set; an armed pair could drop a file"; fail=$((fail+1))
+  else
+    echo "  PASS  no EDI outbox path is configured — the file-drop transport has nowhere to write"; pass=$((pass+1))
+  fi
+fi
+
 echo
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]
