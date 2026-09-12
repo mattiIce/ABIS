@@ -57,6 +57,8 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS coil_track_qa;
             DROP TABLE IF EXISTS coil_quality;
             DROP TABLE IF EXISTS coil_quality_flaw_mapping;
+            DROP TABLE IF EXISTS flaw_codes;
+            DROP TABLE IF EXISTS handling_codes;
             DROP TABLE IF EXISTS scraped_sheet_skid;
             DROP TABLE IF EXISTS scraped_production_sheet_item;
             DROP TABLE IF EXISTS scraped_process_partial_skid;
@@ -427,6 +429,23 @@ public static class SqliteFixture
                 pre_treatment_flag TEXT, cash_date TEXT, mill_id TEXT, net_coil_length REAL, net_coil_length_uom TEXT,
                 coil_width REAL, coil_weight REAL, material_thikness REAL, cash_line_id INTEGER,
                 sampling_required TEXT, pcc_number TEXT, revision_level TEXT);
+
+            -- The mill's flaw and handling vocabularies, seeded VERBATIM from .230 (10 and 3 rows). The
+            -- coil-quality screen shows a flaw as a bare code without them; legacy joins both to show what
+            -- the code means, which is why they are reference data here rather than invented labels.
+            CREATE TABLE flaw_codes (
+                flaw_code TEXT PRIMARY KEY, reason TEXT);
+
+            CREATE TABLE handling_codes (
+                handling_code TEXT PRIMARY KEY, handling_code_name TEXT);
+            INSERT INTO flaw_codes (flaw_code, reason) VALUES
+                ('0','Coil Not Inspected at Mill'),('1','Metallurgical, Gauge, Or Coating'),('2','Surface - Scratches'),
+                ('3','Surface - Dents'),('4','Surface - Laminations'),('5','Surface - Rolls Marks'),
+                ('6','Surface - Stains'),('7','Surface - Rolled In Debris'),('8','For Future Use'),('9','For Future Use');
+            INSERT INTO handling_codes (handling_code, handling_code_name) VALUES
+                ('A','Visually Inspect Top & Bottom. Crop Out or FF as Necessary'),
+                ('B','FF to Crop Out or Crop Out if FF is Not Available at Next Process'),
+                ('X','Crop Out');
 
             CREATE TABLE coil_quality_flaw_mapping (
                 coil_abc_num INTEGER NOT NULL, coil_org_num TEXT NOT NULL, starting_position REAL NOT NULL, ending_position REAL NOT NULL,
