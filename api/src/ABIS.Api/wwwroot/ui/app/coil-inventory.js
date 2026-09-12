@@ -146,7 +146,18 @@ async function loadCoil(id) {
     setBusy(true);
     selected = id;
     try {
-        const [c, proc] = await Promise.all([client().getCoil(id), client().getCoilProcessing(id)]);
+        const [c, proc, histRes] = await Promise.all([
+            client().getCoil(id), client().getCoilProcessing(id), authFetch(`/api/coils/${id}/history`),
+        ]);
+        // The coil's own status/weight/location history (legacy's panel beside its coil list), with the
+        // figures that window derives from it: how long the coil has sat, and when it was first held etc.
+        const track = histRes.ok ? await histRes.json() : { entries: [] };
+        const trackRows = track.entries ?? [];
+        const firstAt = [
+            track.rejectedDate ? `rejected ${String(track.rejectedDate).slice(0, 10)}` : '',
+            track.onHoldDate ? `first held ${String(track.onHoldDate).slice(0, 10)}` : '',
+            track.rebandedDate ? `rebanded ${String(track.rebandedDate).slice(0, 10)}` : '',
+        ].filter(Boolean).join(' · ');
         const hist = (proc ?? []).map((p) => `
       <tr><td class="mono">${esc(p.abJobNum)}</td><td>${statusChip('processCoilStatus', p.processCoilStatus)}</td>
         <td class="mono">${esc(p.processDate?.toString().slice(0, 10))}</td>
@@ -158,7 +169,9 @@ async function loadCoil(id) {
         <span><b>Gauge × width</b>${numf(c.coilGauge)} × ${numf(c.coilWidth)}</span>
         <span><b>Lot</b>${esc(c.lotNum)}</span>
         <span><b>On hand</b>${numf(c.netWtBalance)} / ${numf(c.netWt)}</span>
+        ${track.durationDays == null ? '' : `<span><b>Sitting</b>${numf(track.durationDays)} day${track.durationDays === 1 ? '' : 's'}</span>`}
       </div>
+      ${firstAt ? `<p class="muted" style="margin:-4px 0 10px">${esc(firstAt)}</p>` : ''}
       <div class="frow" style="margin:14px 0">
         <div class="fld"><label>Status</label><input id="eStatus" value="${esc(c.coilStatus)}" style="width:80px" /></div>
         <div class="fld"><label>Location</label><input id="eLocation" value="${esc(c.coilLocation)}" style="width:130px" /></div>
@@ -168,7 +181,17 @@ async function loadCoil(id) {
       <h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin:4px 0 6px">Processing history</h2>
       <div style="overflow-x:auto"><table class="tbl" style="min-width:420px">
         <thead><tr><th>Job</th><th>Status</th><th>Date</th><th class="num">Qty</th><th class="num">End wt</th></tr></thead>
-        <tbody>${hist || '<tr><td colspan="5" class="muted">Not yet processed.</td></tr>'}</tbody></table></div>`;
+        <tbody>${hist || '<tr><td colspan="5" class="muted">Not yet processed.</td></tr>'}</tbody></table></div>
+      <h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin:14px 0 6px">Coil history</h2>
+      <div style="overflow-x:auto"><table class="tbl" style="min-width:460px">
+        <thead><tr><th>When</th><th>Status</th><th class="num">Weight</th><th>Location</th><th>By</th></tr></thead>
+        <tbody>${trackRows.length ? trackRows.map((t) => `<tr>
+          <td class="mono">${esc(String(t.trackDate ?? '').slice(0, 10))}</td>
+          <td>${statusChip('coilStatus', t.preStatus)} → ${statusChip('coilStatus', t.curStatus)}</td>
+          <td class="num">${numf(t.preNetWt)} → ${numf(t.curNetWt)}</td>
+          <td>${esc(t.preLocation) === esc(t.curLocation) ? esc(t.curLocation) : `${esc(t.preLocation)} → ${esc(t.curLocation)}`}</td>
+          <td>${esc(t.modifiedBy)}</td></tr>`).join('')
+            : '<tr><td colspan="5" class="muted">No recorded changes.</td></tr>'}</tbody></table></div>`;
         $('#btnSave').addEventListener('click', () => void saveCoil());
     }
     catch (e) {

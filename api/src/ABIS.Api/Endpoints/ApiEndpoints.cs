@@ -580,6 +580,15 @@ public static class ApiEndpoints
            .Produces(StatusCodes.Status204NoContent).Produces(StatusCodes.Status404NotFound).Produces(StatusCodes.Status409Conflict);
 
         // ---- Coil quality capture (COIL_QUALITY + flaw map) -------------
+        // The coil's own history — legacy shows this as a panel beside its coil list, linked to the
+        // selected coil (w_inv_coil / d_coil_history), and derives four of that list's columns from the
+        // same table. Read-only.
+        api.MapGet("/coils/{coilAbcNum:long}/history", async (long coilAbcNum, IAbisRepository repo, CancellationToken ct) =>
+                await repo.GetCoilHistoryAsync(coilAbcNum, ct) is { } h ? Results.Ok(h) : Results.NotFound())
+           .WithName("GetCoilHistory").WithTags("Coils")
+           .WithSummary("A coil's COIL_TRACK history (newest first) with the days it has sat and when it was first rejected / put on hold / rebanded.")
+           .Produces<CoilHistoryView>().Produces(StatusCodes.Status404NotFound);
+
         api.MapGet("/coils/{coilAbcNum:long}/quality", async (long coilAbcNum, IAbisRepository repo, CancellationToken ct) =>
                 Results.Ok(await repo.GetCoilQualityAsync(coilAbcNum, ct)))
            .WithName("GetCoilQuality").WithTags("Coils")

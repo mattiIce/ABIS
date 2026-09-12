@@ -570,6 +570,35 @@
   done/shipped/transferred refusal and a `system_log` row in the same transaction. `PUT /coils/{n}/customer`.
 - [x] **H** Mint carries full coil attributes — already done in #224: the ownership-transfer mint does a `SELECT *` schema read and copies every coil column (cash_date / part_num / material_num / mid_num / damaged_code / …) to the minted coil
 - [x] **H** Coil-quality capture + flaw mapping (#246 GET/PUT /coils/{n}/quality + POST/DELETE .../quality/flaws) + a **Coil quality** capture page (#247). Inbound status-on-receipt is already handled: MintBolCoilsAsync sets `coil.date_received` at receipt and status 11 (QA-hold) when `receiving_bol_coil.damaged_fault=1` (the damage code lives on receiving_bol_coil, not the coil). Remaining tail: QR/barcode capture feeding the flaw map (needs the handheld/barcode integration).
+- [x] **L** **Unreferenced-legacy-object scan — done 2026-09-12, and this is what it left.** Listing all 991
+  legacy windows/DataWindows and grepping them against the port + docs showed **~150 windows mentioned
+  nowhere**. Ranking those by how many places actually open them, and checking the top of the list:
+  <br>• **Built from it:** the ALPH report (#467) and coil history (#468).
+  <br>• **Already covered:** `w_daily_prod_job_detail_display` and `w_daily_prod_coil_detail_display`
+  (16 callers each) are read-only *Production Order Information* / *Coil Information* popups over
+  `ab_job ⋈ customer_order ⋈ order_item ⋈ customer ⋈ line` and `coil` — the Jobs and Coil-inventory detail
+  cards serve both. `w_report_uptime_per_line` (6) is `/reporting/uptime?groupBy=line`. `w_report_inv_coil` (3)
+  prints the caller's on-screen coil list, which the page exports as CSV/xlsx.
+  <br>• **Blocked, not missing:** `w_bol` / `w_coil_list_by_bol` (3 each) are ASN-driven receiving →
+  `OPEN_QUESTIONS.md` **B4**. `w_report_coil_barcode_new` (3) is paper (**D1**). `w_maint_parts_new` (4) is the
+  dead 2010 spares load. The `w_sales_*` windows are the shelved quoting module.
+  <br>• **The DAS "offline" application** (`legacy/src/da_offline/`, ~20 windows) is **not** an
+  offline-and-sync mode — `w_da_offline_sheet` opens the ordinary `SQLCA` connection, choosing its line from
+  the INI's `DataBase/LogId` (e.g. `bl110`). It reads as the manual-entry DAS for lines without PLC
+  integration. **On `.230` only BL 78, BL 110 and BL 84 have had a shift in the last 12 months**, so the
+  non-networked lines (BL 24 / 36 / 60 / 108) record no production at all and this is not a 1.0 gap.
+  ⚠ *One reading not ruled out:* that operators also use it on a networked line when the PLC feed dies, which
+  shift rows would not distinguish. Worth one question to the plant before the DAS is declared complete.
+- [x] **M** **Coil history + the four derived columns — done (#468).** `GET /coils/{n}/history` reads
+  `COIL_TRACK` (93,468 rows live: every status / weight / location change, with who made it) and returns it
+  newest first, plus the figures legacy's coil window derives from the same table per row:
+  `f_get_coil_duration` (days since the last change, falling back to `date_received`, and **0** once the coil
+  is Done/Shipped), and the FIRST date the coil was rejected (3) / put on hold (4) / rebanded (7). Rendered on
+  the Coil-inventory detail card as a **Coil history** table plus a "Sitting N days" figure. Found by the
+  unreferenced-object scan: `d_coil_history` is a live panel on `w_inv_coil` and nothing in the port had ever
+  read that table. ⚠ **`f_get_coil_duration_2`** (2019, transfer-aware) is defined on `.230` but **called by
+  nothing** — not ported. Live recency of `COIL_TRACK` still to be confirmed on `.230` (it was unreachable
+  when this was built).
 - [~] **M/L** Import-from-BOL / show-archived-BOL browsers; multi-condition coil search (search term over org/lot/mid/notes + temper filter DONE on GET /coils + coil-inventory UI); manual new-coil + live-scale weigh-in — **archived-BOL browser done (#466)**: a card on Coil inventory over `w_archived_bol`'s query, with the coil drill-in inferred from `inbound_coil` (legacy's drill-in window is not vendored). **Import from BOL is NOT a browser** — it is ASN-driven receiving and waits on `OPEN_QUESTIONS.md` **B4**. Remaining: **live-scale** (hardware). **Gauge/width ranges are not a parity gap** (checked 2026-09-11): legacy's coil window has no gauge or width filter — its search control is the 2021 "N years prior" toggle.
 
 ### C4. Handheld scanner (RF coil-receiving)

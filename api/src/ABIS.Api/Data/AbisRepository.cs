@@ -617,6 +617,69 @@ public sealed class AbisRepository : IAbisRepository
             $"SELECT {CoilCols} FROM coil WHERE coil_abc_num = :id", new { id = coilAbcNum }, cancellationToken: ct));
     }
 
+    /// <summary>
+    /// A coil's history — legacy's coil-history panel on the coil inventory window (<c>d_coil_history</c>,
+    /// master-detail off the selected coil) — plus the four figures its list columns derive from the same
+    /// table through <c>f_get_coil_duration</c>, <c>f_get_rejected_date</c>, <c>f_get_onhold_date</c> and
+    /// <c>f_get_rebanded_date</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Duration is legacy's rule, verbatim:</b> days since the coil's most recent
+    /// <c>coil_track_date</c>, falling back to <c>date_received</c> when it has never been tracked — and
+    /// <b>0</b> when the coil's status is 0 (Done) or 10 (Shipped), so material that has left the floor
+    /// does not read as ageing stock. Computed in C# rather than through DB date arithmetic, which keeps
+    /// Oracle and the SQLite fixture on one code path.</para>
+    /// <para>The three dates are each the FIRST time the coil reached that status (<c>MIN</c>), not the
+    /// latest — a coil put on hold twice keeps the date it was first held, as legacy reports it.</para>
+    /// <para>Legacy's panel has no ORDER BY, so it renders in whatever order the database returns. Here
+    /// the entries are newest first, which is the order a history is read in.</para>
+    /// </remarks>
+    public async Task<CoilHistoryView?> GetCoilHistoryAsync(long coilAbcNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var coil = await conn.QuerySingleOrDefaultAsync<CoilAgeRaw>(new CommandDefinition(
+            "SELECT coil_status AS CoilStatus, date_received AS DateReceived FROM coil WHERE coil_abc_num = :id",
+            new { id = coilAbcNum }, cancellationToken: ct));
+        if (coil is null) return null;
+
+        var entries = (await conn.QueryAsync<CoilTrackEntry>(new CommandDefinition(
+            """
+            SELECT coil_abc_num AS CoilAbcNum, coil_track_date AS TrackDate,
+                   coil_pre_status AS PreStatus, coil_cur_status AS CurStatus,
+                   coil_pre_netwt AS PreNetWt, coil_cur_netwt AS CurNetWt,
+                   coil_modified_by AS ModifiedBy,
+                   coil_pre_location AS PreLocation, coil_cur_location AS CurLocation
+              FROM coil_track
+             WHERE coil_abc_num = :id
+            """, new { id = coilAbcNum }, cancellationToken: ct)))
+            .OrderByDescending(e => e.TrackDate ?? DateTime.MinValue)
+            .ToList();
+
+        static DateTime? FirstAt(List<CoilTrackEntry> es, int status) => es
+            .Where(e => e.CurStatus == status && e.TrackDate is not null)
+            .Select(e => e.TrackDate)
+            .DefaultIfEmpty(null)
+            .Min();
+
+        var left = coil.CoilStatus is 0 or 10;
+        var since = entries.Count > 0 ? entries.Max(e => e.TrackDate) : coil.DateReceived;
+        return new CoilHistoryView
+        {
+            CoilAbcNum = coilAbcNum,
+            DurationDays = left ? 0 : since is null ? null : Math.Max(0, (int)(DateTime.Now.Date - since.Value.Date).TotalDays),
+            RejectedDate = FirstAt(entries, 3),
+            OnHoldDate = FirstAt(entries, 4),
+            RebandedDate = FirstAt(entries, 7),
+            Entries = entries,
+        };
+    }
+
+    private sealed class CoilAgeRaw
+    {
+        public int? CoilStatus { get; set; }
+        public DateTime? DateReceived { get; set; }
+    }
+
     public Task<PagedResult<CustomerOrder>> GetOrdersAsync(int page, int pageSize, long? customerId, string? po, string? orderBy, CancellationToken ct)
     {
         // Build only the conditions/params actually used, so the count query

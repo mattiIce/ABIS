@@ -135,6 +135,7 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS abis_scrap_type_x12;
             DROP TABLE IF EXISTS abis_edi_partner;
             DROP TABLE IF EXISTS split_skid;
+            DROP TABLE IF EXISTS coil_track;
             DROP TABLE IF EXISTS inbound_coil;
             DROP TABLE IF EXISTS inbound_shipment_customer;
             DROP TABLE IF EXISTS inbound_shipment_status;
@@ -226,6 +227,17 @@ public static class SqliteFixture
 
             -- Inbound coil detail off a receiving BOL (legacy inbound_coil) — the Constellium 870 takes the F-level
             -- part number from the latest inbound BOL. Empty in the fixture (F-level part falls back to order_item).
+            -- Every status / weight / location change a coil has been through (legacy writes it via
+            -- f_insert_coil_track). 93,468 rows live. The coil inventory window shows it as the coil's
+            -- history panel, and four of its screen columns are derived from it: how long the coil has
+            -- sat, and when it was first rejected (3) / put on hold (4) / rebanded (7).
+            CREATE TABLE coil_track (
+                coil_abc_num INTEGER NOT NULL, coil_track_date TEXT NOT NULL,
+                coil_pre_status INTEGER NOT NULL, coil_cur_status INTEGER NOT NULL,
+                coil_pre_netwt REAL NOT NULL, coil_cur_netwt REAL NOT NULL,
+                coil_modified_by TEXT, coil_pre_location TEXT, coil_cur_location TEXT, scrap_870_date TEXT,
+                PRIMARY KEY (coil_abc_num, coil_track_date));
+
             CREATE TABLE inbound_coil (
                 -- The mill's advance notice of a coil (from its inbound EDI). The handheld receiving
                 -- gun shows these details after a scan so the operator can eyeball the coil against
@@ -1436,6 +1448,24 @@ public static class SqliteFixture
                 new { ShiftNum = 7701L, CoilRunNum = 2, CoilAbcNum = (long?)5002L, AbJobNum = (long?)1001L, CoilBeginWt = (decimal?)8000m, CoilEndWt = (decimal?)5000m, CoilBeginTime = (DateTime?)d.AddHours(3), CoilEndTime = (DateTime?)d.AddHours(6), ProcessWt = (decimal?)3000m, Note = "run 2" },
                 // Shift 7702 (line 120, day d): one coil -> 4000 lbs.
                 new { ShiftNum = 7702L, CoilRunNum = 1, CoilAbcNum = (long?)5003L, AbJobNum = (long?)1003L, CoilBeginWt = (decimal?)10000m, CoilEndWt = (decimal?)6000m, CoilBeginTime = (DateTime?)d.AddHours(9), CoilEndTime = (DateTime?)d.AddHours(13), ProcessWt = (decimal?)4000m, Note = "run 1" }
+            });
+
+        // Coil 5001's life so far: received, put ON HOLD (4), released back to In process (2), then
+        // REBANDED (7) — the statuses the coil window's derived columns key on. Coil 5002 has no history
+        // at all, so the "never tracked, fall back to date_received" path stays exercised.
+        conn.Execute("""
+            INSERT INTO coil_track (coil_abc_num, coil_track_date, coil_pre_status, coil_cur_status,
+                                    coil_pre_netwt, coil_cur_netwt, coil_modified_by, coil_pre_location, coil_cur_location)
+            VALUES (:CoilAbcNum, :TrackDate, :PreStatus, :CurStatus, :PreNetWt, :CurNetWt, :ModifiedBy, :PreLocation, :CurLocation)
+            """,
+            new[]
+            {
+                new { CoilAbcNum = 5001L, TrackDate = d.AddDays(-30), PreStatus = 2, CurStatus = 4, PreNetWt = 12000m, CurNetWt = 12000m,
+                      ModifiedBy = "jsmith", PreLocation = "Building 1", CurLocation = "Building 1" },
+                new { CoilAbcNum = 5001L, TrackDate = d.AddDays(-20), PreStatus = 4, CurStatus = 2, PreNetWt = 12000m, CurNetWt = 12000m,
+                      ModifiedBy = "mlee", PreLocation = "Building 1", CurLocation = "Building 2" },
+                new { CoilAbcNum = 5001L, TrackDate = d.AddDays(-10), PreStatus = 2, CurStatus = 7, PreNetWt = 12000m, CurNetWt = 11500m,
+                      ModifiedBy = "jsmith", PreLocation = "Building 2", CurLocation = "Building 2" },
             });
 
         conn.Execute("""
