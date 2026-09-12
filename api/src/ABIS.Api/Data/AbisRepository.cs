@@ -2830,7 +2830,10 @@ public sealed class AbisRepository : IAbisRepository
             SELECT job_run_id AS JobRunId, scheduled_job_id AS ScheduledJobId, started_utc AS StartedUtc,
                    finished_utc AS FinishedUtc, run_status AS RunStatus, affected_count AS AffectedCount,
                    error_text AS ErrorText, correlation_id AS CorrelationId
-            FROM abis_job_run WHERE scheduled_job_id = :id ORDER BY started_utc DESC
+            FROM abis_job_run WHERE scheduled_job_id = :id
+            -- A queued run has no start time yet. Oracle sorts NULLs FIRST on DESC (SQLite last), which would
+            -- put "not started" above the most recent run; ordered explicitly so both engines agree.
+            ORDER BY CASE WHEN started_utc IS NULL THEN 1 ELSE 0 END, started_utc DESC, job_run_id DESC
             """, new { id = scheduledJobId }, cancellationToken: ct));
         return rows.AsList();
     }
@@ -3221,7 +3224,7 @@ public sealed class AbisRepository : IAbisRepository
             LEFT JOIN customer_contact cc ON cc.contact_id = q.contact_id
             WHERE (:pat IS NULL
                    OR c.customer_short_name LIKE :pat OR q.end_use LIKE :pat OR q.alloy LIKE :pat)
-            ORDER BY q.created_date DESC, q.quote_id, q.quote_revision_id
+            ORDER BY CASE WHEN q.created_date IS NULL THEN 1 ELSE 0 END, q.created_date DESC, q.quote_id, q.quote_revision_id
             """, new { pat = like }, cancellationToken: ct));
         return rows.AsList();
     }, []);
@@ -3400,7 +3403,7 @@ public sealed class AbisRepository : IAbisRepository
             LEFT JOIN customer cn ON cn.customer_id = t.customer_id_new
             LEFT JOIN coil c ON c.coil_abc_num = t.coil_abc_num_orig
             WHERE (:cust IS NULL OR t.customer_id_orig = :cust OR t.customer_id_new = :cust)
-            ORDER BY t.transfer_datetime DESC, t.certificate_num DESC
+            ORDER BY CASE WHEN t.transfer_datetime IS NULL THEN 1 ELSE 0 END, t.transfer_datetime DESC, t.certificate_num DESC
             """, new { cust = customerId }, cancellationToken: ct));
         return rows.AsList();
     }
@@ -11455,7 +11458,7 @@ public sealed class AbisRepository : IAbisRepository
             $"""
             SELECT {TruckCols} FROM abis_truck_appointment
             WHERE UPPER(ref_id) = UPPER(:refv) OR appointment_id = :idv
-            ORDER BY scheduled_start DESC
+            ORDER BY CASE WHEN scheduled_start IS NULL THEN 1 ELSE 0 END, scheduled_start DESC
             """,
             new { refv = reference, idv = idVal }, cancellationToken: ct));
         return rows.AsList();
