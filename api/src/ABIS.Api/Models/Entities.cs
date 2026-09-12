@@ -588,6 +588,36 @@ public sealed class CoilQuality
 
 /// <summary>A flaw segment mapped along a coil (legacy COIL_QUALITY_FLAW_MAPPING): a flaw code over a
 /// start→end position, with an optional handling code.</summary>
+/// <summary>
+/// One customer-quality record the office wrote against a skid — legacy's "Add Defect" on
+/// <c>w_office_skid_entry</c> (<c>qa_customer_quality_skid</c>), listed by its Customer Quality Report.
+/// The three codes are decoded from the plant's own vocabularies; a code absent from them keeps its number
+/// and gains no invented text.
+/// </summary>
+public sealed class QaSkidDefect
+{
+    public long? CustomerId { get; set; }
+    public long? AbJobNum { get; set; }
+    public long? CoilAbcNum { get; set; }
+    /// <summary>The mill's own coil number, joined from <c>coil</c> as legacy's report does.</summary>
+    public string? CoilOrgNum { get; set; }
+    public long? SheetSkidNum { get; set; }
+    public int? DefectCode { get; set; }
+    /// <summary><c>qa_defect.defect_desc</c> — "Scratches - salt &amp; pepper" for code 3.</summary>
+    public string? DefectDesc { get; set; }
+    /// <summary>What ABCo decided (<c>qa_albl_defect_disposition</c>) — "Sort defect", "Package for scrap".</summary>
+    public int? AlblDispCode { get; set; }
+    public string? AlblDispDesc { get; set; }
+    /// <summary>What the CUSTOMER decided. Decoded from <c>qa_cust_defect_disposition</c> keyed by
+    /// <b>customer AND code</b> — each customer keeps its own list, so the code alone would risk showing
+    /// another customer's meaning.</summary>
+    public int? CustDispCode { get; set; }
+    public string? CustDispDesc { get; set; }
+    public DateTime? QaRecordDate { get; set; }
+    public string? Note { get; set; }
+    public string? UserId { get; set; }
+}
+
 public sealed class CoilQualityFlaw
 {
     public long? CoilAbcNum { get; set; }

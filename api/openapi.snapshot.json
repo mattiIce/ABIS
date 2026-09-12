@@ -10043,6 +10043,44 @@
         }
       }
     },
+    "/api/quality/skid-defects": {
+      "get": {
+        "tags": [
+          "Quality"
+        ],
+        "summary": "A job's customer-quality records per skid (legacy w_qa_skid_report): defect, ABCo disposition and the CUSTOMER's disposition, each decoded from the plant's own code lists.",
+        "operationId": "GetJobQaSkidDefects",
+        "parameters": [
+          {
+            "name": "abJobNum",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QaSkidDefect"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/quality/scrap-types": {
       "get": {
         "tags": [
@@ -26756,6 +26794,76 @@
           "avgElong": {
             "type": "number",
             "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QaSkidDefect": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "abJobNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "coilAbcNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "coilOrgNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "sheetSkidNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "defectCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "defectDesc": {
+            "type": "string",
+            "nullable": true
+          },
+          "alblDispCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "alblDispDesc": {
+            "type": "string",
+            "nullable": true
+          },
+          "custDispCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "custDispDesc": {
+            "type": "string",
+            "nullable": true
+          },
+          "qaRecordDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "userId": {
+            "type": "string",
             "nullable": true
           }
         },

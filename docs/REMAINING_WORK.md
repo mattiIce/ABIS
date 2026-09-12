@@ -582,9 +582,19 @@
   BL 84 in June), uptime (19 shifts, 187.91 scheduled, 104.84 uptime, 55.8%), weight on hand (19 alloy groups),
   the printed invoice (Edge Trim 710 + Full Sheet 9,695 + Cut Out 2,510 = 12,915 lb, reconciling), and the BOL
   document (ship-to Stellantis Sterling, bill-to Constellium — the toll-processing split).
+- [x] **H** **Customer-quality records per skid — done (#PR).** The office's "Add Defect" button on
+  `w_office_skid_entry` writes `qa_customer_quality_skid`, listed by its Customer Quality Report
+  (`w_qa_skid_report`, reached from that same screen). **Nothing in the port read the table: 2,250 records over
+  267 jobs on `.230`, 42 in the last 12 months, were invisible.** `GET /quality/skid-defects?abJobNum=` returns
+  them newest-first with all three codes decoded from the plant's own lists, and a card on the Quality page
+  renders it. ⚠ **The customer disposition is per CUSTOMER** (`qa_cust_defect_disposition` keyed by
+  `(customer_id, disp_code)`): decoding on the code alone would show one customer's decision under another's
+  name — pinned by a test, and the mutation that drops `customer_id` fails it. On live data all 2,250 defect
+  codes decode, 2,137 ABCo dispositions, and all 312 customer dispositions. An unlisted code keeps its number
+  and gains no invented meaning. Found via the corrected caller scan below.
 - [x] **L** **Unreferenced-legacy-object scan — done 2026-09-12, and this is what it left.** Listing all 991
   legacy windows/DataWindows and grepping them against the port + docs showed **~150 windows mentioned
-  nowhere**. Ranking those by how many places actually open them, and checking the top of the list:
+  nowhere**. Ranking those by how many places actually open them, and checking the top of the list (⚠ **that ranking was wrong at first — corrected 2026-09-12**: the pattern matched `Open(` and `OpenWithParm(` but not `OpenSheetWithParm(`, so **20 windows counted as caller-less are in fact live**, among them the Customer Quality Report. Count references, not one call spelling):
   <br>• **Built from it:** the ALPH report (#467) and coil history (#468).
   <br>• **Already covered:** `w_daily_prod_job_detail_display` and `w_daily_prod_coil_detail_display`
   (16 callers each) are read-only *Production Order Information* / *Coil Information* popups over
