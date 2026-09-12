@@ -49,6 +49,8 @@ public interface IAbisRepository
     Task<DeleteResult> DeleteCoilAsync(long coilAbcNum, CancellationToken ct);
     /// <summary>A coil's quality capture: header (COIL_QUALITY) + flaw map (COIL_QUALITY_FLAW_MAPPING).</summary>
     Task<CoilQualityDetail> GetCoilQualityAsync(long coilAbcNum, CancellationToken ct);
+    /// <summary>The office's customer-quality records for a job, with all three codes decoded.</summary>
+    Task<IReadOnlyList<QaSkidDefect>> GetJobQaSkidDefectsAsync(long abJobNum, CancellationToken ct);
     /// <summary>Upsert a coil's quality header; null if the coil doesn't exist.</summary>
     Task<CoilQuality?> UpsertCoilQualityAsync(long coilAbcNum, CoilQualityWrite body, CancellationToken ct);
     /// <summary>Add a flaw segment to a coil's flaw map; null if the coil doesn't exist.</summary>

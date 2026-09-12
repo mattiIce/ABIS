@@ -72,6 +72,20 @@ function scaffold(): string {
     </div>
 
     <div id="pane-products" class="card" style="display:none">
+      <header><h2>Customer quality — skid defects</h2><span class="sub" id="qaSub">what the office recorded against a job's skids</span></header>
+      <div class="body">
+        <form id="qaForm" class="frow" style="margin-bottom:8px">
+          <div class="fld"><label>Production order #</label><input id="qaJob" inputmode="numeric" style="width:130px" placeholder="e.g. 124500" /></div>
+          <button class="btn sm" type="submit">Show</button>
+        </form>
+        <div style="overflow-x:auto"><table class="tbl" style="min-width:720px">
+          <thead><tr><th>Recorded</th><th class="num">Skid</th><th>Coil</th><th>Defect</th><th>ABCo disposition</th><th>Customer disposition</th><th>Note</th><th>By</th></tr></thead>
+          <tbody id="tQa"><tr><td colspan="8" class="muted">Enter a production order number.</td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div class="card">
       <header><h2>Product types</h2></header>
       <div style="overflow-x:auto"><table class="tbl" style="min-width:280px">
         <thead><tr><th>Id</th><th>Product type</th></tr></thead>
@@ -143,6 +157,31 @@ async function loadDefects(): Promise<void> {
   finally { setBusy(false); }
 }
 
+// The office's customer-quality records for a job (legacy's Customer Quality Report). A code the plant
+// does not list shows as the bare number — no meaning is invented for it.
+async function loadQaDefects(): Promise<void> {
+  const job = $<HTMLInputElement>('#qaJob').value.trim();
+  if (!job) return;
+  setErr('');
+  try {
+    const r = await authFetch(`/api/quality/skid-defects?abJobNum=${encodeURIComponent(job)}`);
+    if (!r.ok) { setErr(`Skid defects failed (${r.status}).`); return; }
+    const rows: any[] = await r.json();
+    $('#qaSub').textContent = `${rows.length} record${rows.length === 1 ? '' : 's'} on order ${job}`;
+    const code = (n: unknown, desc: unknown): string =>
+      n == null ? '' : desc ? `${esc(n)} — ${esc(desc)}` : `${esc(n)}`;
+    $('#tQa').innerHTML = rows.length ? rows.map((q) => `<tr>
+        <td class="mono">${esc(String(q.qaRecordDate ?? '').slice(0, 10))}</td>
+        <td class="num">${esc(q.sheetSkidNum)}</td>
+        <td class="mono">${esc(q.coilOrgNum ?? q.coilAbcNum)}</td>
+        <td>${code(q.defectCode, q.defectDesc)}</td>
+        <td>${code(q.alblDispCode, q.alblDispDesc)}</td>
+        <td>${code(q.custDispCode, q.custDispDesc)}</td>
+        <td>${esc(q.note)}</td><td>${esc(q.userId)}</td></tr>`).join('')
+      : '<tr><td colspan="8" class="muted">No quality records for this production order.</td></tr>';
+  } catch (e) { setErr(`Skid defects failed: ${(e as Error).message}`); }
+}
+
 async function saveCustomer(): Promise<void> {
   setErr(''); $('#custOk').textContent = '';
   const id = $<HTMLInputElement>('#cId').value.trim();
@@ -211,6 +250,7 @@ function showTab(name: string): void {
   main.innerHTML = scaffold();
   ['catalog', 'customers', 'defects', 'products'].forEach((t) => $(`#tab-${t}`).addEventListener('click', () => showTab(t)));
   $<HTMLFormElement>('#defForm').addEventListener('submit', (e) => { e.preventDefault(); void loadDefects(); });
+  $<HTMLFormElement>('#qaForm').addEventListener('submit', (e) => { e.preventDefault(); void loadQaDefects(); });
   $('#btnSaveCust').addEventListener('click', () => void saveCustomer());
   $('#btnAddDefect').addEventListener('click', () => void addDefect());
   showTab('catalog');

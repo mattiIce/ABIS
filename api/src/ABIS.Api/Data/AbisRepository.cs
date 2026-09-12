@@ -1402,6 +1402,43 @@ public sealed class AbisRepository : IAbisRepository
         "material_thikness AS MaterialThikness, cash_line_id AS CashLineId, sampling_required AS SamplingRequired, " +
         "pcc_number AS PccNumber, revision_level AS RevisionLevel";
 
+    /// <summary>
+    /// The office's customer-quality records for a job — legacy's Customer Quality Report
+    /// (<c>w_qa_skid_report</c> / <c>d_qa_customer_quality_skid_report</c>), written by the "Add Defect"
+    /// button on the office skid-entry screen.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Live data:</b> 2,250 records over 267 jobs on <c>.230</c>, 42 in the last 12 months. All 2,250
+    /// defect codes decode; 312 records carry a customer disposition and all of those decode too.</para>
+    /// <para><b>The customer disposition is decoded per CUSTOMER.</b> <c>qa_cust_defect_disposition</c> is keyed
+    /// by <c>(customer_id, disp_code)</c> — each customer keeps its own list — so joining on the code alone
+    /// would show one customer's decision under another's name. No code means two different things across
+    /// customers today, which is exactly why the join has to be right before one does.</para>
+    /// <para>Legacy inner-joins <c>coil</c> for the mill's coil number; this LEFT joins it so a record whose
+    /// coil has since been purged is still reported rather than silently dropped.</para>
+    /// </remarks>
+    public async Task<IReadOnlyList<QaSkidDefect>> GetJobQaSkidDefectsAsync(long abJobNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        return (await conn.QueryAsync<QaSkidDefect>(new CommandDefinition(
+            """
+            SELECT q.customer_id AS CustomerId, q.ab_job_num AS AbJobNum, q.coil_abc_num AS CoilAbcNum,
+                   c.coil_org_num AS CoilOrgNum, q.sheet_skid_num AS SheetSkidNum,
+                   q.defect_code AS DefectCode, d.defect_desc AS DefectDesc,
+                   q.albl_disp_code AS AlblDispCode, a.disp_desc AS AlblDispDesc,
+                   q.cust_disp_code AS CustDispCode, cd.disp_desc AS CustDispDesc,
+                   q.qa_record_date AS QaRecordDate, q.note AS Note, q.user_id AS UserId
+              FROM qa_customer_quality_skid q
+              LEFT JOIN coil c ON c.coil_abc_num = q.coil_abc_num
+              LEFT JOIN qa_defect d ON d.defect_code = q.defect_code
+              LEFT JOIN qa_albl_defect_disposition a ON a.disp_code = q.albl_disp_code
+              LEFT JOIN qa_cust_defect_disposition cd
+                     ON cd.disp_code = q.cust_disp_code AND cd.customer_id = q.customer_id
+             WHERE q.ab_job_num = :job
+             ORDER BY q.qa_record_date DESC, q.sheet_skid_num, q.defect_code
+            """, new { job = abJobNum }, cancellationToken: ct))).ToList();
+    }
+
     public async Task<CoilQualityDetail> GetCoilQualityAsync(long coilAbcNum, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);

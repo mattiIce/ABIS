@@ -55,6 +55,10 @@ public static class SqliteFixture
             DROP TABLE IF EXISTS part_num_liftgate;
             DROP TABLE IF EXISTS pst_test_result;
             DROP TABLE IF EXISTS coil_track_qa;
+            DROP TABLE IF EXISTS qa_customer_quality_skid;
+            DROP TABLE IF EXISTS qa_defect;
+            DROP TABLE IF EXISTS qa_albl_defect_disposition;
+            DROP TABLE IF EXISTS qa_cust_defect_disposition;
             DROP TABLE IF EXISTS coil_quality;
             DROP TABLE IF EXISTS coil_quality_flaw_mapping;
             DROP TABLE IF EXISTS flaw_codes;
@@ -423,6 +427,34 @@ public static class SqliteFixture
                 coil_abc_num INTEGER NOT NULL, coil_track_date TEXT NOT NULL, coil_pre_status INTEGER NOT NULL, coil_cur_status INTEGER NOT NULL,
                 coil_modified_by TEXT NOT NULL, note TEXT NOT NULL,
                 PRIMARY KEY (coil_abc_num, coil_track_date));
+
+            -- The office's customer-quality record per skid (legacy w_office_skid_entry "Add Defect" →
+            -- qa_customer_quality_skid, reported by w_qa_skid_report). 2,250 rows over 267 jobs live.
+            CREATE TABLE qa_customer_quality_skid (
+                customer_id INTEGER, ab_job_num INTEGER, coil_abc_num INTEGER, sheet_skid_num INTEGER,
+                defect_code INTEGER, albl_disp_code INTEGER, cust_disp_code INTEGER,
+                qa_record_date TEXT, note TEXT, user_id TEXT);
+
+            -- The three vocabularies it reads, seeded verbatim from .230. NOTE the customer dispositions are
+            -- keyed by CUSTOMER as well as code: decoding one with the code alone would show another
+            -- customer's meaning. No code conflicts across customers today, but the table is built to allow it.
+            CREATE TABLE qa_defect (
+                defect_code INTEGER PRIMARY KEY, defect_desc TEXT, note TEXT);
+            CREATE TABLE qa_albl_defect_disposition (
+                disp_code INTEGER PRIMARY KEY, disp_desc TEXT, note TEXT);
+            CREATE TABLE qa_cust_defect_disposition (
+                customer_id INTEGER NOT NULL, disp_code INTEGER NOT NULL, disp_desc TEXT, note TEXT,
+                PRIMARY KEY (customer_id, disp_code));
+            INSERT INTO qa_defect (defect_code, defect_desc) VALUES
+                (1,'Flatness'),(2,'Scratches - hi-lite'),(3,'Scratches - salt & pepper'),(4,'Scratches - heavy'),
+                (5,'Coil repeats'),(6,'Ridge line'),(7,'Water stain'),(8,'Solution stain'),(9,'Arbor marks'),
+                (10,'Black spots'),(11,'Flatness Generic'),(12,'Scratches Generic');
+            INSERT INTO qa_albl_defect_disposition (disp_code, disp_desc) VALUES
+                (1,'Flip and ship'),(2,'Package for scrap'),(3,'Sort defect'),(4,'Request customer disposition'),
+                (5,'Split skid destack'),(6,'Open up skids for samples');
+            INSERT INTO qa_cust_defect_disposition (customer_id, disp_code, disp_desc) VALUES
+                (1153,1,'Flip & ship'),(1153,2,'Place on Hold/Block Stock'),(1153,3,'OK to Release for shipment'),
+                (1153,4,'Scrap skid'),(1459,1,'Flip & ship'),(1459,2,'Place on Hold/Block Stock');
 
             CREATE TABLE coil_quality (
                 coil_abc_num INTEGER PRIMARY KEY, coil_org_num TEXT NOT NULL, part_num TEXT, material_grade TEXT,

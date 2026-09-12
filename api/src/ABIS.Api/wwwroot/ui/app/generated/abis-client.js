@@ -12974,6 +12974,61 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * A job's customer-quality records per skid (legacy w_qa_skid_report): defect, ABCo disposition and the CUSTOMER's disposition, each decoded from the plant's own code lists.
+     * @return OK
+     */
+    getJobQaSkidDefects(abJobNum) {
+        let url_ = this.baseUrl + "/api/quality/skid-defects?";
+        if (abJobNum === undefined || abJobNum === null)
+            throw new globalThis.Error("The parameter 'abJobNum' must be defined and cannot be null.");
+        else
+            url_ += "abJobNum=" + encodeURIComponent("" + abJobNum) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetJobQaSkidDefects(_response);
+        });
+    }
+    processGetJobQaSkidDefects(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(QaSkidDefect.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * The scrap/defect type catalog.
      * @return OK
      */
@@ -31408,6 +31463,58 @@ export class QaMechanicalRow {
         data["avgYts"] = this.avgYts;
         data["avgUts"] = this.avgUts;
         data["avgElong"] = this.avgElong;
+        return data;
+    }
+}
+export class QaSkidDefect {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.customerId = _data["customerId"];
+            this.abJobNum = _data["abJobNum"];
+            this.coilAbcNum = _data["coilAbcNum"];
+            this.coilOrgNum = _data["coilOrgNum"];
+            this.sheetSkidNum = _data["sheetSkidNum"];
+            this.defectCode = _data["defectCode"];
+            this.defectDesc = _data["defectDesc"];
+            this.alblDispCode = _data["alblDispCode"];
+            this.alblDispDesc = _data["alblDispDesc"];
+            this.custDispCode = _data["custDispCode"];
+            this.custDispDesc = _data["custDispDesc"];
+            this.qaRecordDate = _data["qaRecordDate"] ? new Date(_data["qaRecordDate"].toString()) : undefined;
+            this.note = _data["note"];
+            this.userId = _data["userId"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new QaSkidDefect();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["customerId"] = this.customerId;
+        data["abJobNum"] = this.abJobNum;
+        data["coilAbcNum"] = this.coilAbcNum;
+        data["coilOrgNum"] = this.coilOrgNum;
+        data["sheetSkidNum"] = this.sheetSkidNum;
+        data["defectCode"] = this.defectCode;
+        data["defectDesc"] = this.defectDesc;
+        data["alblDispCode"] = this.alblDispCode;
+        data["alblDispDesc"] = this.alblDispDesc;
+        data["custDispCode"] = this.custDispCode;
+        data["custDispDesc"] = this.custDispDesc;
+        data["qaRecordDate"] = this.qaRecordDate ? this.qaRecordDate.toISOString() : undefined;
+        data["note"] = this.note;
+        data["userId"] = this.userId;
         return data;
     }
 }

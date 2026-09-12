@@ -4122,6 +4122,14 @@ public static class ApiEndpoints
            .Produces<IReadOnlyList<CustomerSkidInventoryRow>>().ProducesValidationProblem();
 
         // ---- Quality / Recovery (customer-defect setup) -----------------
+        // The office's customer-quality records for a job (legacy's Customer Quality Report, reached from the
+        // office skid-entry screen). Read-only; the three codes are decoded from the plant's own vocabularies.
+        api.MapGet("/quality/skid-defects", async (long abJobNum, IAbisRepository repo, CancellationToken ct) =>
+                Results.Ok(await repo.GetJobQaSkidDefectsAsync(abJobNum, ct)))
+           .WithName("GetJobQaSkidDefects").WithTags("Quality")
+           .WithSummary("A job's customer-quality records per skid (legacy w_qa_skid_report): defect, ABCo disposition and the CUSTOMER's disposition, each decoded from the plant's own code lists.")
+           .Produces<IReadOnlyList<QaSkidDefect>>();
+
         api.MapGet("/quality/scrap-types", async (IAbisRepository repo, CancellationToken ct) =>
                 Results.Ok(await repo.GetScrapTypesAsync(ct)))
            .WithName("GetScrapTypes").WithTags("Quality")
