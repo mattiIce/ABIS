@@ -79,10 +79,18 @@ they store the Order, Cust PO#, Cust Part#, etc..."*. On `.230`, **`coil.custome
 216 on-hand coils**, and so is `inbound_coil.customer_po` for every one of them. Any segment sourcing
 a customer PO emits nothing today.
 
-### A7 — plant-side data fixes (no decision needed, just someone to do them)
+### A7 — plant-side data fixes (one of them needs an EDI decision after all)
 
 - `abis_x12_coil` has **no row for coil status 2 ("New")**, although status 2 *is* in the on-hand
-  cursor's status list → every new coil ships an empty `PID*S*MA` material status. One INSERT.
+  cursor's status list → every new coil ships an empty `PID*S*MA` material status.
+  ⚠ **Measured 2026-09-12: this is the DOMINANT case, not an edge one — 165 of the 180 on-hand coils on
+  `.230` are status 2 (92%).** So an 846 inventory advice would carry an empty material status for nearly
+  every line. The 846 generator deliberately still emits the segment with an empty PID04 rather than
+  dropping one the guide requires, so the file points at the real cause.
+  <br>**And it is not decision-free:** the row needs an AISI table-67 class and table-70 status chosen for
+  "New" by whoever owns the EDI mapping. Neighbouring rows suggest the shape (status 1 → `01`/`7`,
+  12 → `01`/`0`, 11 → `01`/`E`) but guessing a code that ships to a trading partner is not a data fix.
+  ABIS seeds this map verbatim from `.230`, hole included, so fixing the plant row fixes both.
 - The same map stores the literal string **`NA`** for skid statuses 12 and 15, which is not a valid
   AISI code.
 - `customer.customer_duns_number` (NUMBER) is NULL for 3061 while `customer_duns_number_string` is
