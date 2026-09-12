@@ -3533,6 +3533,15 @@ public static class ApiEndpoints
            .WithSummary("Downtime rolled up along one dimension (legacy daily-prod downtime pivots): occurrences + minutes grouped by groupBy = cause (default) | job | part | line | shift | day | month | year, optionally one line. Defaults to the last 365 days when unbounded.")
            .Produces<IReadOnlyList<DowntimePivotRow>>();
 
+        api.MapGet("/reporting/lbs-per-hour", async (DateTime? from, DateTime? to, IAbisRepository repo, CancellationToken ct, long? lineNum = null) =>
+            {
+                var (f, t) = ResolveReportWindow(from, to);
+                return Results.Ok(await repo.GetLbsPerHourAsync(f, t, lineNum, ct));
+            })
+           .WithName("GetLbsPerHour").WithTags("Reporting")
+           .WithSummary("Average LBs per hour (legacy ALPH): each shift's processed weight over its hours, a Daily roll-up, and the line's goal (line.avg_lb_per_hr) plus its window average on every row. A shift with no usable length is reported as open/invalid rather than abandoning the report as legacy does.")
+           .Produces<IReadOnlyList<LbsPerHourRow>>();
+
         // ---- Calculator (legacy w_order_entry suggested piece weight) ----
         api.MapPost("/calculator/piece-weight", async (PieceWeightRequest body, IAbisRepository repo, CancellationToken ct) =>
             {

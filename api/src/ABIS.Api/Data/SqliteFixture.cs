@@ -677,7 +677,9 @@ public static class SqliteFixture
                 sketch_sys_note TEXT, sketch_status INTEGER);
 
             CREATE TABLE line (
-                line_num INTEGER PRIMARY KEY, line_desc TEXT, line_location TEXT);
+                -- avg_lb_per_hr is the line's PRODUCTION GOAL in pounds per hour, read by the ALPH report
+                -- (legacy w_daily_prod_report_alph). Set per line on .230 (BL 110 = 12,000, BL 84 = 12,500).
+                line_num INTEGER PRIMARY KEY, line_desc TEXT, line_location TEXT, avg_lb_per_hr REAL);
 
             -- The plant's shift CALENDAR (legacy SHIFT_SCHEDULE, ~18.7k rows live): which lines run
             -- which shift type on which date, with a cancelled flag. LINE_SCHEDULE is the standing
@@ -1867,21 +1869,24 @@ public static class SqliteFixture
             });
 
         conn.Execute("""
-            INSERT INTO line (line_num, line_desc, line_location) VALUES (:LineNum, :LineDesc, :LineLocation)
+            INSERT INTO line (line_num, line_desc, line_location, avg_lb_per_hr)
+            VALUES (:LineNum, :LineDesc, :LineLocation, :AvgLbPerHr)
             """,
             new[]
             {
                 // line_num 0 / 'NONE' is the plant's real "no line assigned" sentinel, not a press —
                 // the live LINE table carries it alongside the seven real lines, and jobs never put on
                 // a line point at it. Seeded so the floor board's exclusion of it stays exercised.
-                new { LineNum = 0L, LineDesc = "NONE", LineLocation = (string?)null },
+                new { LineNum = 0L, LineDesc = "NONE", LineLocation = (string?)null, AvgLbPerHr = (decimal?)null },
                 // BL 60 (line_num 3) is the plant's DECOMMISSIONED line, and 3 is its real code on the
                 // live LINE table — verified on .230, where the codes run 0..7. Seeded so the
                 // retired-line guard is exercised against the number production actually uses rather
                 // than one invented for the fixture.
-                new { LineNum = 3L, LineDesc = "BL 60", LineLocation = (string?)null },
-                new { LineNum = 110L, LineDesc = "Cut-to-length 1", LineLocation = (string?)"Bay A" },
-                new { LineNum = 120L, LineDesc = "Cut-to-length 2", LineLocation = (string?)"Bay B" }
+                new { LineNum = 3L, LineDesc = "BL 60", LineLocation = (string?)null, AvgLbPerHr = (decimal?)5000m },
+                // Line 110 carries an ALPH goal; 120 deliberately carries none, so the report's
+                // "no goal set" path stays exercised.
+                new { LineNum = 110L, LineDesc = "Cut-to-length 1", LineLocation = (string?)"Bay A", AvgLbPerHr = (decimal?)1200m },
+                new { LineNum = 120L, LineDesc = "Cut-to-length 2", LineLocation = (string?)"Bay B", AvgLbPerHr = (decimal?)null }
             });
 
         // Live line board: line 110 is RUNNING (shift 7701, job 1001, coil 5001) with skids on two

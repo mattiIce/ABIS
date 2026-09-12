@@ -253,6 +253,8 @@ public interface IAbisRepository
     Task<IReadOnlyList<DowntimeByCauseRow>> GetDowntimeByCauseAsync(DateTime from, DateTime to, long? lineNum, CancellationToken ct);
     Task<IReadOnlyList<UptimeRow>> GetUptimeAsync(DateTime? from, DateTime? to, long? lineNum, string groupBy, CancellationToken ct);
     Task<IReadOnlyList<DowntimePivotRow>> GetDowntimePivotAsync(DateTime? from, DateTime? to, long? lineNum, string groupBy, CancellationToken ct);
+    /// <summary>Average LBs per hour per shift + day (legacy ALPH), with the line's goal.</summary>
+    Task<IReadOnlyList<LbsPerHourRow>> GetLbsPerHourAsync(DateTime? from, DateTime? to, long? lineNum, CancellationToken ct);
     Task<decimal?> GetMetalDensityAsync(string alloy, CancellationToken ct);
     Task<IReadOnlyList<RecoveryJobCoil>> GetRecoveryCoilsByJobAsync(long abJobNum, CancellationToken ct);
     Task<bool> ProcessCoilExistsAsync(long coilAbcNum, long abJobNum, CancellationToken ct);

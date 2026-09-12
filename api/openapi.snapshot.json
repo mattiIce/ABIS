@@ -11853,6 +11853,59 @@
         }
       }
     },
+    "/api/reporting/lbs-per-hour": {
+      "get": {
+        "tags": [
+          "Reporting"
+        ],
+        "summary": "Average LBs per hour (legacy ALPH): each shift's processed weight over its hours, a Daily roll-up, and the line's goal (line.avg_lb_per_hr) plus its window average on every row. A shift with no usable length is reported as open/invalid rather than abandoning the report as legacy does.",
+        "operationId": "GetLbsPerHour",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "lineNum",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LbsPerHourRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/reporting/downtime": {
       "get": {
         "tags": [
@@ -22920,6 +22973,65 @@
             "nullable": true
           },
           "sketchJobNote": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "LbsPerHourRow": {
+        "type": "object",
+        "properties": {
+          "lineNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "lineDesc": {
+            "type": "string",
+            "nullable": true
+          },
+          "day": {
+            "type": "string",
+            "nullable": true
+          },
+          "shift": {
+            "type": "string",
+            "nullable": true
+          },
+          "isDailyTotal": {
+            "type": "boolean"
+          },
+          "shiftNum": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "hours": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "processedWt": {
+            "type": "number",
+            "format": "double"
+          },
+          "lbsPerHour": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "goal": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "rangeAverage": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "status": {
             "type": "string",
             "nullable": true
           }

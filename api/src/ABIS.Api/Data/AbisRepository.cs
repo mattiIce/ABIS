@@ -2309,6 +2309,116 @@ public sealed class AbisRepository : IAbisRepository
             .ToList();
     }
 
+    /// <summary>
+    /// Average LBs per hour — the plant's ALPH report (legacy <c>w_daily_prod_report_alph</c>, opened from the
+    /// daily-production screen's Shift reports). Per shift: <c>SUM(shift_coil.process_wt)</c> ÷ shift hours; then
+    /// a <b>Daily</b> roll-up per day, and the line's average over the window plus its goal
+    /// (<c>line.avg_lb_per_hr</c>) repeated on every row, exactly as legacy fills its Goal / Avg_All columns.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Live data:</b> goals are set per line on <c>.230</c> (BL 110 12,000, BL 84 12,500, BL 78 9,000,
+    /// BL 108 6,000, BL 60 5,000, BL 36 2,500, BL 24 2,000). Recent BL 84 shifts run ~10.4 h at 5,000–9,600
+    /// lb/h against that 12,500 goal.</para>
+    /// <para><b>One deliberate departure.</b> Legacy ABANDONS the whole report when any shift in the range has
+    /// no usable length — "Invalid Date Info", then it closes the window — so a range containing a shift that is
+    /// still open (no <c>end_time</c>) yields no report at all. On <c>.230</c> 16 of the last year's 830 shifts
+    /// have no end time, including the most recent one, so that is the normal case near "today". Here such a
+    /// shift is reported with <c>status</c> "open" (or "invalid" when the end is not after the start) and is left
+    /// out of the Daily and range averages, which are otherwise unchanged.</para>
+    /// <para>Unlike <see cref="GetUptimeAsync"/> there is no worked-shift filter: ALPH's own DataWindow
+    /// (<c>d_daily_prod_shift_info_alph</c>) selects on line + date only, and that is kept.</para>
+    /// </remarks>
+    public async Task<IReadOnlyList<LbsPerHourRow>> GetLbsPerHourAsync(DateTime? from, DateTime? to, long? lineNum, CancellationToken ct)
+    {
+        await using var conn = await OpenAsync(ct);
+        var p = new DynamicParameters();
+        var where = new List<string> { "s.start_time IS NOT NULL" };
+        if (from is not null) { where.Add("s.start_time >= :dfrom"); p.Add("dfrom", from, DbType.DateTime); }
+        if (to is not null) { where.Add("s.start_time < :dto"); p.Add("dto", to, DbType.DateTime); }
+        if (lineNum is not null) { where.Add("s.line_num = :line"); p.Add("line", lineNum); }
+
+        var raw = (await conn.QueryAsync<ShiftWeightRaw>(new CommandDefinition(
+            $"""
+            SELECT s.shift_num AS ShiftNum, s.line_num AS LineNum, l.line_desc AS LineDesc,
+                   l.avg_lb_per_hr AS Goal, s.schedule_type AS ScheduleType,
+                   s.start_time AS StartTime, s.end_time AS EndTime,
+                   (SELECT COALESCE(SUM(sc.process_wt), 0) FROM shift_coil sc WHERE sc.shift_num = s.shift_num) AS ProcessedWt
+            FROM shift s LEFT JOIN line l ON l.line_num = s.line_num
+            WHERE {string.Join(" AND ", where)}
+            """, p, cancellationToken: ct))).ToList();
+
+        static double? UsableHours(ShiftWeightRaw r)
+        {
+            if (r.StartTime is null || r.EndTime is null) return null;
+            var h = (r.EndTime.Value - r.StartTime.Value).TotalHours;
+            return h > 0 ? h : null;
+        }
+
+        var rows = new List<LbsPerHourRow>();
+        foreach (var line in raw.Where(r => r.StartTime is not null)
+                                .GroupBy(r => r.LineNum)
+                                .OrderBy(g => g.Key ?? long.MaxValue))
+        {
+            var goal = line.Select(r => r.Goal).FirstOrDefault(g => g is not null);
+            var desc = line.Select(r => r.LineDesc).FirstOrDefault(d => d is not null);
+            var lineHours = line.Sum(r => UsableHours(r) ?? 0);
+            var lineWt = line.Where(r => UsableHours(r) is not null).Sum(r => r.ProcessedWt);
+            double? rangeAvg = lineHours > 0 ? Math.Round((double)lineWt / lineHours, 1) : null;
+
+            foreach (var day in line.GroupBy(r => r.StartTime!.Value.Date).OrderBy(g => g.Key))
+            {
+                var dayLabel = day.Key.ToString("yyyy-MM-dd");
+                foreach (var s in day.OrderBy(r => r.StartTime))
+                {
+                    var hours = UsableHours(s);
+                    rows.Add(new LbsPerHourRow
+                    {
+                        LineNum = line.Key,
+                        LineDesc = desc,
+                        Day = dayLabel,
+                        Shift = ShiftLabel(s.ScheduleType),
+                        ShiftNum = s.ShiftNum,
+                        Hours = hours is null ? null : Math.Round(hours.Value, 2),
+                        ProcessedWt = s.ProcessedWt,
+                        LbsPerHour = hours is null ? null : Math.Round((double)s.ProcessedWt / hours.Value, 1),
+                        Goal = goal,
+                        RangeAverage = rangeAvg,
+                        Status = s.EndTime is null ? "open" : hours is null ? "invalid" : "ok",
+                    });
+                }
+
+                var dayHours = day.Sum(r => UsableHours(r) ?? 0);
+                var dayWt = day.Where(r => UsableHours(r) is not null).Sum(r => r.ProcessedWt);
+                rows.Add(new LbsPerHourRow
+                {
+                    LineNum = line.Key,
+                    LineDesc = desc,
+                    Day = dayLabel,
+                    Shift = "Daily",
+                    IsDailyTotal = true,
+                    Hours = Math.Round(dayHours, 2),
+                    ProcessedWt = dayWt,
+                    LbsPerHour = dayHours > 0 ? Math.Round((double)dayWt / dayHours, 1) : null,
+                    Goal = goal,
+                    RangeAverage = rangeAvg,
+                });
+            }
+        }
+        return rows;
+    }
+
+    private sealed class ShiftWeightRaw
+    {
+        public long ShiftNum { get; set; }
+        public long? LineNum { get; set; }
+        public string? LineDesc { get; set; }
+        public decimal? Goal { get; set; }
+        public int? ScheduleType { get; set; }
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public decimal ProcessedWt { get; set; }
+    }
+
     // Downtime rolled up along one dimension (legacy daily-prod downtime pivots d_daily_prod_dt_* +
     // d_report_dt_summary). Pulls the detail segments joined to their instance (+ shift for the shift
     // grouping) for the window/line, then buckets in C# so day/month/year need no DB date functions.
