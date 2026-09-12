@@ -11858,7 +11858,7 @@
         "tags": [
           "Reporting"
         ],
-        "summary": "Average LBs per hour (legacy ALPH): each shift's processed weight over its hours, a Daily roll-up, and the line's goal (line.avg_lb_per_hr) plus its window average on every row. A shift with no usable length is reported as open/invalid rather than abandoning the report as legacy does.",
+        "summary": "Average LBs per hour (legacy ALPH): each shift's processed weight over its hours, a Daily roll-up, and the line's goal (line.avg_lb_per_hr) plus its window average on every row. groupBy=month gives legacy's monthly MSR view instead, without its double-counted hours. A shift with no usable length is reported as open/invalid rather than abandoning the report as legacy does.",
         "operationId": "GetLbsPerHour",
         "parameters": [
           {
@@ -11883,6 +11883,14 @@
             "schema": {
               "type": "integer",
               "format": "int64"
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "shift"
             }
           }
         ],

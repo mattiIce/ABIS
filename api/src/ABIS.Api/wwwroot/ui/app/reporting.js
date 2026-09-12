@@ -228,6 +228,21 @@ const REPORTS = {
             { h: 'Note', f: (r) => (r.status === 'ok' || r.isDailyTotal ? '' : r.status === 'open' ? 'open — no end time yet' : 'invalid — end not after start') },
         ],
     },
+    'lbs-per-hour-month': {
+        note: "Legacy's monthly MSR view: one row per line per month. Legacy's own SQL counts each shift's hours " +
+            'once per coil on it and then halves them (x12 where a day has 24 hours), which reported roughly half ' +
+            "the true rate; a month here is the sum of its shifts' own hours and weights.",
+        load: (f, t) => loadJson(`/api/reporting/lbs-per-hour${qwin(f, t, { groupBy: 'month' })}`),
+        cols: [
+            { h: 'Line', f: (r) => esc(lineLabel(r.lineNum)) },
+            { h: 'Month', f: (r) => esc(r.day) },
+            { h: 'Hours', num: true, f: (r) => num(r.hours, 2), raw: (r) => r.hours },
+            { h: 'Processed wt', num: true, f: (r) => num(r.processedWt), raw: (r) => r.processedWt },
+            { h: 'LBs/hr', num: true, f: (r) => num(r.lbsPerHour, 1), raw: (r) => r.lbsPerHour },
+            { h: 'Goal', num: true, f: (r) => num(r.goal), raw: (r) => r.goal },
+            { h: 'Window avg', num: true, f: (r) => num(r.rangeAverage, 1), raw: (r) => r.rangeAverage },
+        ],
+    },
     'uptime-line': {
         note: 'Line uptime over worked shifts: scheduled vs downtime hours + uptime %. (legacy w_report_uptime, by line)',
         load: (f, t) => loadJson(`/api/reporting/uptime${qwin(f, t, { groupBy: 'line' })}`),

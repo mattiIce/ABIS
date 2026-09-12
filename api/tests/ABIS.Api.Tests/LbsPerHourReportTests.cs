@@ -167,6 +167,43 @@ public sealed class LbsPerHourReportTests
         Assert.Equal(JsonValueKind.Null, bad.GetProperty("lbsPerHour").ValueKind);
     }
 
+    /// <summary>
+    /// The monthly view (legacy's MSR). A month is the sum of its shifts' own hours and weights — 15 h and
+    /// 12,000 lb here, so 800 lb/h. Legacy's own SQL would not produce this: it counts each shift's length
+    /// once per coil on it and then halves it, which on `.230` reported roughly half the true rate.
+    /// </summary>
+    [Fact]
+    public async Task The_monthly_view_sums_the_months_own_hours_and_weight()
+    {
+        using var f = new Factory();
+        var rows = await Rows(Client(f), $"lineNum=777&groupBy=month&{Window}");
+
+        var march = Assert.Single(rows);
+        Assert.Equal("2026-03", march.GetProperty("day").GetString());
+        Assert.Equal("Monthly", march.GetProperty("shift").GetString());
+        Assert.Equal(15, march.GetProperty("hours").GetDouble());
+        Assert.Equal(12000m, march.GetProperty("processedWt").GetDecimal());
+        Assert.Equal(800, march.GetProperty("lbsPerHour").GetDouble());
+        Assert.Equal(900m, march.GetProperty("goal").GetDecimal());
+    }
+
+    /// <summary>A shift with no end time cannot contribute hours, so it stays out of the month too.</summary>
+    [Fact]
+    public async Task The_monthly_view_leaves_an_open_shift_out()
+    {
+        using var f = new Factory();
+        var c = Client(f, """
+            INSERT INTO shift (shift_num, start_time, end_time, line_num, schedule_type) VALUES
+                (7806, '2026-03-06 05:00:00', NULL, 777, 1);
+            INSERT INTO shift_coil (shift_num, coil_run_num, coil_abc_num, ab_job_num, process_wt) VALUES (7806, 1, 5001, 1001, 9999);
+            """);
+
+        var march = Assert.Single(await Rows(c, $"lineNum=777&groupBy=month&{Window}"));
+
+        Assert.Equal(15, march.GetProperty("hours").GetDouble());
+        Assert.Equal(12000m, march.GetProperty("processedWt").GetDecimal());
+    }
+
     [Fact]
     public async Task A_line_with_no_goal_set_reports_none()
     {

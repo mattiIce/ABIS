@@ -2327,8 +2327,15 @@ public sealed class AbisRepository : IAbisRepository
     /// out of the Daily and range averages, which are otherwise unchanged.</para>
     /// <para>Unlike <see cref="GetUptimeAsync"/> there is no worked-shift filter: ALPH's own DataWindow
     /// (<c>d_daily_prod_shift_info_alph</c>) selects on line + date only, and that is kept.</para>
+    /// <para><b><c>groupBy = "month"</c></b> gives legacy's monthly view (<c>w_daily_prod_report_msr</c>) as one
+    /// row per line per month. <b>Legacy's own MSR arithmetic is not reproduced, because it is wrong twice
+    /// over</b> (measured on <c>.230</c> 2026-09-12): it sums <c>(END_TIME − START_TIME)</c> across
+    /// <c>SHIFT ⋈ SHIFT_COIL</c>, so every shift's length is counted once per coil on it — 4.1–5.2 coils per
+    /// shift on BL 84 — and then multiplies by <b>12</b> where a day holds 24 hours. For BL 84 that prints
+    /// ~3,300–3,900 lb/h where the true rate is <b>7,063–8,560</b> against a 12,500 goal. Here a month is the
+    /// sum of its shifts' own hours and weights, consistent with the per-shift rows above it.</para>
     /// </remarks>
-    public async Task<IReadOnlyList<LbsPerHourRow>> GetLbsPerHourAsync(DateTime? from, DateTime? to, long? lineNum, CancellationToken ct)
+    public async Task<IReadOnlyList<LbsPerHourRow>> GetLbsPerHourAsync(DateTime? from, DateTime? to, long? lineNum, string? groupBy, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         var p = new DynamicParameters();
@@ -2354,6 +2361,7 @@ public sealed class AbisRepository : IAbisRepository
             return h > 0 ? h : null;
         }
 
+        var monthly = string.Equals(groupBy?.Trim(), "month", StringComparison.OrdinalIgnoreCase);
         var rows = new List<LbsPerHourRow>();
         foreach (var line in raw.Where(r => r.StartTime is not null)
                                 .GroupBy(r => r.LineNum)
@@ -2364,6 +2372,31 @@ public sealed class AbisRepository : IAbisRepository
             var lineHours = line.Sum(r => UsableHours(r) ?? 0);
             var lineWt = line.Where(r => UsableHours(r) is not null).Sum(r => r.ProcessedWt);
             double? rangeAvg = lineHours > 0 ? Math.Round((double)lineWt / lineHours, 1) : null;
+
+            if (monthly)
+            {
+                // One row per line per month — legacy's MSR view, without the two faults measured in its own
+                // SQL (see the method remarks). Same rule as everywhere here: only usable shifts count.
+                foreach (var month in line.GroupBy(r => r.StartTime!.Value.ToString("yyyy-MM")).OrderBy(g => g.Key, StringComparer.Ordinal))
+                {
+                    var mHours = month.Sum(r => UsableHours(r) ?? 0);
+                    var mWt = month.Where(r => UsableHours(r) is not null).Sum(r => r.ProcessedWt);
+                    rows.Add(new LbsPerHourRow
+                    {
+                        LineNum = line.Key,
+                        LineDesc = desc,
+                        Day = month.Key,
+                        Shift = "Monthly",
+                        IsDailyTotal = true,
+                        Hours = Math.Round(mHours, 2),
+                        ProcessedWt = mWt,
+                        LbsPerHour = mHours > 0 ? Math.Round((double)mWt / mHours, 1) : null,
+                        Goal = goal,
+                        RangeAverage = rangeAvg,
+                    });
+                }
+                continue;
+            }
 
             foreach (var day in line.GroupBy(r => r.StartTime!.Value.Date).OrderBy(g => g.Key))
             {

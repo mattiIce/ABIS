@@ -597,9 +597,17 @@
   the Coil-inventory detail card as a **Coil history** table plus a "Sitting N days" figure. Found by the
   unreferenced-object scan: `d_coil_history` is a live panel on `w_inv_coil` and nothing in the port had ever
   read that table. ⚠ **`f_get_coil_duration_2`** (2019, transfer-aware) is defined on `.230` but **called by
-  nothing** — not ported. Live recency of `COIL_TRACK` still to be confirmed on `.230` (it was unreachable
-  when this was built).
-- [~] **M/L** Import-from-BOL / show-archived-BOL browsers; multi-condition coil search (search term over org/lot/mid/notes + temper filter DONE on GET /coils + coil-inventory UI); manual new-coil + live-scale weigh-in — **archived-BOL browser done (#466)**: a card on Coil inventory over `w_archived_bol`'s query, with the coil drill-in inferred from `inbound_coil` (legacy's drill-in window is not vendored). **Import from BOL is NOT a browser** — it is ASN-driven receiving and waits on `OPEN_QUESTIONS.md` **B4**. Remaining: **live-scale** (hardware). **Gauge/width ranges are not a parity gap** (checked 2026-09-11): legacy's coil window has no gauge or width filter — its search control is the 2021 "N years prior" toggle.
+  nothing** — not ported. **Verified against live Oracle on `.110` 2026-09-12** (these had only ever run on SQLite): the history of
+  coil 235684 returns its 3 real changes newest-first with `durationDays` **0** — the Done/Shipped rule firing on
+  real data — and its rebanded date matching `.230` to the second. ⚠ **The two location columns are dead:**
+  0 of all 242,780 rows carry either, and legacy's own panel does not select them, so the UI column was
+  removed (the fields stay on the API, documented as never written). `coil_modified_by` mixes people
+  (JLATIMORE, CBEAMER) with the line that wrote the row (BL84, BL78, BL110).
+  **`COIL_TRACK` confirmed live 2026-09-12:** 242,780 rows over 137,385 coils, **8,840 in the last 12
+  months**, newest 2026-08-20 — rebanded (640) and rejected (137) are routine, on-hold (8) rare but real.
+  (`DATA_MODEL.md`'s 93,468 is a stale snapshot of that table.)
+- [~] **M/L** Import-from-BOL / show-archived-BOL browsers; multi-condition coil search (search term over org/lot/mid/notes + temper filter DONE on GET /coils + coil-inventory UI); manual new-coil + live-scale weigh-in — **archived-BOL browser done (#466; verified on live Oracle 2026-09-12 — 24,238 BOLs for Novelis Kingston,
+  newest first, the undated ones last on the final page, and the drill-in returning the mill's own coil data)**: a card on Coil inventory over `w_archived_bol`'s query, with the coil drill-in inferred from `inbound_coil` (legacy's drill-in window is not vendored). **Import from BOL is NOT a browser** — it is ASN-driven receiving and waits on `OPEN_QUESTIONS.md` **B4**. Remaining: **live-scale** (hardware). **Gauge/width ranges are not a parity gap** (checked 2026-09-11): legacy's coil window has no gauge or width filter — its search control is the 2021 "N years prior" toggle.
 
 ### C4. Handheld scanner (RF coil-receiving)
 - [x] **C** `INBOUND_COIL_STATUS` model + barcode→ABC lookup + mint-decision — done (#311), ported from the
@@ -879,12 +887,19 @@
 - [x] **M** Uptime reports + downtime pivots — done (#252): `/reporting/uptime` (groupBy line|shift|day; worked-shift uptime = (shift length − dt_total s)/3600 + scheduled/downtime hrs + uptime %, faithful to `w_report_uptime`) and `/reporting/downtime-pivot` (groupBy cause|job|**part** (#268)|line|shift|day|month|year — the by-part pivot walks ab_job→order_item→part_num, labelled by enduser_part_num). **The "dt-vs-production ratio" tail — corrected 2026-09-12.** It IS a real legacy screen: `w_report_downtime`'s *Downtime/Production* option opens `w_downtime_shift_downtime_prod_ratio`, a two-bar graph of one shift's production minutes vs downtime minutes (downtime = `SUM(dt_instance_detail.duration)/60` for the shift; production = shift length − downtime). **Both numbers are already served** per shift by `/reporting/uptime` (and the same arithmetic is the ported line efficiency in `LineLiveMetrics`), so only the graph is missing, not the data. Yesterday's note here wrongly said no such screen existed.
 - [~] **M** **Daily-production "Shift reports" (legacy `w_daily_prod_reports`) — surveyed 2026-09-12; ALPH done (#PR).**
   A scan for legacy objects never mentioned anywhere in the port found this hub and its 11 report windows, of
-  which only one DataWindow was referenced. **Built: ALPH** (`w_daily_prod_report_alph`), the plant's
-  Average-LBs-Per-Hour report — `GET /reporting/lbs-per-hour`, per shift + a Daily roll-up, with the line's goal
+  which only one DataWindow was referenced. **Verified against live Oracle on `.110` 2026-09-12:** BL 84 for June 2026 returns **306.8 h / 2,166,985 lb /
+  7,063.5 lb-per-hour** against its 12,500 goal — matching an independent SQL measurement on `.230` exactly — and
+  **one shift in that month came back `open`**, which is precisely the case where legacy refuses to print the
+  report at all. **Built: ALPH** (`w_daily_prod_report_alph`), the plant's Average-LBs-Per-Hour report — `GET /reporting/lbs-per-hour`, per shift + a Daily roll-up, with the line's goal
   from `line.avg_lb_per_hr` (live: BL 110 12,000, BL 84 12,500, BL 78 9,000) and the window average on every row.
-  Remaining from the same hub, in descending value: **MSR** (`w_daily_prod_report_msr`, the monthly actual-vs-goal
-  grid — note its own SQL multiplies shift days by 12, which needs checking against a printed copy before it is
-  copied), the **weekly** ALPH average, and `_ds` / `_dtpw` / `_dtpwps` / `_general` / `_summary`, which are
+  **MSR — done (#PR)** as `groupBy=month` on the same endpoint. ⚠ **Legacy's MSR arithmetic is wrong twice
+  over and was deliberately not reproduced** (measured 2026-09-12): it sums `(END_TIME − START_TIME)` across
+  `SHIFT ⋈ SHIFT_COIL`, counting each shift's length once per coil on it (4.1–5.2 coils/shift on BL 84), and
+  multiplies by **12** where a day holds 24 hours. It would print ~3,300–3,900 lb/h for BL 84 where the true
+  rate is **7,063–8,560** against a 12,500 goal — i.e. roughly half. **The weekly ALPH needs no code (checked 2026-09-12):** `w_daily_prod_report_weekly_alph` runs the SAME
+  per-shift/per-day computation over `start_date .. start_date + 6` and shows the week's average — which is
+  `/reporting/lbs-per-hour` over a 7-day window, where `rangeAverage` IS that week's average. Remaining from
+  the same hub: `_ds` / `_dtpw` / `_dtpwps` / `_general` / `_summary`, which are
   groupings of weight and downtime the modern reports already serve under other names. **Downtime/Production
   ratio** (`w_downtime_shift_downtime_prod_ratio`) is a two-bar graph of one shift; both its numbers are already
   in `/reporting/uptime`, so only the chart is missing.

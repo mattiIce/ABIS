@@ -172,14 +172,13 @@ async function loadCoil(id: number): Promise<void> {
         <tbody>${hist || '<tr><td colspan="5" class="muted">Not yet processed.</td></tr>'}</tbody></table></div>
       <h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin:14px 0 6px">Coil history</h2>
       <div style="overflow-x:auto"><table class="tbl" style="min-width:460px">
-        <thead><tr><th>When</th><th>Status</th><th class="num">Weight</th><th>Location</th><th>By</th></tr></thead>
+        <thead><tr><th>When</th><th>Status</th><th class="num">Weight</th><th>By</th></tr></thead>
         <tbody>${trackRows.length ? trackRows.map((t) => `<tr>
           <td class="mono">${esc(String(t.trackDate ?? '').slice(0, 10))}</td>
           <td>${statusChip('coilStatus', t.preStatus)} → ${statusChip('coilStatus', t.curStatus)}</td>
           <td class="num">${numf(t.preNetWt)} → ${numf(t.curNetWt)}</td>
-          <td>${esc(t.preLocation) === esc(t.curLocation) ? esc(t.curLocation) : `${esc(t.preLocation)} → ${esc(t.curLocation)}`}</td>
           <td>${esc(t.modifiedBy)}</td></tr>`).join('')
-          : '<tr><td colspan="5" class="muted">No recorded changes.</td></tr>'}</tbody></table></div>`;
+          : '<tr><td colspan="4" class="muted">No recorded changes.</td></tr>'}</tbody></table></div>`;
     $('#btnSave').addEventListener('click', () => void saveCoil());
   } catch (e) { setErr(`Load failed: ${problemText(e)}`); }
   finally { setBusy(false); }

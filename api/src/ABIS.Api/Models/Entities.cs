@@ -2138,8 +2138,15 @@ public sealed class CoilTrackEntry
     public int? CurStatus { get; set; }
     public decimal? PreNetWt { get; set; }
     public decimal? CurNetWt { get; set; }
+    /// <summary>Who or what made the change. On <c>.230</c> this is a mix of people (JLATIMORE, CBEAMER)
+    /// and the line that wrote the row (BL84, BL78, BL110), plus DBO for database-side work.</summary>
     public string? ModifiedBy { get; set; }
+    /// <summary><b>Always null in practice.</b> The two location columns exist on <c>COIL_TRACK</c> but have
+    /// never been written: 0 of all 242,780 rows on <c>.230</c> carry either (checked 2026-09-12), and legacy's
+    /// own history panel (<c>d_coil_history</c>) does not select them. Carried so the row matches the table;
+    /// the UI does not show a column that can only be blank.</summary>
     public string? PreLocation { get; set; }
+    /// <inheritdoc cref="PreLocation"/>
     public string? CurLocation { get; set; }
 }
 
