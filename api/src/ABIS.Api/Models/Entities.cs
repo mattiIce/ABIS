@@ -2127,6 +2127,39 @@ public sealed class UptimeRow
     public double? UptimePct { get; set; }
 }
 
+/// <summary>
+/// One row of the Average-LBs-Per-Hour report — the plant's "ALPH" (legacy <c>w_daily_prod_report_alph</c>,
+/// reached from the daily-production screen's Shift reports): for each shift, the weight it processed over the
+/// hours it ran, then a <b>Daily</b> roll-up per day, with the line's goal and its average across the window
+/// repeated on every row (legacy's own <c>Goal</c> / <c>Avg_All</c> columns).
+/// </summary>
+public sealed class LbsPerHourRow
+{
+    public long? LineNum { get; set; }
+    public string? LineDesc { get; set; }
+    /// <summary>The day the shift started (<c>yyyy-MM-dd</c>).</summary>
+    public string Day { get; set; } = "";
+    /// <summary>"1st Shift" … (the shared <c>ShiftLabel</c>), or "Daily" on the day's roll-up row.</summary>
+    public string Shift { get; set; } = "";
+    public bool IsDailyTotal { get; set; }
+    public long? ShiftNum { get; set; }
+    /// <summary>Shift length in hours. Null when the shift has no usable length (still open, or end not after start).</summary>
+    public double? Hours { get; set; }
+    /// <summary><c>SUM(shift_coil.process_wt)</c> for the shift; on a Daily row, the day's usable shifts only.</summary>
+    public decimal ProcessedWt { get; set; }
+    /// <summary>Processed weight ÷ hours — the ALPH figure. Null when there are no usable hours.</summary>
+    public double? LbsPerHour { get; set; }
+    /// <summary><c>line.avg_lb_per_hr</c>, the line's goal. Null where the plant has not set one.</summary>
+    public decimal? Goal { get; set; }
+    /// <summary>The line's average across the whole window, repeated on every one of its rows.</summary>
+    public double? RangeAverage { get; set; }
+    /// <summary>
+    /// "ok", "open" (no end time yet) or "invalid" (end not after start). Only "ok" shifts feed the Daily and
+    /// range averages — an open shift's weight is shown on its own row but cannot be divided by hours.
+    /// </summary>
+    public string Status { get; set; } = "ok";
+}
+
 /// <summary>Downtime rolled up along one dimension (legacy daily-prod downtime pivots
 /// <c>d_daily_prod_dt_*</c> + <c>d_report_dt_summary</c>): occurrences + minutes grouped by
 /// job / day / month / year / shift / line / cause. Minutes = SUM(<c>dt_instance_detail.duration</c>)/60,

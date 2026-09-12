@@ -15212,6 +15212,72 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
+     * Average LBs per hour (legacy ALPH): each shift's processed weight over its hours, a Daily roll-up, and the line's goal (line.avg_lb_per_hr) plus its window average on every row. A shift with no usable length is reported as open/invalid rather than abandoning the report as legacy does.
+     * @param from (optional)
+     * @param to (optional)
+     * @param lineNum (optional)
+     * @return OK
+     */
+    getLbsPerHour(from, to, lineNum) {
+        let url_ = this.baseUrl + "/api/reporting/lbs-per-hour?";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        if (lineNum === null)
+            throw new globalThis.Error("The parameter 'lineNum' cannot be null.");
+        else if (lineNum !== undefined)
+            url_ += "lineNum=" + encodeURIComponent("" + lineNum) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+        let options_ = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+        return this.http.fetch(url_, options_).then((_response) => {
+            return this.processGetLbsPerHour(_response);
+        });
+    }
+    processGetLbsPerHour(response) {
+        const status = response.status;
+        let _headers = {};
+        if (response.headers && response.headers.forEach) {
+            response.headers.forEach((v, k) => _headers[k] = v);
+        }
+        ;
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200 = null;
+                let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                if (Array.isArray(resultData200)) {
+                    result200 = [];
+                    for (let item of resultData200)
+                        result200.push(LbsPerHourRow.fromJS(item));
+                }
+                else {
+                    result200 = null;
+                }
+                return result200;
+            });
+        }
+        else if (status === 401) {
+            return response.text().then((_responseText) => {
+                return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        }
+        else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve(null);
+    }
+    /**
      * Downtime events (optionally one line), with duration minutes. Defaults to the last 365 days when unbounded.
      * @param from (optional)
      * @param to (optional)
@@ -27808,6 +27874,54 @@ export class JobWrite {
         data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : undefined;
         data["jobNotes"] = this.jobNotes;
         data["sketchJobNote"] = this.sketchJobNote;
+        return data;
+    }
+}
+export class LbsPerHourRow {
+    constructor(data) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    this[property] = data[property];
+            }
+        }
+    }
+    init(_data) {
+        if (_data) {
+            this.lineNum = _data["lineNum"];
+            this.lineDesc = _data["lineDesc"];
+            this.day = _data["day"];
+            this.shift = _data["shift"];
+            this.isDailyTotal = _data["isDailyTotal"];
+            this.shiftNum = _data["shiftNum"];
+            this.hours = _data["hours"];
+            this.processedWt = _data["processedWt"];
+            this.lbsPerHour = _data["lbsPerHour"];
+            this.goal = _data["goal"];
+            this.rangeAverage = _data["rangeAverage"];
+            this.status = _data["status"];
+        }
+    }
+    static fromJS(data) {
+        data = typeof data === 'object' ? data : {};
+        let result = new LbsPerHourRow();
+        result.init(data);
+        return result;
+    }
+    toJSON(data) {
+        data = typeof data === 'object' ? data : {};
+        data["lineNum"] = this.lineNum;
+        data["lineDesc"] = this.lineDesc;
+        data["day"] = this.day;
+        data["shift"] = this.shift;
+        data["isDailyTotal"] = this.isDailyTotal;
+        data["shiftNum"] = this.shiftNum;
+        data["hours"] = this.hours;
+        data["processedWt"] = this.processedWt;
+        data["lbsPerHour"] = this.lbsPerHour;
+        data["goal"] = this.goal;
+        data["rangeAverage"] = this.rangeAverage;
+        data["status"] = this.status;
         return data;
     }
 }
