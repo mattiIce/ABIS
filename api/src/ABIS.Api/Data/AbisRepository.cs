@@ -722,7 +722,10 @@ public sealed class AbisRepository : IAbisRepository
         if (from is not null) { conditions.Add("created_date >= :fromDate"); p.Add("fromDate", from); }
         if (to is not null) { conditions.Add("created_date <= :toDate"); p.Add("toDate", to); }
         var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
-        return PageAsync<TestResult>(TestCols, "pst_test_result", orderBy ?? "created_date DESC", where, p, page, pageSize, ct);
+        // 47,516 rows share only 8,317 distinct created_date values on .230 (~5.7 per timestamp), so the date
+        // alone cannot decide a page boundary; the PK (coil, position, source) breaks every tie.
+        return PageAsync<TestResult>(TestCols, "pst_test_result",
+            orderBy ?? "created_date DESC, coil_abc_num, position, source_id", where, p, page, pageSize, ct);
     }
 
     public Task<PagedResult<TempTestResult>> GetTempTestResultsAsync(int page, int pageSize, int? testType, string? position, DateTime? from, DateTime? to, string? orderBy, CancellationToken ct)
@@ -734,7 +737,11 @@ public sealed class AbisRepository : IAbisRepository
         if (from is not null) { conditions.Add("created_date >= :fromDate"); p.Add("fromDate", from); }
         if (to is not null) { conditions.Add("created_date <= :toDate"); p.Add("toDate", to); }
         var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
-        return PageAsync<TempTestResult>(TempTestCols, "temp_test_result", orderBy ?? "created_date DESC", where, p, page, pageSize, ct);
+        // Same tie problem as pst_test_result, plus created_date is NULLABLE here — and Oracle sorts NULLs
+        // first on DESC. The table is empty on .230 today; this keeps it ordered the moment it is not.
+        return PageAsync<TempTestResult>(TempTestCols, "temp_test_result",
+            orderBy ?? "CASE WHEN created_date IS NULL THEN 1 ELSE 0 END, created_date DESC, coil_org_num, position",
+            where, p, page, pageSize, ct);
     }
 
     /// <summary>Record a posted mechanical test result (pst_test_result). The composite PK is (coil_abc_num,
@@ -900,7 +907,10 @@ public sealed class AbisRepository : IAbisRepository
         PageAsync<ScrapSkid>(ScrapSkidCols, "scrap_skid", orderBy ?? "scrap_skid_num", null, new { }, page, pageSize, ct);
 
     public Task<PagedResult<PartialSkid>> GetPartialSkidsAsync(int page, int pageSize, string? orderBy, CancellationToken ct) =>
-        PageAsync<PartialSkid>(PartialSkidCols, "process_partial_skid", orderBy ?? "sheet_skid_num", null, new { }, page, pageSize, ct);
+        // sheet_skid_num is very nearly unique here (25,187 distinct of 25,188 rows on .230) — "nearly" is
+        // exactly the case a page boundary lands on, so the PK's other half goes on the end.
+        PageAsync<PartialSkid>(PartialSkidCols, "process_partial_skid", orderBy ?? "sheet_skid_num, ab_job_num",
+            null, new { }, page, pageSize, ct);
 
     public async Task<IReadOnlyList<PartialSkid>> GetJobPartialSkidsAsync(long abJobNum, CancellationToken ct)
     {
@@ -8509,7 +8519,9 @@ public sealed class AbisRepository : IAbisRepository
         var p = new DynamicParameters();
         var where = customerId is null ? null : "customer_id = :customerId";
         if (customerId is not null) p.Add("customerId", customerId);
-        return PageAsync<EdiLogEntry>(EdiLogCols, "edi_log", orderBy ?? "edi_log_timestamp DESC", where, p, page, pageSize, ct);
+        // 944 rows over 547 distinct timestamps on .230; the PK's remaining columns settle the ties.
+        return PageAsync<EdiLogEntry>(EdiLogCols, "edi_log",
+            orderBy ?? "edi_log_timestamp DESC, customer_id, customer_edi_name", where, p, page, pageSize, ct);
     }
 
     // ---- 997 functional-acknowledgment monitor ------------------------------------------------------------
