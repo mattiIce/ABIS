@@ -952,7 +952,7 @@
 - [x] **L** **Three dead radios on `w_report_downtime` (checked 2026-09-12).** Its *Operator*, *Coil* and
   *Customer* options have **no `.Checked` branch** in `ue_retrieve` — they render and do nothing. Downtime by
   operator/coil/customer is therefore **not a parity gap**. Its 13 live modes are otherwise covered by
-  `/reporting/downtime` (the instance list) and `/reporting/downtime-pivot`. **The last two modes — done (#PR):**
+  `/reporting/downtime` (the instance list) and `/reporting/downtime-pivot`. **The last two modes — done (#480):**
   *compare two jobs* (`d_report_downtime_abjob_comp`) and *daily per category* (`d_report_downtime_daily_per_cat`)
   are `causeId` / `abJobNum` filters on the pivot, with two reports on the Reporting page (a cause picker and two
   job fields shown only for them). A job is compared whole — the pivot's default 365-day window is skipped when a
