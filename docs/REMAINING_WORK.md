@@ -948,7 +948,15 @@
   Each is `SUM(shift_coil.process_wt)` grouped by day and/or line (or the downtime totals), which
   `/reporting/shift-production`, `/reporting/production-summary` and the downtime pivots already serve. **Downtime/Production
   ratio** (`w_downtime_shift_downtime_prod_ratio`) is a two-bar graph of one shift; both its numbers are already
-  in `/reporting/uptime`, so only the chart is missing.
+  in `/reporting/uptime`, so only the chart is missing. ⚠ **Checked 2026-09-13 — the two are not the same number,
+  and uptime's is the right one.** The chart sums the stop *reasons* (`dt_instance_detail.duration`); uptime uses
+  the shift's `dt_total`, which legacy's shift close (`w_da_sheet.srw:672`) and ABIS's (`EndLineShiftAsync`) both
+  write as the stops' wall-clock length. Over the last 60 days on `.230` (73 worked shifts): reasons **369.3 h**,
+  wall-clock **366.3 h**, recorded totals **~361.6 h** — equal within a minute on only 47 shifts. Reasons run over
+  wall-clock because legacy's cause panel times every active reason from its own start (`u_causes.sru:180-183`),
+  so overlapping reasons double-count (13 stops, 4.1 h, almost all BL 78); wall-clock runs over `dt_total` because
+  16 stops (5.4 h) ended after their shift was closed. **Do not port the chart's reason-sum** — it would show BL 78
+  up to ~50 min more downtime per shift than happened.
 - [x] **L** **Three dead radios on `w_report_downtime` (checked 2026-09-12).** Its *Operator*, *Coil* and
   *Customer* options have **no `.Checked` branch** in `ue_retrieve` — they render and do nothing. Downtime by
   operator/coil/customer is therefore **not a parity gap**. Its 13 live modes are otherwise covered by
@@ -1010,7 +1018,9 @@
   <br>If step-up is ever actually wanted it is **new capability** — and the shop-floor half already
   exists as the supervisor override PIN (#400). Decide it deliberately, like quoting.
   ~~Step-up re-authentication popup (3 tries, live credential check)~~
-- [ ] **M** In-DB job control. **Misdirected (audited 2026-08-04):** live `.230` has **0
+- [x] **DROPPED 2026-09-13 — nothing to control.** Re-checked: `all_scheduler_jobs` on `.230` lists 4 jobs, all
+  Oracle's own housekeeping (`EXFSYS.RLM$*`, `ORACLE_OCM.MGMT_*`), and `all_jobs` is empty — no plant job lives
+  in the database. In-DB job control. **Misdirected (audited 2026-08-04):** live `.230` has **0
   `DBMS_SCHEDULER` jobs**, so enable/disable/run-now would control nothing. The plant's scheduling is
   the **crontab on the DB host**, already inventoried in [[abis-230-cron-inventory]] and already
   surfaced read-only by the server-console cron card. Retarget or drop; do not build DBMS_SCHEDULER
