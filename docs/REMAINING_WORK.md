@@ -620,6 +620,20 @@
   non-networked lines (BL 24 / 36 / 60 / 108) record no production at all and this is not a 1.0 gap.
   ⚠ *One reading not ruled out:* that operators also use it on a networked line when the PLC feed dies, which
   shift rows would not distinguish. Worth one question to the plant before the DAS is declared complete.
+  <br>• **Re-scan with every reference counted — done 2026-09-13, no new gap.** Re-run as a script that
+  counts ANY token reference from another legacy file (comments stripped), not one call spelling: **87 windows
+  are referenced but named nowhere in the port or docs.** Most are dialogs (please-wait, warnings, tare and
+  scrap-type pickers, the `da_offline` set, the `w_downtime_detail_*` / `w_daily_prod_report_*` drill-downs
+  already covered above, recovery, maintenance, sales). The ones that looked like features, each read:
+  `w_reverse_coil` is downtime2's reverse-from-done, served by the DAS console's **↺ Reverse coil**;
+  `w_production_control_validation` is the old shared supervisor password (replaced by the override PIN);
+  `w_qa_summary_selection` picks which PDFs the 2023 "attach summary to email" builds — its data (a job's
+  coils, skids, scrap, rejected coils; also the production folder's *Production summary* and *sheet skid
+  list*) is the Jobs page's **Job contents** card, and the email is not ours to send; the ownership-transfer
+  certificate is `/coil-ownership/transfers/{n}/certificate`; shift edits are `PUT /shifts/{n}`.
+  ⚠ `w_stack_queue_edit` and `w_restack_bl110` are **deliberately not ported**: both write
+  `LINE_CURRENT_STATUS`'s stacker queue columns, which the legacy stacker station owns — a second writer is
+  the competing-writer bug the conveyor board was designed to avoid.
 - [x] **M** **Coil history + the four derived columns — done (#468).** `GET /coils/{n}/history` reads
   `COIL_TRACK` (93,468 rows live: every status / weight / location change, with who made it) and returns it
   newest first, plus the figures legacy's coil window derives from the same table per row:
