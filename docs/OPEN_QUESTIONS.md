@@ -188,11 +188,6 @@ Until then the archived-BOL list on Coil inventory is read-only and changes noth
 
 ## C. Blocks a feature
 
-### C1 🟡 Confirm the shipment status legend before cutover
-
-The guided BOL close-out **assumes `0` = Shipped**. Built and working on that assumption; confirm
-against the plant's definitive status list before anyone relies on it.
-
 ### C2 🟡 Five DAS tags are still ungated, on purpose
 
 A plant decision about which tags require a supervisor, not a code change.
@@ -261,12 +256,6 @@ address book. **There is no recipient list in the code**; a person picks, every 
 
 Until then the QA console can show everything except the photos, which is what it does today.
 
-### C7 🟡 WinSPC — needs live-DB discovery
-
-Legacy had `w_quality_winspc`. A read-only connector is built and off by default (`WinSpc:Enabled`, see
-`appsettings.json`). This entry used to call WinSPC the unblock for the dimension-check QC gate; that
-premise was wrong — see *Resolved* at the end.
-
 ---
 
 ## D. Deprioritised by the user, recorded so it is not lost
@@ -309,3 +298,10 @@ Removed from the sections above so the register only holds live questions.
   ticks — in both `coil_eval/d_skid_dim_check.srd` and `da/d_skid_dim_check_per_skid.srd`, with no
   tolerance expression in either — and all 275 checks on `.230` are recorded as pass. There is nothing
   computed to port.
+- **C1 — the shipment status legend is confirmed** (by the user, 2026-07-10): `0` Shipped, `2` Staged,
+  `3` Open, `4` On hold. The BOL close-out's `0 = Shipped` assumption holds, and `status-labels.ts`
+  decodes all four. (Closed here 2026-09-13; the entry had outlived the answer.)
+- **C7 — WinSPC discovery is done.** The read-only connector reads RSEDAM-PC's `WinSPC` database through
+  a `db_datareader` login, is enabled on `.110`, and joins on the free-text "Job #" tag with a synonym
+  map. It serves the Dimensional QC page and fills `in_spec` from WinSPC's own spec limits when WinSPC
+  holds them for the skid's job. ⚠ Never restart that SQL Server during production.
