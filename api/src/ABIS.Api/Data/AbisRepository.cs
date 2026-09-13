@@ -2512,7 +2512,11 @@ public sealed class AbisRepository : IAbisRepository
     // Minutes = SUM(duration)/60; occurrences = number of detail segments in the bucket.
     // groupBy: "cause" (default; dt_instance_detail.ID -> dt_cause, labelled by name) | "job" | "part" | "line"
     // | "shift" | "day" | "month" | "year".
-    public async Task<IReadOnlyList<DowntimePivotRow>> GetDowntimePivotAsync(DateTime? from, DateTime? to, long? lineNum, string groupBy, CancellationToken ct)
+    // causeId / abJobNum narrow the segments first — the two remaining w_report_downtime modes are exactly
+    // these filters over an existing grouping: "daily per category" is groupBy=day for one cause
+    // (d_report_downtime_daily_per_cat) and "compare two jobs" is groupBy=cause for each job
+    // (d_report_downtime_abjob_comp).
+    public async Task<IReadOnlyList<DowntimePivotRow>> GetDowntimePivotAsync(DateTime? from, DateTime? to, long? lineNum, string groupBy, CancellationToken ct, long? causeId = null, long? abJobNum = null)
     {
         await using var conn = await OpenAsync(ct);
         var p = new DynamicParameters();
@@ -2520,6 +2524,8 @@ public sealed class AbisRepository : IAbisRepository
         if (from is not null) { where.Add("i.starting_time >= :dfrom"); p.Add("dfrom", from, DbType.DateTime); }
         if (to is not null) { where.Add("i.starting_time < :dto"); p.Add("dto", to, DbType.DateTime); }
         if (lineNum is not null) { where.Add("i.line_num = :line"); p.Add("line", lineNum); }
+        if (causeId is not null) { where.Add("d.id = :cause"); p.Add("cause", causeId); }
+        if (abJobNum is not null) { where.Add("i.ab_job_num = :job"); p.Add("job", abJobNum); }
         var clause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
         // The part dimension walks ab_job → order_item → part_num (all 1:1, so no row fan-out); the
         // downtime instance carries only ab_job_num. Left joins so downtime not tied to a job/part

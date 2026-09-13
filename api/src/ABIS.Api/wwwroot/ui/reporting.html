@@ -73,11 +73,16 @@
             <option value="dt-by-day">Downtime by day</option>
             <option value="dt-by-month">Downtime by month</option>
             <option value="dt-by-year">Downtime by year</option>
+            <option value="dt-cause-by-day">Downtime for one cause — by day</option>
+            <option value="dt-job-compare">Downtime — compare two jobs</option>
           </optgroup>
         </select>
       </div>
       <div><label>From</label><br /><input id="from" type="date" /></div>
       <div><label>To</label><br /><input id="to" type="date" /></div>
+      <div id="pCauseWrap" hidden><label for="pCause">Cause</label><br /><select id="pCause"></select></div>
+      <div id="pJobAWrap" hidden><label for="pJobA">Job A</label><br /><input id="pJobA" inputmode="numeric" style="width:110px" /></div>
+      <div id="pJobBWrap" hidden><label for="pJobB">Job B</label><br /><input id="pJobB" inputmode="numeric" style="width:110px" /></div>
       <button type="submit">Run report</button>
       <button id="btnCsv" type="button" class="sec">Export CSV</button>
       <button id="btnXlsx" type="button" class="sec">Export Excel</button>

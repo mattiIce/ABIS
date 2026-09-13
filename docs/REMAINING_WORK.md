@@ -948,13 +948,27 @@
   Each is `SUM(shift_coil.process_wt)` grouped by day and/or line (or the downtime totals), which
   `/reporting/shift-production`, `/reporting/production-summary` and the downtime pivots already serve. **Downtime/Production
   ratio** (`w_downtime_shift_downtime_prod_ratio`) is a two-bar graph of one shift; both its numbers are already
-  in `/reporting/uptime`, so only the chart is missing.
+  in `/reporting/uptime`, so only the chart is missing. ⚠ **Checked 2026-09-13 — the two are not the same number,
+  and uptime's is the right one.** The chart sums the stop *reasons* (`dt_instance_detail.duration`); uptime uses
+  the shift's `dt_total`, which legacy's shift close (`w_da_sheet.srw:672`) and ABIS's (`EndLineShiftAsync`) both
+  write as the stops' wall-clock length. Over the last 60 days on `.230` (73 worked shifts): reasons **369.3 h**,
+  wall-clock **366.3 h**, recorded totals **~361.6 h** — equal within a minute on only 47 shifts. Reasons run over
+  wall-clock because legacy's cause panel times every active reason from its own start (`u_causes.sru:180-183`),
+  so overlapping reasons double-count (13 stops, 4.1 h, almost all BL 78); wall-clock runs over `dt_total` because
+  16 stops (5.4 h) ended after their shift was closed. **Do not port the chart's reason-sum** — it would show BL 78
+  up to ~50 min more downtime per shift than happened.
 - [x] **L** **Three dead radios on `w_report_downtime` (checked 2026-09-12).** Its *Operator*, *Coil* and
   *Customer* options have **no `.Checked` branch** in `ue_retrieve` — they render and do nothing. Downtime by
   operator/coil/customer is therefore **not a parity gap**. Its 13 live modes are otherwise covered by
-  `/reporting/downtime` (the instance list) and `/reporting/downtime-pivot`, apart from the two-job comparison
-  (`d_report_downtime_abjob_comp`) and the daily-per-category grid.
-- [x] **C** **Downtime reasons: the cause and position columns were swapped — fixed (#PR).** Found while
+  `/reporting/downtime` (the instance list) and `/reporting/downtime-pivot`. **The last two modes — done (#480):**
+  *compare two jobs* (`d_report_downtime_abjob_comp`) and *daily per category* (`d_report_downtime_daily_per_cat`)
+  are `causeId` / `abJobNum` filters on the pivot, with two reports on the Reporting page (a cause picker and two
+  job fields shown only for them). A job is compared whole — the pivot's default 365-day window is skipped when a
+  job is given, as legacy's comparison has no date range. **Verified against legacy's own SQL on `.230`
+  2026-09-13:** jobs 124506 vs 124508 match on all 14 cause rows; BREAK on BL 84 for August 2026 matches on all
+  15 days. One deliberate difference: legacy's daily grid only counts a stop that also *ended* inside the window
+  (7 of 21,822 stops in a year cross a month boundary); here a stop belongs to the day it started.
+- [x] **C** **Downtime reasons: the cause and position columns were swapped — fixed (#479).** Found while
   reading those two remaining DataWindows, which join `DT_INSTANCE_DETAIL.ID = DT_CAUSE.ID`. On the live schema
   **`ID` is the cause** (`FK_CAUSE_ID`) and **`INSTANCE_ITEM` is the segment's position** in its instance
   (`PK_INSTANCE_ITEM` = `(instance_num, instance_item)`), which is exactly how both legacy writers fill them
@@ -969,6 +983,10 @@
   <br>Fixed in all five places; the fixture now has the live key; the write numbers segments per instance and
   refuses an unknown cause with a 400 instead of an ORA-02291; `dt_instance_detail` left `MaxIdTables`.
   Mutation-verified: putting the swap back fails 5 tests.
+  **Verified on live Oracle via `.110` 2026-09-13** (`0.9.11-27-g42d42d7`): the cause pivot now returns 33 named
+  causes; stop 803081 reads back as 1 FIRST PIECE / 2 BREAK / 3 INSPECTION; and **the write works** — a test stop
+  (**instance 803181**, job 124506, BL 78, note "ABIS TEST … safe to delete") took BREAK, BREAK, INSPECTION as
+  positions 1–3 with `ID` 16/16/26 in legacy's layout, and cause 999 was refused with a 400.
 - [x] **M** Native Excel export — done (#252): dependency-free OOXML `.xlsx` writer (`clientapp/src/xlsx.ts`, STORED zip + CRC32 + inline strings; numbers stay numeric), "Export Excel" on every report next to Export CSV. openpyxl-validated.
 - [~] **C/H** Feature-gate the write tags still auth-only. Done for every tag that maps 1:1 to a nav-gated feature (safe — the user who can reach the page already holds it; kiosks/edge use the API key and bypass): **Jobs**→Production Control, **Shipments**/**Stacker**→Warehouse, **CoilOwnership**→Inventory(Coil), **TestResults**/**Recovery**→Quality Control, **ProdFolder**→Production Control, **Downtime**→Downtime report (added to `FeatureByTag`). **Carriers and Sketches are DONE** (mapped to the live `Carrier Information` / `Production Sketch`) — this line previously still listed them. Still **deferred:** Dies / Sales / Accounting / Trucks / DAS / ScanLog / OpcLog — their nav pages have NO feature gate, so there's no authoritative feature name to gate the API on without risking a lockout; needs live `security_application` verification. **Verified 2026-08-21:** the live table holds **35** features and none of the seven has a name that clearly corresponds — `Trucks` has none at all (a new ABIS subsystem), and inventing one is exactly how four phantom features came about. Needs a plant decision, not a guess. That same check found the four features the app DOES gate on were **missing from `.230` entirely**, 403-ing every Parts and maintenance write for signed-in users; now self-healed at startup.
 - [ ] **NOT PARITY — there is no data to view (audited 2026-08-04).** The legacy OPC-log module reads a
@@ -1000,7 +1018,9 @@
   <br>If step-up is ever actually wanted it is **new capability** — and the shop-floor half already
   exists as the supervisor override PIN (#400). Decide it deliberately, like quoting.
   ~~Step-up re-authentication popup (3 tries, live credential check)~~
-- [ ] **M** In-DB job control. **Misdirected (audited 2026-08-04):** live `.230` has **0
+- [x] **DROPPED 2026-09-13 — nothing to control.** Re-checked: `all_scheduler_jobs` on `.230` lists 4 jobs, all
+  Oracle's own housekeeping (`EXFSYS.RLM$*`, `ORACLE_OCM.MGMT_*`), and `all_jobs` is empty — no plant job lives
+  in the database. In-DB job control. **Misdirected (audited 2026-08-04):** live `.230` has **0
   `DBMS_SCHEDULER` jobs**, so enable/disable/run-now would control nothing. The plant's scheduling is
   the **crontab on the DB host**, already inventoried in [[abis-230-cron-inventory]] and already
   surfaced read-only by the server-console cron card. Retarget or drop; do not build DBMS_SCHEDULER
