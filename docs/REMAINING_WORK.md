@@ -952,9 +952,15 @@
 - [x] **L** **Three dead radios on `w_report_downtime` (checked 2026-09-12).** Its *Operator*, *Coil* and
   *Customer* options have **no `.Checked` branch** in `ue_retrieve` — they render and do nothing. Downtime by
   operator/coil/customer is therefore **not a parity gap**. Its 13 live modes are otherwise covered by
-  `/reporting/downtime` (the instance list) and `/reporting/downtime-pivot`, apart from the two-job comparison
-  (`d_report_downtime_abjob_comp`) and the daily-per-category grid.
-- [x] **C** **Downtime reasons: the cause and position columns were swapped — fixed (#PR).** Found while
+  `/reporting/downtime` (the instance list) and `/reporting/downtime-pivot`. **The last two modes — done (#PR):**
+  *compare two jobs* (`d_report_downtime_abjob_comp`) and *daily per category* (`d_report_downtime_daily_per_cat`)
+  are `causeId` / `abJobNum` filters on the pivot, with two reports on the Reporting page (a cause picker and two
+  job fields shown only for them). A job is compared whole — the pivot's default 365-day window is skipped when a
+  job is given, as legacy's comparison has no date range. **Verified against legacy's own SQL on `.230`
+  2026-09-13:** jobs 124506 vs 124508 match on all 14 cause rows; BREAK on BL 84 for August 2026 matches on all
+  15 days. One deliberate difference: legacy's daily grid only counts a stop that also *ended* inside the window
+  (7 of 21,822 stops in a year cross a month boundary); here a stop belongs to the day it started.
+- [x] **C** **Downtime reasons: the cause and position columns were swapped — fixed (#479).** Found while
   reading those two remaining DataWindows, which join `DT_INSTANCE_DETAIL.ID = DT_CAUSE.ID`. On the live schema
   **`ID` is the cause** (`FK_CAUSE_ID`) and **`INSTANCE_ITEM` is the segment's position** in its instance
   (`PK_INSTANCE_ITEM` = `(instance_num, instance_item)`), which is exactly how both legacy writers fill them
@@ -969,6 +975,10 @@
   <br>Fixed in all five places; the fixture now has the live key; the write numbers segments per instance and
   refuses an unknown cause with a 400 instead of an ORA-02291; `dt_instance_detail` left `MaxIdTables`.
   Mutation-verified: putting the swap back fails 5 tests.
+  **Verified on live Oracle via `.110` 2026-09-13** (`0.9.11-27-g42d42d7`): the cause pivot now returns 33 named
+  causes; stop 803081 reads back as 1 FIRST PIECE / 2 BREAK / 3 INSPECTION; and **the write works** — a test stop
+  (**instance 803181**, job 124506, BL 78, note "ABIS TEST … safe to delete") took BREAK, BREAK, INSPECTION as
+  positions 1–3 with `ID` 16/16/26 in legacy's layout, and cause 999 was refused with a 400.
 - [x] **M** Native Excel export — done (#252): dependency-free OOXML `.xlsx` writer (`clientapp/src/xlsx.ts`, STORED zip + CRC32 + inline strings; numbers stay numeric), "Export Excel" on every report next to Export CSV. openpyxl-validated.
 - [~] **C/H** Feature-gate the write tags still auth-only. Done for every tag that maps 1:1 to a nav-gated feature (safe — the user who can reach the page already holds it; kiosks/edge use the API key and bypass): **Jobs**→Production Control, **Shipments**/**Stacker**→Warehouse, **CoilOwnership**→Inventory(Coil), **TestResults**/**Recovery**→Quality Control, **ProdFolder**→Production Control, **Downtime**→Downtime report (added to `FeatureByTag`). **Carriers and Sketches are DONE** (mapped to the live `Carrier Information` / `Production Sketch`) — this line previously still listed them. Still **deferred:** Dies / Sales / Accounting / Trucks / DAS / ScanLog / OpcLog — their nav pages have NO feature gate, so there's no authoritative feature name to gate the API on without risking a lockout; needs live `security_application` verification. **Verified 2026-08-21:** the live table holds **35** features and none of the seven has a name that clearly corresponds — `Trucks` has none at all (a new ABIS subsystem), and inventing one is exactly how four phantom features came about. Needs a plant decision, not a guess. That same check found the four features the app DOES gate on were **missing from `.230` entirely**, 403-ing every Parts and maintenance write for signed-in users; now self-healed at startup.
 - [ ] **NOT PARITY — there is no data to view (audited 2026-08-04).** The legacy OPC-log module reads a

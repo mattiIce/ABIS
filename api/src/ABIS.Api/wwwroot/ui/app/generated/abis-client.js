@@ -15248,14 +15248,16 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
-     * Downtime rolled up along one dimension (legacy daily-prod downtime pivots): occurrences + minutes grouped by groupBy = cause (default) | job | part | line | shift | day | month | year, optionally one line. Defaults to the last 365 days when unbounded.
+     * Downtime rolled up along one dimension (legacy daily-prod downtime pivots): occurrences + minutes grouped by groupBy = cause (default) | job | part | line | shift | day | month | year, optionally one line, one cause (causeId) and one job (abJobNum). Defaults to the last 365 days when unbounded, except for a job, which bounds itself.
      * @param from (optional)
      * @param to (optional)
      * @param lineNum (optional)
      * @param groupBy (optional)
+     * @param causeId (optional)
+     * @param abJobNum (optional)
      * @return OK
      */
-    getDowntimePivot(from, to, lineNum, groupBy) {
+    getDowntimePivot(from, to, lineNum, groupBy, causeId, abJobNum) {
         let url_ = this.baseUrl + "/api/reporting/downtime-pivot?";
         if (from === null)
             throw new globalThis.Error("The parameter 'from' cannot be null.");
@@ -15273,6 +15275,14 @@ export class AbisClient {
             throw new globalThis.Error("The parameter 'groupBy' cannot be null.");
         else if (groupBy !== undefined)
             url_ += "groupBy=" + encodeURIComponent("" + groupBy) + "&";
+        if (causeId === null)
+            throw new globalThis.Error("The parameter 'causeId' cannot be null.");
+        else if (causeId !== undefined)
+            url_ += "causeId=" + encodeURIComponent("" + causeId) + "&";
+        if (abJobNum === null)
+            throw new globalThis.Error("The parameter 'abJobNum' cannot be null.");
+        else if (abJobNum !== undefined)
+            url_ += "abJobNum=" + encodeURIComponent("" + abJobNum) + "&";
         url_ = url_.replace(/[?&]$/, "");
         let options_ = {
             method: "GET",

@@ -3528,13 +3528,16 @@ public static class ApiEndpoints
            .WithSummary("Line uptime (legacy w_report_uptime): over WORKED shifts, uptime hours = (shift length − dt_total seconds)/3600, plus scheduled/downtime hours and uptime %. groupBy = line (default) | shift | day, optionally one line. Defaults to the last 365 days when unbounded.")
            .Produces<IReadOnlyList<UptimeRow>>();
 
-        api.MapGet("/reporting/downtime-pivot", async (DateTime? from, DateTime? to, IAbisRepository repo, CancellationToken ct, long? lineNum = null, string groupBy = "cause") =>
+        api.MapGet("/reporting/downtime-pivot", async (DateTime? from, DateTime? to, IAbisRepository repo, CancellationToken ct, long? lineNum = null, string groupBy = "cause", long? causeId = null, long? abJobNum = null) =>
             {
-                var (f, t) = ResolveReportWindow(from, to);
-                return Results.Ok(await repo.GetDowntimePivotAsync(f, t, lineNum, groupBy, ct));
+                // A job is its own bound: legacy's two-job comparison has no date range, and a job run more
+                // than a year ago would otherwise compare as "no downtime" under the default 365-day window.
+                DateTime? f = from, t = to;
+                if (abJobNum is null) (f, t) = ResolveReportWindow(from, to);
+                return Results.Ok(await repo.GetDowntimePivotAsync(f, t, lineNum, groupBy, ct, causeId, abJobNum));
             })
            .WithName("GetDowntimePivot").WithTags("Reporting")
-           .WithSummary("Downtime rolled up along one dimension (legacy daily-prod downtime pivots): occurrences + minutes grouped by groupBy = cause (default) | job | part | line | shift | day | month | year, optionally one line. Defaults to the last 365 days when unbounded.")
+           .WithSummary("Downtime rolled up along one dimension (legacy daily-prod downtime pivots): occurrences + minutes grouped by groupBy = cause (default) | job | part | line | shift | day | month | year, optionally one line, one cause (causeId) and one job (abJobNum). Defaults to the last 365 days when unbounded, except for a job, which bounds itself.")
            .Produces<IReadOnlyList<DowntimePivotRow>>();
 
         api.MapGet("/reporting/lbs-per-hour", async (DateTime? from, DateTime? to, IAbisRepository repo, CancellationToken ct, long? lineNum = null, string groupBy = "shift") =>

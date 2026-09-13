@@ -55,6 +55,32 @@ const pivotCols = (h) => [
     { h: 'Occurrences', num: true, f: (r) => num(r.occurrences), raw: (r) => r.occurrences },
     { h: 'Downtime min', num: true, f: (r) => num(r.downtimeMinutes, 1), raw: (r) => r.downtimeMinutes },
 ];
+const params = () => ({
+    causeId: $('#pCause').value || undefined,
+    causeName: $('#pCause').selectedOptions[0]?.textContent ?? undefined,
+    jobA: $('#pJobA').value.trim() || undefined,
+    jobB: $('#pJobB').value.trim() || undefined,
+});
+// Legacy's "compare two jobs" (d_report_downtime_abjob_comp): minutes per cause for each job, side by
+// side. Two calls to the cause pivot, merged on the cause; a cause only one job had shows 0 for the other.
+async function compareJobs(p) {
+    if (!p.jobA || !p.jobB || !/^\d+$/.test(p.jobA) || !/^\d+$/.test(p.jobB))
+        throw new Error('Enter two production order numbers to compare.');
+    const [a, b] = await Promise.all([p.jobA, p.jobB].map((j) => loadJson(`/api/reporting/downtime-pivot${qwin(undefined, undefined, { groupBy: 'cause', abJobNum: j })}`)));
+    const rows = new Map();
+    const row = (k) => rows.get(k) ?? rows.set(k, { bucket: k, a: 0, b: 0, aN: 0, bN: 0 }).get(k);
+    for (const r of a) {
+        const x = row(r.bucket);
+        x.a = r.downtimeMinutes;
+        x.aN = r.occurrences;
+    }
+    for (const r of b) {
+        const x = row(r.bucket);
+        x.b = r.downtimeMinutes;
+        x.bN = r.occurrences;
+    }
+    return [...rows.values()].sort((x, y) => Math.max(y.a, y.b) - Math.max(x.a, x.b));
+}
 const REPORTS = {
     summary: {
         note: 'Per-line roll-up over line ⋈ ab_job ⋈ process_coil (legacy daily_prod).',
@@ -299,7 +325,48 @@ const REPORTS = {
         load: (f, t) => loadJson(`/api/reporting/downtime-pivot${qwin(f, t, { groupBy: 'year' })}`),
         cols: pivotCols('Year'),
     },
+    // ---- The two remaining w_report_downtime modes ----
+    'dt-cause-by-day': {
+        note: "One cause's downtime, day by day, across all lines (legacy \"daily per category\"). Legacy only " +
+            'counted a stop that also ENDED inside the window; here a stop belongs to the day it started.',
+        params: 'cause',
+        load: (f, t, p) => {
+            if (!p?.causeId)
+                throw new Error('Pick a downtime cause.');
+            return loadJson(`/api/reporting/downtime-pivot${qwin(f, t, { groupBy: 'day', causeId: p.causeId })}`);
+        },
+        cols: pivotCols('Day'),
+    },
+    'dt-job-compare': {
+        note: 'Downtime minutes per cause for two production orders side by side (legacy "compare two jobs"). ' +
+            'The whole of each job is compared — the date window is not applied.',
+        params: 'jobs',
+        load: (_f, _t, p) => compareJobs(p ?? {}),
+        cols: [
+            { h: 'Cause', f: (r) => esc(r.bucket) },
+            { h: 'Job A min', num: true, f: (r) => num(r.a, 1), raw: (r) => r.a },
+            { h: 'Job A stops', num: true, f: (r) => num(r.aN), raw: (r) => r.aN },
+            { h: 'Job B min', num: true, f: (r) => num(r.b, 1), raw: (r) => r.b },
+            { h: 'Job B stops', num: true, f: (r) => num(r.bN), raw: (r) => r.bN },
+            { h: 'B − A min', num: true, f: (r) => num(r.b - r.a, 1), raw: (r) => Math.round((r.b - r.a) * 100) / 100 },
+        ],
+    },
 };
+// Show only the inputs the selected report uses.
+function syncParams() {
+    const kind = REPORTS[$('#report').value]?.params;
+    $('#pCauseWrap').hidden = kind !== 'cause';
+    $('#pJobAWrap').hidden = kind !== 'jobs';
+    $('#pJobBWrap').hidden = kind !== 'jobs';
+}
+async function loadCauses() {
+    try {
+        const causes = await loadJson('/api/lookups/downtime-causes');
+        $('#pCause').innerHTML = '<option value="">— cause —</option>' +
+            causes.map((c) => `<option value="${esc(c.id)}">${esc(c.causeName)}</option>`).join('');
+    }
+    catch { /* the report explains a missing cause when it is run */ }
+}
 let current = [];
 let currentKey = 'summary';
 async function run() {
@@ -310,7 +377,7 @@ async function run() {
     $('#repNote').textContent = rep.note;
     $('#head').innerHTML = rep.cols.map((c) => `<th${c.num ? ' style="text-align:right"' : ''}>${esc(c.h)}</th>`).join('');
     try {
-        current = (await rep.load(dv('#from'), dv('#to'))) ?? [];
+        current = (await rep.load(dv('#from'), dv('#to'), params())) ?? [];
         $('#rows').innerHTML = current.map((r) => `<tr>${rep.cols.map((c) => `<td${c.num ? ' style="text-align:right"' : ''}>${c.f(r)}</td>`).join('')}</tr>`).join('')
             || `<tr><td colspan="${rep.cols.length}" class="muted">No data.</td></tr>`;
         $('#totals').textContent = `${current.length} row(s)`;
@@ -350,6 +417,9 @@ function exportExcel() {
 }
 async function init() {
     $('#repForm').addEventListener('submit', (e) => { e.preventDefault(); void run(); });
+    $('#report').addEventListener('change', syncParams);
+    syncParams();
+    void loadCauses();
     $('#btnCsv').addEventListener('click', exportCsv);
     $('#btnXlsx').addEventListener('click', exportExcel);
     await initShell({ active: 'reporting', adopt: true });
