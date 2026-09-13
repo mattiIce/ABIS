@@ -345,7 +345,7 @@ public sealed class AbisRepository : IAbisRepository
     private const string DowntimeCols = """
         instance_num AS InstanceNum, ab_job_num AS AbJobNum, line_num AS LineNum,
         starting_time AS StartingTime, ending_time AS EndingTime, note AS Note, shift_num AS ShiftNum,
-        (SELECT MIN(c.cause_name) FROM dt_instance_detail d JOIN dt_cause c ON c.id = d.instance_item
+        (SELECT MIN(c.cause_name) FROM dt_instance_detail d JOIN dt_cause c ON c.id = d.id
            WHERE d.instance_num = dt_instance.instance_num) AS DowntimeType
         """;
 
@@ -2255,9 +2255,11 @@ public sealed class AbisRepository : IAbisRepository
         public decimal? ProcessWt { get; set; }
     }
 
-    // Downtime totalled by cause code (legacy d_report_downtime_daily_per_cat): SUM(duration)/60
-    // minutes grouped by dt_instance_detail.instance_item, resolved via detail ⋈ dt_instance for
-    // the date/line window. Plain GROUP BY (no date-truncation), so portable SQLite/Oracle.
+    // Downtime totalled by cause: SUM(duration)/60 minutes per dt_cause, resolved via detail ⋈ dt_instance
+    // for the date/line window. THE CAUSE IS dt_instance_detail.ID (FK_CAUSE_ID), exactly as legacy's
+    // downtime reports join it (d_report_downtime_abjob_comp: DT_INSTANCE_DETAIL.ID = DT_CAUSE.ID).
+    // instance_item is only the segment's position in its instance — on .230 it takes 4 values in the
+    // last year against 33 causes, so grouping by it reported "segment 1 / 2 / 3", not causes.
     public async Task<IReadOnlyList<DowntimeByCauseRow>> GetDowntimeByCauseAsync(DateTime from, DateTime to, long? lineNum, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
@@ -2268,13 +2270,14 @@ public sealed class AbisRepository : IAbisRepository
         if (lineNum is not null) { lineFilter = " AND i.line_num = :line"; p.Add("line", lineNum); }
         var rows = await conn.QueryAsync<DowntimeByCauseRow>(new CommandDefinition(
             $"""
-            SELECT d.instance_item AS InstanceItem, COUNT(*) AS Occurrences,
+            SELECT d.id AS CauseId, MIN(c.cause_name) AS CauseName, COUNT(*) AS Occurrences,
                    ROUND(COALESCE(SUM(d.duration), 0) / 60.0, 2) AS DurationMinutes
             FROM dt_instance_detail d
             JOIN dt_instance i ON i.instance_num = d.instance_num
+            LEFT JOIN dt_cause c ON c.id = d.id
             WHERE i.starting_time >= :dfrom AND i.starting_time < :dto{lineFilter}
-            GROUP BY d.instance_item
-            ORDER BY d.instance_item
+            GROUP BY d.id
+            ORDER BY d.id
             """, p, cancellationToken: ct));
         return rows.AsList();
     }
@@ -2507,7 +2510,8 @@ public sealed class AbisRepository : IAbisRepository
     // d_report_dt_summary). Pulls the detail segments joined to their instance (+ shift for the shift
     // grouping) for the window/line, then buckets in C# so day/month/year need no DB date functions.
     // Minutes = SUM(duration)/60; occurrences = number of detail segments in the bucket.
-    // groupBy: "cause" (default, instance_item) | "job" | "part" | "line" | "shift" | "day" | "month" | "year".
+    // groupBy: "cause" (default; dt_instance_detail.ID -> dt_cause, labelled by name) | "job" | "part" | "line"
+    // | "shift" | "day" | "month" | "year".
     public async Task<IReadOnlyList<DowntimePivotRow>> GetDowntimePivotAsync(DateTime? from, DateTime? to, long? lineNum, string groupBy, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
@@ -2522,12 +2526,13 @@ public sealed class AbisRepository : IAbisRepository
         // still counts (bucketed as "(none)").
         var raw = await conn.QueryAsync<DtPivotRaw>(new CommandDefinition(
             $"""
-            SELECT d.instance_item AS InstanceItem, i.ab_job_num AS AbJobNum, i.line_num AS LineNum,
+            SELECT d.id AS CauseId, c.cause_name AS CauseName, i.ab_job_num AS AbJobNum, i.line_num AS LineNum,
                    l.line_desc AS LineDesc, s.schedule_type AS ScheduleType,
                    i.starting_time AS StartingTime, d.duration AS Duration,
                    oi.part_num_id AS PartNumId, COALESCE(pn.enduser_part_num, oi.enduser_part_num) AS PartLabel
             FROM dt_instance_detail d
             JOIN dt_instance i ON i.instance_num = d.instance_num
+            LEFT JOIN dt_cause c ON c.id = d.id
             LEFT JOIN shift s ON s.shift_num = i.shift_num
             LEFT JOIN line l ON l.line_num = i.line_num
             LEFT JOIN ab_job aj ON aj.ab_job_num = i.ab_job_num
@@ -2550,7 +2555,7 @@ public sealed class AbisRepository : IAbisRepository
                 case "day": label = key = r.StartingTime?.ToString("yyyy-MM-dd") ?? "(undated)"; break;
                 case "month": label = key = r.StartingTime?.ToString("yyyy-MM") ?? "(undated)"; break;
                 case "year": label = key = r.StartingTime?.ToString("yyyy") ?? "(undated)"; break;
-                default: key = r.InstanceItem?.ToString() ?? "?"; label = r.InstanceItem?.ToString() ?? "(uncoded)"; break;
+                default: key = r.CauseId?.ToString() ?? "?"; label = r.CauseName ?? r.CauseId?.ToString() ?? "(uncoded)"; break;
             }
             if (!buckets.TryGetValue(key, out var acc)) { acc = new DtPivotAccum { Label = label, SortKey = key }; buckets[key] = acc; }
             acc.Occurrences++;
@@ -2588,7 +2593,8 @@ public sealed class AbisRepository : IAbisRepository
 
     private sealed class DtPivotRaw
     {
-        public int? InstanceItem { get; set; }
+        public long? CauseId { get; set; }
+        public string? CauseName { get; set; }
         public long? AbJobNum { get; set; }
         public long? LineNum { get; set; }
         public string? LineDesc { get; set; }
@@ -11373,17 +11379,18 @@ public sealed class AbisRepository : IAbisRepository
         return n == 0 ? null : await GetDowntimeInstanceAsync(instanceNum, ct);
     }
 
-    // Cause-segments of a downtime instance (dt_instance_detail): the reason (instance_item →
-    // dt_cause) + duration seconds. The DAS operator picks a cause when they log downtime.
+    // Cause-segments of a downtime instance (dt_instance_detail): the reason (ID → dt_cause) + duration
+    // seconds, in the order they were logged (instance_item = position). The DAS operator picks a cause
+    // when they log downtime.
     public async Task<IReadOnlyList<DowntimeSegment>> GetDowntimeSegmentsAsync(long instanceNum, CancellationToken ct)
     {
         await using var conn = await OpenAsync(ct);
         var rows = await conn.QueryAsync<DowntimeSegment>(new CommandDefinition(
             """
-            SELECT d.id AS Id, d.instance_num AS InstanceNum, d.instance_item AS InstanceItem,
+            SELECT d.instance_num AS InstanceNum, d.instance_item AS InstanceItem, d.id AS CauseId,
                    c.cause_name AS CauseName, d.duration AS Duration, d.note AS Note
-            FROM dt_instance_detail d LEFT JOIN dt_cause c ON c.id = d.instance_item
-            WHERE d.instance_num = :id ORDER BY d.id
+            FROM dt_instance_detail d LEFT JOIN dt_cause c ON c.id = d.id
+            WHERE d.instance_num = :id ORDER BY d.instance_item
             """, new { id = instanceNum }, cancellationToken: ct));
         return rows.AsList();
     }
@@ -11398,15 +11405,22 @@ public sealed class AbisRepository : IAbisRepository
             "SELECT COUNT(*) FROM dt_instance WHERE instance_num = :id", new { id = instanceNum }, cancellationToken: ct));
         if (exists == 0) return null;
         await using var tx = await conn.BeginTransactionAsync(ct);
-        var id = await NextIdAsync(conn, tx, "dt_instance_detail", "id", ct);
+        // Legacy's two writers (da/u_causes.sru, da_offline/w_dt_enter_offline.srw) number an instance's
+        // segments 1..n into INSTANCE_ITEM and put the cause in ID. This used to mint ID as MAX(id)+1 and
+        // store the cause in INSTANCE_ITEM: on Oracle the minted "id" (44 today) is a cause that does not
+        // exist, so FK_CAUSE_ID refused every DAS downtime reason — after its instance had been created.
+        // The next position is per instance; a concurrent add loses on PK_INSTANCE_ITEM and is retried.
+        var item = await conn.ExecuteScalarAsync<int>(new CommandDefinition(
+            "SELECT COALESCE(MAX(instance_item), 0) + 1 FROM dt_instance_detail WHERE instance_num = :inst",
+            new { inst = instanceNum }, transaction: tx, cancellationToken: ct));
         await conn.ExecuteAsync(new CommandDefinition(
             """
-            INSERT INTO dt_instance_detail (id, instance_num, instance_item, duration, note)
-            VALUES (:id, :inst, :item, :dur, :note)
-            """, new { id, inst = instanceNum, item = body.CauseId, dur = body.DurationSeconds, note = body.Note },
+            INSERT INTO dt_instance_detail (instance_num, instance_item, id, duration, note)
+            VALUES (:inst, :item, :cause, :dur, :note)
+            """, new { inst = instanceNum, item, cause = body.CauseId, dur = body.DurationSeconds, note = body.Note },
             transaction: tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
-        return (await GetDowntimeSegmentsAsync(instanceNum, ct)).FirstOrDefault(s => s.Id == id);
+        return (await GetDowntimeSegmentsAsync(instanceNum, ct)).FirstOrDefault(s => s.InstanceItem == item);
     }
 
     // ---- Truck appointments (ABIS-owned abis_truck_appointment) --------------------------------
