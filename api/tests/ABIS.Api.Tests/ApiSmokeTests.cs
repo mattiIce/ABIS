@@ -326,11 +326,14 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
     {
         var arr = await _client.GetFromJsonAsync<JsonElement>(
             "/api/reporting/downtime-by-cause?from=2026-01-01T00:00:00&to=2027-01-01T00:00:00");
-        // Cause 1 (coil change): instances 9101 (1200s) + 9103 (300s) = 1500s = 25 min over 2 events.
+        // Cause 1 (coil change): instances 9101 (1200s) + 9103 (300s) = 1500s = 25 min over 2 events. All three
+        // seeded segments are position 1 of their instance, so grouping by instance_item (the old bug) would
+        // report one 35-minute bucket instead.
         JsonElement cause1 = default; var found = false;
         foreach (var e in arr.EnumerateArray())
-            if (e.GetProperty("instanceItem").GetInt32() == 1) { cause1 = e; found = true; break; }
+            if (e.GetProperty("causeId").GetInt64() == 1) { cause1 = e; found = true; break; }
         Assert.True(found);
+        Assert.Equal("Coil change", cause1.GetProperty("causeName").GetString());
         Assert.Equal(25m, cause1.GetProperty("durationMinutes").GetDecimal());
         Assert.Equal(2, cause1.GetProperty("occurrences").GetInt32());
 
@@ -338,7 +341,7 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
         var l110 = await _client.GetFromJsonAsync<JsonElement>(
             "/api/reporting/downtime-by-cause?from=2026-01-01T00:00:00&to=2027-01-01T00:00:00&lineNum=110");
         foreach (var e in l110.EnumerateArray())
-            Assert.Equal(1, e.GetProperty("instanceItem").GetInt32());
+            Assert.Equal(1, e.GetProperty("causeId").GetInt64());
 
         // Pre-data window -> empty.
         var outW = await _client.GetFromJsonAsync<JsonElement>(
@@ -364,10 +367,11 @@ public sealed class ApiSmokeTests : IClassFixture<ApiSmokeTests.ApiFactory>
         Assert.True(up > 0 && up <= sched);   // uptime never exceeds scheduled
         Assert.True(l110.GetProperty("uptimePct").GetDouble() is > 0 and <= 100);
 
-        // Downtime pivot by cause: cause 1 = 25 min over 2 events, sorted first (biggest downtime).
+        // Downtime pivot by cause: cause 1 = 25 min over 2 events, sorted first (biggest downtime), labelled
+        // with the cause's own name.
         var byCause = await _client.GetFromJsonAsync<JsonElement>($"/api/reporting/downtime-pivot?{window}&groupBy=cause");
         var first = byCause[0];
-        Assert.Equal("1", first.GetProperty("bucket").GetString());
+        Assert.Equal("Coil change", first.GetProperty("bucket").GetString());
         Assert.Equal(2, first.GetProperty("occurrences").GetInt32());
         Assert.Equal(25.0, first.GetProperty("downtimeMinutes").GetDouble());
 

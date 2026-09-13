@@ -2133,12 +2133,14 @@ public sealed class RepositoryTests : IDisposable
     public async Task DowntimePivot_groups_by_cause_job_shift_and_day()
     {
         // Segments: cause 1 = 1200+300 = 1500s (2 events); cause 2 = 600s (1 event). Minutes = /60.
+        // The cause is dt_instance_detail.id, labelled with dt_cause's name (all three seeded segments are
+        // position 1 of their instance, so grouping by instance_item would give ONE bucket).
         var byCause = await _repo.GetDowntimePivotAsync(null, null, null, "cause", CancellationToken.None);
         Assert.Equal(2, byCause.Count);
-        Assert.Equal("1", byCause[0].Bucket);          // biggest downtime first
+        Assert.Equal("Coil change", byCause[0].Bucket);  // biggest downtime first
         Assert.Equal(2, byCause[0].Occurrences);
         Assert.Equal(25.0, byCause[0].DowntimeMinutes);
-        Assert.Equal("2", byCause[1].Bucket);
+        Assert.Equal("Jam", byCause[1].Bucket);
         Assert.Equal(10.0, byCause[1].DowntimeMinutes);
 
         var byJob = await _repo.GetDowntimePivotAsync(null, null, null, "job", CancellationToken.None);
@@ -2159,7 +2161,7 @@ public sealed class RepositoryTests : IDisposable
 
         // The line filter drops line-110 segments, leaving only cause 2 on line 120.
         var only2 = Assert.Single(await _repo.GetDowntimePivotAsync(null, null, 120, "cause", CancellationToken.None));
-        Assert.Equal("2", only2.Bucket);
+        Assert.Equal("Jam", only2.Bucket);
     }
 
     [Fact]

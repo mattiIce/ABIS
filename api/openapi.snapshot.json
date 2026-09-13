@@ -11721,7 +11721,7 @@
         "tags": [
           "Reporting"
         ],
-        "summary": "Downtime minutes by cause code (SUM dt_instance_detail.duration/60 via dt_instance), optionally one line. Defaults to the last 365 days when unbounded.",
+        "summary": "Downtime minutes by cause (dt_instance_detail.id -> dt_cause, with its name; SUM duration/60), optionally one line. Defaults to the last 365 days when unbounded.",
         "operationId": "GetDowntimeByCause",
         "parameters": [
           {
@@ -20468,9 +20468,13 @@
       "DowntimeByCauseRow": {
         "type": "object",
         "properties": {
-          "instanceItem": {
+          "causeId": {
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
+            "nullable": true
+          },
+          "causeName": {
+            "type": "string",
             "nullable": true
           },
           "occurrences": {
@@ -20637,17 +20641,17 @@
       "DowntimeSegment": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
           "instanceNum": {
             "type": "integer",
             "format": "int64"
           },
           "instanceItem": {
             "type": "integer",
-            "format": "int32",
+            "format": "int32"
+          },
+          "causeId": {
+            "type": "integer",
+            "format": "int64",
             "nullable": true
           },
           "causeName": {

@@ -685,10 +685,16 @@ public static class SqliteFixture
                 instance_num INTEGER PRIMARY KEY, ab_job_num INTEGER, line_num INTEGER,
                 starting_time TEXT, ending_time TEXT, note TEXT, shift_num INTEGER);
 
-            -- Segmented downtime within an instance (legacy dt_instance_detail): instance_item is
-            -- the cause/category code, duration is seconds (legacy reports SUM(duration)/60 minutes).
+            -- Segmented downtime within an instance (legacy dt_instance_detail), in its LIVE shape:
+            -- instance_item is the segment's POSITION within the instance (1..n) and ID is the CAUSE
+            -- (FK_CAUSE_ID -> dt_cause). PK_INSTANCE_ITEM is (instance_num, instance_item). The fixture
+            -- once had these the other way round (id as a surrogate key, instance_item as the cause),
+            -- which is why every reader and the segment write read them swapped and CI never noticed.
+            -- Duration is seconds (legacy reports SUM(duration)/60 minutes).
             CREATE TABLE dt_instance_detail (
-                id INTEGER PRIMARY KEY, instance_num INTEGER NOT NULL, instance_item INTEGER NOT NULL, duration REAL, note TEXT);
+                instance_num INTEGER NOT NULL, instance_item INTEGER NOT NULL, id INTEGER NOT NULL,
+                duration REAL, note TEXT,
+                PRIMARY KEY (instance_num, instance_item));
 
             -- Per-alloy density (lb/in^3) for the piece-weight calculator (legacy METAL_DENSITY).
             CREATE TABLE metal_density (
@@ -1531,14 +1537,16 @@ public static class SqliteFixture
             });
 
         conn.Execute(
-            "INSERT INTO dt_instance_detail (id, instance_num, instance_item, duration, note) VALUES (:Id, :InstanceNum, :InstanceItem, :Duration, :Note)",
+            "INSERT INTO dt_instance_detail (instance_num, instance_item, id, duration, note) VALUES (:InstanceNum, :InstanceItem, :CauseId, :Duration, :Note)",
             new[]
             {
+                // Every seeded segment is the FIRST (instance_item 1) of its instance, as most live ones
+                // are — so a reader that groups by instance_item lumps all three causes into one bucket.
                 // Cause 1 (coil change): 9101 20min + 9103 5min = 1500s = 25min over 2 events.
-                new { Id = 1L, InstanceNum = 9101L, InstanceItem = (int?)1, Duration = (double?)1200.0, Note = "coil change" },
-                new { Id = 2L, InstanceNum = 9103L, InstanceItem = (int?)1, Duration = (double?)300.0, Note = "coil change" },
+                new { InstanceNum = 9101L, InstanceItem = 1, CauseId = 1L, Duration = (double?)1200.0, Note = "coil change" },
+                new { InstanceNum = 9103L, InstanceItem = 1, CauseId = 1L, Duration = (double?)300.0, Note = "coil change" },
                 // Cause 2 (jam): 9102 10min = 600s.
-                new { Id = 3L, InstanceNum = 9102L, InstanceItem = (int?)2, Duration = (double?)600.0, Note = "jam" }
+                new { InstanceNum = 9102L, InstanceItem = 1, CauseId = 2L, Duration = (double?)600.0, Note = "jam" }
             });
 
         conn.Execute(

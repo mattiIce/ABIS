@@ -15111,7 +15111,7 @@ export class AbisClient {
         return Promise.resolve(null);
     }
     /**
-     * Downtime minutes by cause code (SUM dt_instance_detail.duration/60 via dt_instance), optionally one line. Defaults to the last 365 days when unbounded.
+     * Downtime minutes by cause (dt_instance_detail.id -> dt_cause, with its name; SUM duration/60), optionally one line. Defaults to the last 365 days when unbounded.
      * @param from (optional)
      * @param to (optional)
      * @param lineNum (optional)
@@ -25384,7 +25384,8 @@ export class DowntimeByCauseRow {
     }
     init(_data) {
         if (_data) {
-            this.instanceItem = _data["instanceItem"];
+            this.causeId = _data["causeId"];
+            this.causeName = _data["causeName"];
             this.occurrences = _data["occurrences"];
             this.durationMinutes = _data["durationMinutes"];
         }
@@ -25397,7 +25398,8 @@ export class DowntimeByCauseRow {
     }
     toJSON(data) {
         data = typeof data === 'object' ? data : {};
-        data["instanceItem"] = this.instanceItem;
+        data["causeId"] = this.causeId;
+        data["causeName"] = this.causeName;
         data["occurrences"] = this.occurrences;
         data["durationMinutes"] = this.durationMinutes;
         return data;
@@ -25592,9 +25594,9 @@ export class DowntimeSegment {
     }
     init(_data) {
         if (_data) {
-            this.id = _data["id"];
             this.instanceNum = _data["instanceNum"];
             this.instanceItem = _data["instanceItem"];
+            this.causeId = _data["causeId"];
             this.causeName = _data["causeName"];
             this.duration = _data["duration"];
             this.note = _data["note"];
@@ -25608,9 +25610,9 @@ export class DowntimeSegment {
     }
     toJSON(data) {
         data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
         data["instanceNum"] = this.instanceNum;
         data["instanceItem"] = this.instanceItem;
+        data["causeId"] = this.causeId;
         data["causeName"] = this.causeName;
         data["duration"] = this.duration;
         data["note"] = this.note;

@@ -2734,9 +2734,13 @@ public static class ApiEndpoints
                     return Results.ValidationProblem(new Dictionary<string, string[]> { ["causeId"] = ["A downtime cause is required."] });
                 if (body.DurationSeconds is < 0)
                     return Results.ValidationProblem(new Dictionary<string, string[]> { ["durationSeconds"] = ["Duration cannot be negative."] });
+                // dt_instance_detail.id carries FK_CAUSE_ID on the live schema (SQLite enforces nothing), so
+                // an unknown cause is refused here as a 400 rather than surfacing as an ORA-02291.
+                if (!(await repo.GetDowntimeCausesAsync(ct)).Any(c => c.Id == body.CauseId))
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["causeId"] = [$"Unknown downtime cause {body.CauseId}."] });
                 var seg = await repo.AddDowntimeSegmentAsync(instanceNum, body, ct);
                 return seg is null ? Results.NotFound()
-                    : Results.Created($"/api/downtime/{instanceNum}/segments/{seg.Id}", seg);
+                    : Results.Created($"/api/downtime/{instanceNum}/segments", seg);
             })
            .WithName("AddDowntimeSegment").WithTags("Downtime")
            .WithSummary("Add a cause-segment (reason + duration) to a downtime instance.")
@@ -3512,7 +3516,7 @@ public static class ApiEndpoints
                 return Results.Ok(await repo.GetDowntimeByCauseAsync(f, t, lineNum, ct));
             })
            .WithName("GetDowntimeByCause").WithTags("Reporting")
-           .WithSummary("Downtime minutes by cause code (SUM dt_instance_detail.duration/60 via dt_instance), optionally one line. Defaults to the last 365 days when unbounded.")
+           .WithSummary("Downtime minutes by cause (dt_instance_detail.id -> dt_cause, with its name; SUM duration/60), optionally one line. Defaults to the last 365 days when unbounded.")
            .Produces<IReadOnlyList<DowntimeByCauseRow>>();
 
         api.MapGet("/reporting/uptime", async (DateTime? from, DateTime? to, IAbisRepository repo, CancellationToken ct, long? lineNum = null, string groupBy = "line") =>

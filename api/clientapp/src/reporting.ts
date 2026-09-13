@@ -271,9 +271,9 @@ const REPORTS: Record<string, { note: string; load: (from?: Date, to?: Date) => 
   },
   // ---- Downtime pivots (legacy daily-prod dt_* pivots): occurrences + minutes along one dimension ----
   'dt-by-cause': {
-    note: 'Downtime minutes + occurrences by cause code (dt_instance_detail.instance_item).',
+    note: 'Downtime minutes + occurrences by cause.',
     load: (f, t) => loadJson(`/api/reporting/downtime-pivot${qwin(f, t, { groupBy: 'cause' })}`),
-    cols: pivotCols('Cause code'),
+    cols: pivotCols('Cause'),
   },
   'dt-by-job': {
     note: 'Downtime minutes + occurrences by job.',

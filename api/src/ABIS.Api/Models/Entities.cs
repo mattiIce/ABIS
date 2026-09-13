@@ -1416,14 +1416,16 @@ public sealed class DowntimeCause
     public string? Note { get; set; }
 }
 
-/// <summary>One cause-segment within a downtime instance (table <c>dt_instance_detail</c>):
-/// <c>InstanceItem</c> is the <c>dt_cause</c> id (the reason), <c>Duration</c> is seconds. The
-/// legacy reports SUM(duration)/60 as minutes-by-cause.</summary>
+/// <summary>One cause-segment within a downtime instance (table <c>dt_instance_detail</c>, key
+/// <c>(instance_num, instance_item)</c>). <c>Duration</c> is seconds; the legacy reports SUM(duration)/60
+/// as minutes-by-cause.</summary>
 public sealed class DowntimeSegment
 {
-    public long Id { get; set; }
     public long InstanceNum { get; set; }
-    public int? InstanceItem { get; set; }
+    /// <summary>The segment's position within its instance, 1..n in the order logged — NOT the cause.</summary>
+    public int InstanceItem { get; set; }
+    /// <summary>The reason: <c>dt_instance_detail.id</c>, a <c>dt_cause</c> id.</summary>
+    public long? CauseId { get; set; }
     public string? CauseName { get; set; }
     public double? Duration { get; set; }
     public string? Note { get; set; }
@@ -2133,14 +2135,12 @@ public sealed class ShiftProductionRow
     public decimal ProcessedWt { get; set; }
 }
 
-/// <summary>Downtime totalled by cause (legacy <c>d_report_downtime_daily_per_cat</c>):
-/// SUM(dt_instance_detail.duration)/60 minutes grouped by the cause code
-/// (<c>instance_item</c>), resolved via dt_instance_detail ⋈ dt_instance for the date/line
-/// window. <see cref="InstanceItem"/> is the cause/category code (name lookup is a follow-up
-/// once a downtime-category table is modeled).</summary>
+/// <summary>Downtime totalled by cause: SUM(dt_instance_detail.duration)/60 minutes per <c>dt_cause</c>
+/// (the detail's <c>id</c>), resolved via dt_instance_detail ⋈ dt_instance for the date/line window.</summary>
 public sealed class DowntimeByCauseRow
 {
-    public int? InstanceItem { get; set; }
+    public long? CauseId { get; set; }
+    public string? CauseName { get; set; }
     public int Occurrences { get; set; }
     public decimal DurationMinutes { get; set; }
 }
